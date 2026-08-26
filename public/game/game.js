@@ -13,6 +13,13 @@ const el = {
   resonanceBar: $("resonanceBar"),
   partyPanel: $("partyPanel"),
   dialogue: $("dialogue"),
+  dialoguePortraits: $("dialoguePortraits"),
+  portraitLeft: $("portraitLeft"),
+  portraitLeftImage: $("portraitLeftImage"),
+  portraitLeftName: $("portraitLeftName"),
+  portraitRight: $("portraitRight"),
+  portraitRightImage: $("portraitRightImage"),
+  portraitRightName: $("portraitRightName"),
   speaker: $("speaker"),
   line: $("line"),
   battle: $("battle"),
@@ -46,6 +53,8 @@ let selectedGearSlot = "weapon";
 let selectedPartySlot = 0;
 let activePoint = null;
 let talkQueue = [];
+let talkPortraits = [];
+let talkAfter = null;
 let battle = null;
 let effect = null;
 let codexIndex = 0;
@@ -56,6 +65,17 @@ let activeVendor = null;
 let vendorTab = "buy";
 let audioContext = null;
 let screenSlide = null;
+
+const portraitSources = {
+  Verseborn: "assets/portraits/verseborn.png",
+  Mira: "assets/portraits/mira.png",
+  Seerin: "assets/portraits/seerin.png",
+  Kael: "assets/portraits/kael.png",
+  Torren: "assets/portraits/torren.png",
+  Sparky: "assets/portraits/sparky.png",
+  Glimmer: "assets/portraits/glimmer.png"
+};
+const enemyPortraitCache = new Map();
 
 const music = {
   inhouse: new Audio("assets/audio/inhouse-jrpg.mp3"),
@@ -684,15 +704,15 @@ const state = {
   quest: -1,
   resonance: 15,
   walkUntil: 0,
-  party: ["Verseborn", "Mira"],
-  activeParty: ["Verseborn", "Mira"],
+  party: ["Verseborn"],
+  activeParty: ["Verseborn"],
   gold: 180,
   inventory: { "Marla's Soup": 4, "Clockwork Tonic": 2, "Ash Ward": 1, "Old Registry Key": 1 },
   inventorySlots: 30,
   bagUpgrades: 0,
   stash: {},
-  ownedGear: [...new Set(["Verseborn", "Mira"].flatMap(id => Object.values(baseJobs[id].gear)))],
-  gearCopies: ["Verseborn", "Mira"].flatMap(id => Object.values(baseJobs[id].gear)).reduce((copies, name) => {
+  ownedGear: [...new Set(["Verseborn"].flatMap(id => Object.values(baseJobs[id].gear)))],
+  gearCopies: ["Verseborn"].flatMap(id => Object.values(baseJobs[id].gear)).reduce((copies, name) => {
     copies[name] = (copies[name] || 0) + 1;
     return copies;
   }, {}),
@@ -833,7 +853,7 @@ const maps = {
   ] }),
 
   ashDock: map("Ash Quarter - Ledger Docks", "Issue 1", "ash", [{ x: 1, y: 8, to: "sootMarket", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieCourt", tx: 2, ty: 8, needs: "issue1" }], [
-    point(7, 7, "Mira", [["Mira", "The route is physical. The lie is administrative. Together, that makes a dungeon."], ["Mira", "Draw your lute."]], "harbor"),
+    recruitPoint(7, 7, "Mira", [["Mira", "You came alone. Good. Quiet footsteps survive longer on these docks."], ["Verseborn", "I can do quiet. Briefly."], ["Mira", "The route is physical. The lie is administrative. Together, that makes a dungeon."], ["Mira", "Draw your lute. I will cover the blind side."]], "harbor"),
     chest(4, 8, "ash-echo", { gear: "Echo Collector", gold: 30 })
   ], ["A4 - Ledger Docks", "The first story battle sits beyond two explorable field units."], { background: "ash-route", panorama: true, view: 2, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [3, 2], gridSize: [5, 5], spawns: [
     spawn("dock-foreman", 11, 8, "Miniboss: Dock Foreman", [enemy("Dock Foreman", 126, 15, "Tech", "#403b39", 2, "Chain Warden")], { boss: true, lore: "The foreman kept moving names after the orders stopped." })
@@ -845,7 +865,7 @@ const maps = {
   ], ["A3b - Ledger House", "Optional interior, clue room and escort side quest."], { background: "ash", collision: "ash", grid: [2, 1], gridSize: [5, 5] }),
 
   reverieCourt: map("Reverie - Courtyard", "Issue 2", "reverie", [{ x: 1, y: 8, to: "ashDock", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieDorm", tx: 2, ty: 8 }, { x: 8, y: 4, to: "reverieArchive", tx: 2, ty: 8, needs: "clergyWon" }], [
-    point(6, 7, "Seerin", [["Seerin", "You may inspect the building. You may not take a child."], ["Seerin", "My oath is to life. You are confusing that with authority."]], "clergy"),
+    recruitPoint(6, 7, "Seerin", [["Seerin", "You may inspect the building. You may not take a child."], ["Verseborn", "Then stand with me while we prove who tried."], ["Seerin", "My oath is to life. You are confusing that with authority."], ["Seerin", "I will hold the line. You make them listen."]], "clergy"),
     chest(4, 8, "reverie-hearthwall", { gear: "Hearthwall Crest", gold: 38 })
   ], ["B1 - Shelter Courtyard", "Protection comes before institutional permission."], { background: "reverie-route", panorama: true, view: 0, views: 3, walkable: [[1, 5, 14, 10]], grid: [3, 3], gridSize: [5, 5], spawns: [
     spawn("court-seal-1", 11, 8, "Clergy Seal Patrol", [enemy("Seal Bearer", 70, 10, "Shadow", "#9d5436", 1)], { respawn: 38 })
@@ -866,7 +886,7 @@ const maps = {
   ] }),
 
   reverieArchive: map("Reverie - Clergy Archive", "Issue 2", "reverie", [{ x: 8, y: 12, to: "reverieDorm", tx: 8, ty: 10 }, { x: 1, y: 8, to: "reverieCourt", tx: 8, ty: 5 }], [
-    point(7, 7, "Kael", [["Kael", "I will keep the seal. Not as obedience. As evidence."]], "issue2", "clergyWon"),
+    recruitPoint(7, 7, "Kael", [["Kael", "I will keep the seal. Not as obedience. As evidence."], ["Verseborn", "Evidence travels better with witnesses."], ["Kael", "Then I will walk with the Flameguard. Quietly."]], "issue2", "clergyWon"),
     chest(5, 7, "reverie-echo", { gear: "Echo Collector", items: { "Clockwork Tonic": 1 } })
   ], ["B2b - Clergy Archive", "A short moral dungeon interior with a permanent custodian miniboss."], { background: "reverie", collision: "reverie", grid: [3, 4], gridSize: [5, 5], spawns: [
     spawn("archive-custodian", 11, 7, "Miniboss: Archive Custodian", [enemy("Archive Custodian", 142, 16, "Earth", "#6d5948", 2, "Ash Scribe")], { boss: true, lore: "It files people under the rules they broke." })
@@ -889,7 +909,7 @@ const maps = {
   ] }),
 
   guildCouncil: map("Guildspire - Council Chamber", "Issue 3", "guildspire", [{ x: 8, y: 1, to: "guildRegistry", tx: 8, ty: 10 }, { x: 1, y: 8, to: "guildSteps", tx: 6, ty: 4 }], [
-    point(11, 8, "Torren", [["Torren", "I am not here to earn an old place back. I am here to build a new one."]], "torren", "registered"),
+    recruitPoint(11, 8, "Torren", [["Torren", "I am not here to earn an old place back. I am here to build a new one."], ["Verseborn", "Ember Hall has an empty chair and several structurally questionable walls."], ["Torren", "Then both can be fixed. I am coming."]], "torren", "registered"),
     chest(5, 8, "guild-emberwell", { gear: "Emberwell Chain", items: { "Marla's Soup": 2 } })
   ], ["C2b - Council Chamber", "A branch room for Torren's return and later contracts."], { background: "guildspire", collision: "guildspire", grid: [1, 2], gridSize: [3, 3] }),
 
@@ -904,7 +924,8 @@ const maps = {
   ], ["D2 - Hearth Room", "The route branches down into the resonance cellar."], { background: "ember-route", panorama: true, view: 1, views: 5, walkable: [[1, 4, 14, 10]], grid: [1, 2], gridSize: [5, 5] }),
 
   emberWorkshop: map("Ember Hall - Workshop", "Issue 3", "ember", [{ x: 1, y: 8, to: "emberHearth", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberArmory", tx: 2, ty: 8 }], [
-    point(9, 7, "Sparky", [["Sparky", "Prrrp."], ["Verseborn", "Tiny dragon. Ancient heart. Absolutely coming with us."]], "sparky", "emberWon", "workshop")
+    recruitPoint(9, 7, "Sparky", [["Sparky", "Prrrp."], ["Verseborn", "You remember that flame, do you not?"], ["Sparky", "Prrrp!"], ["Verseborn", "Tiny dragon. Ancient heart. Absolutely coming with us."]], "sparky", "emberWon"),
+    point(11, 7, "Workshop Bench", [["Workshop Bench", "Glimmer labelled every drawer except the one that bites."]], undefined, "sparky", "workshop")
   ], ["D3 - Workshop", "Recruit Sparky, buy crafted gear and inspect Glimmer's machines."], { background: "ember-route", panorama: true, view: 2, views: 5, walkable: [[1, 4, 14, 10]], grid: [2, 2], gridSize: [5, 5] }),
 
   emberArmory: map("Ember Hall - Armory Passage", "Issue 3", "ember", [{ x: 1, y: 8, to: "emberWorkshop", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberRoof", tx: 2, ty: 8 }], [
@@ -944,7 +965,7 @@ const maps = {
   ] }),
 
   alarm: map("False Dawn - Alarm Core", "Issue 4", "alarm", [{ x: 1, y: 8, to: "dawnGate", tx: 13, ty: 8 }], [
-    point(5, 7, "Glimmer", [["Glimmer", "The alarm is not broken. It is obeying the wrong truth."], ["Glimmer", "Everything stays still except me."]], "dawn"),
+    recruitPoint(5, 7, "Glimmer", [["Glimmer", "The alarm is not broken. It is obeying the wrong truth."], ["Verseborn", "Then we give it a better verse."], ["Glimmer", "Everything stays still except me."], ["Glimmer", "That was an invitation. Keep up."]], "dawn"),
     point(10, 5, "Glimmer", [["Kaeldrin", "Your rank still stands."], ["Glimmer", "I know. You came back when you needed the machine. They came when they needed me."], ["Glimmer", "Also, the parts bench is open. Do not lick anything glowing."]], "ending", "dawnWon", "workshop"),
     chest(8, 8, "dawn-fleetglass", { gear: "Fleetglass Circlet", gold: 90 }, "dawnWon")
   ], ["E4 - Alarm Core", "Story boss and ending; its bosses never join the respawn pool."], { background: "alarm", collision: "alarm", grid: [2, 2], gridSize: [3, 3] })
@@ -956,6 +977,10 @@ function map(name, chapter, set, exits, points, beat, options = {}) {
 
 function point(x, y, id, text, event, needs, vendor, quest) {
   return { x, y, id, text, event, needs, vendor, quest };
+}
+
+function recruitPoint(x, y, id, text, event, needs, vendor, quest) {
+  return { ...point(x, y, id, text, event, needs, vendor, quest), recruit: id };
 }
 
 function chest(x, y, id, reward, needs) {
@@ -1107,6 +1132,7 @@ function currentQuest() {
 function visiblePoints() {
   return currentMap().points.filter(p => {
     if (p.needs && !state.flags[p.needs]) return false;
+    if (p.recruit && p.event && state.flags[p.event]) return false;
     if (state.escort === p.id) return false;
     if (state.map === "ledgerHouse" && p.id === "Harl" && state.flags["quest:harlEscort"]) return false;
     return true;
@@ -1393,6 +1419,14 @@ function battleIdleMotion(id, frame) {
 function drawNpc(id, px, py, dir, anim, frame) {
   if (id === "Stage") {
     drawText("♪", px + 8, py + 18 + (Math.floor(frame / 12) % 2), "#ffd27d", 9, "center");
+    return;
+  }
+  if (id === "Workshop Bench") {
+    drawRect(px + 1, py + 15, 15, 4, "#6f482b");
+    drawRect(px + 3, py + 19, 3, 8, "#3b2a22");
+    drawRect(px + 11, py + 19, 3, 8, "#3b2a22");
+    drawRect(px + 5, py + 11, 6, 4, "#b9823e");
+    drawRect(px + 7, py + 8, 2, 8, "#7bd4c6");
     return;
   }
   const rows = { Marla: 0, Harl: 1, Nyx: 2, Rava: 3, Kaeldrin: 4, Lysra: 5 };
@@ -1794,6 +1828,25 @@ function drawFalseDawn(p) {
   }
 }
 
+const battlePartyLayouts = {
+  1: [[55, 122]],
+  2: [[43, 105], [76, 134]],
+  3: [[42, 96], [76, 121], [42, 147]]
+};
+
+function partyBattlePosition(index, count = battle?.party?.length || 1) {
+  return (battlePartyLayouts[Math.min(3, count)] || battlePartyLayouts[3])[index] || [55, 122];
+}
+
+function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
+  const positions = count === 1
+    ? [[198, 105]]
+    : count === 2
+      ? [[181, 79], [214, 126]]
+      : [[178, 61], [215, 101], [181, 141]];
+  return positions[index] || [190, 105];
+}
+
 function drawBattleScene() {
   const map = currentMap();
   const arenaId = battleArenaFor(map);
@@ -1802,27 +1855,16 @@ function drawBattleScene() {
   else drawRect(0, 0, canvas.width, canvas.height, "#17212a");
   drawRect(0, 0, canvas.width, 154, "#07101a24");
 
-  const partyLayouts = {
-    1: [[55, 122]],
-    2: [[43, 105], [76, 134]],
-    3: [[42, 96], [76, 121], [42, 147]]
-  };
-  const partyPositions = partyLayouts[Math.min(3, battle.party.length)] || partyLayouts[3];
   battle.party.forEach((unit, index) => {
-    const [anchorX, baseline] = partyPositions[index];
+    const [anchorX, baseline] = partyBattlePosition(index, battle.party.length);
     drawFieldShadow(anchorX, baseline + 1, unit.id === "Torren" ? 14 : 10);
     drawSprite(unit.id, anchorX - 24 + battleOffset(unit), baseline - 52, 0, unit.anim || "idle", tick);
   });
 
-  const enemyPositions = battle.enemies.length === 1
-    ? [[198, 105]]
-    : battle.enemies.length === 2
-      ? [[181, 79], [214, 126]]
-      : [[178, 61], [215, 101], [181, 141]];
   battle.enemies.forEach((enemyUnit, index) => {
     if (enemyUnit.hp <= 0 && !enemyUnit.defeatUntil) enemyUnit.defeatUntil = tick + 12;
     if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil) return;
-    const [anchorX, baseline] = enemyPositions[index] || [190, 105];
+    const [anchorX, baseline] = enemyBattlePosition(index, battle.enemies.length);
     if (enemyUnit.hp <= 0) ctx.globalAlpha = Math.max(0, (enemyUnit.defeatUntil - tick) / 12);
     drawFieldShadow(anchorX, baseline + 1, enemySpriteIndex(enemyUnit.sprite || enemyUnit.name) >= 6 ? 15 : 11);
     drawEnemy(enemyUnit, anchorX - 8 + battleOffset(enemyUnit), baseline - 31);
@@ -1903,7 +1945,8 @@ function drawEnemy(e, px, py) {
 function drawEffect() {
   if (!effect) return;
   effect.t++;
-  const x = effect.x, y = effect.y;
+  const x = effect.toX ?? effect.x;
+  const y = effect.toY ?? effect.y;
   if (effect.kind === "melee") {
     drawRect(x - effect.t * 2, y - 8, 24, 3, "#fff0bc");
     drawRect(x - effect.t, y - 2, 18, 2, "#e07136");
@@ -1913,13 +1956,111 @@ function drawEffect() {
     for (let i = 0; i < 3; i++) ctx.strokeRect(x - 12 - i * 3, y - 20 - i * 3, 24 + i * 6, 28 + i * 6);
   }
   if (effect.kind === "magic") {
-    for (let i = 0; i < 8; i++) drawSpark(x + Math.cos((tick + i * 9) / 8) * (8 + effect.t), y + Math.sin((tick + i * 7) / 8) * (8 + effect.t), effect.color, tick + i);
+    drawCharacterProjectile(effect);
   }
   if (effect.kind === "ultimate") {
-    drawRect(0, 0, canvas.width, canvas.height, effect.t % 8 < 4 ? "#fff3" : "#0004");
-    for (let i = 0; i < 18; i++) drawSpark((i * 31 + tick * 3) % canvas.width, 30 + ((i * 17 + tick) % 150), effect.color, tick + i);
+    drawUltimateEffect(effect);
   }
-  if (effect.t > 24) effect = null;
+  if (effect.t > (effect.duration || 24)) effect = null;
+}
+
+function effectTravelPoint(fx, lag = 0) {
+  const progress = Math.max(0, Math.min(1, fx.t / 22 - lag));
+  const eased = progress * progress * (3 - 2 * progress);
+  return {
+    x: Math.round((fx.fromX ?? 62) + ((fx.toX ?? fx.x) - (fx.fromX ?? 62)) * eased),
+    y: Math.round((fx.fromY ?? 100) + ((fx.toY ?? fx.y) - (fx.fromY ?? 100)) * eased - Math.sin(progress * Math.PI) * 11)
+  };
+}
+
+function drawCharacterProjectile(fx) {
+  const point = effectTravelPoint(fx);
+  for (let i = 1; i <= 3; i++) {
+    const trail = effectTravelPoint(fx, i * .07);
+    drawRect(trail.x - 1, trail.y - 1, 2, 2, i === 1 ? fx.color : "#ffffff88");
+  }
+  const x = point.x;
+  const y = point.y;
+  const direction = Math.sign((fx.toX ?? 198) - (fx.fromX ?? 62)) || 1;
+  if (fx.caster === "Verseborn") {
+    drawRect(x, y - 5, 2, 7, "#f1cf78");
+    drawRect(x + direction * 2, y - 5, 4, 2, "#f1cf78");
+    drawRect(x - 2, y + 1, 4, 3, "#c694ff");
+    drawRect(x - direction * 6, y - 1, 3, 1, "#c694ff");
+  } else if (fx.caster === "Mira") {
+    drawRect(x - direction * 5, y - 4, 10, 2, "#a56dff");
+    drawRect(x - direction * 4, y + 3, 9, 2, "#6840c7");
+    drawRect(x + direction * 4, y - 5, 2, 4, "#fff2ff");
+    drawRect(x + direction * 4, y + 2, 2, 4, "#e4c8ff");
+  } else if (fx.caster === "Seerin") {
+    drawRect(x - 5, y - 1, 11, 3, "#d04b31");
+    drawRect(x - 1, y - 5, 3, 11, "#f3b44e");
+    drawRect(x, y, 2, 2, "#fff4c0");
+    drawRect(x - direction * 8, y, 4, 2, "#9c2d27");
+  } else if (fx.caster === "Kael") {
+    ctx.strokeStyle = "#fff0bf";
+    ctx.strokeRect(x - 5, y - 5, 10, 10);
+    ctx.strokeStyle = "#d8b06b";
+    ctx.strokeRect(x - 2, y - 7, 4, 14);
+    drawRect(x - 1, y - 1, 3, 3, "#ffffff");
+  } else if (fx.caster === "Torren") {
+    drawRect(x - 5, y - 3, 6, 6, "#8b6843");
+    drawRect(x, y - 5, 5, 5, "#d28a45");
+    drawRect(x + direction * 5, y + 2, 4, 4, "#5e4434");
+    drawRect(x - 2, y - 2, 2, 2, "#f0a54b");
+  } else if (fx.caster === "Glimmer") {
+    drawRect(x - 5, y - 5, 11, 11, "#4c9e98");
+    drawRect(x - 7, y - 2, 15, 5, "#b7823f");
+    drawRect(x - 2, y - 7, 5, 15, "#b7823f");
+    drawRect(x - 2, y - 2, 5, 5, "#9df4e6");
+  } else if (fx.caster === "Sparky") {
+    drawRect(x - 4, y - 4, 9, 9, "#30213e");
+    drawRect(x - 2, y - 7, 5, 11, "#7f4ad1");
+    drawRect(x, y - 9, 3, 7, "#c378ff");
+    drawRect(x - direction * 7, y + 2, 5, 3, "#5b327d");
+  } else {
+    drawRect(x - 4, y - 4, 9, 9, fx.color);
+    drawRect(x - 1, y - 1, 3, 3, "#ffffff");
+  }
+  if (fx.t > 20) {
+    const burst = fx.t - 20;
+    for (let i = 0; i < 6; i++) {
+      const dx = ((i % 3) - 1) * (burst + 2);
+      const dy = (Math.floor(i / 3) * 2 - 1) * (burst + 1);
+      drawRect((fx.toX ?? x) + dx, (fx.toY ?? y) + dy, 2, 2, i % 2 ? fx.color : "#fff0c0");
+    }
+  }
+}
+
+function drawUltimateEffect(fx) {
+  drawRect(0, 0, canvas.width, 154, fx.t % 8 < 3 ? "#ffffff22" : "#09091255");
+  if (fx.caster === "Torren") {
+    for (let i = 0; i < 12; i++) drawRect(12 + i * 22, 139 - ((tick + i * 5) % 16), 6, 12, i % 2 ? "#8b6843" : "#d87536");
+  } else if (fx.caster === "Glimmer") {
+    for (let i = 0; i < 9; i++) {
+      const px = 24 + i * 27;
+      const py = 38 + (i % 3) * 32;
+      ctx.strokeStyle = i % 2 ? "#7bd4c6" : "#b9823e";
+      ctx.strokeRect(px - 5, py - 5, 10, 10);
+      drawRect(px - 1, py - 1, 3, 3, "#fff2c4");
+    }
+  } else if (fx.caster === "Mira") {
+    for (let i = 0; i < 14; i++) drawRect(74 + ((i * 19 + tick * 5) % 176), 28 + (i * 13) % 115, 10, 2, i % 2 ? "#a56dff" : "#ffffff");
+  } else if (fx.caster === "Seerin" || fx.caster === "Kael") {
+    const colour = fx.caster === "Seerin" ? "#f3b44e" : "#fff0bf";
+    drawRect(126, 18, 5, 128, colour);
+    drawRect(70, 74, 117, 5, colour);
+    for (let i = 0; i < 12; i++) drawSpark(36 + i * 17, 34 + (i % 4) * 27, colour, tick + i);
+  } else if (fx.caster === "Sparky") {
+    for (let i = 0; i < 16; i++) drawSpark(18 + i * 15, 142 - ((tick * 2 + i * 11) % 95), i % 3 ? "#7f4ad1" : "#c378ff", tick + i);
+  } else {
+    for (let i = 0; i < 18; i++) {
+      const px = (i * 31 + tick * 3) % canvas.width;
+      const py = 30 + ((i * 17 + tick) % 115);
+      drawRect(px, py, 2, 6, i % 2 ? fx.color : "#f1cf78");
+      drawRect(px - 2, py + 4, 4, 3, fx.color);
+    }
+  }
 }
 
 function drawAtlas() {
@@ -2015,7 +2156,9 @@ function beginFieldEncounter(encounter) {
   if (!encounter || mode !== "walk") return false;
   heldDirection = null;
   const enemies = encounter.enemies.map(unit => ({ ...unit, hp: unit.max, stagger: 0, anim: "idle", animTick: 0 }));
-  startBattle(encounter.name, enemies, undefined, encounter);
+  const launch = () => startBattle(encounter.name, enemies, undefined, encounter);
+  if (encounter.boss) showBossIntro(encounter.name, enemies[0], launch);
+  else launch();
   return true;
 }
 
@@ -2105,7 +2248,8 @@ function interact() {
   const p = visiblePoints().find(pt => Math.abs(pt.x - state.x) + Math.abs(pt.y - state.y) <= 1);
   if (p) {
     activePoint = p;
-    showTalk([...pointDialogue(p), ...questPreview(p.quest)]);
+    const portraits = p.recruit ? ["Verseborn", p.recruit] : [];
+    showTalk([...pointDialogue(p), ...questPreview(p.quest)], { portraits });
   }
 }
 
@@ -2124,9 +2268,12 @@ function pointDialogue(p) {
   return p.text;
 }
 
-function showTalk(lines) {
+function showTalk(lines, options = {}) {
   mode = "talk";
   talkQueue = lines.slice();
+  talkPortraits = (options.portraits || []).slice(0, 2);
+  talkAfter = typeof options.after === "function" ? options.after : null;
+  renderDialoguePortraits();
   nextTalk();
 }
 
@@ -2134,19 +2281,111 @@ function nextTalk() {
   const line = talkQueue.shift();
   if (!line) {
     el.dialogue.classList.add("hidden");
+    el.dialogue.classList.remove("has-portraits");
+    el.dialoguePortraits.classList.add("hidden");
     mode = "walk";
     const completedPoint = activePoint;
+    const after = talkAfter;
     activePoint = null;
+    talkAfter = null;
+    talkPortraits = [];
     if (completedPoint && completedPoint.event) runEvent(completedPoint.event);
     if (completedPoint && completedPoint.quest) processQuestGiver(completedPoint.quest);
     if (completedPoint?.id === "Marla" && questById("harlEscort")?.status === "ready") completeSideQuest("harlEscort");
     if (completedPoint?.chest) openChest(completedPoint);
     if (completedPoint && completedPoint.vendor && mode === "walk") openVendor(completedPoint.vendor);
+    if (after && mode === "walk") after();
     return;
   }
   el.speaker.textContent = line[0];
   el.line.textContent = line[1];
+  updateDialogueSpeaker(line[0]);
   el.dialogue.classList.remove("hidden");
+}
+
+function renderDialoguePortraits() {
+  const portraits = talkPortraits.map(normalizeDialoguePortrait).filter(Boolean);
+  const slots = [
+    [el.portraitLeft, el.portraitLeftImage, el.portraitLeftName],
+    [el.portraitRight, el.portraitRightImage, el.portraitRightName]
+  ];
+  slots.forEach(([figure, image, caption], index) => {
+    const portrait = portraits[index];
+    figure.classList.toggle("hidden", !portrait);
+    figure.classList.toggle("is-enemy", Boolean(portrait?.enemy));
+    figure.classList.remove("is-speaking");
+    figure.dataset.speaker = portrait?.label || "";
+    if (!portrait) return;
+    image.src = portrait.src;
+    image.alt = `${portrait.label} pixel-art portret`;
+    caption.textContent = portrait.label;
+  });
+  const visible = portraits.length > 0;
+  el.dialogue.classList.toggle("has-portraits", visible);
+  el.dialoguePortraits.classList.toggle("hidden", !visible);
+}
+
+function normalizeDialoguePortrait(entry) {
+  if (!entry) return null;
+  if (typeof entry === "string" && portraitSources[entry]) {
+    return { label: entry, src: portraitSources[entry], enemy: false };
+  }
+  if (typeof entry === "object" && entry.enemy) {
+    return {
+      label: entry.label || entry.enemy,
+      src: enemyPortraitDataUrl(entry.enemy),
+      enemy: true
+    };
+  }
+  return null;
+}
+
+function updateDialogueSpeaker(speaker) {
+  [el.portraitLeft, el.portraitRight].forEach(figure => {
+    figure.classList.toggle("is-speaking", figure.dataset.speaker === speaker);
+  });
+}
+
+function enemyPortraitDataUrl(name) {
+  if (enemyPortraitCache.has(name)) return enemyPortraitCache.get(name);
+  if (!enemySheet?.image) return "assets/sprites/enemies-runtime.png";
+  const cell = enemySheet.cells[enemySpriteIndex(name)];
+  const portrait = document.createElement("canvas");
+  portrait.width = 96;
+  portrait.height = 96;
+  const paint = portrait.getContext("2d");
+  paint.imageSmoothingEnabled = false;
+  paint.fillStyle = "#10111a";
+  paint.fillRect(0, 0, 96, 96);
+  paint.fillStyle = "#30262d";
+  paint.fillRect(5, 5, 86, 86);
+  paint.fillStyle = "#171822";
+  paint.fillRect(8, 8, 80, 80);
+  const scale = Math.max(1, Math.min(4, Math.floor(72 / Math.max(cell.w, cell.h))));
+  const width = cell.w * scale;
+  const height = cell.h * scale;
+  paint.drawImage(enemySheet.image, cell.x, cell.y, cell.w, cell.h, Math.floor((96 - width) / 2), 84 - height, width, height);
+  paint.fillStyle = "#d8b06b";
+  paint.fillRect(8, 8, 80, 2);
+  paint.fillRect(8, 86, 80, 2);
+  const url = portrait.toDataURL("image/png");
+  enemyPortraitCache.set(name, url);
+  return url;
+}
+
+function showBossIntro(title, enemyUnit, launch) {
+  const bossName = title.replace(/^Miniboss:\s*/, "");
+  const lines = {
+    "Dock Foreman": [["Dock Foreman", "The ledger closes with your names still inside."], ["Verseborn", "Then we will write in the margins."]],
+    "Archive Custodian": [["Archive Custodian", "Unauthorized lives will be returned to their assigned shelves."], ["Verseborn", "People are not paperwork. Mira, remind it sharply."]],
+    "Dawn Gate Sentinel": [["Dawn Gate Sentinel", "LOCAL VERSE DENIED. CENTRAL DAWN REMAINS."], ["Verseborn", "A song that cannot change is only an alarm."]],
+    "False Dawn System": [["False Dawn System", "LOCAL MEMORY REJECTED. ALL NAMES WILL RETURN TO ORDER."], ["Glimmer", "It thinks order means nobody moves."], ["Verseborn", "Then let us introduce a chorus."]]
+  }[bossName] || [[bossName, "Advance is prohibited."], ["Verseborn", "That has rarely stopped us."]];
+  playSfx("boss");
+  showTalk(lines, {
+    portraits: ["Verseborn", { enemy: enemyUnit.sprite || enemyUnit.name, label: bossName }],
+    after: launch
+  });
 }
 
 function openChest(pointData) {
@@ -2176,7 +2415,10 @@ function runEvent(event) {
   if (state.flags[event]) return;
   state.flags[event] = true;
   if (event === "acceptIssue1") { state.quest = 0; showTalk([["Quest", "Ash Boy's First Verse accepted."], ["Marla", "Follow the marked route east. Mira is watching the Ledger Docks."]]); }
-  if (event === "harbor") startBattle("Harbor Name-Thieves", [enemy("Ledger Cutter", 58, 9, "Sound", "#71513e", 2), enemy("Chain Warden", 68, 10, "Shadow", "#4a4542", 1)], "harborWon");
+  if (event === "harbor") {
+    addParty("Mira");
+    startBattle("Harbor Name-Thieves", [enemy("Ledger Cutter", 58, 9, "Sound", "#71513e", 2), enemy("Chain Warden", 68, 10, "Shadow", "#4a4542", 1)], "harborWon");
+  }
   if (event === "issue1") { state.quest = 1; state.resonance += 12; showTalk([["Mira", "Next stop: Reverie. This is no longer just a dock case."]]); }
   if (event === "clergy") { addParty("Seerin"); startBattle("Fire Clergy Assessors", [enemy("Seal Bearer", 74, 10, "Shadow", "#9d5436", 1), enemy("Ash Scribe", 60, 8, "Sound", "#6d5948", 2)], "clergyWon"); }
   if (event === "issue2") { addParty("Kael"); state.quest = 2; state.resonance += 15; showTalk([["Kael", "Faith under pressure is still faith. Obedience under pressure is only fear."]]); }
@@ -2191,7 +2433,11 @@ function runEvent(event) {
   }
   if (event === "ember") startBattle("Ember Hall Resonance", [enemy("Buried Construct", 86, 12, "Earth", "#6f5540", 1), enemy("Cracked Pillar", 76, 7, "Tech", "#55473c", 2)], "emberWon");
   if (event === "sparky") { addParty("Sparky"); state.quest = 3; state.resonance += 18; showTalk([["Sparky", "Prrrp!"], ["Verseborn", "Tiny dragon. Ancient heart. Family."]]); }
-  if (event === "dawn") { addParty("Glimmer"); startBattle("False Dawn System", [enemy("Wrong Bell", 82, 11, "Tech", "#a66a35", 2), enemy("Gate Lock", 78, 10, "Earth", "#58616b", 1), enemy("Ash Wyrm", 72, 12, "Ancient Fire", "#5a2f52", 3)], "dawnWon"); }
+  if (event === "dawn") {
+    addParty("Glimmer");
+    const enemies = [enemy("Wrong Bell", 82, 11, "Tech", "#a66a35", 2), enemy("Gate Lock", 78, 10, "Earth", "#58616b", 1), enemy("Ash Wyrm", 72, 12, "Ancient Fire", "#5a2f52", 3)];
+    showBossIntro("False Dawn System", enemies[2], () => startBattle("False Dawn System", enemies, "dawnWon"));
+  }
   if (event === "ending") {
     state.resonance = 100;
     state.flags.endingComplete = true;
@@ -2201,11 +2447,14 @@ function runEvent(event) {
 }
 
 function addParty(id) {
-  if (!state.party.includes(id)) state.party.push(id);
+  const newlyRecruited = !state.party.includes(id);
+  if (newlyRecruited) state.party.push(id);
   if (!state.activeParty.includes(id) && state.activeParty.length < 3) state.activeParty.push(id);
-  Object.values(baseJobs[id].gear).forEach(name => {
-    addOwnedGear(name);
-  });
+  if (newlyRecruited) {
+    Object.values(baseJobs[id].gear).forEach(name => {
+      addOwnedGear(name);
+    });
+  }
 }
 
 function enemy(name, hp, atk, weak, color, node, sprite = null) {
@@ -2456,11 +2705,44 @@ function useDefend(u) {
   u.anim = "block";
   u.guarding = true;
   state.resonance = Math.min(100, state.resonance + 6);
-  effect = { kind: "block", t: 0, x: 62, y: 105, color: elementColor(baseJobs[u.id].element) };
+  effect = makeBattleEffect(u, { anim: "block", name: "Defend", element: baseJobs[u.id].element }, u);
   playSfx("block");
   setTimeout(() => u.anim = "idle", 650);
   updatePanels();
   finishTurn(`${u.name} defends, reducing the next direct hit by ${defendReduction(u)}% and gaining 6 Resonance.`);
+}
+
+function makeBattleEffect(caster, skillData, target) {
+  const casterIndex = Math.max(0, battle.party.indexOf(caster));
+  const [fromX, fromBaseline] = partyBattlePosition(casterIndex, battle.party.length);
+  const partyTargetIndex = battle.party.indexOf(target);
+  const enemyTargetIndex = battle.enemies.indexOf(target);
+  let toX = fromX;
+  let toY = fromBaseline - 26;
+  if (partyTargetIndex >= 0) {
+    const [anchorX, baseline] = partyBattlePosition(partyTargetIndex, battle.party.length);
+    toX = anchorX;
+    toY = baseline - 27;
+  } else if (enemyTargetIndex >= 0) {
+    const [anchorX, baseline] = enemyBattlePosition(enemyTargetIndex, battle.enemies.length);
+    toX = anchorX;
+    toY = baseline - 17;
+  }
+  return {
+    kind: skillData.anim,
+    caster: caster.id,
+    skill: skillData.name,
+    element: skillData.element,
+    color: elementColor(skillData.element),
+    t: 0,
+    fromX,
+    fromY: fromBaseline - 27,
+    toX,
+    toY,
+    x: toX,
+    y: toY,
+    duration: skillData.anim === "ultimate" ? 40 : skillData.anim === "magic" ? 29 : 24
+  };
 }
 
 function useSkill(u, sk, chosenTarget = null) {
@@ -2473,21 +2755,23 @@ function useSkill(u, sk, chosenTarget = null) {
   u.anim = sk.anim;
   if (sk.anim !== "ultimate") u.mp -= sk.cost;
   playSfx(sk.anim);
-  effect = { kind: sk.anim, t: 0, x: sk.power < 0 ? 62 : 198, y: 100, color: elementColor(sk.element) };
   setTimeout(() => u.anim = "idle", 650);
   let log = `${u.name} uses ${sk.name}.`;
   if (sk.anim === "ultimate") state.resonance = 0;
   if (sk.power < 0) {
     const wounded = battle.party.filter(p => p.hp > 0).sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
+    effect = makeBattleEffect(u, sk, wounded);
     wounded.hp = Math.min(wounded.max, wounded.hp + Math.abs(sk.power));
     battle.ward = sk.anim === "block" || sk.anim === "ultimate";
     state.resonance = Math.min(100, state.resonance + 5);
     log += ` ${wounded.name} recovers ${Math.abs(sk.power)}.`;
   } else if (sk.anim === "block") {
+    effect = makeBattleEffect(u, sk, u);
     battle.ward = true;
     state.resonance = Math.min(100, state.resonance + 12);
     log += " The party blocks.";
   } else if (target) {
+    effect = makeBattleEffect(u, sk, target);
     const t = totals(u.id);
     let dmg = sk.power + (sk.anim === "magic" || sk.anim === "ultimate" ? t.mag : t.str) + Math.floor(Math.random() * 6);
     if (target.weak === sk.element) {

@@ -1648,3 +1648,116 @@ h1 {
     font-size: 15px;
   }
 }
+
+.dialogue {
+  overflow: visible;
+  z-index: 7;
+}
+
+.dialogue-copy {
+  position: relative;
+  min-height: 66px;
+  padding-right: 72px;
+}
+
+.dialogue-continue {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  color: #c8ae7b;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.dialogue-portraits {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: calc(100% + 8px);
+  z-index: -1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.dialogue-portrait {
+  position: relative;
+  width: clamp(104px, 18vw, 148px);
+  aspect-ratio: 1;
+  margin: 0;
+  overflow: hidden;
+  border: 3px solid #7b5a3f;
+  background: #0f1017;
+  box-shadow: inset 0 0 0 2px #d8b06b, 0 8px 22px #000b;
+  opacity: .58;
+  transform: translateY(8px);
+  transition: opacity 120ms linear, transform 120ms linear;
+}
+
+.dialogue-portrait.is-speaking {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: #e0b76c;
+}
+
+.dialogue-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.dialogue-portrait figcaption {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  padding: 4px 6px;
+  overflow: hidden;
+  color: #fff0ca;
+  background: #10111be8;
+  border-top: 1px solid #d8b06b;
+  font: 700 11px/1.1 "Segoe UI", Arial, sans-serif;
+  letter-spacing: 0;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialogue-portrait.is-enemy img {
+  object-fit: contain;
+  background: radial-gradient(circle at 50% 55%, #493c36 0 22%, #171720 58%, #0d0e14 100%);
+}
+
+@media (max-width: 793px) {
+  .dialogue-copy {
+    padding-right: 48px;
+  }
+
+  .dialogue-portrait {
+    width: 88px;
+  }
+
+  .dialogue-portrait figcaption {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dialogue-portraits {
+    left: 2px;
+    right: 2px;
+    bottom: calc(100% + 4px);
+  }
+
+  .dialogue-portrait {
+    width: 72px;
+    border-width: 2px;
+  }
+
+  .dialogue-portrait figcaption {
+    display: none;
+  }
+}

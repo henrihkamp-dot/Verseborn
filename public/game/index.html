@@ -32,8 +32,21 @@
         </div>
       </div>
       <div id="dialogue" class="dialogue hidden">
-        <div id="speaker"></div>
-        <p id="line"></p>
+        <div id="dialoguePortraits" class="dialogue-portraits hidden" aria-hidden="true">
+          <figure id="portraitLeft" class="dialogue-portrait portrait-left">
+            <img id="portraitLeftImage" alt="">
+            <figcaption id="portraitLeftName"></figcaption>
+          </figure>
+          <figure id="portraitRight" class="dialogue-portrait portrait-right">
+            <img id="portraitRightImage" alt="">
+            <figcaption id="portraitRightName"></figcaption>
+          </figure>
+        </div>
+        <div class="dialogue-copy">
+          <div id="speaker"></div>
+          <p id="line"></p>
+          <span class="dialogue-continue">Z / Enter</span>
+        </div>
       </div>
       <div id="battle" class="battle hidden">
         <div id="battlePreview" class="battle-preview hidden"></div>
