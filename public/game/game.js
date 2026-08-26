@@ -1,6 +1,27 @@
 const canvas = document.getElementById("screen");
 const ctx = canvas.getContext("2d");
+const LOGICAL_WIDTH = 256;
+const LOGICAL_HEIGHT = 224;
+let renderScale = 3;
 ctx.imageSmoothingEnabled = false;
+
+function syncCanvasResolution() {
+  const rect = canvas.getBoundingClientRect();
+  const measuredScale = rect.width ? Math.round(rect.width / LOGICAL_WIDTH) : 3;
+  const nextScale = Math.max(1, Math.min(4, measuredScale));
+  const width = LOGICAL_WIDTH * nextScale;
+  const height = LOGICAL_HEIGHT * nextScale;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  renderScale = nextScale;
+  ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+
+syncCanvasResolution();
+new ResizeObserver(syncCanvasResolution).observe(canvas);
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -74,6 +95,11 @@ const portraitSources = {
   Torren: "assets/portraits/torren.png",
   Sparky: "assets/portraits/sparky.png",
   Glimmer: "assets/portraits/glimmer.png"
+};
+const bossPortraitSources = {
+  "Archive Custodian": "assets/portraits/enemies/archive-custodian.png",
+  "Dawn Gate Sentinel": "assets/portraits/enemies/dawn-gate-sentinel.png",
+  "Dock Foreman": "assets/portraits/enemies/dock-foreman.png"
 };
 const enemyPortraitCache = new Map();
 
@@ -175,6 +201,23 @@ const spriteScale = {
 };
 const spriteSheets = {};
 const walkSpriteSheets = {};
+const animationSheets = {};
+const animatedNpcFiles = {
+  Marla: "marla",
+  Nyx: "nyx",
+  Rava: "rava",
+  Kaeldrin: "kaeldrin",
+  Lysra: "lysra",
+  Jory: "jory"
+};
+const animatedNpcHeights = {
+  Marla: 26,
+  Nyx: 23,
+  Rava: 24,
+  Kaeldrin: 29,
+  Lysra: 29,
+  Jory: 27
+};
 const mapImages = {};
 const battleImages = {};
 let enemySheet = null;
@@ -297,6 +340,37 @@ function loadWalkSpriteSheet(id) {
     };
     image.onerror = resolve;
     image.src = `assets/sprites/${id.toLowerCase()}-walk-runtime.png`;
+  });
+}
+
+function loadAnimationSheet(id, fileName = id.toLowerCase()) {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      const cleaned = document.createElement("canvas");
+      cleaned.width = image.naturalWidth;
+      cleaned.height = image.naturalHeight;
+      const paint = cleaned.getContext("2d", { willReadFrequently: true });
+      paint.imageSmoothingEnabled = false;
+      paint.drawImage(image, 0, 0);
+      const pixels = paint.getImageData(0, 0, cleaned.width, cleaned.height);
+      const cells = [];
+      for (let row = 0; row < 7; row++) {
+        for (let col = 0; col < 4; col++) cells.push(cellBounds(pixels, cleaned.width, cleaned.height, col, row, 4, 7));
+      }
+      const fieldHeights = cells.slice(0, 16).map(cell => cell.h).sort((a, b) => a - b);
+      animationSheets[id] = {
+        image: cleaned,
+        cells,
+        cellWidth: cleaned.width / 4,
+        cellHeight: cleaned.height / 7,
+        referenceHeight: fieldHeights[Math.floor(fieldHeights.length / 2)] || cleaned.height / 7
+      };
+      if (spriteScale[id]) spriteLoadProgress++;
+      resolve();
+    };
+    image.onerror = () => { if (spriteScale[id]) spriteLoadProgress++; resolve(); };
+    image.src = `assets/sprites/animation/${fileName}.png`;
   });
 }
 
@@ -426,8 +500,8 @@ function loadTitleImage() {
 }
 
 Promise.all([
-  ...Object.keys(spriteScale).map(loadSpriteSheet),
-  ...Object.keys(spriteScale).map(loadWalkSpriteSheet),
+  ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
+  ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
   loadEnemySheet(),
   loadEnemyAttackSheet(),
   loadWorldEnemySheet(),
@@ -1323,8 +1397,63 @@ function drawBaseSprite(px, py, body, hair, trim, dir = 0, anim = "idle", frame 
   else drawRect(px + 6, py + 7 + bob, 2, 2, "#24141a");
 }
 
+function animationColumn(id, anim, frame) {
+  if (anim === "walk") return Math.floor(frame / 5) % 4;
+  if (anim === "idle" && mode === "battle") {
+    const phase = Math.floor((frame + Object.keys(spriteScale).indexOf(id) * 5) / 16) % 4;
+    return [0, 0, 3, 0][phase];
+  }
+  if (["melee", "block", "magic", "ultimate"].includes(anim)) {
+    const activeEffect = effect?.caster === id ? effect : null;
+    const duration = Math.max(1, activeEffect?.duration || 24);
+    const progress = activeEffect ? activeEffect.t / duration : (frame % 24) / 24;
+    return Math.max(0, Math.min(3, Math.floor(progress * 4)));
+  }
+  return 0;
+}
+
+function drawAnimationSprite(id, px, py, dir, anim, frame) {
+  const sheet = animationSheets[id];
+  if (!sheet) return false;
+  const playable = Boolean(spriteScale[id]);
+  const actionPose = ["melee", "block", "magic", "ultimate"].includes(anim);
+  const battlePose = playable && (mode === "battle" || actionPose);
+  const directionRows = { 0: 0, 1: 1, 3: 2, 2: 3 };
+  const actionRows = { melee: 4, block: 5, magic: 6, ultimate: 6 };
+  const row = battlePose ? (actionRows[anim] ?? 4) : (directionRows[dir] ?? 0);
+  const col = animationColumn(id, battlePose ? anim : (anim === "walk" ? "walk" : "idle"), frame);
+  const targetHeight = playable
+    ? (battlePose ? spriteScale[id].battle[1] : spriteScale[id].field[1])
+    : (animatedNpcHeights[id] || 26);
+  const scale = targetHeight / Math.max(1, sheet.referenceHeight);
+  const actionT = effect?.caster === id ? Math.min(24, effect.t) : 0;
+  let motionX = 0;
+  let motionY = 0;
+  if (battlePose && anim === "idle") {
+    const idle = battleIdleMotion(id, frame);
+    motionX = idle[0];
+    motionY = idle[1];
+  }
+  if (battlePose && anim === "melee") motionX = Math.round(Math.sin((actionT / 24) * Math.PI) * 7);
+  if (battlePose && (anim === "magic" || anim === "ultimate")) motionY = -Math.round(Math.sin((actionT / 24) * Math.PI) * 3);
+  const anchorX = px + (battlePose ? 24 : 8) + motionX;
+  const baseline = py + (battlePose ? 52 : 32) + motionY;
+  const sourceX = col * sheet.cellWidth;
+  const sourceY = row * sheet.cellHeight;
+  const width = Math.round(sheet.cellWidth * scale);
+  const height = Math.round(sheet.cellHeight * scale);
+  const destX = Math.round(anchorX - width / 2);
+  const destY = Math.round(baseline - (sheet.cellHeight - 2) * scale);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  ctx.restore();
+  return true;
+}
+
 function drawSprite(id, px, py, dir = 0, anim = "idle", frame = tick) {
   const h = baseJobs[id];
+  if (drawAnimationSprite(id, px, py, dir, anim, frame)) return;
   if (!h) return drawNpc(id, px, py, dir, anim, frame);
   const sheet = spriteSheets[id];
   if (!sheet) {
@@ -1477,8 +1606,8 @@ function drawSpark(x, y, color, frame) {
 }
 
 function drawTitle() {
-  if (titleImage) ctx.drawImage(titleImage, 0, 0, canvas.width, canvas.height);
-  else drawRect(0, 0, canvas.width, canvas.height, "#121015");
+  if (titleImage) ctx.drawImage(titleImage, 0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#121015");
   drawRect(34, 43, 188, 87, "#090b19c7");
   ctx.strokeStyle = "#9f7045";
   ctx.strokeRect(37, 46, 182, 81);
@@ -1500,7 +1629,7 @@ function drawTileMap() {
   const offsetY = fieldRenderOffsetY();
   const background = mapImages[map.background || map.set];
   if (background) drawMapBackground(map, background);
-  else drawRect(0, 0, canvas.width, canvas.height, p[2]);
+  else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, p[2]);
   drawAmbient(map.set, map.panorama);
   drawExitMarkers();
   visibleSpawns().forEach(spawnPoint => drawWorldEnemy(spawnPoint));
@@ -1539,25 +1668,25 @@ function drawChest(pointData) {
 
 function drawMapBackground(map, image, offsetX = 0, offsetY = 0) {
   if (!Number.isFinite(map.view)) {
-    ctx.drawImage(image, offsetX, offsetY, canvas.width, canvas.height);
+    ctx.drawImage(image, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     return;
   }
   const views = Math.max(2, map.views || 2);
-  const cropWidth = Math.min(image.width, Math.round(image.height * canvas.width / canvas.height));
+  const cropWidth = Math.min(image.width, Math.round(image.height * LOGICAL_WIDTH / LOGICAL_HEIGHT));
   const maxX = Math.max(0, image.width - cropWidth);
   const sourceX = Math.round(maxX * map.view / (views - 1));
-  ctx.drawImage(image, sourceX, 0, cropWidth, image.height, offsetX, offsetY, canvas.width, canvas.height);
+  ctx.drawImage(image, sourceX, 0, cropWidth, image.height, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 }
 
 function drawScreenSlide() {
   screenSlide.t++;
   const progress = Math.min(1, screenSlide.t / 14);
   const ease = progress * progress * (3 - 2 * progress);
-  const dx = screenSlide.dx * canvas.width;
-  const dy = screenSlide.dy * canvas.height;
+  const dx = screenSlide.dx * LOGICAL_WIDTH;
+  const dy = screenSlide.dy * LOGICAL_HEIGHT;
   const fromImage = mapImages[screenSlide.from.background || screenSlide.from.set];
   const toImage = mapImages[screenSlide.to.background || screenSlide.to.set];
-  drawRect(0, 0, canvas.width, canvas.height, "#0b0910");
+  drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#0b0910");
   if (fromImage) drawMapBackground(screenSlide.from, fromImage, -dx * ease, -dy * ease);
   if (toImage) drawMapBackground(screenSlide.to, toImage, dx * (1 - ease), dy * (1 - ease));
   if (progress >= 1) {
@@ -1915,13 +2044,13 @@ function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
 function drawBattleTurnRail() {
   if (!battle?.turnQueue) return;
   const turns = battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive);
-  drawRect(3, 3, canvas.width - 6, 17, "#090a11dd");
-  drawRect(4, 4, canvas.width - 8, 1, "#8b6a45");
+  drawRect(3, 3, LOGICAL_WIDTH - 6, 17, "#090a11dd");
+  drawRect(4, 4, LOGICAL_WIDTH - 8, 1, "#8b6a45");
   drawText(`R${battle.round}`, 8, 15, "#f0c97a", 6);
   if (!turns.length) return;
   const startX = 25;
   const gap = 2;
-  const available = canvas.width - startX - 6;
+  const available = LOGICAL_WIDTH - startX - 6;
   const chipWidth = Math.max(24, Math.floor((available - gap * (turns.length - 1)) / turns.length));
   turns.forEach((turn, index) => {
     const x = startX + index * (chipWidth + gap);
@@ -1940,8 +2069,8 @@ function drawBattleScene() {
   const arenaId = battleArenaFor(map);
   const background = battleImages[arenaId];
   if (background) drawBattleBackground(background, arenaId);
-  else drawRect(0, 0, canvas.width, canvas.height, "#17212a");
-  drawRect(0, 0, canvas.width, BATTLE_ARENA_HEIGHT, "#07101a24");
+  else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#17212a");
+  drawRect(0, 0, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT, "#07101a24");
 
   const turn = currentTurn();
   const target = selectedBattleEnemy();
@@ -1989,11 +2118,11 @@ function battleArenaFor(map) {
 
 function drawBattleBackground(image, arenaId) {
   const targetHeight = BATTLE_ARENA_HEIGHT;
-  const sourceHeight = Math.min(image.height, Math.round(image.width * targetHeight / canvas.width));
+  const sourceHeight = Math.min(image.height, Math.round(image.width * targetHeight / LOGICAL_WIDTH));
   const sourceY = Math.max(0, Math.floor((image.height - sourceHeight) / 2));
-  ctx.drawImage(image, 0, sourceY, image.width, sourceHeight, 0, 0, canvas.width, targetHeight);
+  ctx.drawImage(image, 0, sourceY, image.width, sourceHeight, 0, 0, LOGICAL_WIDTH, targetHeight);
   drawBattleAmbient(arenaId);
-  drawRect(0, targetHeight, canvas.width, canvas.height - targetHeight, "#11101a");
+  drawRect(0, targetHeight, LOGICAL_WIDTH, LOGICAL_HEIGHT - targetHeight, "#11101a");
 }
 
 function drawBattleAmbient(arenaId) {
@@ -2136,7 +2265,7 @@ function drawCharacterProjectile(fx) {
 }
 
 function drawUltimateEffect(fx) {
-  drawRect(0, 0, canvas.width, BATTLE_ARENA_HEIGHT, fx.t % 8 < 3 ? "#ffffff22" : "#09091255");
+  drawRect(0, 0, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT, fx.t % 8 < 3 ? "#ffffff22" : "#09091255");
   if (fx.caster === "Torren") {
     for (let i = 0; i < 12; i++) drawRect(12 + i * 22, 139 - ((tick + i * 5) % 16), 6, 12, i % 2 ? "#8b6843" : "#d87536");
   } else if (fx.caster === "Glimmer") {
@@ -2158,7 +2287,7 @@ function drawUltimateEffect(fx) {
     for (let i = 0; i < 16; i++) drawSpark(18 + i * 15, 142 - ((tick * 2 + i * 11) % 95), i % 3 ? "#7f4ad1" : "#c378ff", tick + i);
   } else {
     for (let i = 0; i < 18; i++) {
-      const px = (i * 31 + tick * 3) % canvas.width;
+      const px = (i * 31 + tick * 3) % LOGICAL_WIDTH;
       const py = 30 + ((i * 17 + tick) % 115);
       drawRect(px, py, 2, 6, i % 2 ? fx.color : "#f1cf78");
       drawRect(px - 2, py + 4, 4, 3, fx.color);
@@ -2167,7 +2296,7 @@ function drawUltimateEffect(fx) {
 }
 
 function drawAtlas() {
-  drawRect(0, 0, canvas.width, canvas.height, "#9eb3b3");
+  drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#9eb3b3");
   const animations = ["idle", "walk", "melee", "block", "magic", "ultimate"];
   const activeAnimation = animations[Math.floor(tick / 90) % animations.length];
   drawText("ANIMATION ATLAS", 8, 14, "#1b2026", 9);
@@ -2185,7 +2314,7 @@ function drawAtlas() {
 }
 
 function drawMenuBack() {
-  drawRect(0, 0, canvas.width, canvas.height, "#111016");
+  drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#111016");
   drawText("MENU", 12, 18, "#ffd27d", 12);
   state.activeParty.forEach((id, i) => {
     drawSprite(id, 8 + i * 34, 56, 0, "idle", tick + i * 3);
@@ -2194,6 +2323,9 @@ function drawMenuBack() {
 
 function draw() {
   tick++;
+  ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (mode === "walk" && heldDirection && tick >= nextHeldMove) {
     handleControl(heldDirection);
     nextHeldMove = tick + PLAYER_STEP_TICKS;
@@ -2450,6 +2582,7 @@ function updateDialogueSpeaker(speaker) {
 }
 
 function enemyPortraitDataUrl(name) {
+  if (bossPortraitSources[name]) return bossPortraitSources[name];
   if (enemyPortraitCache.has(name)) return enemyPortraitCache.get(name);
   if (!enemySheet?.image) return "assets/sprites/enemies-runtime.png";
   const cell = enemySheet.cells[enemySpriteIndex(name)];
@@ -2486,7 +2619,7 @@ function showBossIntro(title, enemyUnit, launch) {
   }[bossName] || [[bossName, "Advance is prohibited."], ["Verseborn", "That has rarely stopped us."]];
   playSfx("boss");
   showTalk(lines, {
-    portraits: ["Verseborn", { enemy: enemyUnit.sprite || enemyUnit.name, label: bossName }],
+    portraits: ["Verseborn", { enemy: bossName, label: bossName }],
     after: launch
   });
 }
@@ -2664,6 +2797,7 @@ function renderBattle(log) {
   el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} - Weak: ${e.weak}`, hp: e.hp, max: e.max })).join("");
   el.actions.innerHTML = "";
   el.actions.classList.toggle("is-items", battle.itemMode);
+  el.actions.classList.toggle("is-targets", battle.targetMode);
   if (battle.resolving) return;
   if (!turn || turn.side !== "party") return;
   const u = battle.party.find(unit => unit.id === turn.id);
@@ -3756,8 +3890,8 @@ canvas.addEventListener("pointerdown", event => {
 canvas.addEventListener("click", event => {
   if (mode === "battle") {
     const rect = canvas.getBoundingClientRect();
-    const x = (event.clientX - rect.left) * canvas.width / rect.width;
-    const y = (event.clientY - rect.top) * canvas.height / rect.height;
+    const x = (event.clientX - rect.left) * LOGICAL_WIDTH / rect.width;
+    const y = (event.clientY - rect.top) * LOGICAL_HEIGHT / rect.height;
     if (x >= 4 && x <= 98 && y >= 168 && y <= 218) {
       const index = Math.floor((y - 168) / 9);
       if (index >= 0 && index < el.actions.children.length) {

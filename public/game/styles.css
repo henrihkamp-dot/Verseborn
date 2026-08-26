@@ -1153,14 +1153,14 @@ h1 {
   position: absolute;
   z-index: 8;
   width: auto;
-  height: 118px;
+  height: 124px;
   left: 6px;
   top: auto;
   right: 6px;
   bottom: 30px;
   min-height: 0;
   max-height: none;
-  padding: 7px 9px;
+  padding: 6px 8px;
   border: 2px solid #d6aa68;
   overflow: visible;
   clip-path: none;
@@ -1168,12 +1168,12 @@ h1 {
   background: #11101af7;
   box-shadow: inset 0 0 0 1px #5f4938;
   display: grid;
-  grid-template-columns: minmax(170px, 32%) minmax(0, 68%);
-  grid-template-rows: 24px minmax(0, 1fr);
+  grid-template-columns: minmax(224px, 36%) minmax(0, 64%);
+  grid-template-rows: 22px minmax(0, 1fr);
   grid-template-areas:
     "top top"
     "actions preview";
-  gap: 4px 8px;
+  gap: 4px 6px;
   font-family: "Segoe UI", Arial, sans-serif;
   font-size: 13px;
   line-height: 1.15;
@@ -1188,7 +1188,7 @@ h1 {
   grid-template-columns: max-content minmax(0, 1fr) 124px;
   grid-template-rows: 1fr;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
   color: #f7dfaa;
 }
 
@@ -1266,7 +1266,7 @@ h1 {
   min-width: 0;
   min-height: 0;
   height: 100%;
-  padding: 6px 9px;
+  padding: 5px 8px;
   border: 1px solid #72583f;
   background: #0c0c13;
   box-shadow: none;
@@ -1329,32 +1329,56 @@ h1 {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-auto-rows: minmax(0, 1fr);
-  gap: 3px;
-  padding-right: 9px;
-  border-right: 1px solid #72583f;
+  grid-auto-rows: 14px;
+  align-content: start;
+  gap: 0;
+  padding: 3px;
+  border: 1px solid #72583f;
+  background: #0c0c13;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #72583f #0c0c13;
 }
 
 .battle:not(.hidden) .actions button {
   width: 100%;
+  height: 14px;
   min-width: 0;
-  min-height: 0;
-  padding: 2px 8px;
+  min-height: 14px;
+  padding: 0 7px;
   border: 1px solid transparent;
   background: transparent;
   color: #f0e8d8;
   text-align: left;
-  font: 600 13px/1.1 "Segoe UI", Arial, sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 12px/12px "Segoe UI", Arial, sans-serif;
 }
 
 .battle:not(.hidden) .actions button.is-selected {
-  border-color: #d8b06b;
-  background: #755238;
-  box-shadow: none;
+  border-color: #e4bd75;
+  background: #65452f;
+  box-shadow: inset 3px 0 #ffd98b;
   color: #fff4d2;
 }
 
+.battle:not(.hidden) .actions.is-targets {
+  grid-auto-rows: 20px;
+}
+
+.battle:not(.hidden) .actions.is-targets button {
+  height: 20px;
+  min-height: 20px;
+}
+
+.battle:not(.hidden) .actions.is-items {
+  grid-auto-rows: 28px;
+}
+
 .battle:not(.hidden) .actions.is-items button {
+  height: 28px;
+  min-height: 28px;
   font-size: 12px;
 }
 
@@ -1422,9 +1446,9 @@ h1 {
 
 @media (max-width: 793px) {
   .battle:not(.hidden) {
-    height: 108px;
+    height: 124px;
     padding: 6px 7px;
-    grid-template-columns: minmax(138px, 38%) minmax(0, 62%);
+    grid-template-columns: minmax(190px, 40%) minmax(0, 60%);
     grid-template-rows: 22px minmax(0, 1fr);
     gap: 3px 6px;
     font-size: 11px;
@@ -1437,8 +1461,7 @@ h1 {
   }
 
   .battle:not(.hidden) #battleName,
-  .battle:not(.hidden) .unit strong,
-  .battle:not(.hidden) .actions button {
+  .battle:not(.hidden) .unit strong {
     font-size: 11px;
   }
 
