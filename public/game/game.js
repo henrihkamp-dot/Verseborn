@@ -1833,6 +1833,7 @@ const battlePartyLayouts = {
   2: [[43, 105], [76, 134]],
   3: [[42, 96], [76, 121], [42, 147]]
 };
+const BATTLE_ARENA_HEIGHT = 188;
 
 function partyBattlePosition(index, count = battle?.party?.length || 1) {
   return (battlePartyLayouts[Math.min(3, count)] || battlePartyLayouts[3])[index] || [55, 122];
@@ -1847,18 +1848,113 @@ function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
   return positions[index] || [190, 105];
 }
 
+function selectedBattleEnemy() {
+  if (!battle?.targetMode) return null;
+  return battle.enemies.filter(enemyUnit => enemyUnit.hp > 0)[battleActionIndex] || null;
+}
+
+function drawBattleGroundMarker(anchorX, baseline, kind) {
+  const pulse = Math.floor(tick / 8) % 2;
+  const colour = kind === "target" ? "#c99cff" : "#f4c66e";
+  ctx.save();
+  ctx.globalAlpha = kind === "target" ? .68 : .52 + pulse * .12;
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.ellipse(anchorX, baseline + 1, kind === "target" ? 15 : 13, kind === "target" ? 5 : 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = kind === "target" ? "#f3ddff" : "#fff0bd";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(anchorX, baseline + 1, kind === "target" ? 17 : 15, kind === "target" ? 6 : 5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  if (kind === "target") {
+    drawRect(anchorX - 2, baseline - 39 - pulse, 5, 2, "#f3ddff");
+    drawRect(anchorX - 1, baseline - 37 - pulse, 3, 2, "#c99cff");
+    drawRect(anchorX, baseline - 35 - pulse, 1, 2, "#8f5ac7");
+  } else {
+    drawRect(anchorX - 18, baseline - 1, 3, 3, "#fff0bd");
+    drawRect(anchorX + 16, baseline - 1, 3, 3, "#fff0bd");
+  }
+  ctx.restore();
+}
+
+function drawWithTurnOutline(drawUnit, colour) {
+  const offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = colour;
+  offsets.forEach(([x, y]) => {
+    ctx.shadowOffsetX = x;
+    ctx.shadowOffsetY = y;
+    drawUnit();
+  });
+  ctx.restore();
+  drawUnit();
+}
+
+function drawBattleVitalBar(anchorX, y, value, max, label, colour, width = 42) {
+  const safeMax = Math.max(1, max || 1);
+  const pct = Math.max(0, Math.min(1, value / safeMax));
+  const x = Math.round(anchorX - width / 2);
+  drawRect(x, y, width, 6, "#08080ddf");
+  drawRect(x + 1, y + 1, width - 2, 4, "#2a2230");
+  drawRect(x + 1, y + 1, Math.round((width - 2) * pct), 4, colour);
+  drawText(`${label} ${Math.max(0, value)}`, x + 2, y + 5, "#fff4d2", 5);
+}
+
+function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
+  if (unit.hp <= 0) return;
+  drawBattleVitalBar(anchorX, baseline + 4, unit.hp, unit.max, "HP", enemySide ? "#c85645" : "#e8a64b", enemySide ? 46 : 42);
+  if (!enemySide && Number.isFinite(unit.maxmp)) {
+    drawBattleVitalBar(anchorX, baseline + 11, unit.mp, unit.maxmp, "MP", "#7d62b8", 42);
+  }
+}
+
+function drawBattleTurnRail() {
+  if (!battle?.turnQueue) return;
+  const turns = battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive);
+  drawRect(3, 3, canvas.width - 6, 17, "#090a11dd");
+  drawRect(4, 4, canvas.width - 8, 1, "#8b6a45");
+  drawText(`R${battle.round}`, 8, 15, "#f0c97a", 6);
+  if (!turns.length) return;
+  const startX = 25;
+  const gap = 2;
+  const available = canvas.width - startX - 6;
+  const chipWidth = Math.max(24, Math.floor((available - gap * (turns.length - 1)) / turns.length));
+  turns.forEach((turn, index) => {
+    const x = startX + index * (chipWidth + gap);
+    const active = index === 0;
+    const background = active ? "#725338" : turn.side === "enemy" ? "#3d2428" : "#24233a";
+    const border = active ? "#f0bd68" : turn.side === "enemy" ? "#a15446" : "#665788";
+    drawRect(x, 7, chipWidth, 10, border);
+    drawRect(x + 1, 8, chipWidth - 2, 8, background);
+    const shortName = turn.name.split(" ")[0].slice(0, Math.max(3, Math.floor(chipWidth / 6)));
+    drawText(`${active ? ">" : ""}${shortName}`, x + Math.floor(chipWidth / 2), 14, active ? "#fff0ca" : "#ded6e6", 5, "center");
+  });
+}
+
 function drawBattleScene() {
   const map = currentMap();
   const arenaId = battleArenaFor(map);
   const background = battleImages[arenaId];
   if (background) drawBattleBackground(background, arenaId);
   else drawRect(0, 0, canvas.width, canvas.height, "#17212a");
-  drawRect(0, 0, canvas.width, 154, "#07101a24");
+  drawRect(0, 0, canvas.width, BATTLE_ARENA_HEIGHT, "#07101a24");
+
+  const turn = currentTurn();
+  const target = selectedBattleEnemy();
 
   battle.party.forEach((unit, index) => {
     const [anchorX, baseline] = partyBattlePosition(index, battle.party.length);
+    const hasTurn = turn?.side === "party" && turn.id === unit.id;
+    if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
     drawFieldShadow(anchorX, baseline + 1, unit.id === "Torren" ? 14 : 10);
-    drawSprite(unit.id, anchorX - 24 + battleOffset(unit), baseline - 52, 0, unit.anim || "idle", tick);
+    const drawUnit = () => drawSprite(unit.id, anchorX - 24 + battleOffset(unit), baseline - 52, 0, unit.anim || "idle", tick);
+    if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
+    else drawUnit();
+    drawBattleVitals(unit, anchorX, baseline);
   });
 
   battle.enemies.forEach((enemyUnit, index) => {
@@ -1866,11 +1962,18 @@ function drawBattleScene() {
     if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil) return;
     const [anchorX, baseline] = enemyBattlePosition(index, battle.enemies.length);
     if (enemyUnit.hp <= 0) ctx.globalAlpha = Math.max(0, (enemyUnit.defeatUntil - tick) / 12);
+    const hasTurn = turn?.side === "enemy" && turn.index === index;
+    if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
+    if (target === enemyUnit) drawBattleGroundMarker(anchorX, baseline, "target");
     drawFieldShadow(anchorX, baseline + 1, enemySpriteIndex(enemyUnit.sprite || enemyUnit.name) >= 6 ? 15 : 11);
-    drawEnemy(enemyUnit, anchorX - 8 + battleOffset(enemyUnit), baseline - 31);
+    const drawUnit = () => drawEnemy(enemyUnit, anchorX - 8 + battleOffset(enemyUnit), baseline - 31);
+    if (hasTurn) drawWithTurnOutline(drawUnit, "#ffc08a");
+    else drawUnit();
+    drawBattleVitals(enemyUnit, anchorX, baseline, true);
     ctx.globalAlpha = 1;
   });
   drawEffect();
+  drawBattleTurnRail();
 }
 
 function battleArenaFor(map) {
@@ -1885,7 +1988,7 @@ function battleArenaFor(map) {
 }
 
 function drawBattleBackground(image, arenaId) {
-  const targetHeight = 154;
+  const targetHeight = BATTLE_ARENA_HEIGHT;
   const sourceHeight = Math.min(image.height, Math.round(image.width * targetHeight / canvas.width));
   const sourceY = Math.max(0, Math.floor((image.height - sourceHeight) / 2));
   ctx.drawImage(image, 0, sourceY, image.width, sourceHeight, 0, 0, canvas.width, targetHeight);
@@ -2033,7 +2136,7 @@ function drawCharacterProjectile(fx) {
 }
 
 function drawUltimateEffect(fx) {
-  drawRect(0, 0, canvas.width, 154, fx.t % 8 < 3 ? "#ffffff22" : "#09091255");
+  drawRect(0, 0, canvas.width, BATTLE_ARENA_HEIGHT, fx.t % 8 < 3 ? "#ffffff22" : "#09091255");
   if (fx.caster === "Torren") {
     for (let i = 0; i < 12; i++) drawRect(12 + i * 22, 139 - ((tick + i * 5) % 16), 6, 12, i % 2 ? "#8b6843" : "#d87536");
   } else if (fx.caster === "Glimmer") {
