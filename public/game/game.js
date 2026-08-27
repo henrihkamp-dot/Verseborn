@@ -98,7 +98,12 @@ const portraitSources = {
   Sparky: "assets/portraits/sparky.png",
   Glimmer: "assets/portraits/glimmer.png",
   Marla: "assets/portraits/marla.png",
-  Harl: "assets/portraits/harl.png"
+  Harl: "assets/portraits/harl.png",
+  Nyx: "assets/portraits/nyx.png",
+  Rava: "assets/portraits/rava.png",
+  Jory: "assets/portraits/jory.png",
+  Kaeldrin: "assets/portraits/kaeldrin.png",
+  Lyrsa: "assets/portraits/lyrsa.png"
 };
 const bossPortraitSources = {
   "Archive Custodian": "assets/portraits/enemies/archive-custodian.png",
@@ -211,7 +216,7 @@ const animatedNpcFiles = {
   Nyx: "nyx",
   Rava: "rava",
   Kaeldrin: "kaeldrin",
-  Lysra: "lysra",
+  Lyrsa: "lyrsa",
   Jory: "jory",
   Harl: "harl",
   Shade: "shade",
@@ -222,7 +227,7 @@ const animatedNpcHeights = {
   Nyx: 23,
   Rava: 24,
   Kaeldrin: 29,
-  Lysra: 29,
+  Lyrsa: 29,
   Jory: 27,
   Harl: 26,
   Shade: 27,
@@ -252,21 +257,21 @@ const magicEnemyAnimations = new Set([
   "Seal Bearer",
   "Ash Wyrm"
 ]);
-const magicNpcAnimations = new Set(["Lysra", "Nyx", "Jory"]);
+const magicNpcAnimations = new Set(["Lyrsa", "Nyx", "Jory"]);
 const enemyAbilityProfiles = {
   Jory: { row: 0, element: "Sound", magic: "Star Note", ultimate: "Grand Chord" },
   Nyx: { row: 1, element: "Shadow", magic: "Shadow Bolt", ultimate: "Gravebind" },
   Rava: { row: 2, element: "Ancient Fire", magic: "Ember Javelin", ultimate: "Dragon's Breath" },
   Grumm: { row: 3, element: "Earth", magic: "Boulder Toss", ultimate: "Mountain Breaker" },
   Kaeldrin: { row: 4, element: "Holy Fire", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn" },
-  Lysra: { row: 5, element: "Sigil", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence" },
+  Lyrsa: { row: 5, element: "Sigil", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence" },
   Shade: { row: 6, element: "Shadow", magic: "Throwing Daggers", ultimate: "Shadow Storm" },
   Marla: { row: 7, element: "Heart", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true }
 };
 const animationLayouts = {
   Harl: { columns: 6, rows: 4, chromaBlack: true },
   Kaeldrin: { columns: 4, rows: 7, chromaBlack: true },
-  Lysra: { columns: 4, rows: 7, chromaBlack: true },
+  Lyrsa: { columns: 4, rows: 7, chromaBlack: true },
   Shade: { columns: 4, rows: 7, chromaBlack: true },
   Grumm: { columns: 4, rows: 7, chromaBlack: true }
 };
@@ -661,7 +666,7 @@ const codex = [
   ["Glimmer", "01_Glimmer_Clean_Quest_Manga_Sheet.png"],
   ["Sparky", "05_Sparky_Clean_Quest_Manga_Sheet.png"],
   ["Kaeldrin", "18_Kaeldrin_Clean_Quest_Manga_Sheet.png"],
-  ["Lysra", "19_Lysra_Clean_Quest_Manga_Sheet.png"],
+  ["Lyrsa", "19_Lysra_Clean_Quest_Manga_Sheet.png"],
   ["Shade", "20_Shade_Clean_Quest_Manga_Sheet.png"],
   ["Grumm", "17_Grumm_Clean_Quest_Manga_Sheet.png"],
   ["Ember Hall", "location_EmberHall_Manga_Sheet.png"],
@@ -1149,7 +1154,7 @@ Object.assign(lootTables, {
   "Dawn Null": loot([60, 88], [["Null Calibration Shard", 1, 2]], [["Local Truth Lens", .58]]),
   "Dawn Gate Sentinel": loot([110, 145], [["Sentinel Core", 1, 1]], [["Wyrmheart Ember", .7]]),
   "Kaeldrin": loot([180, 240], [["Stonewake Medal", 1, 1]], [["Stonewake Oathblade", 1]]),
-  "Lysra": loot([170, 230], [["Loopglass Shard", 1, 2]], [["Echo Vow Chain", .7]]),
+  "Lyrsa": loot([170, 230], [["Loopglass Shard", 1, 2]], [["Echo Vow Chain", .7]]),
   "Nyx": loot([150, 210], [["Loopglass Shard", 1, 2]], [["Causality Visor", .65]]),
   "Rava": loot([165, 225], [["Orphan Ember Thread", 1, 2]], [["Orphanheart Coat", .7]]),
   "Jory": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]]),
@@ -1176,7 +1181,7 @@ const sideQuests = [
   sideQuest("harlEscort", "A Name Walks Home", "Harl", "escort", { map: "lantern" }, { gold: 125, xp: 140, items: { "Ash Ward": 2 } }, "Escort Harl safely from the ledger house back to the Drunk Lantern."),
   sideQuest("ravaWave", "Nobody Crosses This Yard", "Rava", "wave", { waves: 3 }, { gold: 150, xp: 180, gear: "Rava's Guard Ring" }, "Hold the Reverie dormitory through three escalating clergy waves."),
   sideQuest("rareLore", "Names Outside the Ledger", "Nyx", "rare", { amount: 2 }, { gold: 240, xp: 260, gear: "Nyx's Margin Note" }, "Find and defeat two lore-marked rare spawns across Cindervale."),
-  sideQuest("stonewakeTrial", "The Weight of the Old Rank", "Kaeldrin", "boss", { flag: "ngStonewakeWon", amount: 1 }, { gold: 900, xp: 900, gears: ["Stonewake Oathblade", "Second Verse Lute", "Worldroot Shield"] }, "In New Game Plus, defeat Kaeldrin and Lysra in Stonewake's full-rank trial.", { requiresNgPlus: true }),
+  sideQuest("stonewakeTrial", "The Weight of the Old Rank", "Kaeldrin", "boss", { flag: "ngStonewakeWon", amount: 1 }, { gold: 900, xp: 900, gears: ["Stonewake Oathblade", "Second Verse Lute", "Worldroot Shield"] }, "In New Game Plus, defeat Kaeldrin and Lyrsa in Stonewake's full-rank trial.", { requiresNgPlus: true }),
   sideQuest("orphanTrial", "The Children Answer Back", "Jory", "boss", { flag: "ngOrphanTrialWon", amount: 1 }, { gold: 1000, xp: 1050, gears: ["Orphanheart Coat", "Veln Eclipse Blades", "Cinderstar Aegis", "Unbound Oathstaff"] }, "In New Game Plus, survive Nyx, Rava and Jory's Reverie counter-trial.", { requiresNgPlus: true })
 ];
 
@@ -1255,7 +1260,7 @@ const maps = {
   ], ["C2 - Registry", "Main registration, equipment vendor and a branch to the council chamber."], { background: "guildspire-route", panorama: true, view: 1, views: 3, walkable: [[1, 4, 14, 10]], grid: [2, 1], gridSize: [3, 3] }),
 
   guildHall: map("Guildspire - Audience Hall", "Issue 3", "guildspire", [{ x: 1, y: 8, to: "guildRegistry", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberYard", tx: 2, ty: 8, needs: "registered" }], [
-    point(8, 6, "Lysra", [["Lysra", "Mira Veln refusing privilege is still a privilege. Fascinating posture."]]),
+    point(8, 6, "Lyrsa", [["Lyrsa", "Mira Veln refusing privilege is still a privilege. Fascinating posture."]]),
     chest(5, 8, "guild-cinderbite", { gear: "Cinderbite Edge", gold: 55 })
   ], ["C3 - Audience Hall", "Political dialogue and a rare archive apparition."], { background: "guildspire-route", panorama: true, view: 2, views: 3, walkable: [[1, 4, 14, 10]], grid: [2, 2], gridSize: [3, 3], spawns: [
     spawn("guild-rare-witness", 12, 8, "Rare: Redacted Witness", [enemy("Redacted Witness", 118, 15, "Ancient Fire", "#4d4167", 2, "Wrong Bell")], { respawn: 135, rare: true, lore: "A testimony removed from the record but not from the hall." })
@@ -1263,7 +1268,7 @@ const maps = {
 
   guildCouncil: map("Guildspire - Council Chamber", "Issue 3", "guildspire", [{ x: 8, y: 1, to: "guildRegistry", tx: 8, ty: 10 }, { x: 1, y: 8, to: "guildSteps", tx: 6, ty: 4 }], [
     recruitPoint(11, 8, "Torren", [["Torren", "I am not here to earn an old place back. I am here to build a new one."], ["Verseborn", "Ember Hall has an empty chair and several structurally questionable walls."], ["Torren", "Then both can be fixed. I am coming."]], "torren", "registered"),
-    point(7, 7, "Kaeldrin", [["Kaeldrin", "A second journey deserves a full-rank test."], ["Lysra", "Stonewake will not repeat the restraint of the first evaluation."], ["Verseborn", "Good. We did not bring repeat answers."]], "ngStonewakeTrial", "newGamePlus"),
+    point(7, 7, "Kaeldrin", [["Kaeldrin", "A second journey deserves a full-rank test."], ["Lyrsa", "Stonewake will not repeat the restraint of the first evaluation."], ["Verseborn", "Good. We did not bring repeat answers."]], "ngStonewakeTrial", "newGamePlus"),
     chest(5, 8, "guild-emberwell", { gear: "Emberwell Chain", items: { "Marla's Soup": 2 } })
   ], ["C2b - Council Chamber", "A branch room for Torren's return and later contracts."], { background: "guildspire", collision: "guildspire", grid: [1, 2], gridSize: [3, 3] }),
 
@@ -1416,7 +1421,7 @@ const npc = {
   Nyx: ["#1e2a46", "#0b0b13", "#b58a3e"],
   Rava: ["#26342f", "#427065", "#d8b08b"],
   Kaeldrin: ["#10233f", "#111018", "#d9c07b"],
-  Lysra: ["#f2eee6", "#f2f2ec", "#6b4bb0"],
+  Lyrsa: ["#f2eee6", "#f2f2ec", "#6b4bb0"],
   "Field Clerk": ["#26353e", "#b08a55", "#7bd4c6"]
 };
 
@@ -1982,7 +1987,7 @@ function drawNpc(id, px, py, dir, anim, frame) {
     drawRect(px + 7, py + 8, 2, 8, "#7bd4c6");
     return;
   }
-  const rows = { Marla: 0, Harl: 1, Nyx: 2, Rava: 3, Kaeldrin: 4, Lysra: 5 };
+  const rows = { Marla: 0, Harl: 1, Nyx: 2, Rava: 3, Kaeldrin: 4, Lyrsa: 5 };
   const row = rows[id];
   if (!npcSheet || row === undefined) {
     const p = npc[id] || npc.Stage;
@@ -3176,6 +3181,7 @@ function nextTalk() {
   }
   el.speaker.textContent = line[0];
   el.line.textContent = line[1];
+  syncDialoguePortraitForSpeaker(line[0]);
   updateDialogueSpeaker(line[0]);
   el.dialogue.classList.remove("hidden");
 }
@@ -3217,6 +3223,29 @@ function normalizeDialoguePortrait(entry) {
   return null;
 }
 
+function dialoguePortraitLabel(entry) {
+  if (typeof entry === "string") return entry;
+  return entry?.label || entry?.enemy || "";
+}
+
+function syncDialoguePortraitForSpeaker(speaker) {
+  if (!portraitSources[speaker]) return;
+  if (talkPortraits.some(entry => dialoguePortraitLabel(entry) === speaker)) return;
+  if (!talkPortraits.length) {
+    talkPortraits = [speaker];
+  } else if (talkPortraits.length === 1) {
+    talkPortraits.push(speaker);
+  } else {
+    const protectedIndex = talkPortraits.findIndex(entry => {
+      const label = dialoguePortraitLabel(entry);
+      return label === "Verseborn" || state.activeParty.includes(label);
+    });
+    const replaceIndex = protectedIndex === 0 ? 1 : protectedIndex === 1 ? 0 : 1;
+    talkPortraits[replaceIndex] = speaker;
+  }
+  renderDialoguePortraits();
+}
+
 function updateDialogueSpeaker(speaker) {
   [el.portraitLeft, el.portraitRight].forEach(figure => {
     figure.classList.toggle("is-speaking", figure.dataset.speaker === speaker);
@@ -3224,6 +3253,7 @@ function updateDialogueSpeaker(speaker) {
 }
 
 function enemyPortraitDataUrl(name) {
+  if (portraitSources[name]) return portraitSources[name];
   if (bossPortraitSources[name]) return bossPortraitSources[name];
   if (enemyPortraitCache.has(name)) return enemyPortraitCache.get(name);
   const animatedEnemySheet = enemyAnimationSheets[name];
@@ -3379,12 +3409,12 @@ function runEvent(event) {
   if (event === "ngStonewakeTrial") {
     activateSideQuest("stonewakeTrial");
     const kaeldrin = enemy("Kaeldrin", 185, 23, "Shadow", "#d9c07b", 2, "Kaeldrin");
-    const lysra = enemy("Lysra", 160, 25, "Tech", "#8b6ac4", 1, "Lysra");
-    kaeldrin.levelHint = lysra.levelHint = 20;
-    kaeldrin.npcBoss = lysra.npcBoss = true;
-    showTalk([["Kaeldrin", "Stonewake advances at full strength."], ["Lysra", "Order begins with precision. Let us measure yours."], ["Verseborn", "Flameguard, second verse."]], {
-      portraits: ["Verseborn", { enemy: "Kaeldrin", label: "Kaeldrin" }],
-      after: () => startBattle("Stonewake Full-Rank Trial", [kaeldrin, lysra], "ngStonewakeWon")
+    const lyrsa = enemy("Lyrsa", 160, 25, "Tech", "#8b6ac4", 1, "Lyrsa");
+    kaeldrin.levelHint = lyrsa.levelHint = 20;
+    kaeldrin.npcBoss = lyrsa.npcBoss = true;
+    showTalk([["Kaeldrin", "Stonewake advances at full strength."], ["Lyrsa", "Order begins with precision. Let us measure yours."], ["Verseborn", "Flameguard, second verse."]], {
+      portraits: ["Kaeldrin", "Lyrsa"],
+      after: () => startBattle("Stonewake Full-Rank Trial", [kaeldrin, lyrsa], "ngStonewakeWon")
     });
   }
   if (event === "ngOrphanTrial") {
@@ -3394,7 +3424,7 @@ function runEvent(event) {
     const jory = enemy("Jory", 170, 26, "Sound", "#755247", 3, "Jory");
     [nyx, rava, jory].forEach(unit => { unit.levelHint = 20; unit.npcBoss = true; });
     showTalk([["Nyx", "The first loop supplied adequate combat data."], ["Rava", "Translation: we know your tricks."], ["Jory", "Reverie trial begins now."]], {
-      portraits: ["Verseborn", { enemy: "Nyx", label: "Nyx" }],
+      portraits: ["Nyx", "Rava"],
       after: () => startBattle("Reverie Counter-Trial", [nyx, rava, jory], "ngOrphanTrialWon")
     });
   }
@@ -4685,7 +4715,7 @@ function startEndgameHunt() {
     { name: "Dawn Gate Recalibration", enemies: [rankedEnemy("Dawn Gate Sentinel", 148, 19, "Ancient Fire", "#58616b", 2, "Gate Lock")] },
     { name: "Stonewake Shadows", enemies: [rankedEnemy("Shade", 104, 18, "Holy Fire", "#4b2633", 2, "Shade", true), rankedEnemy("Grumm", 132, 20, "Sound", "#755034", 1, "Grumm", true)] },
     { name: "Lantern Name-Runners", enemies: [rankedEnemy("Marla", 110, 17, "Shadow", "#8a5b3d", 2, "Marla", true), rankedEnemy("Harl", 118, 19, "Tech", "#5b4a40", 1, "Harl", true)] },
-    { name: "Stonewake Command", enemies: [rankedEnemy("Kaeldrin", 138, 22, "Sound", "#62554a", 2, "Kaeldrin", true), rankedEnemy("Lysra", 124, 21, "Shadow", "#4c556b", 1, "Lysra", true)] },
+    { name: "Stonewake Command", enemies: [rankedEnemy("Kaeldrin", 138, 22, "Sound", "#62554a", 2, "Kaeldrin", true), rankedEnemy("Lyrsa", 124, 21, "Shadow", "#4c556b", 1, "Lyrsa", true)] },
     { name: "Reverie Counter-Echo", enemies: [rankedEnemy("Nyx", 106, 20, "Holy Fire", "#473c62", 1, "Nyx", true), rankedEnemy("Rava", 126, 21, "Earth", "#43685a", 2, "Rava", true), rankedEnemy("Jory", 116, 23, "Sound", "#755247", 3, "Jory", true)] }
   ];
   const formation = formations[(rank - 1) % formations.length];
