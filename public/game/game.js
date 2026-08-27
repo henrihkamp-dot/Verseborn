@@ -71,6 +71,7 @@ let mode = "title";
 let menuTab = "status";
 let selectedGearHero = "Verseborn";
 let selectedGearSlot = "weapon";
+let selectedSkillHero = "Verseborn";
 let selectedPartySlot = 0;
 let activePoint = null;
 let talkQueue = [];
@@ -94,7 +95,9 @@ const portraitSources = {
   Kael: "assets/portraits/kael.png",
   Torren: "assets/portraits/torren.png",
   Sparky: "assets/portraits/sparky.png",
-  Glimmer: "assets/portraits/glimmer.png"
+  Glimmer: "assets/portraits/glimmer.png",
+  Marla: "assets/portraits/marla.png",
+  Harl: "assets/portraits/harl.png"
 };
 const bossPortraitSources = {
   "Archive Custodian": "assets/portraits/enemies/archive-custodian.png",
@@ -208,7 +211,8 @@ const animatedNpcFiles = {
   Rava: "rava",
   Kaeldrin: "kaeldrin",
   Lysra: "lysra",
-  Jory: "jory"
+  Jory: "jory",
+  Harl: "harl"
 };
 const animatedNpcHeights = {
   Marla: 26,
@@ -216,7 +220,11 @@ const animatedNpcHeights = {
   Rava: 24,
   Kaeldrin: 29,
   Lysra: 29,
-  Jory: 27
+  Jory: 27,
+  Harl: 26
+};
+const animationLayouts = {
+  Harl: { columns: 6, rows: 4, chromaBlack: true }
 };
 const mapImages = {};
 const battleImages = {};
@@ -354,17 +362,26 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
       paint.imageSmoothingEnabled = false;
       paint.drawImage(image, 0, 0);
       const pixels = paint.getImageData(0, 0, cleaned.width, cleaned.height);
-      const cells = [];
-      for (let row = 0; row < 7; row++) {
-        for (let col = 0; col < 4; col++) cells.push(cellBounds(pixels, cleaned.width, cleaned.height, col, row, 4, 7));
+      const layout = animationLayouts[id] || { columns: 4, rows: 7 };
+      if (layout.chromaBlack) {
+        for (let index = 0; index < pixels.data.length; index += 4) {
+          if (pixels.data[index] < 5 && pixels.data[index + 1] < 5 && pixels.data[index + 2] < 5) pixels.data[index + 3] = 0;
+        }
+        paint.putImageData(pixels, 0, 0);
       }
-      const fieldHeights = cells.slice(0, 16).map(cell => cell.h).sort((a, b) => a - b);
+      const cells = [];
+      for (let row = 0; row < layout.rows; row++) {
+        for (let col = 0; col < layout.columns; col++) cells.push(cellBounds(pixels, cleaned.width, cleaned.height, col, row, layout.columns, layout.rows));
+      }
+      const fieldHeights = cells.slice(0, Math.min(cells.length, layout.columns * 4)).map(cell => cell.h).sort((a, b) => a - b);
       animationSheets[id] = {
         image: cleaned,
         cells,
-        cellWidth: cleaned.width / 4,
-        cellHeight: cleaned.height / 7,
-        referenceHeight: fieldHeights[Math.floor(fieldHeights.length / 2)] || cleaned.height / 7
+        columns: layout.columns,
+        rows: layout.rows,
+        cellWidth: cleaned.width / layout.columns,
+        cellHeight: cleaned.height / layout.rows,
+        referenceHeight: fieldHeights[Math.floor(fieldHeights.length / 2)] || cleaned.height / layout.rows
       };
       if (spriteScale[id]) spriteLoadProgress++;
       resolve();
@@ -615,6 +632,22 @@ const postgameGear = [
 ];
 postgameGear.forEach(gear => gearDb[gear.slot].push(gear));
 
+const ngPlusGear = [
+  item("Stonewake Oathblade", "weapon", { str: 10, agi: 5, stam: 3 }, "A command blade that yields only to earned respect.", { type: "critChance", value: .1, label: "+10% critical chance" }),
+  item("Orphanheart Coat", "armour", { stam: 12, mag: 5 }, "Reverie cloth strengthened by every child who refused to be moved.", { type: "battleRegen", value: 24, label: "Restore 24 HP after victory" }),
+  item("Second-Loop Signet", "ring", { str: 7, agi: 7, mag: 4 }, "A ring that remembers the opening the first loop missed.", { type: "openingResonance", value: 26, label: "+26 Resonance at battle start" }),
+  item("Echo Vow Chain", "necklace", { mag: 9, stam: 7 }, "Every promise in the chain returns a little power.", { type: "mpOnHit", value: 5, label: "Restore 5 MP after dealing damage" }),
+  item("Causality Visor", "helmet", { mag: 8, agi: 9 }, "Shows the weakness a perfected system tried to hide.", { type: "weaknessDamage", value: .35, label: "+35% weakness damage" }),
+  item("Second Verse Lute", "weapon", { str: 5, mag: 13, agi: 6 }, "Verseborn's completed refrain, carried through one ending.", { type: "openingResonance", value: 30, label: "+30 Resonance at battle start" }),
+  item("Veln Eclipse Blades", "weapon", { str: 13, agi: 10 }, "Mira's twin conclusions, sharpened against repeated history.", { type: "critChance", value: .15, label: "+15% critical chance" }),
+  item("Cinderstar Aegis", "weapon", { str: 10, stam: 12, mag: 4 }, "Seerin's promise made heavy enough to stop a second dawn.", { type: "blockPower", value: .3, label: "30% stronger personal guard" }),
+  item("Unbound Oathstaff", "weapon", { mag: 14, stam: 8 }, "Kael's faith after obedience has been burned away.", { type: "battleRegen", value: 26, label: "Restore 26 HP after victory" }),
+  item("Worldroot Shield", "weapon", { str: 12, stam: 15 }, "Torren carries the foundation instead of standing on it.", { type: "hpOnHit", value: 8, label: "Restore 8 HP after dealing damage" }),
+  item("Klik-Wrench Infinite", "weapon", { str: 6, mag: 15, agi: 8 }, "Glimmer improved the improved version. It is probably finished.", { type: "mpOnHit", value: 7, label: "Restore 7 MP after dealing damage" }),
+  item("Elderflame Claws", "weapon", { str: 9, mag: 14, agi: 7 }, "Sparky's oldest memory finally remembers how to fight.", { type: "weaknessDamage", value: .4, label: "+40% weakness damage" })
+];
+ngPlusGear.forEach(gear => gearDb[gear.slot].push(gear));
+
 const gearOwners = {
   "Voice of Verse": ["Verseborn", "Sparky"],
   "Twin Voidthorns": ["Mira"],
@@ -629,6 +662,13 @@ const gearOwners = {
   "Songweaver Hood": ["Verseborn"],
   "Glimmer Goggles": ["Glimmer"],
   "Mira Top Hat": ["Mira"],
+  "Second Verse Lute": ["Verseborn"],
+  "Veln Eclipse Blades": ["Mira"],
+  "Cinderstar Aegis": ["Seerin"],
+  "Unbound Oathstaff": ["Kael"],
+  "Worldroot Shield": ["Torren"],
+  "Klik-Wrench Infinite": ["Glimmer"],
+  "Elderflame Claws": ["Sparky"],
   "Echo-Thread Lute": ["Verseborn"],
   "Songbound Rosin": ["Verseborn"],
   "Nightneedle Harness": ["Mira"],
@@ -639,22 +679,32 @@ const gearOwners = {
   "Elder Ember Bell": ["Sparky"]
 };
 
+const ngPlusSignatureNames = new Set([
+  "Second Verse Lute", "Veln Eclipse Blades", "Cinderstar Aegis", "Unbound Oathstaff",
+  "Worldroot Shield", "Klik-Wrench Infinite", "Elderflame Claws"
+]);
+
 const generalDropGear = new Set([
   ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
   ...questGear,
   ...chestGear,
-  ...postgameGear
+  ...postgameGear,
+  ...ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name))
 ].map(gear => gear.name));
 const postgameGearNames = new Set(postgameGear.map(gear => gear.name));
+const ngPlusGearNames = new Set(ngPlusGear.map(gear => gear.name));
 
 function gearIconSheet(gear, heroId) {
   if (gear?.name === "Echo-Thread Lute") return "gear-verseborn";
+  if (ngPlusSignatureNames.has(gear?.name)) return `gear-${gearOwners[gear.name][0].toLowerCase()}`;
   if (generalDropGear.has(gear?.name)) return "gear-drop";
   return `gear-${heroId.toLowerCase()}`;
 }
 
 function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
+  if (ngPlusSignatureNames.has(gear?.name)) return `NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
+  if (ngPlusGearNames.has(gear?.name)) return "NG+ LEGENDARY DROP / ALL HEROES";
   if (chestGear.includes(gear)) return gearOwners[gear.name] ? `EPIC CHEST / ${gearOwners[gear.name][0].toUpperCase()} ONLY` : "EPIC CHEST / ALL HEROES";
   if (postgameGearNames.has(gear?.name)) return "ENDGAME DROP / ALL HEROES";
   if (generalDropGear.has(gear?.name)) return "FOUND GEAR / ALL HEROES";
@@ -677,6 +727,9 @@ const inventoryDb = {
   "Ash Ink": { type: "Quest Material", desc: "Ink recovered from an Ash Scribe." },
   "Resonant Stone": { type: "Crafting Material", desc: "Stone that still hums after battle." },
   "False Dawn Cog": { type: "Rare Material", desc: "A calibrated cog from the False Dawn system." },
+  "Loopglass Shard": { type: "New Game Plus Material", desc: "Glass that reflects a route the party has already survived." },
+  "Stonewake Medal": { type: "New Game Plus Trophy", desc: "Stonewake proof that respect was earned in a second loop." },
+  "Orphan Ember Thread": { type: "New Game Plus Material", desc: "Protective thread woven by the children of Reverie." },
   "Tempered Lockplate": { type: "Crafting Material", desc: "Armoured mechanism plating." },
   "Ancient Ember Scale": { type: "Rare Material", desc: "A warm scale carrying elder-dragon memory." },
   "Living Ash Ink": { type: "Rare Material", desc: "Ink that continues correcting its own record." },
@@ -756,6 +809,60 @@ const baseJobs = {
   ])
 };
 
+const MAX_LEVEL = 20;
+const talentTrees = {
+  Verseborn: [
+    talent(5, "Open Chorus", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
+    talent(10, "Resonant Field", "aoeSkill", "Resonant Verse", "Resonant Verse strikes every living enemy."),
+    talent(15, "Names Have Edges", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
+    talent(20, "Every Name Returns", "newSkill", skill("ULT: Every Name Returns", "ultimate", "Sound", 118, 100, "A completed refrain that hits every enemy."), "Unlocks a new all-enemy ultimate.")
+  ],
+  Mira: [
+    talent(5, "First Cut", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
+    talent(10, "Voidthorn Rain", "aoeSkill", "Voidthorn Mark", "Voidthorn Mark strikes every living enemy."),
+    talent(15, "Ledger Sight", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
+    talent(20, "Between Two Names", "newSkill", skill("ULT: Between Two Names", "ultimate", "Shadow", 132, 100, "A double eclipse strike with high critical pressure."), "Unlocks a stronger precision ultimate.")
+  ],
+  Seerin: [
+    talent(5, "Shieldheart", "healBoost", .3, "Healing commands restore 30% more HP."),
+    talent(10, "Starflame Halo", "aoeSkill", "Starflame Cut", "Starflame Cut burns every living enemy."),
+    talent(15, "Oathreader", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
+    talent(20, "Chosen Family Aegis", "newSkill", skill("ULT: Chosen Family Aegis", "ultimate", "Holy Fire", 116, 100, "A shieldburst that strikes every enemy."), "Unlocks a new all-enemy ultimate.")
+  ],
+  Kael: [
+    talent(5, "Mercy Without Permission", "healBoost", .4, "Healing commands restore 40% more HP."),
+    talent(10, "Wide Sigil", "partyHeal", "Quiet Rite", "Quiet Rite restores HP to every living party member."),
+    talent(15, "Discern the Command", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
+    talent(20, "Oath Without Chains", "newSkill", { ...skill("ULT: Oath Without Chains", "ultimate", "Sigil", -120, 100, "A complete party heal and ward."), partyWide: true }, "Unlocks a full-party healing ultimate.")
+  ],
+  Torren: [
+    talent(5, "Faultline Instinct", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
+    talent(10, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break strikes every living enemy."),
+    talent(15, "Granite Memory", "blockTalent", .18, "Defend and block commands reduce another 18% damage."),
+    talent(20, "The Mountain Chooses Us", "newSkill", skill("ULT: The Mountain Chooses Us", "ultimate", "Earth", 138, 100, "A battlefield-wide stone rupture."), "Unlocks a new all-enemy ultimate.")
+  ],
+  Glimmer: [
+    talent(5, "Unsafe Overclock", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
+    talent(10, "Scatterburst", "aoeSkill", "Klik-Wrench 7", "Klik-Wrench 7 strikes every living enemy."),
+    talent(15, "Local Diagnostics", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
+    talent(20, "Better Than Original", "newSkill", skill("ULT: Better Than Original", "ultimate", "Tech", 142, 100, "An impossible upgrade that detonates across all targets."), "Unlocks a new all-enemy ultimate.")
+  ],
+  Sparky: [
+    talent(5, "Ember Mischief", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
+    talent(10, "Memory Wildfire", "aoeSkill", "Memory Flare", "Memory Flare burns every living enemy."),
+    talent(15, "Ancient Warmth", "battleRegenTalent", 18, "Sparky restores 18 extra HP after every victory."),
+    talent(20, "First Flame Remembers", "newSkill", skill("ULT: First Flame Remembers", "ultimate", "Ancient Fire", 136, 100, "Ancient dragon memory engulfs every enemy."), "Unlocks a new all-enemy ultimate.")
+  ]
+};
+
+const zoneLevelBands = {
+  "Cindervale / Ash Quarter": [1, 4],
+  "Reverie Orphanage": [4, 8],
+  Guildspire: [8, 11],
+  "Ember Hall": [11, 15],
+  "False Dawn": [15, 20]
+};
+
 function character(name, title, element, color, hair, trim, stats, gear, skills) {
   return { name, title, element, color, hair, trim, stats, gear: slotsFrom(gear), skills, hp: 1, mp: 1 };
 }
@@ -766,6 +873,10 @@ function slotsFrom(names) {
 
 function skill(name, anim, element, power, cost, desc) {
   return { name, anim, element, power, cost, desc };
+}
+
+function talent(level, name, type, value, desc, unlockDesc = desc) {
+  return { level, name, type, value, desc, unlockDesc };
 }
 
 const state = {
@@ -792,6 +903,8 @@ const state = {
   }, {}),
   endgameRank: 0,
   ngPlus: 0,
+  heroProgress: Object.fromEntries(Object.keys(baseJobs).map(id => [id, { level: 1, xp: 0, talents: [] }])),
+  discoveredMaps: ["lantern"],
   escort: null,
   fieldWard: false,
   flags: {}
@@ -880,8 +993,33 @@ Object.assign(lootTables, {
   "Redacted Witness": loot([48, 72], [["Redacted Testimony", 1, 1]], [["Local Truth Lens", .5]]),
   "First Ember Memory": loot([55, 80], [["Ancient Ember Scale", 1, 2]], [["Wyrmheart Ember", .62]]),
   "Dawn Null": loot([60, 88], [["Null Calibration Shard", 1, 2]], [["Local Truth Lens", .58]]),
-  "Dawn Gate Sentinel": loot([110, 145], [["Sentinel Core", 1, 1]], [["Wyrmheart Ember", .7]])
+  "Dawn Gate Sentinel": loot([110, 145], [["Sentinel Core", 1, 1]], [["Wyrmheart Ember", .7]]),
+  "Kaeldrin": loot([180, 240], [["Stonewake Medal", 1, 1]], [["Stonewake Oathblade", 1]]),
+  "Lysra": loot([170, 230], [["Loopglass Shard", 1, 2]], [["Echo Vow Chain", .7]]),
+  "Nyx": loot([150, 210], [["Loopglass Shard", 1, 2]], [["Causality Visor", .65]]),
+  "Rava": loot([165, 225], [["Orphan Ember Thread", 1, 2]], [["Orphanheart Coat", .7]]),
+  "Jory": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]])
 });
+
+const ngPlusLootTables = {
+  "Ledger Cutter": loot([28, 42], [["Loopglass Shard", .35, 1]], [["Second Verse Lute", .08], ["Second-Loop Signet", .1]]),
+  "Chain Warden": loot([32, 48], [["Loopglass Shard", .4, 1]], [["Orphanheart Coat", .09]]),
+  "Seal Bearer": loot([34, 52], [["Orphan Ember Thread", .4, 1]], [["Cinderstar Aegis", .1]]),
+  "Ash Scribe": loot([30, 46], [["Loopglass Shard", .45, 1]], [["Unbound Oathstaff", .09]]),
+  "Buried Construct": loot([42, 60], [["Stonewake Medal", .35, 1]], [["Worldroot Shield", .11]]),
+  "Cracked Pillar": loot([40, 58], [["Stonewake Medal", .3, 1]], [["Stonewake Oathblade", .08]]),
+  "Wrong Bell": loot([50, 72], [["Loopglass Shard", .5, 2]], [["Klik-Wrench Infinite", .12]]),
+  "Gate Lock": loot([48, 68], [["Loopglass Shard", .45, 1]], [["Causality Visor", .12]]),
+  "Ash Wyrm": loot([58, 82], [["Orphan Ember Thread", .5, 2]], [["Elderflame Claws", .14]]),
+  "Inkbound Auditor": loot([62, 88], [["Loopglass Shard", .75, 2]], [["Second Verse Lute", .24]]),
+  "Dock Foreman": loot([85, 120], [["Stonewake Medal", 1, 2]], [["Veln Eclipse Blades", .32]]),
+  "Orphaned Sigil": loot([70, 98], [["Orphan Ember Thread", 1, 2]], [["Cinderstar Aegis", .3]]),
+  "Archive Custodian": loot([95, 130], [["Loopglass Shard", 1, 3]], [["Unbound Oathstaff", .35]]),
+  "Redacted Witness": loot([78, 110], [["Loopglass Shard", 1, 2]], [["Veln Eclipse Blades", .3]]),
+  "First Ember Memory": loot([88, 124], [["Orphan Ember Thread", 1, 3]], [["Elderflame Claws", .38]]),
+  "Dawn Null": loot([92, 132], [["Loopglass Shard", 1, 3]], [["Klik-Wrench Infinite", .36]]),
+  "Dawn Gate Sentinel": loot([135, 185], [["Stonewake Medal", 1, 3]], [["Causality Visor", .45]])
+};
 
 function loot(gold, common, rare) {
   return { gold, common, rare };
@@ -895,15 +1033,17 @@ const quests = [
 ];
 
 const sideQuests = [
-  sideQuest("marlaCrate", "A Crate Owed Twice", "Marla", "fetch", { item: "Iron Chain Link", amount: 3 }, { gold: 75, items: { "Marla's Soup": 2 } }, "Bring Marla three chain links for repairs under the Lantern."),
-  sideQuest("nyxInk", "Ink That Remembers", "Nyx", "kill", { names: ["Ash Scribe"], amount: 3 }, { gold: 110, items: { "Clockwork Tonic": 2 } }, "Defeat three returning Ash Scribes and recover what their ink observed."),
-  sideQuest("harlEscort", "A Name Walks Home", "Harl", "escort", { map: "lantern" }, { gold: 125, items: { "Ash Ward": 2 } }, "Escort Harl safely from the ledger house back to the Drunk Lantern."),
-  sideQuest("ravaWave", "Nobody Crosses This Yard", "Rava", "wave", { waves: 3 }, { gold: 150, gear: "Rava's Guard Ring" }, "Hold the Reverie dormitory through three escalating clergy waves."),
-  sideQuest("rareLore", "Names Outside the Ledger", "Nyx", "rare", { amount: 2 }, { gold: 240, gear: "Nyx's Margin Note" }, "Find and defeat two lore-marked rare spawns across Cindervale.")
+  sideQuest("marlaCrate", "A Crate Owed Twice", "Marla", "fetch", { item: "Iron Chain Link", amount: 3 }, { gold: 75, xp: 90, items: { "Marla's Soup": 2 } }, "Bring Marla three chain links for repairs under the Lantern."),
+  sideQuest("nyxInk", "Ink That Remembers", "Nyx", "kill", { names: ["Ash Scribe"], amount: 3 }, { gold: 110, xp: 120, items: { "Clockwork Tonic": 2 } }, "Defeat three returning Ash Scribes and recover what their ink observed."),
+  sideQuest("harlEscort", "A Name Walks Home", "Harl", "escort", { map: "lantern" }, { gold: 125, xp: 140, items: { "Ash Ward": 2 } }, "Escort Harl safely from the ledger house back to the Drunk Lantern."),
+  sideQuest("ravaWave", "Nobody Crosses This Yard", "Rava", "wave", { waves: 3 }, { gold: 150, xp: 180, gear: "Rava's Guard Ring" }, "Hold the Reverie dormitory through three escalating clergy waves."),
+  sideQuest("rareLore", "Names Outside the Ledger", "Nyx", "rare", { amount: 2 }, { gold: 240, xp: 260, gear: "Nyx's Margin Note" }, "Find and defeat two lore-marked rare spawns across Cindervale."),
+  sideQuest("stonewakeTrial", "The Weight of the Old Rank", "Kaeldrin", "boss", { flag: "ngStonewakeWon", amount: 1 }, { gold: 900, xp: 900, gears: ["Stonewake Oathblade", "Second Verse Lute", "Worldroot Shield"] }, "In New Game Plus, defeat Kaeldrin and Lysra in Stonewake's full-rank trial.", { requiresNgPlus: true }),
+  sideQuest("orphanTrial", "The Children Answer Back", "Jory", "boss", { flag: "ngOrphanTrialWon", amount: 1 }, { gold: 1000, xp: 1050, gears: ["Orphanheart Coat", "Veln Eclipse Blades", "Cinderstar Aegis", "Unbound Oathstaff"] }, "In New Game Plus, survive Nyx, Rava and Jory's Reverie counter-trial.", { requiresNgPlus: true })
 ];
 
-function sideQuest(id, title, giver, type, target, reward, desc, status = "unseen") {
-  return { id, title, giver, type, target, reward, desc, status, progress: 0 };
+function sideQuest(id, title, giver, type, target, reward, desc, options = {}) {
+  return { id, title, giver, type, target, reward, desc, status: "unseen", progress: 0, ...options };
 }
 
 const maps = {
@@ -948,6 +1088,7 @@ const maps = {
   reverieDorm: map("Reverie - Dormitory Wing", "Issue 2", "reverie", [{ x: 1, y: 8, to: "reverieCourt", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieSeal", tx: 2, ty: 8 }, { x: 8, y: 11, to: "reverieArchive", tx: 8, ty: 11 }], [
     point(6, 7, "Nyx", [["Nyx", "Adults pretend punctuation cannot hurt people."], ["Nyx", "The supply locker is less interesting than the archive. It is still useful."]], undefined, undefined, "shelter", "nyxInk"),
     point(10, 7, "Rava", [["Rava", "Three waves. No speeches. Keep them away from the little kids."]], "ravaWave"),
+    point(13, 7, "Jory", [["Jory", "The first loop taught us where the Flameguard leaves openings."], ["Rava", "You wanted stronger opponents. Try not to complain when you get them."], ["Nyx", "I documented seventeen likely mistakes. We only need one."]], "ngOrphanTrial", "newGamePlus"),
     chest(4, 8, "reverie-silent", { gear: "Silent Reliquary", items: { "Ash Ward": 1 } })
   ], ["B2 - Dormitory Wing", "NPC side quests and a wave-defense encounter live off the main route."], { background: "reverie-route", panorama: true, view: 1, views: 3, walkable: [[1, 5, 14, 10]], grid: [4, 3], gridSize: [5, 5], spawns: [
     spawn("dorm-scribe-1", 12, 8, "Ash Scribe Remnant", [enemy("Ash Scribe", 58, 8, "Sound", "#6d5948", 2)], { respawn: 34 })
@@ -984,6 +1125,7 @@ const maps = {
 
   guildCouncil: map("Guildspire - Council Chamber", "Issue 3", "guildspire", [{ x: 8, y: 1, to: "guildRegistry", tx: 8, ty: 10 }, { x: 1, y: 8, to: "guildSteps", tx: 6, ty: 4 }], [
     recruitPoint(11, 8, "Torren", [["Torren", "I am not here to earn an old place back. I am here to build a new one."], ["Verseborn", "Ember Hall has an empty chair and several structurally questionable walls."], ["Torren", "Then both can be fixed. I am coming."]], "torren", "registered"),
+    point(7, 7, "Kaeldrin", [["Kaeldrin", "A second journey deserves a full-rank test."], ["Lysra", "Stonewake will not repeat the restraint of the first evaluation."], ["Verseborn", "Good. We did not bring repeat answers."]], "ngStonewakeTrial", "newGamePlus"),
     chest(5, 8, "guild-emberwell", { gear: "Emberwell Chain", items: { "Marla's Soup": 2 } })
   ], ["C2b - Council Chamber", "A branch room for Torren's return and later contracts."], { background: "guildspire", collision: "guildspire", grid: [1, 2], gridSize: [3, 3] }),
 
@@ -1171,9 +1313,116 @@ function effectValue(id, type) {
   }, 0);
 }
 
+function progressFor(id) {
+  if (!state.heroProgress[id]) state.heroProgress[id] = { level: 1, xp: 0, talents: [] };
+  return state.heroProgress[id];
+}
+
+function xpForNextLevel(level) {
+  if (level >= MAX_LEVEL) return 0;
+  return 60 + level * 28 + level * level * 4;
+}
+
+function activeTalents(id) {
+  const chosen = progressFor(id).talents;
+  return (talentTrees[id] || []).filter(entry => chosen.includes(entry.name));
+}
+
+function talentValue(id, type, matchValue = null) {
+  return activeTalents(id)
+    .filter(entry => entry.type === type && (matchValue === null || entry.value === matchValue))
+    .reduce((total, entry) => total + (typeof entry.value === "number" ? entry.value : 1), 0);
+}
+
+function battleSkills(id) {
+  const extra = activeTalents(id)
+    .filter(entry => entry.type === "newSkill")
+    .map(entry => ({ ...entry.value, talentSkill: true, allEnemies: entry.value.power > 0 }));
+  return [...baseJobs[id].skills, ...extra];
+}
+
+function skillHitsAll(id, sk) {
+  return Boolean(sk.allEnemies || talentValue(id, "aoeSkill", sk.name));
+}
+
+function partyCanSeeWeaknesses() {
+  return state.activeParty.some(id => talentValue(id, "revealWeakness") > 0);
+}
+
+function averagePartyLevel() {
+  const roster = state.party.length ? state.party : ["Verseborn"];
+  return Math.max(1, Math.round(roster.reduce((sum, id) => sum + progressFor(id).level, 0) / roster.length));
+}
+
+function awardHeroXp(id, amount) {
+  const progress = progressFor(id);
+  if (progress.level >= MAX_LEVEL || amount <= 0) return [];
+  progress.xp += amount;
+  const gained = [];
+  while (progress.level < MAX_LEVEL && progress.xp >= xpForNextLevel(progress.level)) {
+    progress.xp -= xpForNextLevel(progress.level);
+    progress.level++;
+    gained.push(progress.level);
+  }
+  if (progress.level >= MAX_LEVEL) progress.xp = 0;
+  if (gained.length) {
+    const total = totals(id);
+    baseJobs[id].hp = total.max;
+    baseJobs[id].mp = total.mp;
+  }
+  return gained;
+}
+
+function awardPartyXp(amount, reason = "Progress", reserveRate = .65) {
+  const levelUps = [];
+  state.party.forEach(id => {
+    const share = state.activeParty.includes(id) ? amount : Math.max(1, Math.round(amount * reserveRate));
+    const levels = awardHeroXp(id, share);
+    if (levels.length) levelUps.push(`${id} Lv ${levels.at(-1)}`);
+  });
+  if (levelUps.length) showHudNotice(`LEVEL UP - ${levelUps.join(" / ")}`);
+  return `${amount} XP${reason ? ` (${reason})` : ""}${levelUps.length ? ` / LEVEL UP: ${levelUps.join(", ")}` : ""}`;
+}
+
+function zoneBandForMap(mapId = state.map) {
+  const region = mapRegion(mapId);
+  const base = zoneLevelBands[region] || [1, 4];
+  if (!state.ngPlus) return base.slice();
+  const order = Object.keys(zoneLevelBands).indexOf(region);
+  return [Math.min(20, 15 + Math.max(0, order)), Math.min(20, 18 + Math.max(0, order))];
+}
+
+function zoneLevelText(mapId = state.map) {
+  const [low, high] = zoneBandForMap(mapId);
+  return `${state.ngPlus ? "NG+ " : ""}Lv ${low}-${high}`;
+}
+
+function discoverMap(mapId) {
+  if (state.discoveredMaps.includes(mapId)) return "";
+  state.discoveredMaps.push(mapId);
+  const [low] = zoneBandForMap(mapId);
+  const xp = 28 + low * 6;
+  const summary = awardPartyXp(xp, "new area");
+  showHudNotice(`AREA DISCOVERED - ${summary}`);
+  return summary;
+}
+
+function showHudNotice(message) {
+  el.hint.textContent = message;
+  const expected = message;
+  setTimeout(() => {
+    if (el.hint.textContent === expected) el.hint.textContent = "Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party";
+  }, 3200);
+}
+
 function totals(id) {
   const h = baseJobs[id];
   const out = { ...h.stats };
+  const levels = progressFor(id).level - 1;
+  Object.keys(out).forEach(stat => {
+    const growth = .32 + h.stats[stat] / 30;
+    out[stat] += Math.floor(levels * growth);
+  });
   Object.values(h.gear).forEach(name => {
     const g = gearByName(name);
     if (!g) return;
@@ -1398,16 +1647,17 @@ function drawBaseSprite(px, py, body, hair, trim, dir = 0, anim = "idle", frame 
 }
 
 function animationColumn(id, anim, frame) {
-  if (anim === "walk") return Math.floor(frame / 5) % 4;
+  const columns = animationSheets[id]?.columns || 4;
+  if (anim === "walk") return Math.floor(frame / 5) % columns;
   if (anim === "idle" && mode === "battle") {
     const phase = Math.floor((frame + Object.keys(spriteScale).indexOf(id) * 5) / 16) % 4;
-    return [0, 0, 3, 0][phase];
+    return [0, 0, Math.min(3, columns - 1), 0][phase];
   }
   if (["melee", "block", "magic", "ultimate"].includes(anim)) {
     const activeEffect = effect?.caster === id ? effect : null;
     const duration = Math.max(1, activeEffect?.duration || 24);
     const progress = activeEffect ? activeEffect.t / duration : (frame % 24) / 24;
-    return Math.max(0, Math.min(3, Math.floor(progress * 4)));
+    return Math.max(0, Math.min(columns - 1, Math.floor(progress * columns)));
   }
   return 0;
 }
@@ -2147,7 +2397,36 @@ function battleOffset(u) {
   return Math.sin(tick * 2.4) * 3;
 }
 
+function drawNpcBattleEnemy(e, px, py) {
+  const id = e.sprite || e.name;
+  const sheet = animationSheets[id];
+  if (!sheet || !animatedNpcFiles[id]) return false;
+  const attacking = e.anim === "attack";
+  const row = attacking ? 4 : 0;
+  const duration = 24;
+  const progress = attacking ? Math.min(1, (e.animTick || 0) / duration) : 0;
+  const col = attacking ? Math.min(3, Math.floor(progress * 4)) : [0, 0, 3, 0][Math.floor((tick + id.length * 3) / 16) % 4];
+  const targetHeight = Math.round((animatedNpcHeights[id] || 26) * 1.9);
+  const scale = targetHeight / Math.max(1, sheet.referenceHeight);
+  const sourceX = col * sheet.cellWidth;
+  const sourceY = row * sheet.cellHeight;
+  const width = Math.round(sheet.cellWidth * scale);
+  const height = Math.round(sheet.cellHeight * scale);
+  const lunge = attacking ? Math.round(Math.sin(progress * Math.PI) * 7) : 0;
+  const anchorX = px + 8 - lunge;
+  const baseline = py + 31 + (!attacking && Math.floor(tick / 18) % 3 === 1 ? -1 : 0);
+  const destX = Math.round(anchorX - width / 2);
+  const destY = Math.round(baseline - (sheet.cellHeight - 2) * scale);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  ctx.restore();
+  if (attacking) e.animTick = (e.animTick || 0) + 1;
+  return true;
+}
+
 function drawEnemy(e, px, py) {
+  if (drawNpcBattleEnemy(e, px, py)) return;
   const index = enemySpriteIndex(e.sprite || e.name);
   const source = e.anim === "attack" && enemyAttackSheet ? enemyAttackSheet : enemySheet;
   if (!source || !enemySheet) return;
@@ -2345,7 +2624,7 @@ function updatePanels() {
   const objective = objectiveTarget();
   const map = currentMap();
   el.chapter.textContent = map.chapter;
-  el.place.textContent = map.name;
+  el.place.textContent = `${map.name} / ${zoneLevelText(state.map)}`;
   el.questTitle.textContent = q ? q[0] : "No active quest";
   el.questText.textContent = q ? `Next: ${objective.label}.` : "Speak with Marla at the counter.";
   el.beatTitle.textContent = map.beat[0];
@@ -2354,7 +2633,8 @@ function updatePanels() {
   el.gold.textContent = `${state.gold} G`;
   el.partyPanel.innerHTML = state.activeParty.map(id => {
     const h = baseJobs[id], t = totals(id);
-    return `<div class="hero-row"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${h.hp}/${t.max}</span></div>`;
+    const progress = progressFor(id);
+    return `<div class="hero-row"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>LV ${progress.level} / ${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${h.hp}/${t.max}</span></div>`;
   }).join("");
 }
 
@@ -2449,6 +2729,7 @@ function move(dx, dy, facing) {
     state.renderY = state.y * TILE;
     screenSlide = { from, to: currentMap(), dx: Math.sign(dx), dy: Math.sign(dy), t: 0 };
     mode = "transition";
+    discoverMap(state.map);
     checkSideQuestMap(state.map);
     updatePanels();
     updateMusic();
@@ -2483,8 +2764,10 @@ function interact() {
   const p = visiblePoints().find(pt => Math.abs(pt.x - state.x) + Math.abs(pt.y - state.y) <= 1);
   if (p) {
     activePoint = p;
-    const portraits = p.recruit ? ["Verseborn", p.recruit] : [];
-    showTalk([...pointDialogue(p), ...questPreview(p.quest)], { portraits });
+    const lines = [...pointDialogue(p), ...questPreview(p.quest)];
+    const picturedSpeakers = [...new Set(lines.map(line => line[0]).filter(name => portraitSources[name]))];
+    const portraits = p.recruit ? ["Verseborn", p.recruit] : picturedSpeakers.length > 1 ? picturedSpeakers.slice(0, 2) : picturedSpeakers.length ? [state.activeParty[0], picturedSpeakers[0]] : [];
+    showTalk(lines, { portraits });
   }
 }
 
@@ -2584,6 +2867,30 @@ function updateDialogueSpeaker(speaker) {
 function enemyPortraitDataUrl(name) {
   if (bossPortraitSources[name]) return bossPortraitSources[name];
   if (enemyPortraitCache.has(name)) return enemyPortraitCache.get(name);
+  const npcSheet = animationSheets[name];
+  if (npcSheet && animatedNpcFiles[name]) {
+    const portrait = document.createElement("canvas");
+    portrait.width = 96;
+    portrait.height = 96;
+    const paint = portrait.getContext("2d");
+    paint.imageSmoothingEnabled = false;
+    paint.fillStyle = "#10111a";
+    paint.fillRect(0, 0, 96, 96);
+    paint.fillStyle = "#30262d";
+    paint.fillRect(5, 5, 86, 86);
+    paint.fillStyle = "#171822";
+    paint.fillRect(8, 8, 80, 80);
+    const height = 76;
+    const scale = height / npcSheet.cellHeight;
+    const width = Math.round(npcSheet.cellWidth * scale);
+    paint.drawImage(npcSheet.image, 0, 0, npcSheet.cellWidth, npcSheet.cellHeight, Math.round((96 - width) / 2), 86 - height, width, height);
+    paint.fillStyle = "#d8b06b";
+    paint.fillRect(8, 8, 80, 2);
+    paint.fillRect(8, 86, 80, 2);
+    const url = portrait.toDataURL("image/png");
+    enemyPortraitCache.set(name, url);
+    return url;
+  }
   if (!enemySheet?.image) return "assets/sprites/enemies-runtime.png";
   const cell = enemySheet.cells[enemySpriteIndex(name)];
   const portrait = document.createElement("canvas");
@@ -2655,9 +2962,9 @@ function runEvent(event) {
     addParty("Mira");
     startBattle("Harbor Name-Thieves", [enemy("Ledger Cutter", 58, 9, "Sound", "#71513e", 2), enemy("Chain Warden", 68, 10, "Shadow", "#4a4542", 1)], "harborWon");
   }
-  if (event === "issue1") { state.quest = 1; state.resonance += 12; showTalk([["Mira", "Next stop: Reverie. This is no longer just a dock case."]]); }
+  if (event === "issue1") { state.quest = 1; state.resonance += 12; const xp = awardPartyXp(180, "Issue 1"); showTalk([["Mira", "Next stop: Reverie. This is no longer just a dock case."], ["Progress", xp]]); }
   if (event === "clergy") { addParty("Seerin"); startBattle("Fire Clergy Assessors", [enemy("Seal Bearer", 74, 10, "Shadow", "#9d5436", 1), enemy("Ash Scribe", 60, 8, "Sound", "#6d5948", 2)], "clergyWon"); }
-  if (event === "issue2") { addParty("Kael"); state.quest = 2; state.resonance += 15; showTalk([["Kael", "Faith under pressure is still faith. Obedience under pressure is only fear."]]); }
+  if (event === "issue2") { addParty("Kael"); state.quest = 2; state.resonance += 15; const xp = awardPartyXp(260, "Issue 2"); showTalk([["Kael", "Faith under pressure is still faith. Obedience under pressure is only fear."], ["Progress", xp]]); }
   if (event === "registry") { state.flags.registered = true; state.resonance += 10; showTalk([["Guild Clerk", "Flameguard: provisional rank assigned."], ["Verseborn", "Provisional is official for interesting."]]); }
   if (event === "torren") { addParty("Torren"); showTalk([["Torren", "An empty chair is not a debt."]]); }
   if (event === "ravaWave") {
@@ -2668,7 +2975,7 @@ function runEvent(event) {
     ]);
   }
   if (event === "ember") startBattle("Ember Hall Resonance", [enemy("Buried Construct", 86, 12, "Earth", "#6f5540", 1), enemy("Cracked Pillar", 76, 7, "Tech", "#55473c", 2)], "emberWon");
-  if (event === "sparky") { addParty("Sparky"); state.quest = 3; state.resonance += 18; showTalk([["Sparky", "Prrrp!"], ["Verseborn", "Tiny dragon. Ancient heart. Family."]]); }
+  if (event === "sparky") { addParty("Sparky"); state.quest = 3; state.resonance += 18; const xp = awardPartyXp(360, "Issue 3"); showTalk([["Sparky", "Prrrp!"], ["Verseborn", "Tiny dragon. Ancient heart. Family."], ["Progress", xp]]); }
   if (event === "dawn") {
     addParty("Glimmer");
     const enemies = [enemy("Wrong Bell", 82, 11, "Tech", "#a66a35", 2), enemy("Gate Lock", 78, 10, "Earth", "#58616b", 1), enemy("Ash Wyrm", 72, 12, "Ancient Fire", "#5a2f52", 3)];
@@ -2677,33 +2984,89 @@ function runEvent(event) {
   if (event === "ending") {
     state.resonance = 100;
     state.flags.endingComplete = true;
-    showTalk([["Narrator", "The Flameguard is complete."], ["Glimmer", "I can improve unstable."], ["System", "Postgame Echo Hunts and New Game Plus are now available from the System menu."]]);
+    const xp = awardPartyXp(600, "Issue 4");
+    showTalk([["Narrator", "The Flameguard is complete."], ["Glimmer", "I can improve unstable."], ["Progress", xp], ["System", "Postgame Echo Hunts and New Game Plus are now available from the System menu."]]);
+  }
+  if (event === "ngStonewakeTrial") {
+    activateSideQuest("stonewakeTrial");
+    const kaeldrin = enemy("Kaeldrin", 185, 23, "Shadow", "#d9c07b", 2, "Kaeldrin");
+    const lysra = enemy("Lysra", 160, 25, "Tech", "#8b6ac4", 1, "Lysra");
+    kaeldrin.levelHint = lysra.levelHint = 20;
+    kaeldrin.npcBoss = lysra.npcBoss = true;
+    showTalk([["Kaeldrin", "Stonewake advances at full strength."], ["Lysra", "Order begins with precision. Let us measure yours."], ["Verseborn", "Flameguard, second verse."]], {
+      portraits: ["Verseborn", { enemy: "Kaeldrin", label: "Kaeldrin" }],
+      after: () => startBattle("Stonewake Full-Rank Trial", [kaeldrin, lysra], "ngStonewakeWon")
+    });
+  }
+  if (event === "ngOrphanTrial") {
+    activateSideQuest("orphanTrial");
+    const nyx = enemy("Nyx", 145, 22, "Holy Fire", "#473c62", 1, "Nyx");
+    const rava = enemy("Rava", 180, 24, "Earth", "#43685a", 2, "Rava");
+    const jory = enemy("Jory", 170, 26, "Sound", "#755247", 3, "Jory");
+    [nyx, rava, jory].forEach(unit => { unit.levelHint = 20; unit.npcBoss = true; });
+    showTalk([["Nyx", "The first loop supplied adequate combat data."], ["Rava", "Translation: we know your tricks."], ["Jory", "Reverie trial begins now."]], {
+      portraits: ["Verseborn", { enemy: "Nyx", label: "Nyx" }],
+      after: () => startBattle("Reverie Counter-Trial", [nyx, rava, jory], "ngOrphanTrialWon")
+    });
   }
   updatePanels();
 }
 
 function addParty(id) {
   const newlyRecruited = !state.party.includes(id);
+  const recruitLevel = averagePartyLevel();
   if (newlyRecruited) state.party.push(id);
   if (!state.activeParty.includes(id) && state.activeParty.length < 3) state.activeParty.push(id);
   if (newlyRecruited) {
+    state.heroProgress[id] = { level: recruitLevel, xp: 0, talents: [] };
     Object.values(baseJobs[id].gear).forEach(name => {
       addOwnedGear(name);
     });
+    const total = totals(id);
+    baseJobs[id].hp = total.max;
+    baseJobs[id].mp = total.mp;
   }
 }
 
 function enemy(name, hp, atk, weak, color, node, sprite = null) {
-  const ngScale = 1 + state.ngPlus * .28;
-  const scaledHp = Math.round(hp * 3.15 * ngScale);
-  const scaledAtk = Math.round(atk * (1 + state.ngPlus * .18));
+  const scaledHp = Math.round(hp * 3.15);
+  const scaledAtk = atk;
   const stats = {
     str: scaledAtk,
-    agi: Math.max(4, Math.round(5 + node * 3 + atk * .55 + state.ngPlus * 2)),
+    agi: Math.max(4, Math.round(5 + node * 3 + atk * .55)),
     mag: Math.max(3, Math.round(atk * .72 + (weak === "Tech" || weak === "Sound" ? 3 : 0))),
     stam: Math.max(5, Math.round(hp / 10 + node * 2))
   };
-  return { name, hp: scaledHp, max: scaledHp, atk: scaledAtk, stats, weak, color, node, sprite, stagger: 0, row: 1, anim: "idle", animTick: 0 };
+  return { name, hp: scaledHp, max: scaledHp, baseMax: scaledHp, baseAtk: atk, baseStats: { ...stats }, atk: scaledAtk, stats, weak, color, node, sprite, level: 1, stagger: 0, row: 1, anim: "idle", animTick: 0 };
+}
+
+function prepareEnemyForBattle(source, mapId = state.map) {
+  const [low, high] = zoneBandForMap(mapId);
+  const level = Math.max(low, Math.min(MAX_LEVEL, source.levelHint || low + Math.min(high - low, Math.max(0, (source.node || 1) - 1))));
+  const ngScale = 1 + state.ngPlus * .32;
+  const levelScale = 1 + Math.max(0, level - 1) * .012;
+  const baseMax = source.baseMax || source.max;
+  const baseAtk = source.baseAtk || source.atk;
+  const max = Math.round(baseMax * ngScale * levelScale);
+  const atk = Math.round(baseAtk * (1 + state.ngPlus * .22) * (1 + Math.max(0, level - 1) * .01));
+  const baseStats = source.baseStats || source.stats;
+  return {
+    ...source,
+    hp: max,
+    max,
+    atk,
+    level,
+    xp: 14 + level * 7,
+    stats: {
+      str: atk,
+      agi: Math.round((baseStats.agi || 5) + level * .45 + state.ngPlus * 3),
+      mag: Math.round((baseStats.mag || 3) + level * .35 + state.ngPlus * 2),
+      stam: Math.round((baseStats.stam || 5) + level * .5 + state.ngPlus * 3)
+    },
+    stagger: 0,
+    anim: "idle",
+    animTick: 0
+  };
 }
 
 function battleUnit(id) {
@@ -2715,7 +3078,9 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
   mode = "battle";
   const preparedWard = Boolean(state.fieldWard);
   state.fieldWard = false;
-  battle = { name, enemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, spawnRef, waves: waves.slice(), defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1 };
+  const preparedEnemies = enemies.map(unit => prepareEnemyForBattle(unit));
+  const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
+  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1 };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -2794,7 +3159,8 @@ function renderBattle(log) {
   const turn = currentTurn();
   renderTurnOrder();
   el.partyRows.innerHTML = battle.party.map(unit => unitHtml(unit, turn?.side === "party" && turn.id === unit.id ? "is-active" : "")).join("");
-  el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} - Weak: ${e.weak}`, hp: e.hp, max: e.max })).join("");
+  const revealWeakness = partyCanSeeWeaknesses();
+  el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} Lv ${e.level} - Weak: ${revealWeakness ? e.weak : "???"}`, hp: e.hp, max: e.max })).join("");
   el.actions.innerHTML = "";
   el.actions.classList.toggle("is-items", battle.itemMode);
   el.actions.classList.toggle("is-targets", battle.targetMode);
@@ -2804,7 +3170,7 @@ function renderBattle(log) {
   if (!u || u.hp <= 0) return finishTurn("A fallen ally loses their turn.");
   if (battle.itemMode) return renderBattleItems(u);
   if (battle.targetMode) return renderBattleTargets(u);
-  baseJobs[u.id].skills.forEach(sk => {
+  battleSkills(u.id).forEach(sk => {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = sk.name;
@@ -2842,7 +3208,9 @@ function highlightBattleAction() {
 
 function skillPreview(u, sk, target = null) {
   const t = totals(u.id);
-  if (sk.power < 0) return `Restores ${Math.abs(sk.power)} HP / costs ${sk.cost} MP. ${sk.desc}`;
+  const partyHeal = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0;
+  const heal = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")));
+  if (sk.power < 0) return `Restores ${heal} HP${partyHeal ? " to every living ally" : " to the weakest ally"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
   if (sk.anim === "block") return `0 damage / costs ${sk.cost} MP. Grants party guard. ${sk.desc}`;
   const statName = sk.anim === "magic" || sk.anim === "ultimate" ? "MAG" : "STR";
   const stat = statName === "MAG" ? t.mag : t.str;
@@ -2850,12 +3218,17 @@ function skillPreview(u, sk, target = null) {
   const high = low + 5;
   const weaknessBonus = effectValue(u.id, "weaknessDamage");
   const hitsWeakness = target && target.weak === sk.element;
-  const targetLow = hitsWeakness ? Math.floor(Math.floor(low * 1.55) * (1 + weaknessBonus)) : low;
-  const targetHigh = hitsWeakness ? Math.floor(Math.floor(high * 1.55) * (1 + weaknessBonus)) : high;
+  const revealWeakness = partyCanSeeWeaknesses();
+  const displayWeakness = hitsWeakness && revealWeakness;
+  const targetLow = displayWeakness ? Math.floor(Math.floor(low * 1.55) * (1 + weaknessBonus)) : low;
+  const targetHigh = displayWeakness ? Math.floor(Math.floor(high * 1.55) * (1 + weaknessBonus)) : high;
   const weakText = weaknessBonus ? ` Weakness hits use x1.55 and another +${Math.round(weaknessBonus * 100)}% from gear.` : " Weakness hits use x1.55 damage.";
   const cost = sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`;
-  const targetText = target ? ` Against ${target.name}: ${targetLow}-${targetHigh} damage${hitsWeakness ? " including weakness" : ""}.` : "";
-  return `${sk.element} ${sk.anim} / ${low}-${high} base damage from ${statName} ${stat} / costs ${cost}.${targetText}${weakText} ${sk.desc}`;
+  const targetText = target ? ` Against ${target.name}: ${targetLow}-${targetHigh} damage${hitsWeakness && revealWeakness ? " including weakness" : ""}.` : "";
+  const areaText = skillHitsAll(u.id, sk) ? " Hits every living enemy." : " Hits one selected enemy.";
+  const critChance = Math.min(.5, talentValue(u.id, "critChance") + effectValue(u.id, "critChance"));
+  const critText = critChance ? ` ${Math.round(critChance * 100)}% critical chance for double damage.` : "";
+  return `${sk.element} ${sk.anim} / ${low}-${high} base damage from ${statName} ${stat} / costs ${cost}.${targetText}${areaText}${critText}${revealWeakness ? weakText : " Weaknesses are hidden until a reveal talent is active."} ${sk.desc}`;
 }
 
 function setBattlePreview(button, title, description) {
@@ -2898,7 +3271,7 @@ function unitHtml(u, className = "") {
 
 function chooseSkillTarget(u, sk) {
   const live = battle.enemies.filter(enemyUnit => enemyUnit.hp > 0);
-  if (sk.power > 0 && live.length > 1) {
+  if (sk.power > 0 && live.length > 1 && !skillHitsAll(u.id, sk)) {
     battle.targetMode = true;
     battle.pendingSkill = sk;
     battleActionIndex = 0;
@@ -2909,11 +3282,12 @@ function chooseSkillTarget(u, sk) {
 
 function renderBattleTargets(u) {
   const sk = battle.pendingSkill;
+  const revealWeakness = partyCanSeeWeaknesses();
   battle.enemies.filter(enemyUnit => enemyUnit.hp > 0).forEach(enemyUnit => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = `${enemyUnit.name} | HP ${enemyUnit.hp}/${enemyUnit.max} | Weak: ${enemyUnit.weak}`;
-    setBattlePreview(button, `${sk.name} -> ${enemyUnit.name}`, `${skillPreview(u, sk, enemyUnit)} Target weakness: ${enemyUnit.weak}.`);
+    button.textContent = `${enemyUnit.name} Lv ${enemyUnit.level} | HP ${enemyUnit.hp}/${enemyUnit.max} | Weak: ${revealWeakness ? enemyUnit.weak : "???"}`;
+    setBattlePreview(button, `${sk.name} -> ${enemyUnit.name}`, `${skillPreview(u, sk, enemyUnit)} Target weakness: ${revealWeakness ? enemyUnit.weak : "hidden"}.`);
     button.onclick = () => useSkill(u, sk, enemyUnit);
     el.actions.appendChild(button);
   });
@@ -2934,7 +3308,7 @@ function closeTargetSelection() {
 }
 
 function defendReduction(u) {
-  return Math.round((1 - Math.max(.15, .45 - effectValue(u.id, "blockPower"))) * 100);
+  return Math.round((1 - Math.max(.15, .45 - effectValue(u.id, "blockPower") - talentValue(u.id, "blockTalent"))) * 100);
 }
 
 function useDefend(u) {
@@ -2996,12 +3370,20 @@ function useSkill(u, sk, chosenTarget = null) {
   let log = `${u.name} uses ${sk.name}.`;
   if (sk.anim === "ultimate") state.resonance = 0;
   if (sk.power < 0) {
-    const wounded = battle.party.filter(p => p.hp > 0).sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
+    const living = battle.party.filter(p => p.hp > 0);
+    const wounded = living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
+    const healing = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")));
+    const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : [wounded];
     effect = makeBattleEffect(u, sk, wounded);
-    wounded.hp = Math.min(wounded.max, wounded.hp + Math.abs(sk.power));
+    let totalRestored = 0;
+    healTargets.forEach(ally => {
+      const restored = Math.min(healing, ally.max - ally.hp);
+      ally.hp += restored;
+      totalRestored += restored;
+    });
     battle.ward = sk.anim === "block" || sk.anim === "ultimate";
     state.resonance = Math.min(100, state.resonance + 5);
-    log += ` ${wounded.name} recovers ${Math.abs(sk.power)}.`;
+    log += ` ${healTargets.length > 1 ? "The party recovers" : `${wounded.name} recovers`} ${totalRestored} HP.`;
   } else if (sk.anim === "block") {
     effect = makeBattleEffect(u, sk, u);
     battle.ward = true;
@@ -3010,27 +3392,35 @@ function useSkill(u, sk, chosenTarget = null) {
   } else if (target) {
     effect = makeBattleEffect(u, sk, target);
     const t = totals(u.id);
-    let dmg = sk.power + (sk.anim === "magic" || sk.anim === "ultimate" ? t.mag : t.str) + Math.floor(Math.random() * 6);
-    if (target.weak === sk.element) {
-      dmg = Math.floor(dmg * 1.55);
-      dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
-      target.stagger += 2 + effectValue(u.id, "stagger");
-      state.resonance = Math.min(100, state.resonance + 14);
-      log += " Weakness!";
-    } else {
-      target.stagger++;
-      state.resonance = Math.min(100, state.resonance + 5);
-    }
-    if (target.stagger >= 3) {
-      dmg += 12;
-      target.stagger = 0;
-      log += " Stagger break!";
-    }
-    if (sk.name.includes("Silent Step")) target.node = Math.min(3, target.node + 1);
-    target.hp -= dmg;
-    target.flash = 10;
+    const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
+    const critChance = Math.min(.5, talentValue(u.id, "critChance") + effectValue(u.id, "critChance"));
+    hitTargets.forEach(hitTarget => {
+      let dmg = sk.power + (sk.anim === "magic" || sk.anim === "ultimate" ? t.mag : t.str) + Math.floor(Math.random() * 6);
+      if (hitTarget.weak === sk.element) {
+        dmg = Math.floor(dmg * 1.55);
+        dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
+        hitTarget.stagger += 2 + effectValue(u.id, "stagger");
+        state.resonance = Math.min(100, state.resonance + 14);
+        log += ` ${hitTarget.name}: Weakness!`;
+      } else {
+        hitTarget.stagger++;
+        state.resonance = Math.min(100, state.resonance + 5);
+      }
+      if (hitTarget.stagger >= 3) {
+        dmg += 12;
+        hitTarget.stagger = 0;
+        log += ` ${hitTarget.name}: Stagger break!`;
+      }
+      if (critChance && Math.random() < critChance) {
+        dmg *= 2;
+        log += ` ${hitTarget.name}: CRITICAL!`;
+      }
+      if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
+      hitTarget.hp -= dmg;
+      hitTarget.flash = 10;
+      log += ` ${hitTarget.name} takes ${dmg}.`;
+    });
     setTimeout(() => playSfx("hit"), 90);
-    log += ` ${target.name} takes ${dmg}.`;
     const hpOnHit = effectValue(u.id, "hpOnHit");
     const mpOnHit = effectValue(u.id, "mpOnHit");
     if (hpOnHit) {
@@ -3165,7 +3555,7 @@ function resolveEnemyTurn(turn, prev) {
   }
   target.hp -= dmg;
   target.flash = 12;
-  playSfx(["Wrong Bell", "Gate Lock", "Ash Wyrm"].includes(e.name) ? "boss" : "hit");
+  playSfx(e.npcBoss || ["Wrong Bell", "Gate Lock", "Ash Wyrm"].includes(e.name) ? "boss" : "hit");
   battle.ward = false;
   battle.resolving = false;
   finishTurn(`${e.name} hits ${target.name} for ${dmg}.${defenseText}`);
@@ -3189,10 +3579,13 @@ function winBattle(log) {
   state.resonance = Math.min(100, state.resonance + 15);
   battle.party.forEach(u => {
     const h = baseJobs[u.id];
-    h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + effectValue(u.id, "battleRegen")));
+    h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + effectValue(u.id, "battleRegen") + talentValue(u.id, "battleRegenTalent")));
     h.mp = u.mp;
   });
   const rewards = rollBattleLoot(battle.defeated);
+  const bossBattle = Boolean(battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
+  const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
+  const xpSummary = awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
   if (battle.winFlag === "endgameHuntWon") {
     state.endgameRank++;
     const echoGold = 100 + state.endgameRank * 35;
@@ -3214,6 +3607,8 @@ function winBattle(log) {
   }
   updateSideQuestKills(battle.defeated, battle.spawnRef);
   if (battle.winFlag === "ravaWaveWon") completeSideQuest("ravaWave");
+  if (battle.winFlag === "ngStonewakeWon") completeSideQuest("stonewakeTrial");
+  if (battle.winFlag === "ngOrphanTrialWon") completeSideQuest("orphanTrial");
   hideBattlePreview();
   el.turnOrder.innerHTML = "";
   el.battle.classList.add("hidden");
@@ -3222,25 +3617,26 @@ function winBattle(log) {
   updatePanels();
   playSfx("coin");
   const dropText = rewards.drops.length ? rewards.drops.join(", ") : "no item drops";
-  showTalk([["Victory", `${log} Trust and one more clue gained.`], ["Loot", `${rewards.gold} gold. ${dropText}.`]]);
+  showTalk([["Victory", `${log} ${xpSummary}.`], ["Loot", `${rewards.gold} gold. ${dropText}.`]]);
 }
 
 function rollBattleLoot(enemies) {
   let gold = 0;
   const drops = [];
   enemies.forEach(enemyUnit => {
-    const table = lootTables[enemyUnit.name];
-    if (!table) return;
-    gold += table.gold[0] + Math.floor(Math.random() * (table.gold[1] - table.gold[0] + 1));
-    table.common.forEach(([name, chance, amount]) => {
-      if (Math.random() > chance) return;
-      const stored = addInventoryItem(name, amount);
-      drops.push(`${name} x${amount}${stored ? "" : " (Marla stash)"}`);
-    });
-    table.rare.forEach(([name, chance]) => {
-      if (state.ownedGear.includes(name) || Math.random() > chance) return;
-      addOwnedGear(name);
-      drops.push(`RARE: ${name}`);
+    const tables = [lootTables[enemyUnit.name], state.ngPlus > 0 ? ngPlusLootTables[enemyUnit.name] : null].filter(Boolean);
+    tables.forEach((table, tableIndex) => {
+      gold += table.gold[0] + Math.floor(Math.random() * (table.gold[1] - table.gold[0] + 1));
+      table.common.forEach(([name, chance, amount]) => {
+        if (Math.random() > chance) return;
+        const stored = addInventoryItem(name, amount);
+        drops.push(`${tableIndex ? "NG+: " : ""}${name} x${amount}${stored ? "" : " (Marla stash)"}`);
+      });
+      table.rare.forEach(([name, chance]) => {
+        if (Math.random() > chance || gearCopyCount(name) >= 3) return;
+        addOwnedGear(name);
+        drops.push(`${tableIndex ? "NG+ LEGENDARY" : "RARE"}: ${name}`);
+      });
     });
   });
   state.gold += gold;
@@ -3270,7 +3666,7 @@ function questById(id) {
 
 function activateSideQuest(id) {
   const quest = questById(id);
-  if (!quest || !["unseen", "available"].includes(quest.status)) return;
+  if (!quest || quest.requiresNgPlus && state.ngPlus < 1 || !["unseen", "available"].includes(quest.status)) return;
   quest.status = "active";
   if (quest.type === "escort") state.escort = quest.giver;
 }
@@ -3279,6 +3675,7 @@ function questPreview(id) {
   if (!id) return [];
   const quest = questById(id);
   if (!quest) return [];
+  if (quest.requiresNgPlus && state.ngPlus < 1) return [];
   if (id === "nyxInk" && quest.status === "completed") {
     const followup = questById("rareLore");
     if (followup && (followup.status === "unseen" || followup.status === "available")) return [["Nyx", `Quest offered: ${followup.title}. ${followup.desc}`]];
@@ -3294,7 +3691,7 @@ function questPreview(id) {
 
 function processQuestGiver(id) {
   const quest = questById(id);
-  if (!quest) return;
+  if (!quest || quest.requiresNgPlus && state.ngPlus < 1) return;
   if (quest.status === "unseen" || quest.status === "available") activateSideQuest(id);
   if (quest.status === "active" && quest.type === "fetch") {
     const have = state.inventory[quest.target.item] || 0;
@@ -3336,11 +3733,16 @@ function completeSideQuest(id) {
   quest.status = "completed";
   quest.progress = quest.target.amount || quest.target.waves || 1;
   state.gold += quest.reward.gold || 0;
+  const xpSummary = quest.reward.xp ? awardPartyXp(quest.reward.xp, quest.title) : "";
   Object.entries(quest.reward.items || {}).forEach(([name, amount]) => addInventoryItem(name, amount));
   if (quest.reward.gear && !state.ownedGear.includes(quest.reward.gear)) addOwnedGear(quest.reward.gear);
+  (quest.reward.gears || []).forEach(name => {
+    if (!state.ownedGear.includes(name)) addOwnedGear(name);
+  });
   if (state.escort === quest.giver) state.escort = null;
   state.flags[`quest:${id}`] = true;
   playSfx("coin");
+  if (xpSummary) showHudNotice(`QUEST COMPLETE - ${xpSummary}`);
   updatePanels();
 }
 
@@ -3352,6 +3754,7 @@ function sideQuestProgress(quest) {
     return state.escort ? "escort active" : "waiting";
   }
   if (quest.type === "wave") return quest.status === "completed" ? "3/3 waves" : "awaiting defense";
+  if (quest.type === "boss") return quest.status === "completed" ? "trial defeated" : "boss trial awaiting victory";
   return `${Math.min(quest.progress, quest.target.amount)}/${quest.target.amount}`;
 }
 
@@ -3370,12 +3773,37 @@ function toggleMenu() {
   renderMenu();
 }
 
+function xpProgressHtml(id) {
+  const progress = progressFor(id);
+  const required = xpForNextLevel(progress.level);
+  const percent = required ? Math.min(100, Math.round(progress.xp / required * 100)) : 100;
+  const copy = required ? `${progress.xp} / ${required} XP` : "MAX LEVEL";
+  return `<div class="xp-progress"><span><b>Level ${progress.level}</b><small>${copy}</small></span><i><em style="width:${percent}%"></em></i></div>`;
+}
+
+function toggleTalent(value) {
+  const separator = value.indexOf(":");
+  const id = value.slice(0, separator);
+  const name = value.slice(separator + 1);
+  const progress = progressFor(id);
+  const entry = (talentTrees[id] || []).find(option => option.name === name);
+  if (!entry || progress.level < entry.level) return;
+  if (progress.talents.includes(name)) progress.talents = progress.talents.filter(chosen => chosen !== name);
+  else {
+    if (progress.talents.length >= 2) return showHudNotice("SKILL TREE - deselect one of the two active skills first");
+    progress.talents.push(name);
+  }
+  playSfx("menu");
+  updatePanels();
+  renderMenu();
+}
+
 function renderMenu() {
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
     el.menuBody.innerHTML = `<div class="menu-grid">${state.party.map(id => {
-      const h = baseJobs[id], t = totals(id);
-      return `<div class="menu-card"><strong>${h.name} - ${h.title}</strong><small>${state.activeParty.includes(id) ? `ACTIVE SLOT ${state.activeParty.indexOf(id) + 1}` : "RESERVE"}</small><p>STR ${t.str} / AGI ${t.agi} / MAG ${t.mag} / STAM ${t.stam}</p><p>HP ${h.hp}/${t.max} MP ${h.mp}/${t.mp}. ${h.element} class.</p></div>`;
+      const h = baseJobs[id], t = totals(id), chosen = activeTalents(id);
+      return `<div class="menu-card status-card"><strong>${h.name} - ${h.title}</strong><small>${state.activeParty.includes(id) ? `ACTIVE SLOT ${state.activeParty.indexOf(id) + 1}` : "RESERVE"}</small>${xpProgressHtml(id)}<p>STR ${t.str} / AGI ${t.agi} / MAG ${t.mag} / STAM ${t.stam}</p><p>HP ${h.hp}/${t.max} MP ${h.mp}/${t.mp}. ${h.element} class.</p><small>${chosen.length ? `Active skills: ${chosen.map(entry => entry.name).join(", ")}` : "No milestone skills active."}</small></div>`;
     }).join("")}</div>`;
   }
   if (menuTab === "party") {
@@ -3401,6 +3829,30 @@ function renderMenu() {
     });
     el.menuBody.querySelectorAll("[data-party-add]").forEach(button => button.onclick = () => setActivePartyMember(button.dataset.partyAdd));
     el.menuBody.querySelectorAll("[data-party-remove]").forEach(button => button.onclick = () => removeActivePartyMember(Number(button.dataset.partyRemove)));
+  }
+  if (menuTab === "skills") {
+    if (!state.party.includes(selectedSkillHero)) selectedSkillHero = state.party[0];
+    const id = selectedSkillHero;
+    const hero = baseJobs[id];
+    const progress = progressFor(id);
+    const chosen = new Set(progress.talents);
+    const roster = state.party.map(heroId => {
+      const current = progressFor(heroId);
+      return `<button type="button" class="skill-hero ${heroId === id ? "is-selected" : ""}" data-skill-hero="${heroId}"><span class="dot" style="background:${baseJobs[heroId].color}"></span><strong>${heroId}</strong><small>Level ${current.level} / ${current.talents.length} of 2 active</small></button>`;
+    }).join("");
+    const choices = talentTrees[id].map(entry => {
+      const selected = chosen.has(entry.name);
+      const locked = progress.level < entry.level;
+      const full = !selected && chosen.size >= 2;
+      const stateText = locked ? `UNLOCKS AT LV ${entry.level}` : selected ? "ACTIVE" : full ? "2 / 2 ACTIVE" : "AVAILABLE";
+      return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" ${locked || full ? "disabled" : ""}><span class="talent-level">LV ${entry.level}</span><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p><small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : "+"}</b></button>`;
+    }).join("");
+    el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Milestone Skills</strong><p>Unlock choices at levels 5, 10, 15 and 20. Activate any two; you may change them outside battle.</p></div><span>${hero.name} / ${chosen.size} of 2 active</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small></div>${xpProgressHtml(id)}</header><div class="talent-grid">${choices}</div></section>`;
+    el.menuBody.querySelectorAll("[data-skill-hero]").forEach(button => button.onclick = () => {
+      selectedSkillHero = button.dataset.skillHero;
+      renderMenu();
+    });
+    el.menuBody.querySelectorAll("[data-talent]").forEach(button => button.onclick = () => toggleTalent(button.dataset.talent));
   }
   if (menuTab === "gear") {
     if (!state.party.includes(selectedGearHero)) selectedGearHero = state.party[0];
@@ -3472,12 +3924,14 @@ function renderMenu() {
       .map((sk, skillIndex) => ({ casterId, sk, skillIndex: baseJobs[casterId].skills.indexOf(sk) })));
     const fieldSkillCards = fieldSkills.map(({ casterId, sk, skillIndex }) => {
       const caster = baseJobs[casterId];
-      const heal = sk.power < 0 ? Math.abs(sk.power) + Math.round(totals(casterId).mag * .6) : 0;
-      const effectText = [heal ? `Heals about ${heal} HP` : "", sk.anim === "block" ? "prepares an opening party ward" : ""].filter(Boolean).join(" and ");
-      return `<div class="menu-card field-skill-card"><strong>${caster.name}: ${sk.name}</strong><small>${sk.cost} MP / ${effectText}</small><p>${sk.desc}</p><div class="field-targets"><span>Cast on</span>${state.party.map(targetId => {
+      const heal = sk.power < 0 ? Math.round((Math.abs(sk.power) + totals(casterId).mag * .6) * (1 + talentValue(casterId, "healBoost"))) : 0;
+      const partyHeal = sk.partyWide || talentValue(casterId, "partyHeal", sk.name) > 0;
+      const effectText = [heal ? `Heals about ${heal} HP${partyHeal ? " for all living allies" : ""}` : "", sk.anim === "block" ? "prepares an opening party ward" : ""].filter(Boolean).join(" and ");
+      return `<div class="menu-card field-skill-card"><strong>${caster.name}: ${sk.name}</strong><small>${sk.cost} MP / ${effectText}</small><p>${sk.desc}</p><div class="field-targets"><span>Cast on</span>${(partyHeal && heal ? [state.party[0]] : state.party).map(targetId => {
         const target = baseJobs[targetId], targetTotal = totals(targetId);
-        const canUse = caster.mp >= sk.cost && (sk.anim === "block" && !state.fieldWard || heal > 0 && target.hp < targetTotal.max);
-        return `<button type="button" data-field-skill="${casterId}:${skillIndex}:${targetId}" ${canUse ? "" : "disabled"}>${target.name}<small>${target.hp}/${targetTotal.max} HP</small></button>`;
+        const anyoneNeedsHealing = state.party.some(heroId => baseJobs[heroId].hp > 0 && baseJobs[heroId].hp < totals(heroId).max);
+        const canUse = caster.mp >= sk.cost && (sk.anim === "block" && !state.fieldWard || heal > 0 && (partyHeal ? anyoneNeedsHealing : target.hp < targetTotal.max));
+        return `<button type="button" data-field-skill="${casterId}:${skillIndex}:${targetId}" ${canUse ? "" : "disabled"}>${partyHeal && heal ? "All allies" : target.name}<small>${partyHeal && heal ? "Party heal" : `${target.hp}/${targetTotal.max} HP`}</small></button>`;
       }).join("")}</div></div>`;
     }).join("");
     el.menuBody.innerHTML = `<div class="wallet-line"><span>Wallet</span><strong>${state.gold} G</strong><span>Bag ${inventoryUsed()}/${state.inventorySlots}</span><span>${state.fieldWard ? "Opening ward prepared" : "No field ward"}</span></div><h3>Items</h3><div class="menu-grid">${bag.length ? bag.map(itemCard).join("") : `<div class="menu-card"><strong>Bag empty</strong><p>No consumables or materials are being carried.</p></div>`}</div><h3>Field Skills</h3><div class="menu-grid">${fieldSkillCards || `<div class="menu-card"><strong>No field support skill available</strong><p>Recruit a healer or support hero to cast outside combat.</p></div>`}</div><h3>Equipment Inventory</h3><div class="menu-grid">${equipment.map(equipmentCard).join("")}</div>${stash.length ? `<h3>Marla's Stash</h3><div class="menu-grid">${stash.map(itemCard).join("")}</div>` : ""}`;
@@ -3487,18 +3941,18 @@ function renderMenu() {
   if (menuTab === "quests") {
     const main = currentQuest();
     const tracked = sideQuests.filter(quest => ["active", "ready", "completed"].includes(quest.status));
-    el.menuBody.innerHTML = `<div class="menu-card main-quest"><strong>${main ? `Main: ${main[0]}` : "No active main quest"}</strong><p>${main ? main[1] : "Speak with people marked by a gold exclamation point."}</p></div><div class="menu-grid">${tracked.length ? tracked.map(quest => `<div class="menu-card quest-${quest.status}"><strong>${quest.title}</strong><small>${quest.status.toUpperCase()} / ${quest.giver}</small><p>${quest.desc}</p><p>${sideQuestProgress(quest)}</p><p>Reward: ${quest.reward.gold || 0} G${quest.reward.gear ? ` / ${quest.reward.gear}` : ""}</p></div>`).join("") : `<div class="menu-card"><strong>No side quests yet</strong><p>They appear here after an NPC gives them to you.</p></div>`}</div>`;
+    el.menuBody.innerHTML = `<div class="menu-card main-quest"><strong>${main ? `Main: ${main[0]}` : "No active main quest"}</strong><p>${main ? main[1] : "Speak with people marked by a gold exclamation point."}</p></div><div class="menu-grid">${tracked.length ? tracked.map(quest => { const rewardGear = [quest.reward.gear, ...(quest.reward.gears || [])].filter(Boolean); return `<div class="menu-card quest-${quest.status}"><strong>${quest.title}</strong><small>${quest.status.toUpperCase()} / ${quest.giver}</small><p>${quest.desc}</p><p>${sideQuestProgress(quest)}</p><p>Reward: ${quest.reward.gold || 0} G / ${quest.reward.xp || 0} XP${rewardGear.length ? ` / ${rewardGear.join(", ")}` : ""}</p></div>`; }).join("") : `<div class="menu-card"><strong>No side quests yet</strong><p>They appear here after an NPC gives them to you.</p></div>`}</div>`;
   }
   if (menuTab === "world") {
     const region = mapRegion(state.map);
     const entries = Object.entries(maps).filter(([id]) => mapRegion(id) === region);
     const size = currentMap().gridSize || [5, 5];
-    el.menuBody.innerHTML = `<div class="wallet-line"><span>${region}</span><strong>${size[0]} x ${size[1]} field grid</strong></div><div class="world-grid" style="--world-cols:${size[0]}">${Array.from({ length: size[0] * size[1] }, (_, index) => {
+    el.menuBody.innerHTML = `<div class="wallet-line"><span>${region}</span><strong>${size[0]} x ${size[1]} field grid / ${zoneLevelText()}</strong></div><div class="world-grid" style="--world-cols:${size[0]}">${Array.from({ length: size[0] * size[1] }, (_, index) => {
       const x = index % size[0], y = Math.floor(index / size[0]);
       const match = entries.find(([, field]) => field.grid?.[0] === x && field.grid?.[1] === y);
       if (!match) return `<div class="world-cell is-empty"></div>`;
       const [id, field] = match;
-      return `<div class="world-cell ${id === state.map ? "is-current" : ""}"><span>${x + 1}.${y + 1}</span><strong>${field.name}</strong></div>`;
+      return `<div class="world-cell ${id === state.map ? "is-current" : ""} ${state.discoveredMaps.includes(id) ? "" : "is-undiscovered"}"><span>${x + 1}.${y + 1} / ${zoneLevelText(id)}</span><strong>${state.discoveredMaps.includes(id) ? field.name : "Undiscovered"}</strong></div>`;
     }).join("")}</div>`;
   }
   if (menuTab === "lore") {
@@ -3507,8 +3961,8 @@ function renderMenu() {
     el.menuBody.innerHTML = `<h3>Issue Chronicle</h3><div class="menu-grid">${knownIssues.length ? knownIssues.map((q, i) => `<div class="menu-card"><strong>Issue ${i + 1}: ${q[0]}</strong><p>${q[2]}</p><p>${q[1]}</p></div>`).join("") : `<div class="menu-card"><strong>No issue recorded</strong><p>Your chronicle begins when someone entrusts you with a quest.</p></div>`}</div><h3>Rare & Miniboss Field Notes</h3><div class="menu-grid">${fieldNotes.map(spawnPoint => `<div class="menu-card"><strong>${spawnPoint.name}</strong><small>${spawnPoint.rare ? "RARE SPAWN" : "ONE-TIME MINIBOSS"} / ${state.flags[`spawn:${spawnPoint.id}`] ? "DEFEATED" : spawnPoint.available ? "ACTIVE" : "DORMANT"}</small><p>${spawnPoint.lore}</p><p>${spawnPoint.boss ? "Does not respawn." : `Rare return window: roughly ${spawnPoint.respawn}-${spawnPoint.respawn + 30}s.`}</p></div>`).join("")}</div>`;
   }
   if (menuTab === "system") {
-    const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear and award gold, materials and five pieces of Dawnforged endgame gear. New Game Plus keeps companions, equipment, items and gold while resetting story quests and bosses with stronger enemy stats.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
-    el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>AGI creates one shared turn order for heroes and enemies. Every hero can Defend, select targets and inspect exact command values.</p></div><div class="menu-card"><strong>Stats</strong><p>STR controls melee, AGI controls turn order, MAG controls spells, STAM controls HP and durability.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Every enemy has its own gold and loot table. Rare effect gear comes from battles and side quests, never shops.</p></div><div class="menu-card"><strong>World</strong><p>Field units form branching 3x3 and 5x5 regional grids with interiors, vendors, rare spawns and one-time bosses.</p></div></div>${postgame}`;
+    const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear. New Game Plus carries levels, milestone choices, companions, equipment, items and gold into level 15-20 zones, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
+    el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>AGI creates one shared turn order for heroes and enemies. Every hero can Defend, select targets and inspect exact command values.</p></div><div class="menu-card"><strong>Levels & Skills</strong><p>The level cap is 20. Battles, bosses, quests and first visits to new areas award XP. Milestone skills unlock at levels 5, 10, 15 and 20; activate a maximum of two.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Every enemy has its own gold and loot table. New Game Plus adds stronger legendary drops and unique boss-quest rewards.</p></div><div class="menu-card"><strong>World</strong><p>Regions have visible level bands. Field units form branching grids with interiors, vendors, rare spawns and one-time bosses.</p></div></div>${postgame}`;
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
   }
@@ -3549,12 +4003,17 @@ function useFieldSkill(value) {
   const sk = caster?.skills[Number(skillIndexText)];
   if (!caster || !target || !sk || sk.anim === "ultimate" || (sk.power >= 0 && sk.anim !== "block") || caster.mp < sk.cost) return;
   const targetTotal = totals(targetId);
-  const heal = sk.power < 0 ? Math.abs(sk.power) + Math.round(totals(casterId).mag * .6) : 0;
-  const needsHeal = heal > 0 && target.hp < targetTotal.max;
+  const heal = sk.power < 0 ? Math.round((Math.abs(sk.power) + totals(casterId).mag * .6) * (1 + talentValue(casterId, "healBoost"))) : 0;
+  const partyHeal = sk.partyWide || talentValue(casterId, "partyHeal", sk.name) > 0;
+  const needsHeal = heal > 0 && (partyHeal ? state.party.some(id => baseJobs[id].hp > 0 && baseJobs[id].hp < totals(id).max) : target.hp < targetTotal.max);
   const needsWard = sk.anim === "block" && !state.fieldWard;
   if (!needsHeal && !needsWard) return;
   caster.mp -= sk.cost;
-  if (needsHeal) target.hp = Math.min(targetTotal.max, target.hp + heal);
+  if (needsHeal && partyHeal) state.party.forEach(id => {
+    const ally = baseJobs[id];
+    if (ally.hp > 0) ally.hp = Math.min(totals(id).max, ally.hp + heal);
+  });
+  else if (needsHeal) target.hp = Math.min(targetTotal.max, target.hp + heal);
   if (sk.anim === "block") state.fieldWard = true;
   playSfx(sk.anim === "block" ? "block" : "magic");
   updatePanels();
@@ -3625,10 +4084,11 @@ function startEndgameHunt() {
   const boost = 1 + rank * .14;
   const rankedEnemy = (name, hp, atk, weak, color, node, sprite) => {
     const unit = enemy(name, hp, atk, weak, color, node, sprite);
-    unit.hp = unit.max = Math.round(unit.max * boost);
-    unit.atk = Math.round(unit.atk * (1 + rank * .08));
-    unit.stats.agi += Math.ceil(rank * 1.5);
-    unit.stats.stam += rank * 2;
+    unit.baseMax = unit.hp = unit.max = Math.round(unit.baseMax * boost);
+    unit.baseAtk = unit.atk = Math.round(unit.baseAtk * (1 + rank * .08));
+    unit.baseStats.agi += Math.ceil(rank * 1.5);
+    unit.baseStats.stam += rank * 2;
+    unit.levelHint = Math.min(20, 15 + rank);
     return unit;
   };
   const formations = [
@@ -3653,6 +4113,7 @@ function beginNewGamePlus() {
   state.escort = null;
   state.endgameRank = 0;
   state.flags = { newGamePlus: true };
+  state.discoveredMaps = ["lantern"];
   sideQuests.forEach(quest => {
     quest.status = "unseen";
     quest.progress = 0;
@@ -3662,6 +4123,11 @@ function beginNewGamePlus() {
     spawnPoint.returnAt = 0;
     spawnPoint.x = spawnPoint.homeX;
     spawnPoint.y = spawnPoint.homeY;
+  });
+  state.party.forEach(id => {
+    const total = totals(id);
+    baseJobs[id].hp = total.max;
+    baseJobs[id].mp = total.mp;
   });
   mode = "walk";
   el.menu.classList.add("hidden");
