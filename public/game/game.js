@@ -313,6 +313,69 @@ function cellBounds(imageData, width, height, col, row, columns, rows) {
   return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
 }
 
+function occupiedRowRuns(imageData, width, startX, endX, startY, endY) {
+  const runs = [];
+  let runStart = -1;
+  for (let y = startY; y <= endY; y++) {
+    let occupied = false;
+    if (y < endY) {
+      let pixels = 0;
+      for (let x = startX; x < endX; x++) {
+        if (imageData.data[(y * width + x) * 4 + 3] < 20) continue;
+        if (++pixels >= 2) { occupied = true; break; }
+      }
+    }
+    if (occupied && runStart < 0) runStart = y;
+    if (!occupied && runStart >= 0) {
+      runs.push({ start: runStart, end: y - 1 });
+      runStart = -1;
+    }
+  }
+  return runs;
+}
+
+function repairedAnimationFrame(source, imageData, col, row, columns, rows) {
+  const cellWidth = source.width / columns;
+  const cellHeight = source.height / rows;
+  const startX = Math.floor(col * cellWidth);
+  const endX = Math.floor((col + 1) * cellWidth);
+  const boundary = Math.floor(row * cellHeight);
+  const nextBoundary = Math.floor((row + 1) * cellHeight);
+  const currentRuns = occupiedRowRuns(imageData, source.width, startX, endX, boundary, nextBoundary);
+  const body = currentRuns[0];
+  if (!body) return null;
+
+  const pieces = [];
+  if (row >= 3) {
+    const previousRuns = occupiedRowRuns(
+      imageData,
+      source.width,
+      startX,
+      endX,
+      Math.max(0, boundary - Math.floor(cellHeight / 2)),
+      boundary
+    );
+    const head = previousRuns[previousRuns.length - 1];
+    if (head && boundary - head.end <= 8) pieces.push(head);
+  }
+  pieces.push(body);
+
+  const padding = 2;
+  const joinedHeight = pieces.reduce((sum, piece) => sum + piece.end - piece.start + 1, 0) + padding * 2 + Math.max(0, pieces.length - 1);
+  const frame = document.createElement("canvas");
+  frame.width = endX - startX;
+  frame.height = joinedHeight;
+  const paint = frame.getContext("2d");
+  paint.imageSmoothingEnabled = false;
+  let targetY = padding;
+  pieces.forEach(piece => {
+    const height = piece.end - piece.start + 1;
+    paint.drawImage(source, startX, piece.start, frame.width, height, 0, targetY, frame.width, height);
+    targetY += height + 1;
+  });
+  return frame;
+}
+
 function loadSpriteSheet(id) {
   return new Promise(resolve => {
     const image = new Image();
@@ -402,10 +465,16 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
       for (let row = 0; row < layout.rows; row++) {
         for (let col = 0; col < layout.columns; col++) cells.push(cellBounds(pixels, cleaned.width, cleaned.height, col, row, layout.columns, layout.rows));
       }
-      const fieldHeights = cells.slice(0, Math.min(cells.length, layout.columns * 4)).map(cell => cell.h).sort((a, b) => a - b);
+      const frames = layout.columns === 4 && layout.rows === 7
+        ? Array.from({ length: layout.rows }, (_, row) => Array.from({ length: layout.columns }, (_, col) => repairedAnimationFrame(cleaned, pixels, col, row, layout.columns, layout.rows)))
+        : null;
+      const fieldHeights = frames
+        ? frames.slice(0, 4).flat().filter(Boolean).map(frame => frame.height).sort((a, b) => a - b)
+        : cells.slice(0, Math.min(cells.length, layout.columns * 4)).map(cell => cell.h).sort((a, b) => a - b);
       animationSheets[id] = {
         image: cleaned,
         cells,
+        frames,
         columns: layout.columns,
         rows: layout.rows,
         cellWidth: cleaned.width / layout.columns,
@@ -1808,15 +1877,17 @@ function drawAnimationSprite(id, px, py, dir, anim, frame) {
   if (battlePose && (anim === "magic" || anim === "ultimate")) motionY = -Math.round(Math.sin((actionT / 24) * Math.PI) * 3);
   const anchorX = px + (battlePose ? 24 : 8) + motionX;
   const baseline = py + (battlePose ? 52 : 32) + motionY;
-  const sourceX = col * sheet.cellWidth;
-  const sourceY = row * sheet.cellHeight;
-  const width = Math.round(sheet.cellWidth * scale);
-  const height = Math.round(sheet.cellHeight * scale);
+  const repairedFrame = sheet.frames?.[row]?.[col];
+  const sourceWidth = repairedFrame?.width || sheet.cellWidth;
+  const sourceHeight = repairedFrame?.height || sheet.cellHeight;
+  const width = Math.round(sourceWidth * scale);
+  const height = Math.round(sourceHeight * scale);
   const destX = Math.round(anchorX - width / 2);
-  const destY = Math.round(baseline - (sheet.cellHeight - 2) * scale);
+  const destY = Math.round(baseline - height);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  if (repairedFrame) ctx.drawImage(repairedFrame, 0, 0, sourceWidth, sourceHeight, destX, destY, width, height);
+  else ctx.drawImage(sheet.image, col * sheet.cellWidth, row * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
   ctx.restore();
   return true;
 }
@@ -2612,18 +2683,20 @@ function drawNpcBattleEnemy(e, px, py) {
   const col = attacking ? Math.min(3, Math.floor(progress * 4)) : [0, 0, 3, 0][Math.floor((tick + id.length * 3) / 16) % 4];
   const targetHeight = Math.round((animatedNpcHeights[id] || 26) * 1.9);
   const scale = targetHeight / Math.max(1, sheet.referenceHeight);
-  const sourceX = col * sheet.cellWidth;
-  const sourceY = row * sheet.cellHeight;
-  const width = Math.round(sheet.cellWidth * scale);
-  const height = Math.round(sheet.cellHeight * scale);
+  const repairedFrame = sheet.frames?.[row]?.[col];
+  const sourceWidth = repairedFrame?.width || sheet.cellWidth;
+  const sourceHeight = repairedFrame?.height || sheet.cellHeight;
+  const width = Math.round(sourceWidth * scale);
+  const height = Math.round(sourceHeight * scale);
   const lunge = attacking ? Math.round(Math.sin(progress * Math.PI) * 7) : 0;
   const anchorX = px + 8 - lunge;
   const baseline = py + 31 + (!attacking && Math.floor(tick / 18) % 3 === 1 ? -1 : 0);
   const destX = Math.round(anchorX - width / 2);
-  const destY = Math.round(baseline - (sheet.cellHeight - 2) * scale);
+  const destY = Math.round(baseline - height);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  if (repairedFrame) ctx.drawImage(repairedFrame, 0, 0, sourceWidth, sourceHeight, destX, destY, width, height);
+  else ctx.drawImage(sheet.image, col * sheet.cellWidth, row * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
   ctx.restore();
   if (attacking && e.lastAnimDrawTick !== tick) {
     e.animTick = (e.animTick || 0) + 1;
@@ -3160,10 +3233,14 @@ function enemyPortraitDataUrl(name) {
     paint.fillRect(5, 5, 86, 86);
     paint.fillStyle = "#171822";
     paint.fillRect(8, 8, 80, 80);
+    const frame = npcSheet.frames?.[0]?.[0];
+    const sourceWidth = frame?.width || npcSheet.cellWidth;
+    const sourceHeight = frame?.height || npcSheet.cellHeight;
     const height = 76;
-    const scale = height / npcSheet.cellHeight;
-    const width = Math.round(npcSheet.cellWidth * scale);
-    paint.drawImage(npcSheet.image, 0, 0, npcSheet.cellWidth, npcSheet.cellHeight, Math.round((96 - width) / 2), 86 - height, width, height);
+    const scale = height / sourceHeight;
+    const width = Math.round(sourceWidth * scale);
+    if (frame) paint.drawImage(frame, 0, 0, sourceWidth, sourceHeight, Math.round((96 - width) / 2), 86 - height, width, height);
+    else paint.drawImage(npcSheet.image, 0, 0, npcSheet.cellWidth, npcSheet.cellHeight, Math.round((96 - width) / 2), 86 - height, width, height);
     paint.fillStyle = "#d8b06b";
     paint.fillRect(8, 8, 80, 2);
     paint.fillRect(8, 86, 80, 2);
@@ -3205,8 +3282,9 @@ function showBossIntro(title, enemyUnit, launch) {
     "False Dawn System": [["False Dawn System", "LOCAL MEMORY REJECTED. ALL NAMES WILL RETURN TO ORDER."], ["Glimmer", "It thinks order means nobody moves."], ["Verseborn", "Then let us introduce a chorus."]]
   }[bossName] || [[bossName, "Advance is prohibited."], ["Verseborn", "That has rarely stopped us."]];
   playSfx("boss");
+  const portraitKey = bossPortraitSources[bossName] ? bossName : enemyUnit.sprite || enemyUnit.name;
   showTalk(lines, {
-    portraits: ["Verseborn", { enemy: enemyUnit.sprite || enemyUnit.name, label: bossName }],
+    portraits: ["Verseborn", { enemy: portraitKey, label: bossName }],
     after: launch
   });
 }
