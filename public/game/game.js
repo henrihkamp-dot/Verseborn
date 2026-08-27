@@ -213,7 +213,9 @@ const animatedNpcFiles = {
   Kaeldrin: "kaeldrin",
   Lysra: "lysra",
   Jory: "jory",
-  Harl: "harl"
+  Harl: "harl",
+  Shade: "shade",
+  Grumm: "grumm"
 };
 const animatedNpcHeights = {
   Marla: 26,
@@ -222,7 +224,9 @@ const animatedNpcHeights = {
   Kaeldrin: 29,
   Lysra: 29,
   Jory: 27,
-  Harl: 26
+  Harl: 26,
+  Shade: 27,
+  Grumm: 24
 };
 const enemyAnimationFiles = {
   "Inkbound Auditor": "inkbound-auditor",
@@ -248,8 +252,23 @@ const magicEnemyAnimations = new Set([
   "Seal Bearer",
   "Ash Wyrm"
 ]);
+const magicNpcAnimations = new Set(["Lysra", "Nyx", "Jory"]);
+const enemyAbilityProfiles = {
+  Jory: { row: 0, element: "Sound", magic: "Star Note", ultimate: "Grand Chord" },
+  Nyx: { row: 1, element: "Shadow", magic: "Shadow Bolt", ultimate: "Gravebind" },
+  Rava: { row: 2, element: "Ancient Fire", magic: "Ember Javelin", ultimate: "Dragon's Breath" },
+  Grumm: { row: 3, element: "Earth", magic: "Boulder Toss", ultimate: "Mountain Breaker" },
+  Kaeldrin: { row: 4, element: "Holy Fire", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn" },
+  Lysra: { row: 5, element: "Sigil", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence" },
+  Shade: { row: 6, element: "Shadow", magic: "Throwing Daggers", ultimate: "Shadow Storm" },
+  Marla: { row: 7, element: "Heart", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true }
+};
 const animationLayouts = {
-  Harl: { columns: 6, rows: 4, chromaBlack: true }
+  Harl: { columns: 6, rows: 4, chromaBlack: true },
+  Kaeldrin: { columns: 4, rows: 7, chromaBlack: true },
+  Lysra: { columns: 4, rows: 7, chromaBlack: true },
+  Shade: { columns: 4, rows: 7, chromaBlack: true },
+  Grumm: { columns: 4, rows: 7, chromaBlack: true }
 };
 const mapImages = {};
 const battleImages = {};
@@ -261,6 +280,7 @@ let worldEnemySheet = null;
 let npcSheet = null;
 let titleImage = null;
 let chestSheet = null;
+let echoProjectileSheet = null;
 let spriteLoadProgress = 0;
 let runtimeAssetsReady = false;
 
@@ -311,69 +331,6 @@ function cellBounds(imageData, width, height, col, row, columns, rows) {
   }
   if (minX > maxX) return { x: startX, y: startY, w: cellWidth, h: cellHeight };
   return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
-}
-
-function occupiedRowRuns(imageData, width, startX, endX, startY, endY) {
-  const runs = [];
-  let runStart = -1;
-  for (let y = startY; y <= endY; y++) {
-    let occupied = false;
-    if (y < endY) {
-      let pixels = 0;
-      for (let x = startX; x < endX; x++) {
-        if (imageData.data[(y * width + x) * 4 + 3] < 20) continue;
-        if (++pixels >= 2) { occupied = true; break; }
-      }
-    }
-    if (occupied && runStart < 0) runStart = y;
-    if (!occupied && runStart >= 0) {
-      runs.push({ start: runStart, end: y - 1 });
-      runStart = -1;
-    }
-  }
-  return runs;
-}
-
-function repairedAnimationFrame(source, imageData, col, row, columns, rows) {
-  const cellWidth = source.width / columns;
-  const cellHeight = source.height / rows;
-  const startX = Math.floor(col * cellWidth);
-  const endX = Math.floor((col + 1) * cellWidth);
-  const boundary = Math.floor(row * cellHeight);
-  const nextBoundary = Math.floor((row + 1) * cellHeight);
-  const currentRuns = occupiedRowRuns(imageData, source.width, startX, endX, boundary, nextBoundary);
-  const body = currentRuns[0];
-  if (!body) return null;
-
-  const pieces = [];
-  if (row >= 3) {
-    const previousRuns = occupiedRowRuns(
-      imageData,
-      source.width,
-      startX,
-      endX,
-      Math.max(0, boundary - Math.floor(cellHeight / 2)),
-      boundary
-    );
-    const head = previousRuns[previousRuns.length - 1];
-    if (head && boundary - head.end <= 8) pieces.push(head);
-  }
-  pieces.push(body);
-
-  const padding = 2;
-  const joinedHeight = pieces.reduce((sum, piece) => sum + piece.end - piece.start + 1, 0) + padding * 2 + Math.max(0, pieces.length - 1);
-  const frame = document.createElement("canvas");
-  frame.width = endX - startX;
-  frame.height = joinedHeight;
-  const paint = frame.getContext("2d");
-  paint.imageSmoothingEnabled = false;
-  let targetY = padding;
-  pieces.forEach(piece => {
-    const height = piece.end - piece.start + 1;
-    paint.drawImage(source, startX, piece.start, frame.width, height, 0, targetY, frame.width, height);
-    targetY += height + 1;
-  });
-  return frame;
 }
 
 function loadSpriteSheet(id) {
@@ -465,16 +422,10 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
       for (let row = 0; row < layout.rows; row++) {
         for (let col = 0; col < layout.columns; col++) cells.push(cellBounds(pixels, cleaned.width, cleaned.height, col, row, layout.columns, layout.rows));
       }
-      const frames = layout.columns === 4 && layout.rows === 7
-        ? Array.from({ length: layout.rows }, (_, row) => Array.from({ length: layout.columns }, (_, col) => repairedAnimationFrame(cleaned, pixels, col, row, layout.columns, layout.rows)))
-        : null;
-      const fieldHeights = frames
-        ? frames.slice(0, 4).flat().filter(Boolean).map(frame => frame.height).sort((a, b) => a - b)
-        : cells.slice(0, Math.min(cells.length, layout.columns * 4)).map(cell => cell.h).sort((a, b) => a - b);
+      const fieldHeights = cells.slice(0, Math.min(cells.length, layout.columns * 4)).map(cell => cell.h).sort((a, b) => a - b);
       animationSheets[id] = {
         image: cleaned,
         cells,
-        frames,
         columns: layout.columns,
         rows: layout.rows,
         cellWidth: cleaned.width / layout.columns,
@@ -664,6 +615,25 @@ function loadTitleImage() {
   });
 }
 
+function loadEchoProjectileSheet() {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      const cleaned = document.createElement("canvas");
+      cleaned.width = image.naturalWidth;
+      cleaned.height = image.naturalHeight;
+      const paint = cleaned.getContext("2d", { willReadFrequently: true });
+      paint.imageSmoothingEnabled = false;
+      paint.drawImage(image, 0, 0);
+      removeConnectedCheckerboard(paint, cleaned.width, cleaned.height);
+      echoProjectileSheet = cleaned;
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = "assets/effects/echo-projectiles.png";
+  });
+}
+
 Promise.all([
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
   ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
@@ -674,6 +644,7 @@ Promise.all([
   loadWorldEnemySheet(),
   loadNpcSheet(),
   loadTitleImage(),
+  loadEchoProjectileSheet(),
   ...["ash-quarter", "reverie", "guildspire", "ember-hall", "false-dawn"].map(loadBattleImage),
   ...["lantern", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
 ]).then(() => {
@@ -1181,7 +1152,11 @@ Object.assign(lootTables, {
   "Lysra": loot([170, 230], [["Loopglass Shard", 1, 2]], [["Echo Vow Chain", .7]]),
   "Nyx": loot([150, 210], [["Loopglass Shard", 1, 2]], [["Causality Visor", .65]]),
   "Rava": loot([165, 225], [["Orphan Ember Thread", 1, 2]], [["Orphanheart Coat", .7]]),
-  "Jory": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]])
+  "Jory": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]]),
+  "Shade": loot([145, 205], [["Loopglass Shard", 1, 2]], [["Second-Loop Signet", .55]]),
+  "Grumm": loot([155, 215], [["Stonewake Medal", 1, 1], ["Resonant Stone", 1, 2]], [["Stonewake Oathblade", .5]]),
+  "Marla": loot([130, 190], [["Marla's Soup", 1, 2]], [["Orphanheart Coat", .45]]),
+  "Harl": loot([140, 200], [["Loopglass Shard", 1, 1]], [["Echo Vow Chain", .45]])
 });
 
 function loot(gold, common, rare) {
@@ -1850,6 +1825,14 @@ function animationColumn(id, anim, frame) {
   return 0;
 }
 
+function animationFrameRect(sheet, col, row) {
+  const x = Math.floor(col * sheet.image.width / sheet.columns);
+  const y = Math.floor(row * sheet.image.height / sheet.rows);
+  const right = Math.floor((col + 1) * sheet.image.width / sheet.columns);
+  const bottom = Math.floor((row + 1) * sheet.image.height / sheet.rows);
+  return { x, y, w: right - x, h: bottom - y };
+}
+
 function drawAnimationSprite(id, px, py, dir, anim, frame) {
   const sheet = animationSheets[id];
   if (!sheet) return false;
@@ -1877,17 +1860,16 @@ function drawAnimationSprite(id, px, py, dir, anim, frame) {
   if (battlePose && (anim === "magic" || anim === "ultimate")) motionY = -Math.round(Math.sin((actionT / 24) * Math.PI) * 3);
   const anchorX = px + (battlePose ? 24 : 8) + motionX;
   const baseline = py + (battlePose ? 52 : 32) + motionY;
-  const repairedFrame = sheet.frames?.[row]?.[col];
-  const sourceWidth = repairedFrame?.width || sheet.cellWidth;
-  const sourceHeight = repairedFrame?.height || sheet.cellHeight;
+  const source = animationFrameRect(sheet, col, row);
+  const sourceWidth = source.w;
+  const sourceHeight = source.h;
   const width = Math.round(sourceWidth * scale);
   const height = Math.round(sourceHeight * scale);
   const destX = Math.round(anchorX - width / 2);
-  const destY = Math.round(baseline - height);
+  const destY = Math.round(baseline - (sourceHeight - 2) * scale);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  if (repairedFrame) ctx.drawImage(repairedFrame, 0, 0, sourceWidth, sourceHeight, destX, destY, width, height);
-  else ctx.drawImage(sheet.image, col * sheet.cellWidth, row * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  ctx.drawImage(sheet.image, source.x, source.y, sourceWidth, sourceHeight, destX, destY, width, height);
   ctx.restore();
   return true;
 }
@@ -2555,7 +2537,9 @@ function drawBattleVitalBar(anchorX, y, value, max, label, colour, width = 42) {
 function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
   if (unit.hp <= 0) return;
   drawBattleVitalBar(anchorX, baseline + 4, unit.hp, unit.max, "HP", enemySide ? "#c85645" : "#e8a64b", enemySide ? 46 : 42);
-  if (!enemySide && Number.isFinite(unit.maxmp)) {
+  if (enemySide) {
+    drawBattleVitalBar(anchorX, baseline + 11, unit.resonance || 0, 100, "R", "#8a5ac4", 46);
+  } else if (Number.isFinite(unit.maxmp)) {
     drawBattleVitalBar(anchorX, baseline + 11, unit.mp, unit.maxmp, "MP", "#7d62b8", 42);
   }
 }
@@ -2677,26 +2661,27 @@ function drawNpcBattleEnemy(e, px, py) {
   const sheet = animationSheets[id];
   if (!sheet || !animatedNpcFiles[id]) return false;
   const attacking = e.anim === "attack";
-  const row = attacking ? 4 : 0;
+  const row = attacking && sheet.rows >= 7 ? (e.attackStyle === "magic" ? 6 : 4) : 0;
   const duration = 24;
   const progress = attacking ? Math.min(1, (e.animTick || 0) / duration) : 0;
-  const col = attacking ? Math.min(3, Math.floor(progress * 4)) : [0, 0, 3, 0][Math.floor((tick + id.length * 3) / 16) % 4];
+  const col = attacking
+    ? Math.min(sheet.columns - 1, Math.floor(progress * sheet.columns))
+    : [0, 0, Math.min(3, sheet.columns - 1), 0][Math.floor((tick + id.length * 3) / 16) % 4];
   const targetHeight = Math.round((animatedNpcHeights[id] || 26) * 1.9);
   const scale = targetHeight / Math.max(1, sheet.referenceHeight);
-  const repairedFrame = sheet.frames?.[row]?.[col];
-  const sourceWidth = repairedFrame?.width || sheet.cellWidth;
-  const sourceHeight = repairedFrame?.height || sheet.cellHeight;
+  const source = animationFrameRect(sheet, col, row);
+  const sourceWidth = source.w;
+  const sourceHeight = source.h;
   const width = Math.round(sourceWidth * scale);
   const height = Math.round(sourceHeight * scale);
   const lunge = attacking ? Math.round(Math.sin(progress * Math.PI) * 7) : 0;
   const anchorX = px + 8 - lunge;
   const baseline = py + 31 + (!attacking && Math.floor(tick / 18) % 3 === 1 ? -1 : 0);
   const destX = Math.round(anchorX - width / 2);
-  const destY = Math.round(baseline - height);
+  const destY = Math.round(baseline - (sourceHeight - 2) * scale);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  if (repairedFrame) ctx.drawImage(repairedFrame, 0, 0, sourceWidth, sourceHeight, destX, destY, width, height);
-  else ctx.drawImage(sheet.image, col * sheet.cellWidth, row * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  ctx.drawImage(sheet.image, source.x, source.y, sourceWidth, sourceHeight, destX, destY, width, height);
   ctx.restore();
   if (attacking && e.lastAnimDrawTick !== tick) {
     e.animTick = (e.animTick || 0) + 1;
@@ -2801,6 +2786,50 @@ function drawEffect() {
   if (effect.t > (effect.duration || 24)) effect = null;
 }
 
+function enemyAbilityProfile(unit) {
+  return enemyAbilityProfiles[unit?.sprite] || enemyAbilityProfiles[unit?.name] || null;
+}
+
+function echoProjectileCell(row, col) {
+  if (!echoProjectileSheet) return null;
+  const x = Math.floor(col * echoProjectileSheet.width / 4);
+  const y = Math.floor(row * echoProjectileSheet.height / 8);
+  const right = Math.floor((col + 1) * echoProjectileSheet.width / 4);
+  const bottom = Math.floor((row + 1) * echoProjectileSheet.height / 8);
+  return { x, y, w: right - x, h: bottom - y };
+}
+
+function drawEchoEnemyProjectile(fx) {
+  if (!fx.enemyCaster || !Number.isFinite(fx.effectRow) || !echoProjectileSheet) return false;
+  const impactTick = fx.impactTicks || 38;
+  const travelling = fx.t <= impactTick;
+  const point = travelling ? effectTravelPoint(fx) : { x: fx.toX, y: fx.toY };
+  const progress = Math.min(1, fx.t / impactTick);
+  const col = travelling ? (progress < .55 ? 0 : 1) : 2;
+  const cell = echoProjectileCell(fx.effectRow, col);
+  const width = travelling ? 46 : 62;
+  const height = Math.round(width * cell.h / cell.w);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(echoProjectileSheet, cell.x, cell.y, cell.w, cell.h, Math.round(point.x - width / 2), Math.round(point.y - height / 2), width, height);
+  ctx.restore();
+  return true;
+}
+
+function drawEchoEnemyUltimate(fx) {
+  if (!fx.enemyCaster || !Number.isFinite(fx.effectRow) || !echoProjectileSheet) return false;
+  const cell = echoProjectileCell(fx.effectRow, 3);
+  const pulse = Math.floor(fx.t / 7) % 2;
+  const width = 104 + pulse * 8;
+  const height = Math.round(width * cell.h / cell.w);
+  drawRect(0, 0, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT, fx.t % 10 < 4 ? `${fx.color}22` : "#08081244");
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(echoProjectileSheet, cell.x, cell.y, cell.w, cell.h, Math.round((fx.toX ?? 82) - width / 2), Math.round((fx.toY ?? 92) - height / 2), width, height);
+  ctx.restore();
+  return true;
+}
+
 function effectTravelPoint(fx, lag = 0) {
   const progress = Math.max(0, Math.min(1, fx.t / (fx.impactTicks || 22) - lag));
   const eased = progress * progress * (3 - 2 * progress);
@@ -2811,6 +2840,7 @@ function effectTravelPoint(fx, lag = 0) {
 }
 
 function drawCharacterProjectile(fx) {
+  if (drawEchoEnemyProjectile(fx)) return;
   const point = effectTravelPoint(fx);
   for (let i = 1; i <= 3; i++) {
     const trail = effectTravelPoint(fx, i * .07);
@@ -2871,6 +2901,7 @@ function drawCharacterProjectile(fx) {
 }
 
 function drawUltimateEffect(fx) {
+  if (drawEchoEnemyUltimate(fx)) return;
   drawRect(0, 0, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT, fx.t % 8 < 3 ? "#ffffff22" : "#09091255");
   if (fx.caster === "Torren") {
     for (let i = 0; i < 12; i++) drawRect(12 + i * 22, 139 - ((tick + i * 5) % 16), 6, 12, i % 2 ? "#8b6843" : "#d87536");
@@ -3233,14 +3264,13 @@ function enemyPortraitDataUrl(name) {
     paint.fillRect(5, 5, 86, 86);
     paint.fillStyle = "#171822";
     paint.fillRect(8, 8, 80, 80);
-    const frame = npcSheet.frames?.[0]?.[0];
-    const sourceWidth = frame?.width || npcSheet.cellWidth;
-    const sourceHeight = frame?.height || npcSheet.cellHeight;
+    const source = animationFrameRect(npcSheet, 0, 0);
+    const sourceWidth = source.w;
+    const sourceHeight = source.h;
     const height = 76;
     const scale = height / sourceHeight;
     const width = Math.round(sourceWidth * scale);
-    if (frame) paint.drawImage(frame, 0, 0, sourceWidth, sourceHeight, Math.round((96 - width) / 2), 86 - height, width, height);
-    else paint.drawImage(npcSheet.image, 0, 0, npcSheet.cellWidth, npcSheet.cellHeight, Math.round((96 - width) / 2), 86 - height, width, height);
+    paint.drawImage(npcSheet.image, source.x, source.y, sourceWidth, sourceHeight, Math.round((96 - width) / 2), 86 - height, width, height);
     paint.fillStyle = "#d8b06b";
     paint.fillRect(8, 8, 80, 2);
     paint.fillRect(8, 86, 80, 2);
@@ -3396,7 +3426,7 @@ function enemy(name, hp, atk, weak, color, node, sprite = null) {
     mag: Math.max(3, Math.round(atk * .72 + (weak === "Tech" || weak === "Sound" ? 3 : 0))),
     stam: Math.max(5, Math.round(hp / 10 + node * 2))
   };
-  return { name, hp: scaledHp, max: scaledHp, baseMax: scaledHp, baseAtk: atk, baseStats: { ...stats }, atk: scaledAtk, stats, weak, color, node, sprite, level: 1, stagger: 0, row: 1, anim: "idle", animTick: 0 };
+  return { name, hp: scaledHp, max: scaledHp, baseMax: scaledHp, baseAtk: atk, baseStats: { ...stats }, atk: scaledAtk, stats, weak, color, node, sprite, level: 1, stagger: 0, resonance: 0, row: 1, anim: "idle", animTick: 0 };
 }
 
 function prepareEnemyForBattle(source, mapId = state.map) {
@@ -3423,6 +3453,7 @@ function prepareEnemyForBattle(source, mapId = state.map) {
       stam: Math.round((baseStats.stam || 5) + level * .5 + state.ngPlus * 3)
     },
     stagger: 0,
+    resonance: 0,
     anim: "idle",
     animTick: 0
   };
@@ -3804,6 +3835,7 @@ function useSkill(u, sk, chosenTarget = null) {
         }
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
         hitTarget.hp -= dmg;
+        hitTarget.resonance = Math.min(100, (hitTarget.resonance || 0) + (critical ? 14 : 8));
         hitTarget.flash = 10;
         addBattleFloater(hitTarget, dmg, { damageType: sk.element, crit: critical });
         if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
@@ -3932,6 +3964,81 @@ function useBattleItem(u, name) {
   finishTurn(log);
 }
 
+function enemyMagicElement(unit) {
+  const profile = enemyAbilityProfile(unit);
+  if (profile?.element) return profile.element;
+  return {
+    "Holy Fire": "Shadow",
+    Shadow: "Holy Fire",
+    Sound: "Tech",
+    Tech: "Sound",
+    Earth: "Ancient Fire",
+    "Ancient Fire": "Earth"
+  }[unit.weak] || "Sigil";
+}
+
+function enemyCanHeal(unit) {
+  const profile = enemyAbilityProfile(unit);
+  return Boolean(profile?.heal || /clergy|paladin|seal bearer|sentinel|gate lock/i.test(`${unit.name} ${unit.sprite || ""}`));
+}
+
+function chooseEnemyAction(unit) {
+  const profile = enemyAbilityProfile(unit);
+  const wounded = battle.enemies
+    .filter(ally => ally.hp > 0 && ally.hp / ally.max < .58)
+    .sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
+  if ((unit.resonance || 0) >= 100) {
+    return { kind: "ultimate", name: profile?.ultimate || "Resonant Rupture", element: profile?.element || enemyMagicElement(unit), target: profile?.ultimateHeal ? unit : null, healing: Boolean(profile?.ultimateHeal) };
+  }
+  if (wounded && enemyCanHeal(unit) && Math.random() < .68) {
+    return { kind: "heal", name: profile?.heal || "Seal Mend", element: profile?.element || "Holy Fire", target: wounded, healing: true };
+  }
+  if (Math.random() < .44) {
+    const element = enemyMagicElement(unit);
+    return { kind: "magic", name: profile?.magic || `${element} Pulse`, element };
+  }
+  return { kind: "melee", name: "Melee Strike", element: "Physical" };
+}
+
+function makeEnemyBattleEffect(unit, target, action) {
+  const enemyIndex = Math.max(0, battle.enemies.indexOf(unit));
+  const [fromX, fromBaseline] = enemyBattlePosition(enemyIndex, battle.enemies.length);
+  const partyIndex = battle.party.indexOf(target);
+  const enemyTargetIndex = battle.enemies.indexOf(target);
+  let toX = fromX;
+  let toY = fromBaseline - 24;
+  if (partyIndex >= 0) {
+    const [anchorX, baseline] = partyBattlePosition(partyIndex, battle.party.length);
+    toX = action.kind === "ultimate" && (unit.npcBoss || unit.node >= 3) ? 62 : anchorX;
+    toY = action.kind === "ultimate" && (unit.npcBoss || unit.node >= 3) ? 100 : baseline - 27;
+  } else if (enemyTargetIndex >= 0) {
+    const [anchorX, baseline] = enemyBattlePosition(enemyTargetIndex, battle.enemies.length);
+    toX = anchorX;
+    toY = baseline - 24;
+  }
+  const timing = battleActionTiming(action.kind === "heal" ? "magic" : action.kind);
+  const profile = enemyAbilityProfile(unit);
+  return {
+    kind: action.kind === "heal" ? "magic" : action.kind,
+    actionKind: action.kind,
+    caster: unit.sprite || unit.name,
+    enemyCaster: true,
+    effectRow: profile?.row,
+    skill: action.name,
+    element: action.element,
+    color: elementColor(action.element),
+    t: 0,
+    fromX,
+    fromY: fromBaseline - 25,
+    toX,
+    toY,
+    x: toX,
+    y: toY,
+    duration: timing.effectTicks,
+    impactTicks: timing.impactTicks
+  };
+}
+
 function resolveEnemyTurn(turn, prev) {
   const liveParty = battle.party.filter(p => p.hp > 0);
   if (!liveParty.length) {
@@ -3945,44 +4052,72 @@ function resolveEnemyTurn(turn, prev) {
     battle.resolving = false;
     return finishTurn(prev);
   }
+  const action = chooseEnemyAction(e);
+  const target = action.target || liveParty[Math.floor(Math.random() * liveParty.length)];
+  const timingKey = action.kind === "heal" ? "magic" : action.kind;
+  const timing = battleActionTiming(timingKey);
   e.anim = "attack";
   e.animTick = 0;
-  const animationKey = enemyAnimationKey(e);
-  e.attackStyle = animationKey && magicEnemyAnimations.has(animationKey) ? "magic" : "melee";
-  const target = liveParty[Math.floor(Math.random() * liveParty.length)];
-  const impactDelay = e.attackStyle === "magic" ? 720 : 580;
-  playSfx(e.attackStyle === "magic" ? "magic" : e.npcBoss || ["Wrong Bell", "Gate Lock", "Ash Wyrm"].includes(e.name) ? "boss" : "melee");
-  renderBattle(`${e.name} targets ${target.name} with a ${e.attackStyle} attack...`);
+  e.attackStyle = action.kind === "melee" ? "melee" : "magic";
+  effect = makeEnemyBattleEffect(e, target, action);
+  playSfx(action.kind === "melee" ? (e.npcBoss ? "boss" : "melee") : "magic");
+  renderBattle(`${e.name} prepares ${action.name}${action.kind === "ultimate" ? " - ULTIMATE" : ""}...`);
+
   setTimeout(() => {
-    if (!battle || mode !== "battle" || e.hp <= 0 || target.hp <= 0) return;
-    let dmg = e.atk + Math.floor(Math.random() * 6);
-    let defenseText = "";
-    if (target.guarding) {
-      const reduction = defendReduction(target);
-      dmg = Math.ceil(dmg * (1 - reduction / 100));
-      target.guarding = false;
-      defenseText = ` ${target.name}'s defense blocks ${reduction}%.`;
-      playSfx("block");
-    } else if (battle.ward) {
-      dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(target.id, "blockPower")));
-      defenseText = " Party Guard softens the hit.";
-      playSfx("block");
+    if (!battle || mode !== "battle" || e.hp <= 0) return;
+    let actionLog = `${e.name} uses ${action.name}.`;
+    if (action.healing) {
+      const healTargets = action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
+      let total = 0;
+      healTargets.forEach(ally => {
+        const amount = Math.round(ally.max * (action.kind === "ultimate" ? .24 : .16) + e.stats.mag * (action.kind === "ultimate" ? 1.4 : .9));
+        const restored = Math.min(amount, ally.max - ally.hp);
+        ally.hp += restored;
+        total += restored;
+        addBattleFloater(ally, restored, { kind: "heal" });
+      });
+      e.resonance = action.kind === "ultimate" ? 0 : Math.min(100, (e.resonance || 0) + 32);
+      actionLog += ` ${healTargets.length > 1 ? "The enemy formation restores" : `${target.name} restores`} ${total} HP.`;
+      playSfx("item");
     } else {
-      playSfx("hit");
+      const allTargets = action.kind === "ultimate" && (e.npcBoss || e.node >= 3);
+      const hitTargets = allTargets ? battle.party.filter(member => member.hp > 0) : [target].filter(member => member.hp > 0);
+      hitTargets.forEach(defender => {
+        const random = Math.floor(Math.random() * (action.kind === "ultimate" ? 9 : 6));
+        let dmg = action.kind === "melee"
+          ? e.atk + random
+          : action.kind === "magic"
+            ? Math.round(e.atk * .7 + e.stats.mag * .75) + random
+            : Math.round((e.atk + e.stats.mag * .5) * (allTargets ? 1.18 : 1.58)) + random;
+        let defenseText = "";
+        if (defender.guarding) {
+          const reduction = defendReduction(defender);
+          dmg = Math.ceil(dmg * (1 - reduction / 100));
+          defender.guarding = false;
+          defenseText = ` ${defender.name} blocks ${reduction}%.`;
+          playSfx("block");
+        } else if (battle.ward) {
+          dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(defender.id, "blockPower")));
+          defenseText = " Party Guard softens the hit.";
+        }
+        defender.hp = Math.max(0, defender.hp - dmg);
+        defender.flash = 12;
+        addBattleFloater(defender, dmg, { damageType: action.kind === "melee" ? "Physical" : action.element, crit: action.kind === "ultimate" });
+        actionLog += ` ${defender.name} takes ${dmg}.${defenseText}`;
+      });
+      battle.ward = false;
+      e.resonance = action.kind === "ultimate" ? 0 : Math.min(100, (e.resonance || 0) + (action.kind === "magic" ? 34 : 27));
+      playSfx(action.kind === "ultimate" ? "boss" : "hit");
     }
-    target.hp = Math.max(0, target.hp - dmg);
-    target.flash = 12;
-    addBattleFloater(target, dmg, { damageType: e.attackStyle === "magic" ? "Magic" : "Physical" });
-    battle.ward = false;
-    const hitLog = `${e.name} hits ${target.name} for ${dmg}.${defenseText}`;
-    renderBattle(hitLog);
+    updatePanels();
+    renderBattle(actionLog);
     setTimeout(() => {
       if (!battle || mode !== "battle") return;
       e.anim = "idle";
       e.animTick = 0;
-      finishTurn(hitLog);
-    }, 560);
-  }, impactDelay);
+      finishTurn(actionLog);
+    }, action.kind === "ultimate" ? 820 : 560);
+  }, timing.impactMs);
 }
 
 function winBattle(log) {
@@ -4534,22 +4669,28 @@ function startEndgameHunt() {
   if (!state.flags.endingComplete) return;
   const rank = state.endgameRank + 1;
   const boost = 1 + rank * .14;
-  const rankedEnemy = (name, hp, atk, weak, color, node, sprite) => {
+  const rankedEnemy = (name, hp, atk, weak, color, node, sprite, npcBoss = false) => {
     const unit = enemy(name, hp, atk, weak, color, node, sprite);
     unit.baseMax = unit.hp = unit.max = Math.round(unit.baseMax * boost);
     unit.baseAtk = unit.atk = Math.round(unit.baseAtk * (1 + rank * .08));
     unit.baseStats.agi += Math.ceil(rank * 1.5);
     unit.baseStats.stam += rank * 2;
     unit.levelHint = Math.min(20, 15 + rank);
+    unit.npcBoss = npcBoss;
     return unit;
   };
   const formations = [
-    [rankedEnemy("Dawn Null", 92, 14, "Sound", "#4f6570", 2, "Wrong Bell"), rankedEnemy("Redacted Witness", 82, 13, "Holy Fire", "#413044", 1, "Ash Scribe")],
-    [rankedEnemy("First Ember Memory", 116, 16, "Shadow", "#6a3552", 2, "Ash Wyrm"), rankedEnemy("Orphaned Sigil", 96, 15, "Tech", "#8a6640", 1, "Seal Bearer")],
-    [rankedEnemy("Dawn Gate Sentinel", 148, 19, "Ancient Fire", "#58616b", 2, "Gate Lock")]
+    { name: "Redacted Witnesses", enemies: [rankedEnemy("Dawn Null", 92, 14, "Sound", "#4f6570", 2, "Wrong Bell"), rankedEnemy("Redacted Witness", 82, 13, "Holy Fire", "#413044", 1, "Ash Scribe")] },
+    { name: "First Ember Memory", enemies: [rankedEnemy("First Ember Memory", 116, 16, "Shadow", "#6a3552", 2, "Ash Wyrm"), rankedEnemy("Orphaned Sigil", 96, 15, "Tech", "#8a6640", 1, "Seal Bearer")] },
+    { name: "Dawn Gate Recalibration", enemies: [rankedEnemy("Dawn Gate Sentinel", 148, 19, "Ancient Fire", "#58616b", 2, "Gate Lock")] },
+    { name: "Stonewake Shadows", enemies: [rankedEnemy("Shade", 104, 18, "Holy Fire", "#4b2633", 2, "Shade", true), rankedEnemy("Grumm", 132, 20, "Sound", "#755034", 1, "Grumm", true)] },
+    { name: "Lantern Name-Runners", enemies: [rankedEnemy("Marla", 110, 17, "Shadow", "#8a5b3d", 2, "Marla", true), rankedEnemy("Harl", 118, 19, "Tech", "#5b4a40", 1, "Harl", true)] },
+    { name: "Stonewake Command", enemies: [rankedEnemy("Kaeldrin", 138, 22, "Sound", "#62554a", 2, "Kaeldrin", true), rankedEnemy("Lysra", 124, 21, "Shadow", "#4c556b", 1, "Lysra", true)] },
+    { name: "Reverie Counter-Echo", enemies: [rankedEnemy("Nyx", 106, 20, "Holy Fire", "#473c62", 1, "Nyx", true), rankedEnemy("Rava", 126, 21, "Earth", "#43685a", 2, "Rava", true), rankedEnemy("Jory", 116, 23, "Sound", "#755247", 3, "Jory", true)] }
   ];
+  const formation = formations[(rank - 1) % formations.length];
   el.menu.classList.add("hidden");
-  startBattle(`Postgame Echo Hunt - Rank ${rank}`, formations[(rank - 1) % formations.length], "endgameHuntWon");
+  startBattle(`Echo Hunt ${rank}: ${formation.name}`, formation.enemies, "endgameHuntWon");
 }
 
 function beginNewGamePlus() {
