@@ -79,6 +79,7 @@ let talkPortraits = [];
 let talkAfter = null;
 let battle = null;
 let effect = null;
+let battleFloaters = [];
 let codexIndex = 0;
 let battleActionIndex = 0;
 let heldDirection = null;
@@ -261,6 +262,7 @@ let npcSheet = null;
 let titleImage = null;
 let chestSheet = null;
 let spriteLoadProgress = 0;
+let runtimeAssetsReady = false;
 
 function isCheckerPixel(data, offset) {
   const r = data[offset], g = data[offset + 1], b = data[offset + 2], a = data[offset + 3];
@@ -606,6 +608,7 @@ Promise.all([
   ...["ash-quarter", "reverie", "guildspire", "ember-hall", "false-dawn"].map(loadBattleImage),
   ...["lantern", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
 ]).then(() => {
+  runtimeAssetsReady = true;
   el.hint.textContent = "Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party";
 });
 
@@ -727,6 +730,33 @@ const ngPlusGear = [
 ];
 ngPlusGear.forEach(gear => gearDb[gear.slot].push(gear));
 
+const echoForgeSlots = ["weapon", "armour", "ring", "necklace", "helmet"];
+const echoForgeGear = Array.from({ length: 20 }, (_, index) => {
+  const rank = index + 1;
+  const slot = echoForgeSlots[index % echoForgeSlots.length];
+  const primary = 5 + rank;
+  const secondary = 2 + Math.ceil(rank / 2);
+  const stats = {
+    weapon: { str: primary, mag: Math.ceil(secondary / 2), agi: secondary },
+    armour: { stam: primary + 1, str: secondary, mag: Math.ceil(secondary / 2) },
+    ring: { agi: primary, mag: secondary, str: Math.ceil(secondary / 2) },
+    necklace: { mag: primary, stam: secondary, agi: Math.ceil(secondary / 2) },
+    helmet: { agi: primary, mag: secondary, stam: Math.ceil(secondary / 2) }
+  }[slot];
+  const effect = {
+    weapon: { type: "critChance", value: Math.min(.24, .04 + rank * .01), label: `+${Math.round(Math.min(.24, .04 + rank * .01) * 100)}% critical chance` },
+    armour: { type: "blockPower", value: Math.min(.32, .1 + rank * .011), label: `${Math.round(Math.min(.32, .1 + rank * .011) * 100)}% stronger personal guard` },
+    ring: { type: "openingResonance", value: 6 + rank * 2, label: `+${6 + rank * 2} Resonance at battle start` },
+    necklace: { type: "hpOnHit", value: 2 + Math.floor(rank / 3), label: `Restore ${2 + Math.floor(rank / 3)} HP after dealing damage` },
+    helmet: { type: "weaknessDamage", value: Math.min(.42, .1 + rank * .016), label: `+${Math.round(Math.min(.42, .1 + rank * .016) * 100)}% weakness damage` }
+  }[slot];
+  return Object.assign(
+    item(`Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}`, slot, stats, `Glimmer recalibrated this piece after Echo Hunt rank ${rank}.`, effect),
+    { echoRank: rank, price: 220 + rank * 105 + rank * rank * 9 }
+  );
+});
+echoForgeGear.forEach(gear => gearDb[gear.slot].push(gear));
+
 const gearOwners = {
   "Voice of Verse": ["Verseborn", "Sparky"],
   "Twin Voidthorns": ["Mira"],
@@ -772,17 +802,19 @@ const generalDropGear = new Set([
 ].map(gear => gear.name));
 const postgameGearNames = new Set(postgameGear.map(gear => gear.name));
 const ngPlusGearNames = new Set(ngPlusGear.map(gear => gear.name));
+const echoForgeGearNames = new Set(echoForgeGear.map(gear => gear.name));
 
 function gearIconSheet(gear, heroId) {
   if (gear?.name === "Echo-Thread Lute") return "gear-verseborn";
   if (ngPlusSignatureNames.has(gear?.name)) return `gear-${gearOwners[gear.name][0].toLowerCase()}`;
-  if (generalDropGear.has(gear?.name)) return "gear-drop";
+  if (generalDropGear.has(gear?.name) || echoForgeGearNames.has(gear?.name)) return "gear-drop";
   return `gear-${heroId.toLowerCase()}`;
 }
 
 function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
   if (ngPlusSignatureNames.has(gear?.name)) return `NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
+  if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / GLIMMER VENDOR / ALL HEROES`;
   if (ngPlusGearNames.has(gear?.name)) return "NG+ LEGENDARY DROP / ALL HEROES";
   if (chestGear.includes(gear)) return gearOwners[gear.name] ? `EPIC CHEST / ${gearOwners[gear.name][0].toUpperCase()} ONLY` : "EPIC CHEST / ALL HEROES";
   if (postgameGearNames.has(gear?.name)) return "ENDGAME DROP / ALL HEROES";
@@ -798,6 +830,8 @@ function item(name, slot, stats, desc, effect = null) {
 const inventoryDb = {
   "Marla's Soup": { type: "Food / HP", desc: "Restores 24 HP to a chosen hero, in or outside battle.", battle: "hp", field: "hp", value: 24, short: "HP +24" },
   "Clockwork Tonic": { type: "Tonic / MP", desc: "Restores 18 MP to a chosen hero, in or outside battle.", battle: "mp", field: "mp", value: 18, short: "MP +18" },
+  "Emberheart Stew": { type: "NG+ Food / HP", desc: "Restores 70 HP to a chosen hero, in or outside battle.", battle: "hp", field: "hp", value: 70, short: "HP +70" },
+  "Resonance Draught": { type: "NG+ Tonic / MP", desc: "Restores 50 MP to a chosen hero, in or outside battle.", battle: "mp", field: "mp", value: 50, short: "MP +50" },
   "Ash Ward": { type: "Ward / Guard", desc: "Halves incoming party damage for one enemy turn. Outside battle it prepares an opening ward.", battle: "guard", field: "guard", value: 1, short: "Party Guard" },
   "Old Registry Key": { type: "Key Item", desc: "Opens an old registry lock in the Ash Quarter." },
   "Ledger Scrap": { type: "Battle Loot", desc: "Discarded ledger paper. Useful to collectors and clerks." },
@@ -825,7 +859,7 @@ function inventoryInfo(name) {
 }
 
 function inventoryIcon(name) {
-  const itemIcons = { "Marla's Soup": 0, "Clockwork Tonic": 1, "Ash Ward": 2, "Old Registry Key": 3 };
+  const itemIcons = { "Marla's Soup": 0, "Emberheart Stew": 0, "Clockwork Tonic": 1, "Resonance Draught": 1, "Ash Ward": 2, "Old Registry Key": 3 };
   if (Number.isFinite(itemIcons[name])) return { sheet: "item", index: itemIcons[name] };
   const lootIcons = { "Ledger Scrap": 0, "Iron Chain Link": 1, "Broken Wax Seal": 2, "Ash Ink": 3, "Living Ash Ink": 3, "Resonant Stone": 4 };
   if (Number.isFinite(lootIcons[name])) return { sheet: "loot", index: lootIcons[name] };
@@ -981,6 +1015,7 @@ const state = {
     return copies;
   }, {}),
   endgameRank: 0,
+  echoForgeRank: 0,
   ngPlus: 0,
   heroProgress: Object.fromEntries(Object.keys(baseJobs).map(id => [id, { level: 1, xp: 0, talents: [] }])),
   discoveredMaps: ["lantern"],
@@ -1079,26 +1114,6 @@ Object.assign(lootTables, {
   "Rava": loot([165, 225], [["Orphan Ember Thread", 1, 2]], [["Orphanheart Coat", .7]]),
   "Jory": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]])
 });
-
-const ngPlusLootTables = {
-  "Ledger Cutter": loot([28, 42], [["Loopglass Shard", .35, 1]], [["Second Verse Lute", .08], ["Second-Loop Signet", .1]]),
-  "Chain Warden": loot([32, 48], [["Loopglass Shard", .4, 1]], [["Orphanheart Coat", .09]]),
-  "Seal Bearer": loot([34, 52], [["Orphan Ember Thread", .4, 1]], [["Cinderstar Aegis", .1]]),
-  "Ash Scribe": loot([30, 46], [["Loopglass Shard", .45, 1]], [["Unbound Oathstaff", .09]]),
-  "Buried Construct": loot([42, 60], [["Stonewake Medal", .35, 1]], [["Worldroot Shield", .11]]),
-  "Cracked Pillar": loot([40, 58], [["Stonewake Medal", .3, 1]], [["Stonewake Oathblade", .08]]),
-  "Wrong Bell": loot([50, 72], [["Loopglass Shard", .5, 2]], [["Klik-Wrench Infinite", .12]]),
-  "Gate Lock": loot([48, 68], [["Loopglass Shard", .45, 1]], [["Causality Visor", .12]]),
-  "Ash Wyrm": loot([58, 82], [["Orphan Ember Thread", .5, 2]], [["Elderflame Claws", .14]]),
-  "Inkbound Auditor": loot([62, 88], [["Loopglass Shard", .75, 2]], [["Second Verse Lute", .24]]),
-  "Dock Foreman": loot([85, 120], [["Stonewake Medal", 1, 2]], [["Veln Eclipse Blades", .32]]),
-  "Orphaned Sigil": loot([70, 98], [["Orphan Ember Thread", 1, 2]], [["Cinderstar Aegis", .3]]),
-  "Archive Custodian": loot([95, 130], [["Loopglass Shard", 1, 3]], [["Unbound Oathstaff", .35]]),
-  "Redacted Witness": loot([78, 110], [["Loopglass Shard", 1, 2]], [["Veln Eclipse Blades", .3]]),
-  "First Ember Memory": loot([88, 124], [["Orphan Ember Thread", 1, 3]], [["Elderflame Claws", .38]]),
-  "Dawn Null": loot([92, 132], [["Loopglass Shard", 1, 3]], [["Klik-Wrench Infinite", .36]]),
-  "Dawn Gate Sentinel": loot([135, 185], [["Stonewake Medal", 1, 3]], [["Causality Visor", .45]])
-};
 
 function loot(gold, common, rare) {
   return { gold, common, rare };
@@ -1621,26 +1636,51 @@ function fieldRenderOffsetY() {
 }
 
 function drawWorldEnemy(spawnPoint) {
-  if (!worldEnemySheet) return;
   const enemyUnit = spawnPoint.enemies[0];
-  const index = enemySpriteIndex(enemyUnit.sprite || enemyUnit.name);
-  const cell = worldEnemySheet.cells[index];
-  const width = cell.w;
-  const height = cell.h;
   if (!Number.isFinite(spawnPoint.renderX)) spawnPoint.renderX = spawnPoint.x * TILE;
   if (!Number.isFinite(spawnPoint.renderY)) spawnPoint.renderY = spawnPoint.y * TILE;
   const targetX = spawnPoint.x * TILE;
   const targetY = spawnPoint.y * TILE;
   const moving = spawnPoint.renderX !== targetX || spawnPoint.renderY !== targetY;
+  if (moving && targetX !== spawnPoint.renderX) spawnPoint.facingX = targetX > spawnPoint.renderX ? 1 : -1;
   spawnPoint.renderX = approach(spawnPoint.renderX, targetX, 2);
   spawnPoint.renderY = approach(spawnPoint.renderY, targetY, 2);
   const stride = moving ? [0, -1, 0, 1][Math.floor(tick / 5) % 4] : (Math.floor((tick + spawnPoint.phase) / 28) % 4 === 1 ? -1 : 0);
-  const sway = moving ? [0, 1, 0, -1][Math.floor(tick / 5) % 4] : 0;
   const offsetY = fieldRenderOffsetY();
-  const x = Math.round(spawnPoint.renderX + 8 - width / 2 + sway);
-  const y = Math.round(spawnPoint.renderY + 17 + offsetY - height + stride);
-  drawFieldShadow(spawnPoint.renderX + 8, spawnPoint.renderY + 17 + offsetY, spawnPoint.boss ? 10 : 7);
-  ctx.drawImage(worldEnemySheet.image, cell.x, cell.y, cell.w, cell.h, x, y, width, height);
+  const anchorX = Math.round(spawnPoint.renderX + 8);
+  const baseline = Math.round(spawnPoint.renderY + 17 + offsetY + stride);
+  const key = enemyAnimationKey(enemyUnit);
+  const animatedSheet = key ? enemyAnimationSheets[key] : null;
+  if (animatedSheet) {
+    const row = moving ? 1 : 0;
+    const cells = animatedSheet.rows[row];
+    const frame = moving ? Math.floor(tick / 6) % cells.length : Math.floor((tick + spawnPoint.phase) / 14) % cells.length;
+    const cell = cells[frame];
+    const targetHeight = Math.max(25, Math.round((enemyAnimationHeights[key] || 44) * .68));
+    const scale = targetHeight / Math.max(1, animatedSheet.referenceHeight);
+    const width = Math.max(1, Math.round(cell.w * scale));
+    const height = Math.max(1, Math.round(cell.h * scale));
+    drawFieldShadow(anchorX, baseline, key === "Ash Wyrm" ? 12 : spawnPoint.boss ? 10 : 8);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (spawnPoint.facingX > 0) {
+      ctx.translate(anchorX * 2, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(animatedSheet.image, cell.x, cell.y, cell.w, cell.h, Math.round(anchorX - width / 2), Math.round(baseline - height), width, height);
+    ctx.restore();
+  } else {
+    if (!worldEnemySheet) return;
+    const index = enemySpriteIndex(enemyUnit.sprite || enemyUnit.name);
+    const cell = worldEnemySheet.cells[index];
+    const width = cell.w;
+    const height = cell.h;
+    const sway = moving ? [0, 1, 0, -1][Math.floor(tick / 5) % 4] : 0;
+    const x = Math.round(anchorX - width / 2 + sway);
+    const y = Math.round(baseline - height);
+    drawFieldShadow(anchorX, baseline, spawnPoint.boss ? 10 : 7);
+    ctx.drawImage(worldEnemySheet.image, cell.x, cell.y, cell.w, cell.h, x, y, width, height);
+  }
   if (spawnPoint.rare) drawSubtlePulse(spawnPoint.renderX + 8, spawnPoint.renderY + 8 + offsetY, 0, "#bca2ff", 156);
   if (spawnPoint.boss) drawText("!", spawnPoint.renderX + 8, spawnPoint.renderY - 12 + offsetY, "#ffcf73", 8, "center");
 }
@@ -1755,7 +1795,8 @@ function drawAnimationSprite(id, px, py, dir, anim, frame) {
     ? (battlePose ? spriteScale[id].battle[1] : spriteScale[id].field[1])
     : (animatedNpcHeights[id] || 26);
   const scale = targetHeight / Math.max(1, sheet.referenceHeight);
-  const actionT = effect?.caster === id ? Math.min(24, effect.t) : 0;
+  const actionDuration = effect?.caster === id ? (effect.impactTicks || 24) : 24;
+  const actionT = effect?.caster === id ? Math.min(actionDuration, effect.t) : 0;
   let motionX = 0;
   let motionY = 0;
   if (battlePose && anim === "idle") {
@@ -1763,7 +1804,7 @@ function drawAnimationSprite(id, px, py, dir, anim, frame) {
     motionX = idle[0];
     motionY = idle[1];
   }
-  if (battlePose && anim === "melee") motionX = Math.round(Math.sin((actionT / 24) * Math.PI) * 7);
+  if (battlePose && anim === "melee") motionX = Math.round(Math.sin((actionT / actionDuration) * Math.PI) * 7);
   if (battlePose && (anim === "magic" || anim === "ultimate")) motionY = -Math.round(Math.sin((actionT / 24) * Math.PI) * 3);
   const anchorX = px + (battlePose ? 24 : 8) + motionX;
   const baseline = py + (battlePose ? 52 : 32) + motionY;
@@ -1834,7 +1875,8 @@ function drawSprite(id, px, py, dir = 0, anim = "idle", frame = tick) {
   const scale = target[1] / cell.h;
   const width = Math.max(1, Math.round(cell.w * scale));
   const height = Math.max(1, Math.round(cell.h * scale));
-  const actionT = effect ? Math.min(24, effect.t) : 0;
+  const actionDuration = effect?.impactTicks || 24;
+  const actionT = effect ? Math.min(actionDuration, effect.t) : 0;
   let motionX = 0;
   let motionY = 0;
   if (battlePose && anim === "idle") {
@@ -1842,7 +1884,7 @@ function drawSprite(id, px, py, dir = 0, anim = "idle", frame = tick) {
     motionX = idle[0];
     motionY = idle[1];
   }
-  if (battlePose && anim === "melee") motionX = Math.round(Math.sin((actionT / 24) * Math.PI) * 8);
+  if (battlePose && anim === "melee") motionX = Math.round(Math.sin((actionT / actionDuration) * Math.PI) * 8);
   if (battlePose && (anim === "magic" || anim === "ultimate")) motionY = -Math.round(Math.sin((actionT / 24) * Math.PI) * 3);
   const anchorX = px + (battlePose ? 24 : 8) + motionX;
   const baseline = py + (battlePose ? 52 : 32) + motionY;
@@ -1943,7 +1985,7 @@ function drawTitle() {
   drawText("VERSEBORN", 128, 73, "#ffd27d", 20, "center");
   drawText("GETTING STARTED", 128, 94, "#f0d8aa", 9, "center");
   drawText("THE FALSE DAWN", 128, 111, "#c89561", 7, "center");
-  drawText(spriteLoadProgress < 7 ? `SPRITES ${spriteLoadProgress}/7` : "Z / ENTER", 128, 145, "#fff1c6", 8, "center");
+  drawText(runtimeAssetsReady ? "Z / ENTER" : "LOADING ART", 128, 145, "#fff1c6", 8, "center");
   const starPhase = tick % 180;
   if (starPhase < 24) drawSubtlePulse(104, 24, 0, "#c4a9ff", 180);
 }
@@ -1999,7 +2041,7 @@ function drawChest(pointData) {
     const sourceY = Math.floor(row * chestSheet.cellHeight);
     const sourceWidth = Math.ceil(chestSheet.cellWidth);
     const sourceHeight = Math.ceil(chestSheet.cellHeight);
-    const targetHeight = rarity === "epic" ? 25 : rarity === "rare" ? 23 : 21;
+    const targetHeight = rarity === "epic" ? 22 : rarity === "rare" ? 20 : 18;
     const targetWidth = Math.round(sourceWidth * targetHeight / sourceHeight);
     ctx.save();
     ctx.imageSmoothingEnabled = false;
@@ -2328,6 +2370,66 @@ function selectedBattleEnemy() {
   return battle.enemies.filter(enemyUnit => enemyUnit.hp > 0)[battleActionIndex] || null;
 }
 
+function battleFloaterPosition(target) {
+  const partyIndex = battle?.party?.indexOf(target) ?? -1;
+  if (partyIndex >= 0) {
+    const [x, baseline] = partyBattlePosition(partyIndex, battle.party.length);
+    return [x, baseline - 55];
+  }
+  const enemyIndex = battle?.enemies?.indexOf(target) ?? -1;
+  if (enemyIndex >= 0) {
+    const [x, baseline] = enemyBattlePosition(enemyIndex, battle.enemies.length);
+    const key = enemyAnimationKey(target);
+    return [x, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) + 8)];
+  }
+  return [LOGICAL_WIDTH / 2, 80];
+}
+
+function addBattleFloater(target, amount, options = {}) {
+  if (!battle || !amount) return;
+  const [x, y] = battleFloaterPosition(target);
+  battleFloaters.push({
+    x,
+    y,
+    amount: Math.abs(Math.round(amount)),
+    kind: options.kind || "damage",
+    damageType: options.damageType || (options.kind === "heal" ? "HEAL" : "PHYSICAL"),
+    crit: Boolean(options.crit),
+    born: tick + (options.delayTicks || 0)
+  });
+}
+
+function drawBattleFloaters() {
+  battleFloaters = battleFloaters.filter(floater => tick - floater.born < 48);
+  battleFloaters.forEach(floater => {
+    const age = tick - floater.born;
+    if (age < 0) return;
+    const rise = Math.round(age * .28);
+    const alpha = Math.min(1, (48 - age) / 12);
+    const healing = floater.kind === "heal";
+    const main = `${healing ? "+" : ""}${floater.amount}`;
+    const mainSize = floater.crit ? 13 : 10;
+    const mainY = floater.y - rise;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.lineJoin = "round";
+    ctx.font = `bold ${mainSize}px "Comic Sans MS", "Comic Sans", cursive`;
+    ctx.lineWidth = floater.crit ? 3 : 2;
+    ctx.strokeStyle = "#160d13";
+    ctx.fillStyle = healing ? "#65e88a" : "#ff5b55";
+    ctx.strokeText(main, floater.x, mainY);
+    ctx.fillText(main, floater.x, mainY);
+    ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
+    ctx.lineWidth = 2;
+    const label = `${floater.crit ? "CRIT! " : ""}${healing ? "HEAL" : floater.damageType.toUpperCase()}`;
+    ctx.strokeText(label, floater.x, mainY + 7);
+    ctx.fillText(label, floater.x, mainY + 7);
+    ctx.restore();
+  });
+}
+
 function drawBattleGroundMarker(anchorX, baseline, kind) {
   const pulse = Math.floor(tick / 8) % 2;
   const colour = kind === "target" ? "#c99cff" : "#f4c66e";
@@ -2453,6 +2555,7 @@ function drawBattleScene() {
     ctx.globalAlpha = 1;
   });
   drawEffect();
+  drawBattleFloaters();
   drawBattleTurnRail();
 }
 
@@ -2607,8 +2710,10 @@ function drawEffect() {
   const x = effect.toX ?? effect.x;
   const y = effect.toY ?? effect.y;
   if (effect.kind === "melee") {
-    drawRect(x - effect.t * 2, y - 8, 24, 3, "#fff0bc");
-    drawRect(x - effect.t, y - 2, 18, 2, "#e07136");
+    const progress = Math.min(1, effect.t / (effect.impactTicks || 24));
+    const sweep = Math.round((1 - progress) * 22);
+    drawRect(x - sweep - 12, y - 8, 24, 3, "#fff0bc");
+    drawRect(x - Math.round(sweep * .6) - 9, y - 2, 18, 2, "#e07136");
   }
   if (effect.kind === "block") {
     ctx.strokeStyle = "#f5d68b";
@@ -2624,7 +2729,7 @@ function drawEffect() {
 }
 
 function effectTravelPoint(fx, lag = 0) {
-  const progress = Math.max(0, Math.min(1, fx.t / 22 - lag));
+  const progress = Math.max(0, Math.min(1, fx.t / (fx.impactTicks || 22) - lag));
   const eased = progress * progress * (3 - 2 * progress);
   return {
     x: Math.round((fx.fromX ?? 62) + ((fx.toX ?? fx.x) - (fx.fromX ?? 62)) * eased),
@@ -2681,8 +2786,9 @@ function drawCharacterProjectile(fx) {
     drawRect(x - 4, y - 4, 9, 9, fx.color);
     drawRect(x - 1, y - 1, 3, 3, "#ffffff");
   }
-  if (fx.t > 20) {
-    const burst = fx.t - 20;
+  const impactTick = fx.impactTicks || 22;
+  if (fx.t > impactTick) {
+    const burst = Math.min(10, fx.t - impactTick);
     for (let i = 0; i < 6; i++) {
       const dx = ((i % 3) - 1) * (burst + 2);
       const dy = (Math.floor(i / 3) * 2 - 1) * (burst + 1);
@@ -2900,6 +3006,7 @@ function move(dx, dy, facing) {
 function interact() {
   unlockMusic();
   if (mode === "title") {
+    if (!runtimeAssetsReady) return;
     mode = "walk";
     updateMusic();
     showTalk([["Narrator", "Issue 1: The Man With the Enormous Voice"], ["Verseborn", "A warm room, a quiet stage, and Marla looking like she has work for me."]]);
@@ -3015,6 +3122,31 @@ function updateDialogueSpeaker(speaker) {
 function enemyPortraitDataUrl(name) {
   if (bossPortraitSources[name]) return bossPortraitSources[name];
   if (enemyPortraitCache.has(name)) return enemyPortraitCache.get(name);
+  const animatedEnemySheet = enemyAnimationSheets[name];
+  if (animatedEnemySheet) {
+    const portrait = document.createElement("canvas");
+    portrait.width = 96;
+    portrait.height = 96;
+    const paint = portrait.getContext("2d");
+    paint.imageSmoothingEnabled = false;
+    paint.fillStyle = "#10111a";
+    paint.fillRect(0, 0, 96, 96);
+    paint.fillStyle = "#30262d";
+    paint.fillRect(5, 5, 86, 86);
+    paint.fillStyle = "#171822";
+    paint.fillRect(8, 8, 80, 80);
+    const cell = animatedEnemySheet.rows[0][0];
+    const scale = Math.min(1, 74 / Math.max(cell.w, cell.h));
+    const width = Math.max(1, Math.round(cell.w * scale));
+    const height = Math.max(1, Math.round(cell.h * scale));
+    paint.drawImage(animatedEnemySheet.image, cell.x, cell.y, cell.w, cell.h, Math.round((96 - width) / 2), 85 - height, width, height);
+    paint.fillStyle = "#d8b06b";
+    paint.fillRect(8, 8, 80, 2);
+    paint.fillRect(8, 86, 80, 2);
+    const url = portrait.toDataURL("image/png");
+    enemyPortraitCache.set(name, url);
+    return url;
+  }
   const npcSheet = animationSheets[name];
   if (npcSheet && animatedNpcFiles[name]) {
     const portrait = document.createElement("canvas");
@@ -3074,7 +3206,7 @@ function showBossIntro(title, enemyUnit, launch) {
   }[bossName] || [[bossName, "Advance is prohibited."], ["Verseborn", "That has rarely stopped us."]];
   playSfx("boss");
   showTalk(lines, {
-    portraits: ["Verseborn", { enemy: bossName, label: bossName }],
+    portraits: ["Verseborn", { enemy: enemyUnit.sprite || enemyUnit.name, label: bossName }],
     after: launch
   });
 }
@@ -3225,6 +3357,7 @@ function battleUnit(id) {
 
 function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
   mode = "battle";
+  battleFloaters = [];
   const preparedWard = Boolean(state.fieldWard);
   state.fieldWard = false;
   const preparedEnemies = enemies.map(unit => prepareEnemyForBattle(unit));
@@ -3283,8 +3416,8 @@ function runCurrentTurn(log) {
   battleActionIndex = 0;
   if (turn.side === "enemy") {
     battle.resolving = true;
-    renderBattle(`${log} ${turn.name} moves next.`);
-    setTimeout(() => resolveEnemyTurn(turn, log), 430);
+    renderBattle(`${log} ${turn.name} prepares to act...`);
+    setTimeout(() => resolveEnemyTurn(turn, log), 680);
     return;
   }
   battle.resolving = false;
@@ -3462,14 +3595,29 @@ function defendReduction(u) {
 
 function useDefend(u) {
   if (battle.resolving) return;
+  const timing = battleActionTiming("block");
+  battle.resolving = true;
   u.anim = "block";
   u.guarding = true;
   state.resonance = Math.min(100, state.resonance + 6);
   effect = makeBattleEffect(u, { anim: "block", name: "Defend", element: baseJobs[u.id].element }, u);
   playSfx("block");
-  setTimeout(() => u.anim = "idle", 650);
+  setTimeout(() => u.anim = "idle", timing.totalMs - 100);
   updatePanels();
-  finishTurn(`${u.name} defends, reducing the next direct hit by ${defendReduction(u)}% and gaining 6 Resonance.`);
+  const log = `${u.name} defends, reducing the next direct hit by ${defendReduction(u)}% and gaining 6 Resonance.`;
+  renderBattle(log);
+  setTimeout(() => {
+    if (battle && mode === "battle") finishTurn(log);
+  }, timing.totalMs);
+}
+
+function battleActionTiming(anim) {
+  return {
+    melee: { effectTicks: 44, impactTicks: 26, impactMs: 430, totalMs: 900 },
+    magic: { effectTicks: 64, impactTicks: 38, impactMs: 640, totalMs: 1200 },
+    ultimate: { effectTicks: 104, impactTicks: 62, impactMs: 1030, totalMs: 1900 },
+    block: { effectTicks: 48, impactTicks: 28, impactMs: 460, totalMs: 900 }
+  }[anim] || { effectTicks: 48, impactTicks: 28, impactMs: 460, totalMs: 950 };
 }
 
 function makeBattleEffect(caster, skillData, target) {
@@ -3488,6 +3636,7 @@ function makeBattleEffect(caster, skillData, target) {
     toX = anchorX;
     toY = baseline - 17;
   }
+  const timing = battleActionTiming(skillData.anim);
   return {
     kind: skillData.anim,
     caster: caster.id,
@@ -3501,103 +3650,120 @@ function makeBattleEffect(caster, skillData, target) {
     toY,
     x: toX,
     y: toY,
-    duration: skillData.anim === "ultimate" ? 40 : skillData.anim === "magic" ? 29 : 24
+    duration: timing.effectTicks,
+    impactTicks: timing.impactTicks
   };
 }
 
 function useSkill(u, sk, chosenTarget = null) {
   if (battle.resolving) return;
   if (sk.anim !== "ultimate" && sk.cost > u.mp) return renderBattle(`${u.name} needs more MP.`);
-  const live = battle.enemies.filter(e => e.hp > 0);
-  const target = chosenTarget?.hp > 0 ? chosenTarget : live[0];
+  const liveAtStart = battle.enemies.filter(e => e.hp > 0);
+  const target = chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0];
+  const timing = battleActionTiming(sk.anim);
   battle.targetMode = false;
   battle.pendingSkill = null;
+  battle.resolving = true;
   u.anim = sk.anim;
   if (sk.anim !== "ultimate") u.mp -= sk.cost;
   playSfx(sk.anim);
-  setTimeout(() => u.anim = "idle", 650);
-  let log = `${u.name} uses ${sk.name}.`;
   if (sk.anim === "ultimate") state.resonance = 0;
-  if (sk.power < 0) {
-    const living = battle.party.filter(p => p.hp > 0);
-    const wounded = living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
-    const healing = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")));
-    const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : [wounded];
-    effect = makeBattleEffect(u, sk, wounded);
-    let totalRestored = 0;
-    healTargets.forEach(ally => {
-      const restored = Math.min(healing, ally.max - ally.hp);
-      ally.hp += restored;
-      totalRestored += restored;
-    });
-    battle.ward = sk.anim === "block" || sk.anim === "ultimate";
-    state.resonance = Math.min(100, state.resonance + 5);
-    log += ` ${healTargets.length > 1 ? "The party recovers" : `${wounded.name} recovers`} ${totalRestored} HP.`;
-  } else if (sk.anim === "block") {
-    effect = makeBattleEffect(u, sk, u);
-    battle.ward = true;
-    state.resonance = Math.min(100, state.resonance + 12);
-    log += " The party blocks.";
-  } else if (target) {
-    effect = makeBattleEffect(u, sk, target);
-    const t = totals(u.id);
-    const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
-    const critChance = Math.min(.5, talentValue(u.id, "critChance") + effectValue(u.id, "critChance"));
-    hitTargets.forEach(hitTarget => {
-      let dmg = sk.power + (sk.anim === "magic" || sk.anim === "ultimate" ? t.mag : t.str) + Math.floor(Math.random() * 6);
-      if (hitTarget.weak === sk.element) {
-        dmg = Math.floor(dmg * 1.55);
-        dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
-        hitTarget.stagger += 2 + effectValue(u.id, "stagger");
-        state.resonance = Math.min(100, state.resonance + 14);
-        log += ` ${hitTarget.name}: Weakness!`;
-      } else {
-        hitTarget.stagger++;
-        state.resonance = Math.min(100, state.resonance + 5);
-      }
-      if (hitTarget.stagger >= 3) {
-        dmg += 12;
-        hitTarget.stagger = 0;
-        log += ` ${hitTarget.name}: Stagger break!`;
-      }
-      if (critChance && Math.random() < critChance) {
-        dmg *= 2;
-        log += ` ${hitTarget.name}: CRITICAL!`;
-      }
-      if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
-      hitTarget.hp -= dmg;
-      hitTarget.flash = 10;
-      if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
-        hitTarget.hp = 0;
-        hitTarget.anim = "death";
-        hitTarget.deathTick = tick;
-        hitTarget.defeatUntil = tick + (enemyAnimationSheetFor(hitTarget) ? 30 : 12);
-      }
-      log += ` ${hitTarget.name} takes ${dmg}.`;
-    });
-    setTimeout(() => playSfx("hit"), 90);
-    const hpOnHit = effectValue(u.id, "hpOnHit");
-    const mpOnHit = effectValue(u.id, "mpOnHit");
-    if (hpOnHit) {
-      const restored = Math.min(hpOnHit, u.max - u.hp);
-      u.hp += restored;
-      if (restored) log += ` ${u.name} restores ${restored} HP.`;
-    }
-    if (mpOnHit) {
-      const restored = Math.min(mpOnHit, u.maxmp - u.mp);
-      u.mp += restored;
-      if (restored) log += ` ${u.name} restores ${restored} MP.`;
-    }
-  }
   updatePanels();
-  if (battle.enemies.every(e => e.hp <= 0)) {
-    battle.resolving = true;
+  const livingAtStart = battle.party.filter(p => p.hp > 0);
+  const woundedAtStart = livingAtStart.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
+  effect = makeBattleEffect(u, sk, sk.power < 0 ? woundedAtStart : sk.anim === "block" ? u : target || u);
+  renderBattle(`${u.name} prepares ${sk.name}...`);
+  setTimeout(() => { if (u) u.anim = "idle"; }, timing.totalMs - 100);
+
+  setTimeout(() => {
+    if (!battle || mode !== "battle") return;
+    let log = `${u.name} uses ${sk.name}.`;
+    if (sk.power < 0) {
+      const living = battle.party.filter(p => p.hp > 0);
+      const wounded = living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
+      const healing = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")));
+      const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : [wounded];
+      let totalRestored = 0;
+      healTargets.forEach(ally => {
+        const restored = Math.min(healing, ally.max - ally.hp);
+        ally.hp += restored;
+        totalRestored += restored;
+        addBattleFloater(ally, restored, { kind: "heal" });
+      });
+      battle.ward = sk.anim === "block" || sk.anim === "ultimate";
+      state.resonance = Math.min(100, state.resonance + 5);
+      log += ` ${healTargets.length > 1 ? "The party recovers" : `${wounded.name} recovers`} ${totalRestored} HP.`;
+    } else if (sk.anim === "block") {
+      battle.ward = true;
+      state.resonance = Math.min(100, state.resonance + 12);
+      log += " The party blocks.";
+    } else if (target) {
+      const live = battle.enemies.filter(e => e.hp > 0);
+      const t = totals(u.id);
+      const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
+      const critChance = Math.min(.5, talentValue(u.id, "critChance") + effectValue(u.id, "critChance"));
+      hitTargets.forEach(hitTarget => {
+        let dmg = sk.power + (sk.anim === "magic" || sk.anim === "ultimate" ? t.mag : t.str) + Math.floor(Math.random() * 6);
+        if (hitTarget.weak === sk.element) {
+          dmg = Math.floor(dmg * 1.55);
+          dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
+          hitTarget.stagger += 2 + effectValue(u.id, "stagger");
+          state.resonance = Math.min(100, state.resonance + 14);
+          log += ` ${hitTarget.name}: Weakness!`;
+        } else {
+          hitTarget.stagger++;
+          state.resonance = Math.min(100, state.resonance + 5);
+        }
+        if (hitTarget.stagger >= 3) {
+          dmg += 12;
+          hitTarget.stagger = 0;
+          log += ` ${hitTarget.name}: Stagger break!`;
+        }
+        const critical = Boolean(critChance && Math.random() < critChance);
+        if (critical) {
+          dmg *= 2;
+          log += ` ${hitTarget.name}: CRITICAL!`;
+        }
+        if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
+        hitTarget.hp -= dmg;
+        hitTarget.flash = 10;
+        addBattleFloater(hitTarget, dmg, { damageType: sk.element, crit: critical });
+        if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
+          hitTarget.hp = 0;
+          hitTarget.anim = "death";
+          hitTarget.deathTick = tick;
+          hitTarget.defeatUntil = tick + (enemyAnimationSheetFor(hitTarget) ? 30 : 12);
+        }
+        log += ` ${hitTarget.name} takes ${dmg}.`;
+      });
+      playSfx("hit");
+      const hpOnHit = effectValue(u.id, "hpOnHit");
+      const mpOnHit = effectValue(u.id, "mpOnHit");
+      if (hpOnHit) {
+        const restored = Math.min(hpOnHit, u.max - u.hp);
+        u.hp += restored;
+        addBattleFloater(u, restored, { kind: "heal" });
+        if (restored) log += ` ${u.name} restores ${restored} HP.`;
+      }
+      if (mpOnHit) {
+        const restored = Math.min(mpOnHit, u.maxmp - u.mp);
+        u.mp += restored;
+        if (restored) log += ` ${u.name} restores ${restored} MP.`;
+      }
+    }
+    updatePanels();
+    renderBattle(log);
+    const tailDelay = Math.max(260, timing.totalMs - timing.impactMs);
+    if (battle.enemies.every(e => e.hp <= 0)) {
+      setTimeout(() => {
+        if (battle?.enemies.every(e => e.hp <= 0)) winBattle(log);
+      }, Math.max(540, tailDelay));
+      return;
+    }
     setTimeout(() => {
-      if (battle?.enemies.every(e => e.hp <= 0)) winBattle(log);
-    }, 540);
-    return;
-  }
-  finishTurn(log);
+      if (battle && mode === "battle") finishTurn(log);
+    }, tailDelay);
+  }, timing.impactMs);
 }
 
 function elementColor(element) {
@@ -3670,7 +3836,9 @@ function useBattleItem(u, name) {
   if (info.battle === "hp") {
     const before = u.hp;
     u.hp = Math.min(u.max, u.hp + info.value);
-    log += ` HP +${u.hp - before}.`;
+    const restored = u.hp - before;
+    addBattleFloater(u, restored, { kind: "heal" });
+    log += ` HP +${restored}.`;
     playSfx("item");
   } else if (info.battle === "mp") {
     const before = u.mp;
@@ -3703,25 +3871,40 @@ function resolveEnemyTurn(turn, prev) {
   e.animTick = 0;
   const animationKey = enemyAnimationKey(e);
   e.attackStyle = animationKey && magicEnemyAnimations.has(animationKey) ? "magic" : "melee";
-  setTimeout(() => { e.anim = "idle"; e.animTick = 0; }, 520);
   const target = liveParty[Math.floor(Math.random() * liveParty.length)];
-  let dmg = e.atk + Math.floor(Math.random() * 6);
-  let defenseText = "";
-  if (target.guarding) {
-    const reduction = defendReduction(target);
-    dmg = Math.ceil(dmg * (1 - reduction / 100));
-    target.guarding = false;
-    defenseText = ` ${target.name}'s defense blocks ${reduction}%.`;
-  } else if (battle.ward) {
-    dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(target.id, "blockPower")));
-    defenseText = " Party Guard softens the hit.";
-  }
-  target.hp -= dmg;
-  target.flash = 12;
+  const impactDelay = e.attackStyle === "magic" ? 720 : 580;
   playSfx(e.attackStyle === "magic" ? "magic" : e.npcBoss || ["Wrong Bell", "Gate Lock", "Ash Wyrm"].includes(e.name) ? "boss" : "melee");
-  battle.ward = false;
-  battle.resolving = false;
-  finishTurn(`${e.name} hits ${target.name} for ${dmg}.${defenseText}`);
+  renderBattle(`${e.name} targets ${target.name} with a ${e.attackStyle} attack...`);
+  setTimeout(() => {
+    if (!battle || mode !== "battle" || e.hp <= 0 || target.hp <= 0) return;
+    let dmg = e.atk + Math.floor(Math.random() * 6);
+    let defenseText = "";
+    if (target.guarding) {
+      const reduction = defendReduction(target);
+      dmg = Math.ceil(dmg * (1 - reduction / 100));
+      target.guarding = false;
+      defenseText = ` ${target.name}'s defense blocks ${reduction}%.`;
+      playSfx("block");
+    } else if (battle.ward) {
+      dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(target.id, "blockPower")));
+      defenseText = " Party Guard softens the hit.";
+      playSfx("block");
+    } else {
+      playSfx("hit");
+    }
+    target.hp = Math.max(0, target.hp - dmg);
+    target.flash = 12;
+    addBattleFloater(target, dmg, { damageType: e.attackStyle === "magic" ? "Magic" : "Physical" });
+    battle.ward = false;
+    const hitLog = `${e.name} hits ${target.name} for ${dmg}.${defenseText}`;
+    renderBattle(hitLog);
+    setTimeout(() => {
+      if (!battle || mode !== "battle") return;
+      e.anim = "idle";
+      e.animTick = 0;
+      finishTurn(hitLog);
+    }, 560);
+  }, impactDelay);
 }
 
 function winBattle(log) {
@@ -3751,6 +3934,7 @@ function winBattle(log) {
   const xpSummary = awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
   if (battle.winFlag === "endgameHuntWon") {
     state.endgameRank++;
+    state.echoForgeRank = Math.max(state.echoForgeRank || 0, state.endgameRank);
     const echoGold = 100 + state.endgameRank * 35;
     const cogs = 1 + Math.floor(state.endgameRank / 3);
     state.gold += echoGold;
@@ -3787,23 +3971,50 @@ function rollBattleLoot(enemies) {
   let gold = 0;
   const drops = [];
   enemies.forEach(enemyUnit => {
-    const tables = [lootTables[enemyUnit.name], state.ngPlus > 0 ? ngPlusLootTables[enemyUnit.name] : null].filter(Boolean);
-    tables.forEach((table, tableIndex) => {
+    const tables = [lootTables[enemyUnit.name]].filter(Boolean);
+    tables.forEach(table => {
       gold += table.gold[0] + Math.floor(Math.random() * (table.gold[1] - table.gold[0] + 1));
       table.common.forEach(([name, chance, amount]) => {
         if (Math.random() > chance) return;
         const stored = addInventoryItem(name, amount);
-        drops.push(`${tableIndex ? "NG+: " : ""}${name} x${amount}${stored ? "" : " (Marla stash)"}`);
+        drops.push(`${name} x${amount}${stored ? "" : " (Marla stash)"}`);
       });
       table.rare.forEach(([name, chance]) => {
         if (Math.random() > chance || gearCopyCount(name) >= 3) return;
         addOwnedGear(name);
-        drops.push(`${tableIndex ? "NG+ LEGENDARY" : "RARE"}: ${name}`);
+        drops.push(`RARE: ${name}`);
       });
     });
+    if (state.ngPlus > 0) gold += rollNgPlusRandomLoot(enemyUnit, drops);
   });
   state.gold += gold;
   return { gold, drops };
+}
+
+function rollNgPlusRandomLoot(enemyUnit, drops) {
+  const loop = Math.max(1, state.ngPlus);
+  const commonPool = [
+    ["Loopglass Shard", 1 + Math.floor(loop / 2)],
+    ["Orphan Ember Thread", 1 + Math.floor(loop / 3)],
+    ["Stonewake Medal", 1],
+    ["Emberheart Stew", 1],
+    ["Resonance Draught", 1]
+  ];
+  const rolls = Math.min(3, 1 + Math.floor((loop - 1) / 2));
+  for (let roll = 0; roll < rolls; roll++) {
+    const [name, amount] = commonPool[Math.floor(Math.random() * commonPool.length)];
+    const stored = addInventoryItem(name, amount);
+    drops.push(`NG+ RANDOM: ${name} x${amount}${stored ? "" : " (Marla stash)"}`);
+  }
+  const randomGear = ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name) && gearCopyCount(gear.name) < 3);
+  const gearChance = Math.min(.48, .14 + loop * .055 + (state.endgameRank || 0) * .01);
+  if (randomGear.length && Math.random() < gearChance) {
+    const gear = randomGear[Math.floor(Math.random() * randomGear.length)];
+    addOwnedGear(gear.name);
+    drops.push(`NG+ RANDOM LEGENDARY: ${gear.name}`);
+  }
+  const level = enemyUnit.level || 1;
+  return 22 + level * 4 + Math.floor(Math.random() * (18 + loop * 8));
 }
 
 function inventoryUsed() {
@@ -4320,11 +4531,30 @@ function closeVendor() {
   document.querySelector(".menu-tabs").classList.remove("hidden");
 }
 
+function vendorWares(id) {
+  const vendor = vendors[id];
+  if (!vendor) return [];
+  const wares = [...vendor.wares];
+  if (id !== "workshop") return wares;
+  if (state.ngPlus > 0) {
+    wares.push(
+      { kind: "item", name: "Emberheart Stew", price: 82, desc: inventoryDb["Emberheart Stew"].desc },
+      { kind: "item", name: "Resonance Draught", price: 96, desc: inventoryDb["Resonance Draught"].desc }
+    );
+  }
+  const unlockedRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
+  echoForgeGear.filter(gear => gear.echoRank <= unlockedRank).forEach(gear => {
+    wares.push({ kind: "gear", name: gear.name, price: gear.price });
+  });
+  return wares;
+}
+
 function renderVendor() {
   const vendor = vendors[activeVendor];
   if (!vendor) return closeVendor();
+  const wares = vendorWares(activeVendor);
   const stashEntries = Object.entries(state.stash).filter(([, amount]) => amount > 0);
-  const buyList = `<div class="shop-list">${vendor.wares.map((ware, index) => {
+  const buyList = `<div class="shop-list">${wares.map((ware, index) => {
     const gear = ware.kind === "gear" ? gearByName(ware.name) : null;
     const owned = ware.kind === "gear" && state.ownedGear.includes(ware.name);
     const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
@@ -4349,7 +4579,11 @@ function renderVendor() {
     const available = gearCopyCount(gear.name) - equippedGearUsers(gear.name).length;
     return `<div class="shop-row">${pixelIconHtml(gearIconSheet(gear, state.party[0]), iconIndex, "shop-icon")}<div><strong>${gear.name} x${available} spare</strong><small>${statLine(gear.stats)}. ${gear.desc}</small></div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${gear.name}">Sell 1</button></div>`;
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
-  el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">Rare effect gear comes from battles and quests, never shops. Spare general gear can be sold after it is unequipped.</p>`;
+  const forgeRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
+  const shopNote = activeVendor === "workshop"
+    ? `Echo Forge rank ${forgeRank}/20. Every cleared Echo Hunt rank unlocks one stronger all-hero equipment piece here. NG+ also unlocks improved consumables.`
+    : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
+  el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
   el.menuBody.querySelectorAll("[data-shop-tab]").forEach(button => button.onclick = () => {
     vendorTab = button.dataset.shopTab;
@@ -4366,6 +4600,8 @@ function inventorySellPrice(name) {
   const shopWare = Object.values(vendors).flatMap(vendor => vendor.wares).find(ware => ware.kind === "item" && ware.name === name);
   if (shopWare) return Math.max(1, Math.floor(shopWare.price * .4));
   const values = {
+    "Emberheart Stew": 33,
+    "Resonance Draught": 38,
     "Ledger Scrap": 6,
     "Broken Wax Seal": 8,
     "Ash Ink": 10,
@@ -4376,7 +4612,10 @@ function inventorySellPrice(name) {
     "Living Ash Ink": 28,
     "Unclaimed Sigil": 30,
     "Redacted Testimony": 34,
-    "Null Calibration Shard": 38
+    "Null Calibration Shard": 38,
+    "Loopglass Shard": 28,
+    "Stonewake Medal": 46,
+    "Orphan Ember Thread": 34
   };
   return values[name] || 0;
 }
@@ -4408,7 +4647,7 @@ function sellVendorItem(kind, name) {
 }
 
 function buyWare(index) {
-  const ware = vendors[activeVendor]?.wares[index];
+  const ware = vendorWares(activeVendor)[index];
   const price = ware?.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware?.price;
   if (!ware || state.gold < price) return;
   if (ware.kind === "gear" && state.ownedGear.includes(ware.name)) return;
@@ -4565,6 +4804,7 @@ document.querySelectorAll(".menu-tabs button").forEach(btn => {
 
 el.codexPrev.onclick = () => { codexIndex = (codexIndex + codex.length - 1) % codex.length; updateCodex(); };
 el.codexNext.onclick = () => { codexIndex = (codexIndex + 1) % codex.length; updateCodex(); };
+
 
 refreshHeroVitals();
 updateCodex();
