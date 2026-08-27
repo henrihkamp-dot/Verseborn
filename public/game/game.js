@@ -223,16 +223,43 @@ const animatedNpcHeights = {
   Jory: 27,
   Harl: 26
 };
+const enemyAnimationFiles = {
+  "Inkbound Auditor": "inkbound-auditor",
+  "Dawn Gate Sentinel": "dawn-gate-sentinel",
+  "Archive Custodian": "archive-custodian",
+  "Dock Foreman": "dock-foreman",
+  "Seal Bearer": "clergy-seal-patrol",
+  "Cracked Pillar": "cracked-armory-pillar",
+  "Ash Wyrm": "ash-wyrm"
+};
+const enemyAnimationHeights = {
+  "Inkbound Auditor": 44,
+  "Dawn Gate Sentinel": 51,
+  "Archive Custodian": 47,
+  "Dock Foreman": 45,
+  "Seal Bearer": 45,
+  "Cracked Pillar": 55,
+  "Ash Wyrm": 60
+};
+const magicEnemyAnimations = new Set([
+  "Inkbound Auditor",
+  "Archive Custodian",
+  "Seal Bearer",
+  "Ash Wyrm"
+]);
 const animationLayouts = {
   Harl: { columns: 6, rows: 4, chromaBlack: true }
 };
 const mapImages = {};
 const battleImages = {};
+const enemyAnimationSheets = {};
+const chestOpenTicks = {};
 let enemySheet = null;
 let enemyAttackSheet = null;
 let worldEnemySheet = null;
 let npcSheet = null;
 let titleImage = null;
+let chestSheet = null;
 let spriteLoadProgress = 0;
 
 function isCheckerPixel(data, offset) {
@@ -391,6 +418,56 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
   });
 }
 
+function loadEnemyAnimationSheet(id, fileName) {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      const cleaned = document.createElement("canvas");
+      cleaned.width = image.naturalWidth;
+      cleaned.height = image.naturalHeight;
+      const paint = cleaned.getContext("2d", { willReadFrequently: true });
+      paint.imageSmoothingEnabled = false;
+      paint.drawImage(image, 0, 0);
+      const pixels = paint.getImageData(0, 0, cleaned.width, cleaned.height);
+      const rows = Array.from({ length: 5 }, (_, row) => Array.from({ length: 5 }, (_, col) => (
+        cellBounds(pixels, cleaned.width, cleaned.height, col, row, 5, 5)
+      )));
+      const idleHeights = rows[0].map(cell => cell.h).sort((a, b) => a - b);
+      enemyAnimationSheets[id] = {
+        image: cleaned,
+        rows,
+        referenceHeight: idleHeights[Math.floor(idleHeights.length / 2)] || cleaned.height / 5
+      };
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = `assets/sprites/enemies-animation/${fileName}.png`;
+  });
+}
+
+function loadChestSheet() {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      const cleaned = document.createElement("canvas");
+      cleaned.width = image.naturalWidth;
+      cleaned.height = image.naturalHeight;
+      const paint = cleaned.getContext("2d", { willReadFrequently: true });
+      paint.imageSmoothingEnabled = false;
+      paint.drawImage(image, 0, 0);
+      const pixels = paint.getImageData(0, 0, cleaned.width, cleaned.height);
+      const cells = [];
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 5; col++) cells.push(cellBounds(pixels, cleaned.width, cleaned.height, col, row, 5, 3));
+      }
+      chestSheet = { image: cleaned, cells, cellWidth: cleaned.width / 5, cellHeight: cleaned.height / 3 };
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = "assets/sprites/chests.png";
+  });
+}
+
 function loadEnemySheet() {
   return new Promise(resolve => {
     const image = new Image();
@@ -519,6 +596,8 @@ function loadTitleImage() {
 Promise.all([
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
   ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
+  ...Object.entries(enemyAnimationFiles).map(([id, fileName]) => loadEnemyAnimationSheet(id, fileName)),
+  loadChestSheet(),
   loadEnemySheet(),
   loadEnemyAttackSheet(),
   loadWorldEnemySheet(),
@@ -1905,15 +1984,32 @@ function drawTileMap() {
 }
 
 function drawChest(pointData) {
-  const x = pointData.x * TILE + 2;
-  const y = pointData.y * TILE + 4 + fieldRenderOffsetY();
+  const anchorX = pointData.x * TILE + 8;
+  const baseline = pointData.y * TILE + 18 + fieldRenderOffsetY();
   const opened = state.flags[`chest:${pointData.chest.id}`];
-  drawFieldShadow(x + 6, y + 12, 7);
-  drawRect(x, y + (opened ? 4 : 2), 12, 8, "#3a2117");
-  drawRect(x + 1, y + (opened ? 3 : 1), 10, 3, opened ? "#6f4827" : "#b17436");
-  drawRect(x + 5, y + 5, 2, 4, "#f1c663");
-  drawRect(x + 1, y + 10, 10, 2, "#171018");
-  if (!opened && tick % 150 < 12) drawSubtlePulse(x + 6, y - 2, 0, "#ffe29a", 150);
+  const reward = pointData.chest.reward || {};
+  const rarity = pointData.chest.rarity || (reward.gear ? "epic" : Object.keys(reward.items || {}).length ? "rare" : "common");
+  const row = { common: 0, rare: 1, epic: 2 }[rarity] ?? 0;
+  const openedAt = chestOpenTicks[pointData.chest.id];
+  const opening = opened && Number.isFinite(openedAt) && tick - openedAt < 25;
+  const frame = opened ? (opening ? Math.min(4, Math.floor((tick - openedAt) / 5)) : 4) : 0;
+  drawFieldShadow(anchorX, baseline + 1, rarity === "epic" ? 10 : 8);
+  if (chestSheet) {
+    const sourceX = Math.floor(frame * chestSheet.cellWidth);
+    const sourceY = Math.floor(row * chestSheet.cellHeight);
+    const sourceWidth = Math.ceil(chestSheet.cellWidth);
+    const sourceHeight = Math.ceil(chestSheet.cellHeight);
+    const targetHeight = rarity === "epic" ? 25 : rarity === "rare" ? 23 : 21;
+    const targetWidth = Math.round(sourceWidth * targetHeight / sourceHeight);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(chestSheet.image, sourceX, sourceY, sourceWidth, sourceHeight, Math.round(anchorX - targetWidth / 2), baseline - targetHeight, targetWidth, targetHeight);
+    ctx.restore();
+  } else {
+    drawRect(anchorX - 6, baseline - 10, 12, 8, opened ? "#6f4827" : "#b17436");
+    drawRect(anchorX - 1, baseline - 7, 2, 4, "#f1c663");
+  }
+  if (!opened && tick % 150 < 12) drawSubtlePulse(anchorX, baseline - 22, 0, rarity === "epic" ? "#d899ff" : rarity === "rare" ? "#9ed8ff" : "#ffe29a", 150);
 }
 
 function drawMapBackground(map, image, offsetX = 0, offsetY = 0) {
@@ -2337,10 +2433,15 @@ function drawBattleScene() {
   });
 
   battle.enemies.forEach((enemyUnit, index) => {
-    if (enemyUnit.hp <= 0 && !enemyUnit.defeatUntil) enemyUnit.defeatUntil = tick + 12;
+    const animatedDeath = Boolean(enemyAnimationSheetFor(enemyUnit));
+    if (enemyUnit.hp <= 0 && !enemyUnit.defeatUntil) {
+      enemyUnit.anim = "death";
+      enemyUnit.deathTick = tick;
+      enemyUnit.defeatUntil = tick + (animatedDeath ? 30 : 12);
+    }
     if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil) return;
     const [anchorX, baseline] = enemyBattlePosition(index, battle.enemies.length);
-    if (enemyUnit.hp <= 0) ctx.globalAlpha = Math.max(0, (enemyUnit.defeatUntil - tick) / 12);
+    if (enemyUnit.hp <= 0 && !animatedDeath) ctx.globalAlpha = Math.max(0, (enemyUnit.defeatUntil - tick) / 12);
     const hasTurn = turn?.side === "enemy" && turn.index === index;
     if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
     if (target === enemyUnit) drawBattleGroundMarker(anchorX, baseline, "target");
@@ -2421,11 +2522,58 @@ function drawNpcBattleEnemy(e, px, py) {
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
   ctx.restore();
-  if (attacking) e.animTick = (e.animTick || 0) + 1;
+  if (attacking && e.lastAnimDrawTick !== tick) {
+    e.animTick = (e.animTick || 0) + 1;
+    e.lastAnimDrawTick = tick;
+  }
+  return true;
+}
+
+function enemyAnimationKey(e) {
+  if (enemyAnimationFiles[e.name]) return e.name;
+  if (enemyAnimationFiles[e.sprite]) return e.sprite;
+  return null;
+}
+
+function enemyAnimationSheetFor(e) {
+  const key = enemyAnimationKey(e);
+  return key ? enemyAnimationSheets[key] : null;
+}
+
+function drawAnimatedEnemy(e, px, py) {
+  const key = enemyAnimationKey(e);
+  const sheet = key ? enemyAnimationSheets[key] : null;
+  if (!sheet) return false;
+  const dying = e.hp <= 0 || e.anim === "death";
+  const attacking = e.anim === "attack";
+  const row = dying ? 4 : attacking ? (e.attackStyle === "magic" || magicEnemyAnimations.has(key) ? 3 : 2) : 0;
+  const cells = sheet.rows[row];
+  let frame = Math.floor((tick + key.length * 3) / 12) % cells.length;
+  if (attacking) frame = Math.min(cells.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
+  if (dying) frame = Math.min(cells.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
+  const cell = cells[frame];
+  const targetHeight = enemyAnimationHeights[key] || 46;
+  const scale = targetHeight / Math.max(1, sheet.referenceHeight);
+  const width = Math.max(1, Math.round(cell.w * scale));
+  const height = Math.max(1, Math.round(cell.h * scale));
+  const progress = attacking ? Math.min(1, (e.animTick || 0) / 24) : 0;
+  const lunge = attacking ? Math.round(Math.sin(progress * Math.PI) * 7) : 0;
+  const bob = !attacking && !dying && Math.floor((tick + key.length) / 18) % 3 === 1 ? -1 : 0;
+  const anchorX = px + 8 - lunge;
+  const baseline = py + 31 + bob;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sheet.image, cell.x, cell.y, cell.w, cell.h, Math.round(anchorX - width / 2), Math.round(baseline - height), width, height);
+  ctx.restore();
+  if (attacking && e.lastAnimDrawTick !== tick) {
+    e.animTick = (e.animTick || 0) + 1;
+    e.lastAnimDrawTick = tick;
+  }
   return true;
 }
 
 function drawEnemy(e, px, py) {
+  if (drawAnimatedEnemy(e, px, py)) return;
   if (drawNpcBattleEnemy(e, px, py)) return;
   const index = enemySpriteIndex(e.sprite || e.name);
   const source = e.anim === "attack" && enemyAttackSheet ? enemyAttackSheet : enemySheet;
@@ -2934,6 +3082,7 @@ function showBossIntro(title, enemyUnit, launch) {
 function openChest(pointData) {
   const chestData = pointData?.chest;
   if (!chestData || state.flags[`chest:${chestData.id}`]) return;
+  chestOpenTicks[chestData.id] = tick;
   state.flags[`chest:${chestData.id}`] = true;
   const reward = chestData.reward || {};
   const found = [];
@@ -3418,6 +3567,12 @@ function useSkill(u, sk, chosenTarget = null) {
       if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
       hitTarget.hp -= dmg;
       hitTarget.flash = 10;
+      if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
+        hitTarget.hp = 0;
+        hitTarget.anim = "death";
+        hitTarget.deathTick = tick;
+        hitTarget.defeatUntil = tick + (enemyAnimationSheetFor(hitTarget) ? 30 : 12);
+      }
       log += ` ${hitTarget.name} takes ${dmg}.`;
     });
     setTimeout(() => playSfx("hit"), 90);
@@ -3435,7 +3590,13 @@ function useSkill(u, sk, chosenTarget = null) {
     }
   }
   updatePanels();
-  if (battle.enemies.every(e => e.hp <= 0)) return winBattle(log);
+  if (battle.enemies.every(e => e.hp <= 0)) {
+    battle.resolving = true;
+    setTimeout(() => {
+      if (battle?.enemies.every(e => e.hp <= 0)) winBattle(log);
+    }, 540);
+    return;
+  }
   finishTurn(log);
 }
 
@@ -3540,6 +3701,8 @@ function resolveEnemyTurn(turn, prev) {
   }
   e.anim = "attack";
   e.animTick = 0;
+  const animationKey = enemyAnimationKey(e);
+  e.attackStyle = animationKey && magicEnemyAnimations.has(animationKey) ? "magic" : "melee";
   setTimeout(() => { e.anim = "idle"; e.animTick = 0; }, 520);
   const target = liveParty[Math.floor(Math.random() * liveParty.length)];
   let dmg = e.atk + Math.floor(Math.random() * 6);
@@ -3555,7 +3718,7 @@ function resolveEnemyTurn(turn, prev) {
   }
   target.hp -= dmg;
   target.flash = 12;
-  playSfx(e.npcBoss || ["Wrong Bell", "Gate Lock", "Ash Wyrm"].includes(e.name) ? "boss" : "hit");
+  playSfx(e.attackStyle === "magic" ? "magic" : e.npcBoss || ["Wrong Bell", "Gate Lock", "Ash Wyrm"].includes(e.name) ? "boss" : "melee");
   battle.ward = false;
   battle.resolving = false;
   finishTurn(`${e.name} hits ${target.name} for ${dmg}.${defenseText}`);
