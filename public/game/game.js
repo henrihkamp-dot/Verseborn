@@ -3228,6 +3228,14 @@ function passable(x, y) {
   return !visibleSpawns().some(spawnPoint => Math.abs(spawnPoint.x - x) <= (spawnPoint.boss ? 1 : 0) && Math.abs(spawnPoint.y - y) <= (spawnPoint.boss ? 1 : 0));
 }
 
+function exitAtPosition(x, y) {
+  return currentMap().exits.find(exit => {
+    if (exit.needs && !state.flags[exit.needs]) return false;
+    if (exit.x <= 1 || exit.x >= 14) return x === exit.x && Math.abs(y - exit.y) <= 1;
+    return y === exit.y && Math.abs(x - exit.x) <= 1;
+  });
+}
+
 function enemyCanOccupy(spawnPoint, x, y, activeSpawns) {
   if (!terrainPassable(x, y)) return false;
   if (currentMap().exits.some(exit => exit.x === x && exit.y === y)) return false;
@@ -3289,7 +3297,7 @@ function move(dx, dy, facing) {
   if (mode !== "walk") return false;
   state.facing = facing;
   const nx = state.x + dx, ny = state.y + dy;
-  const exit = currentMap().exits.find(e => e.x === nx && e.y === ny && (!e.needs || state.flags[e.needs]));
+  const exit = exitAtPosition(nx, ny);
   if (exit) {
     const from = currentMap();
     state.map = exit.to;
@@ -5257,7 +5265,7 @@ function fieldPathTo(targetX, targetY, interactionRadius = 0) {
       const y = current.y + dy;
       const key = fieldTileKey(x, y);
       if (parents.has(key) || x < 1 || x > 14 || y < 1 || y > 12) continue;
-      const activeExit = currentMap().exits.find(exit => exit.x === x && exit.y === y && (!exit.needs || state.flags[exit.needs]));
+      const activeExit = exitAtPosition(x, y);
       if (activeExit && (x !== targetX || y !== targetY || interactionRadius > 0)) continue;
       if (!passable(x, y) && !activeExit) continue;
       parents.set(key, { key: fieldTileKey(current.x, current.y), step: [dx, dy, facing] });
