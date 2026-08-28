@@ -606,6 +606,58 @@ canvas:focus {
   font-weight: normal;
 }
 
+.gear-rarity {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 1px 4px;
+  border: 1px solid #6e5647;
+  color: #d8c8a8 !important;
+  font-size: 9px !important;
+  font-weight: 700;
+}
+
+.rarity-uncommon { color: #86d79d !important; border-color: #477759; }
+.rarity-rare { color: #88bdf0 !important; border-color: #466c8e; }
+.rarity-epic { color: #cf9bf2 !important; border-color: #76518d; }
+.rarity-legendary { color: #ffd27d !important; border-color: #a87932; }
+
+.gear-affixes {
+  display: grid !important;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.gear-affixes small {
+  color: #9fdccc !important;
+  font-size: 9px !important;
+}
+
+.status-chips {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.status-chips span {
+  padding: 1px 3px;
+  border: 1px solid #6e5647;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+.status-chips .is-negative {
+  border-color: #8a3d49;
+  color: #ffaaa4;
+}
+
+.status-chips .is-buff {
+  border-color: #3f7478;
+  color: #a9e8df;
+}
+
 .gear-access {
   color: #d4b467 !important;
   font-size: 10px !important;
