@@ -633,6 +633,24 @@ canvas:focus {
   font-size: 9px !important;
 }
 
+.gear-unique-effects {
+  display: grid !important;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.gear-unique-effects small {
+  color: #7bd4c6 !important;
+  font-size: 9px !important;
+}
+
+.gear-unique-effects .is-echo-unique {
+  color: #ffd27d !important;
+  border-left: 2px solid #a87932;
+  padding-left: 5px;
+  font-weight: bold;
+}
+
 .status-chips {
   grid-column: 1 / -1;
   display: flex;

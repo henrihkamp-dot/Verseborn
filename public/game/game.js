@@ -767,16 +767,16 @@ const gearDb = {
 };
 
 const zoneStarterGear = [
-  item("Ashrunner Knife", "weapon", { str: 2, agi: 2 }, "Affordable Ash Quarter steel for a first route."),
-  item("Sootweave Coat", "armour", { agi: 1, stam: 3 }, "Warm, patched and built for narrow streets."),
-  item("Shelter Staff", "weapon", { mag: 3, stam: 2 }, "A simple focus used by Reverie wardens."),
-  item("Reverie Mantle", "armour", { mag: 2, stam: 3 }, "Protective cloth made to outlast a bad night."),
-  item("Guildsteel Saber", "weapon", { str: 4, agi: 1 }, "Standard Guildspire field issue without ceremonial weight."),
-  item("Registry Coat", "armour", { agi: 2, stam: 3 }, "Officially practical and practically official."),
-  item("Ember Pike", "weapon", { str: 4, mag: 2 }, "Training-yard steel with a restrained ember channel."),
-  item("Flameguard Leathers", "armour", { str: 2, stam: 4 }, "Flexible field armour from Ember Hall stores."),
-  item("Calibration Rod", "weapon", { mag: 4, agi: 2 }, "A recovered False Dawn tool repurposed as a focus."),
-  item("Stormglass Vestment", "armour", { agi: 3, stam: 3 }, "Insulated cloth for the causeway's static winds.")
+  item("Ashrunner Knife", "weapon", { str: 2, agi: 2 }, "Affordable Ash Quarter steel for a first route.", { type: "statusOnHit", status: "poison", value: .1, label: "10% chance to Poison on hit" }),
+  item("Sootweave Coat", "armour", { agi: 1, stam: 3 }, "Warm, patched and built for narrow streets.", { type: "statusOnHit", status: "poison", value: .05, label: "5% chance to Poison on hit" }),
+  item("Shelter Staff", "weapon", { mag: 3, stam: 2 }, "A simple focus used by Reverie wardens.", { type: "statusOnHit", status: "sleep", value: .1, label: "10% chance to Sleep on hit" }),
+  item("Reverie Mantle", "armour", { mag: 2, stam: 3 }, "Protective cloth made to outlast a bad night.", { type: "statusOnHit", status: "sleep", value: .05, label: "5% chance to Sleep on hit" }),
+  item("Guildsteel Saber", "weapon", { str: 4, agi: 1 }, "Standard Guildspire field issue without ceremonial weight.", { type: "statusOnHit", status: "stun", value: .1, label: "10% chance to Stun on hit" }),
+  item("Registry Coat", "armour", { agi: 2, stam: 3 }, "Officially practical and practically official.", { type: "statusChance", value: .08, label: "+8% status application chance" }),
+  item("Ember Pike", "weapon", { str: 4, mag: 2 }, "Training-yard steel with a restrained ember channel.", { type: "statusOnHit", status: "stun", value: .12, label: "12% chance to Stun on hit" }),
+  item("Flameguard Leathers", "armour", { str: 2, stam: 4 }, "Flexible field armour from Ember Hall stores.", { type: "statusChance", value: .1, label: "+10% status application chance" }),
+  item("Calibration Rod", "weapon", { mag: 4, agi: 2 }, "A recovered False Dawn tool repurposed as a focus.", { type: "statusOnHit", status: "sleep", value: .12, label: "12% chance to Sleep on hit" }),
+  item("Stormglass Vestment", "armour", { agi: 3, stam: 3 }, "Insulated cloth for the causeway's static winds.", { type: "statusOnHit", status: "stun", value: .07, label: "7% chance to Stun on hit" })
 ];
 zoneStarterGear.forEach(gear => gearDb[gear.slot].push(gear));
 
@@ -811,11 +811,31 @@ const chestGear = [
 chestGear.forEach(gear => gearDb[gear.slot].push(gear));
 
 const postgameGear = [
-  item("Crownless Edge", "weapon", { str: 8, mag: 8, agi: 4 }, "A general weapon forged from a completed False Dawn loop.", { type: "openingResonance", value: 20, label: "+20 Resonance at battle start" }),
-  item("Dawnforged Aegis", "armour", { stam: 10, str: 4 }, "Armour tempered by battles that already happened once.", { type: "blockPower", value: .25, label: "25% stronger personal guard" }),
-  item("Loopbreaker Ring", "ring", { str: 6, agi: 6, stam: 3 }, "Its broken circle refuses to repeat a losing turn.", { type: "stagger", value: 2, label: "+2 stagger on weakness hits" }),
-  item("Memory Chain", "necklace", { mag: 8, stam: 6 }, "Carries a victory forward without erasing the road behind it.", { type: "battleRegen", value: 18, label: "Restore 18 HP after victory" }),
-  item("Starless Visor", "helmet", { mag: 7, agi: 7 }, "Sees the flaw inside a perfected system.", { type: "weaknessDamage", value: .28, label: "+28% weakness damage" })
+  item("Crownless Edge", "weapon", { str: 10, mag: 10, agi: 5 }, "A general weapon forged from a completed False Dawn loop.", [
+    { type: "openingResonance", value: 20, label: "+20 Resonance at battle start" },
+    { type: "statusOnHit", status: "stun", value: .18, label: "18% chance to Stun on hit", echoUnique: true },
+    { type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" }
+  ]),
+  item("Dawnforged Aegis", "armour", { stam: 13, str: 5, mag: 3 }, "Armour tempered by battles that already happened once.", [
+    { type: "blockPower", value: .25, label: "25% stronger personal guard" },
+    { type: "allStatusResistance", value: .2, label: "+20% resistance to all statuses" },
+    { type: "buffDuration", value: 1, label: "Buffs last +1 turn", echoUnique: true }
+  ]),
+  item("Loopbreaker Ring", "ring", { str: 8, agi: 8, stam: 4 }, "Its broken circle refuses to repeat a losing turn.", [
+    { type: "stagger", value: 2, label: "+2 stagger on weakness hits" },
+    { type: "statusChance", value: .2, label: "+20% status application chance" },
+    { type: "openingTurnProgress", value: .15, label: "+15% opening turn progress", echoUnique: true }
+  ]),
+  item("Memory Chain", "necklace", { mag: 10, stam: 8, agi: 3 }, "Carries a victory forward without erasing the road behind it.", [
+    { type: "battleRegen", value: 18, label: "Restore 18 HP after victory" },
+    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" },
+    { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn", echoUnique: true }
+  ]),
+  item("Starless Visor", "helmet", { mag: 9, agi: 9, stam: 3 }, "Sees the flaw inside a perfected system.", [
+    { type: "weaknessDamage", value: .28, label: "+28% weakness damage" },
+    { type: "statusOnHit", status: "sleep", value: .15, label: "15% chance to Sleep on hit", echoUnique: true },
+    { type: "statusChance", value: .15, label: "+15% status application chance" }
+  ])
 ];
 postgameGear.forEach(gear => gearDb[gear.slot].push(gear));
 
@@ -836,28 +856,60 @@ const ngPlusGear = [
 ngPlusGear.forEach(gear => gearDb[gear.slot].push(gear));
 
 const echoForgeSlots = ["weapon", "armour", "ring", "necklace", "helmet"];
+const echoForgeBlueprints = {
+  weapon: [
+    { base: "Voice of Verse", rarity: "Common", effect: { type: "buffDuration", value: 1, label: "support buffs last +1 turn" } },
+    { base: "Ashrunner Knife", rarity: "Uncommon", effect: { type: "poisonDamage", value: .35, label: "+35% Poison damage" } },
+    { base: "Echo-Thread Lute", rarity: "Rare", effect: { type: "echoing", value: .08, label: "8% skill Echo turn progress" } },
+    { base: "Cinderbite Edge", rarity: "Epic", effect: { type: "afflictedDamage", value: .24, label: "+24% damage against afflicted targets" } }
+  ],
+  armour: [
+    { base: "Ashcloak", rarity: "Common", effect: { type: "openingTurnProgress", value: .12, label: "+12% opening turn progress" } },
+    { base: "Sootweave Coat", rarity: "Uncommon", effect: { type: "statusDuration", value: 1, label: "inflicted statuses last +1 turn" } },
+    { base: "Sealbreak Vestment", rarity: "Rare", effect: { type: "allStatusResistance", value: .18, label: "+18% resistance to all statuses" } },
+    { base: "Nightneedle Harness", rarity: "Epic", effect: { type: "statusOnHit", status: "sleep", value: .16, label: "16% chance to Sleep on hit" } }
+  ],
+  ring: [
+    { base: "Promise Ring", rarity: "Common", effect: { type: "buffDuration", value: 1, label: "support buffs last +1 turn" } },
+    { base: "Red Ember Band", rarity: "Uncommon", effect: { type: "afflictedDamage", value: .14, label: "+14% damage against afflicted targets" } },
+    { base: "Faultline Signet", rarity: "Rare", effect: { type: "statusOnHit", status: "stun", value: .15, label: "15% chance to Stun on hit" } },
+    { base: "Songbound Rosin", rarity: "Epic", effect: { type: "echoing", value: .07, label: "7% skill Echo turn progress" } }
+  ],
+  necklace: [
+    { base: "Cinder Star", rarity: "Common", effect: { type: "magicDamage", value: .1, label: "+10% magic damage" } },
+    { base: "Veln Crest Token", rarity: "Uncommon", effect: { type: "statusChance", value: .14, label: "+14% status application chance" } },
+    { base: "Wyrmheart Ember", rarity: "Rare", effect: { type: "magicDamage", value: .18, label: "+18% magic damage" } },
+    { base: "Hearthwall Crest", rarity: "Epic", effect: { type: "buffDuration", value: 1, label: "defensive buffs last +1 turn" } }
+  ],
+  helmet: [
+    { base: "Songweaver Hood", rarity: "Common", effect: { type: "openingResonance", value: 10, label: "+10 Resonance at battle start" } },
+    { base: "Mira Top Hat", rarity: "Uncommon", effect: { type: "statusOnHit", status: "sleep", value: .1, label: "10% chance to Sleep on hit" } },
+    { base: "Local Truth Lens", rarity: "Rare", effect: { type: "statusChance", value: .2, label: "+20% status application chance" } },
+    { base: "Impossible Lens", rarity: "Epic", effect: { type: "afflictedDamage", value: .22, label: "+22% damage against afflicted targets" } }
+  ]
+};
+
+function nextGearRarity(rarity) {
+  const order = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
+  return order[Math.min(order.length - 1, Math.max(0, order.indexOf(rarity)) + 1)];
+}
+
 const echoForgeGear = Array.from({ length: 20 }, (_, index) => {
   const rank = index + 1;
   const slot = echoForgeSlots[index % echoForgeSlots.length];
-  const primary = 5 + rank;
-  const secondary = 2 + Math.ceil(rank / 2);
-  const stats = {
-    weapon: { str: primary, mag: Math.ceil(secondary / 2), agi: secondary },
-    armour: { stam: primary + 1, str: secondary, mag: Math.ceil(secondary / 2) },
-    ring: { agi: primary, mag: secondary, str: Math.ceil(secondary / 2) },
-    necklace: { mag: primary, stam: secondary, agi: Math.ceil(secondary / 2) },
-    helmet: { agi: primary, mag: secondary, stam: Math.ceil(secondary / 2) }
-  }[slot];
-  const effect = {
-    weapon: { type: "critChance", value: Math.min(.24, .04 + rank * .01), label: `+${Math.round(Math.min(.24, .04 + rank * .01) * 100)}% critical chance` },
-    armour: { type: "blockPower", value: Math.min(.32, .1 + rank * .011), label: `${Math.round(Math.min(.32, .1 + rank * .011) * 100)}% stronger personal guard` },
-    ring: { type: "openingResonance", value: 6 + rank * 2, label: `+${6 + rank * 2} Resonance at battle start` },
-    necklace: { type: "hpOnHit", value: 2 + Math.floor(rank / 3), label: `Restore ${2 + Math.floor(rank / 3)} HP after dealing damage` },
-    helmet: { type: "weaknessDamage", value: Math.min(.42, .1 + rank * .016), label: `+${Math.round(Math.min(.42, .1 + rank * .016) * 100)}% weakness damage` }
-  }[slot];
+  const tier = Math.floor(index / echoForgeSlots.length);
+  const blueprint = echoForgeBlueprints[slot][tier];
+  const baseGear = gearByName(blueprint.base);
+  const boost = 1 + tier + Math.floor(rank / 10);
+  const stats = Object.fromEntries(Object.entries(baseGear.stats).map(([stat, value]) => [stat, value + boost]));
+  const coreStat = { weapon: "str", armour: "stam", ring: "agi", necklace: "mag", helmet: "agi" }[slot];
+  stats[coreStat] = (stats[coreStat] || 0) + 1 + tier;
+  const inheritedEffects = gearEffects(baseGear).map(effect => ({ ...effect, label: `Inherited: ${effect.label}` }));
+  const echoEffect = { ...blueprint.effect, echoUnique: true, label: `ECHO: ${blueprint.effect.label}` };
+  const echoRarity = nextGearRarity(blueprint.rarity);
   return Object.assign(
-    item(`Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}`, slot, stats, `Glimmer recalibrated this piece after Echo Hunt rank ${rank}.`, effect),
-    { echoRank: rank, price: 220 + rank * 105 + rank * rank * 9 }
+    item(`Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}`, slot, stats, `An ${echoRarity} Echo upgrade of ${blueprint.base}, preserving its role after Echo Hunt rank ${rank}.`, [...inheritedEffects, echoEffect]),
+    { echoRank: rank, echoBase: blueprint.base, echoRarity, price: 240 + rank * 110 + tier * 180 }
   );
 });
 echoForgeGear.forEach(gear => gearDb[gear.slot].push(gear));
@@ -919,7 +971,7 @@ function gearIconSheet(gear, heroId) {
 function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
   if (ngPlusSignatureNames.has(gear?.name)) return `NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
-  if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / GLIMMER VENDOR / ALL HEROES`;
+  if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / ${gear.echoRarity.toUpperCase()} UPGRADE OF ${gear.echoBase.toUpperCase()} / ALL HEROES`;
   if (ngPlusGearNames.has(gear?.name)) return "NG+ LEGENDARY DROP / ALL HEROES";
   if (chestGear.includes(gear)) return gearOwners[gear.name] ? `EPIC CHEST / ${gearOwners[gear.name][0].toUpperCase()} ONLY` : "EPIC CHEST / ALL HEROES";
   if (postgameGearNames.has(gear?.name)) return "ENDGAME DROP / ALL HEROES";
@@ -932,7 +984,24 @@ function item(name, slot, stats, desc, effect = null) {
   return { name, slot, stats, desc, effect };
 }
 
-const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 1 };
+function gearEffects(gear) {
+  if (!gear?.effect) return [];
+  return Array.isArray(gear.effect) ? gear.effect : [gear.effect];
+}
+
+function gearEffectLabels(gear) {
+  return gearEffects(gear).map(effect => effect.echoUnique && effect.label ? `ECHO EFFECT: ${effect.label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : effect.label).filter(Boolean);
+}
+
+function gearEffectHtml(gear, className = "rare-effect") {
+  const effects = gearEffects(gear).filter(effect => effect.label);
+  return effects.length ? `<span class="gear-unique-effects ${className}">${effects.map(effect => {
+    const label = effect.echoUnique ? `ECHO EFFECT: ${effect.label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : effect.label;
+    return `<small class="${effect.echoUnique ? "is-echo-unique" : ""}">${label}</small>`;
+  }).join("")}</span>` : "";
+}
+
+const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4 };
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
 
 function affix(key, label, type, min, max, options = {}) {
@@ -955,6 +1024,9 @@ const affixPools = {
   armour: [
     affix("stout", "Stout", "statPct", .06, .16, { stat: "stam", theme: "mountain" }),
     affix("vital", "Vital", "hpPct", .08, .2),
+    affix("venomLined", "Venom-lined", "statusOnHit", .04, .08, { status: "poison", theme: "swamp" }),
+    affix("dreamwoven", "Dreamwoven", "statusOnHit", .04, .08, { status: "sleep", theme: "ruins" }),
+    affix("shockbound", "Shockbound", "statusOnHit", .04, .08, { status: "stun", theme: "mountain" }),
     affix("antivenom", "Antivenom", "statusResistance", .1, .3, { status: "poison", theme: "swamp" }),
     affix("wakeful", "Wakeful", "statusResistance", .1, .3, { status: "sleep", theme: "ruins" }),
     affix("unyielding", "Unyielding", "statusResistance", .1, .3, { status: "stun", theme: "mountain" }),
@@ -965,6 +1037,9 @@ const affixPools = {
   accessory: [
     affix("fleet", "Fleet", "statPct", .05, .15, { stat: "agi", theme: "dragon" }),
     affix("alchemist", "Alchemist", "statusChance", .08, .18, { theme: "swamp" }),
+    affix("venomSeal", "Venom Seal", "statusOnHit", .05, .1, { status: "poison", theme: "swamp" }),
+    affix("dreamSeal", "Dream Seal", "statusOnHit", .05, .1, { status: "sleep", theme: "ruins" }),
+    affix("stormSeal", "Storm Seal", "statusOnHit", .05, .1, { status: "stun", theme: "mountain" }),
     affix("resolute", "Resolute", "allStatusResistance", .08, .2),
     affix("echoing", "Echoing", "echoing", .05, .08, { theme: "dragon" }),
     affix("prolonging", "Prolonging", "buffDuration", 1, 1),
@@ -996,9 +1071,11 @@ function defaultGearRarity(name) {
   const gear = gearByName(name);
   if (!gear) return "Common";
   if (ngPlusSignatureNames.has(name) || postgameGearNames.has(name)) return "Legendary";
-  if (ngPlusGearNames.has(name) || echoForgeGearNames.has(name)) return "Epic";
+  if (echoForgeGearNames.has(name)) return gear.echoRarity || "Legendary";
+  if (ngPlusGearNames.has(name)) return "Epic";
   if (chestGear.includes(gear)) return "Epic";
   if (rareGear.includes(gear) || questGear.includes(gear)) return "Rare";
+  if (zoneStarterGear.includes(gear)) return "Uncommon";
   return "Common";
 }
 
@@ -1026,6 +1103,45 @@ function ensureGearMetadata(name, options = {}) {
     const shouldRoll = options.rollAffixes === true;
     state.gearAffixes[name] = shouldRoll ? rollGearAffixes(gearByName(name), state.gearRarities[name], options.theme) : [];
   }
+}
+
+function topUpGearAffixes(name, rarity = gearRarity(name), theme = "dragon") {
+  const gear = gearByName(name);
+  if (!gear) return [];
+  const wanted = RARITY_AFFIX_COUNTS[rarity] || 0;
+  const existing = gearAffixes(name);
+  let attempts = 0;
+  while (existing.length < wanted && attempts++ < 24) {
+    const candidates = rollGearAffixes(gear, rarity, theme);
+    const next = candidates.find(candidate => !existing.some(entry => entry.key === candidate.key));
+    if (!next) continue;
+    existing.push(next);
+  }
+  if (existing.length < wanted) {
+    const pool = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
+    pool.filter(entry => !existing.some(current => current.key === entry.key)).slice(0, wanted - existing.length).forEach(entry => {
+      const rolled = { ...entry, value: randomAffixValue(entry) };
+      rolled.text = formatAffix(rolled);
+      existing.push(rolled);
+    });
+  }
+  state.gearAffixes[name] = existing;
+  return existing;
+}
+
+function upgradeOwnedLegendaryGear() {
+  const equipped = Object.values(baseJobs).flatMap(hero => Object.values(hero.gear || {})).filter(Boolean);
+  [...new Set([...(state.ownedGear || []), ...equipped])].forEach(name => {
+    if (!gearByName(name)) return;
+    if (postgameGearNames.has(name)) state.gearRarities[name] = "Legendary";
+    if (echoForgeGearNames.has(name)) {
+      const current = state.gearRarities[name] || "Common";
+      const upgraded = defaultGearRarity(name);
+      state.gearRarities[name] = RARITY_ORDER.indexOf(current) > RARITY_ORDER.indexOf(upgraded) ? current : upgraded;
+    }
+    const rarity = gearRarity(name);
+    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || rarity === "Legendary") topUpGearAffixes(name, rarity, "dragon");
+  });
 }
 
 function gearRarity(name) {
@@ -1431,6 +1547,7 @@ function loadGame() {
       if (!name || gearByName(name)) baseJobs[id].gear[slot] = name || null;
     });
   });
+  upgradeOwnedLegendaryGear();
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
     if (!saved) return;
@@ -1452,6 +1569,9 @@ function loadGame() {
     progressFor(id);
     clampHeroVitals(id);
   });
+  const safeEntry = nearestMapEntry(state.map, state.x, state.y);
+  state.x = safeEntry.x;
+  state.y = safeEntry.y;
   state.renderX = state.x * TILE;
   state.renderY = state.y * TILE;
   return true;
@@ -1838,12 +1958,14 @@ function canEquip(id, gear) {
   return !owners || owners.includes(id);
 }
 
-function effectValue(id, type) {
+function effectValue(id, type, match = null) {
   const fixed = Object.values(baseJobs[id].gear).reduce((total, name) => {
-    const effect = gearByName(name)?.effect;
-    return total + (effect?.type === type ? effect.value : 0);
+    const effects = gearEffects(gearByName(name));
+    return total + effects
+      .filter(effect => effect.type === type && (match === null || effect.status === match || effect.stat === match))
+      .reduce((sum, effect) => sum + (effect.value || 0), 0);
   }, 0);
-  return fixed + affixValue(id, type);
+  return fixed + affixValue(id, type, match);
 }
 
 function progressFor(id) {
@@ -1937,12 +2059,12 @@ function statusApplicationChance(target, type, baseChance = 1, source = null) {
     chance *= target.statusChances?.[type] ?? STATUS_TIER_CHANCES[tier]?.[type] ?? 1;
   } else {
     const id = target.id;
-    const specific = id ? affixValue(id, "statusResistance", type) : 0;
-    const broad = id ? affixValue(id, "allStatusResistance") + typedTalentValue(id, "statusResistance") : 0;
+    const specific = id ? effectValue(id, "statusResistance", type) : 0;
+    const broad = id ? effectValue(id, "allStatusResistance") + typedTalentValue(id, "statusResistance") : 0;
     chance *= Math.max(.05, 1 - specific - broad);
   }
   if (source?.id) {
-    chance *= 1 + typedTalentValue(source.id, "statusChance", type) + affixValue(source.id, "statusChance");
+    chance *= 1 + typedTalentValue(source.id, "statusChance", type) + effectValue(source.id, "statusChance");
   }
   return Math.max(0, Math.min(.95, chance));
 }
@@ -1959,7 +2081,7 @@ function statusDurationFor(source, type, requested) {
   const base = requested || STATUS_DEFS[type]?.duration || 1;
   const negative = STATUS_DEFS[type]?.negative;
   const talentBonus = negative && source?.id ? typedTalentValue(source.id, "statusDuration", type) : 0;
-  const gearBonus = negative && source?.id ? affixValue(source.id, "statusDuration") : 0;
+  const gearBonus = negative && source?.id ? effectValue(source.id, "statusDuration") : 0;
   if (type === "sleep") return Math.min(5, base);
   if (type === "stun") return 1;
   return Math.max(1, base + talentBonus + gearBonus);
@@ -1972,9 +2094,9 @@ function applyStatus(target, type, source, options = {}) {
     return { applied: false, message: `${def.label} RESISTED` };
   }
   let duration = statusDurationFor(source, type, options.duration);
-  if (def.negative && target.id) duration = Math.max(1, duration - affixValue(target.id, "statusDurationReduction"));
+  if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
   const existing = statusOf(target, type);
-  const poisonBoost = source?.id ? 1 + typedTalentValue(source.id, "poisonDamage") : 1;
+  const poisonBoost = source?.id ? 1 + typedTalentValue(source.id, "poisonDamage") + effectValue(source.id, "poisonDamage") : 1;
   const value = options.value ?? (type === "poison" ? Math.max(1, Math.round(sourceBasicDamage(source) * .1 * poisonBoost)) : def.value);
   const data = {
     type,
@@ -2007,8 +2129,8 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
   if (kind === "melee") multiplier *= 1 + statusValue(unit, "strengthUp");
   if (kind === "magic" || kind === "ultimate") multiplier *= 1 + statusValue(unit, "magicUp");
   if (unit?.id) {
-    multiplier *= 1 + affixValue(unit.id, kind === "melee" ? "physicalDamage" : "magicDamage");
-    if (target && hasNegativeStatus(target)) multiplier *= 1 + typedTalentValue(unit.id, "afflictedDamage") + affixValue(unit.id, "afflictedDamage");
+    multiplier *= 1 + effectValue(unit.id, kind === "melee" ? "physicalDamage" : "magicDamage");
+    if (target && hasNegativeStatus(target)) multiplier *= 1 + typedTalentValue(unit.id, "afflictedDamage") + effectValue(unit.id, "afflictedDamage");
   }
   return multiplier;
 }
@@ -2019,7 +2141,7 @@ function incomingDamageMultiplier(unit) {
 
 function effectiveAgility(unit, base) {
   const buff = 1 + statusValue(unit, "agilityUp");
-  const opening = battle?.round === 1 && unit?.id ? 1 + affixValue(unit.id, "openingTurnProgress") : 1;
+  const opening = battle?.round === 1 && unit?.id ? 1 + effectValue(unit.id, "openingTurnProgress") : 1;
   return Math.round(base * buff * opening);
 }
 
@@ -2028,7 +2150,7 @@ function applySkillStatuses(source, target, sk) {
   if (sk.status) applications.push(applyStatus(target, sk.status.type, source, sk.status));
   if (source?.id && sk.power > 0) {
     ["poison", "sleep", "stun"].forEach(type => {
-      const chance = affixValue(source.id, "statusOnHit", type);
+      const chance = effectValue(source.id, "statusOnHit", type);
       if (chance > 0) applications.push(applyStatus(target, type, source, { chance }));
     });
   }
@@ -2039,7 +2161,7 @@ function applySkillBuffs(source, targets, sk) {
   const notes = [];
   (sk.buffs || []).forEach(buff => {
     targets.forEach(target => {
-      const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 3) + (source?.id ? typedTalentValue(source.id, "buffDuration") + affixValue(source.id, "buffDuration") : 0);
+      const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 3) + (source?.id ? typedTalentValue(source.id, "buffDuration") + effectValue(source.id, "buffDuration") : 0);
       const result = applyStatus(target, buff.type, source, { duration, chance: 1 });
       if (result.message) notes.push(`${target.name}: ${result.message}`);
     });
@@ -2315,18 +2437,11 @@ function fieldRenderOffsetY() {
 
 function drawWorldEnemy(spawnPoint) {
   const enemyUnit = spawnPoint.enemies[0];
-  if (!Number.isFinite(spawnPoint.renderX)) spawnPoint.renderX = spawnPoint.x * TILE;
-  if (!Number.isFinite(spawnPoint.renderY)) spawnPoint.renderY = spawnPoint.y * TILE;
-  const targetX = spawnPoint.x * TILE;
-  const targetY = spawnPoint.y * TILE;
-  const moving = spawnPoint.renderX !== targetX || spawnPoint.renderY !== targetY;
-  if (moving && targetX !== spawnPoint.renderX) spawnPoint.facingX = targetX > spawnPoint.renderX ? 1 : -1;
-  spawnPoint.renderX = approach(spawnPoint.renderX, targetX, 2);
-  spawnPoint.renderY = approach(spawnPoint.renderY, targetY, 2);
+  const moving = Boolean(spawnPoint.fieldMoving);
   const stride = moving ? [0, -1, 0, 1][Math.floor(tick / 5) % 4] : (Math.floor((tick + spawnPoint.phase) / 28) % 4 === 1 ? -1 : 0);
   const offsetY = fieldRenderOffsetY();
   const anchorX = Math.round(spawnPoint.renderX + 8);
-  const baseline = Math.round(spawnPoint.renderY + 17 + offsetY + stride);
+  const baseline = Math.round(spawnPoint.renderY + 25 + offsetY + stride);
   const key = enemyAnimationKey(enemyUnit);
   const animatedSheet = key ? enemyAnimationSheets[key] : null;
   if (animatedSheet) {
@@ -2361,6 +2476,18 @@ function drawWorldEnemy(spawnPoint) {
   }
   if (spawnPoint.rare) drawSubtlePulse(spawnPoint.renderX + 8, spawnPoint.renderY + 8 + offsetY, 0, "#bca2ff", 156);
   if (spawnPoint.boss) drawText("!", spawnPoint.renderX + 8, spawnPoint.renderY - 12 + offsetY, "#ffcf73", 8, "center");
+}
+
+function updateWorldEnemyRender(spawnPoint) {
+  if (!Number.isFinite(spawnPoint.renderX)) spawnPoint.renderX = spawnPoint.x * TILE;
+  if (!Number.isFinite(spawnPoint.renderY)) spawnPoint.renderY = spawnPoint.y * TILE;
+  const targetX = spawnPoint.x * TILE;
+  const targetY = spawnPoint.y * TILE;
+  const moving = spawnPoint.renderX !== targetX || spawnPoint.renderY !== targetY;
+  if (moving && targetX !== spawnPoint.renderX) spawnPoint.facingX = targetX > spawnPoint.renderX ? 1 : -1;
+  spawnPoint.renderX = approach(spawnPoint.renderX, targetX, 2);
+  spawnPoint.renderY = approach(spawnPoint.renderY, targetY, 2);
+  spawnPoint.fieldMoving = moving;
 }
 
 function drawExitMarkers() {
@@ -2605,15 +2732,24 @@ function battleIdleMotion(id, frame) {
 
 function drawNpc(id, px, py, dir, anim, frame) {
   if (id === "Stage") {
-    drawText("♪", px + 8, py + 18 + (Math.floor(frame / 12) % 2), "#ffd27d", 9, "center");
+    const baseline = py + 32;
+    drawRect(px - 2, baseline - 5, 20, 5, "#4b2f26");
+    drawRect(px, baseline - 7, 16, 3, "#835739");
+    drawRect(px + 2, baseline - 8, 12, 1, "#c28a50");
+    drawText("♪", px + 8, baseline - 12 + (Math.floor(frame / 12) % 2), "#ffd27d", 9, "center");
     return;
   }
   if (id === "Workshop Bench") {
-    drawRect(px + 1, py + 15, 15, 4, "#6f482b");
-    drawRect(px + 3, py + 19, 3, 8, "#3b2a22");
-    drawRect(px + 11, py + 19, 3, 8, "#3b2a22");
-    drawRect(px + 5, py + 11, 6, 4, "#b9823e");
-    drawRect(px + 7, py + 8, 2, 8, "#7bd4c6");
+    const baseline = py + 32;
+    drawRect(px - 5, baseline - 13, 26, 4, "#815536");
+    drawRect(px - 4, baseline - 12, 24, 2, "#c0874a");
+    drawRect(px - 2, baseline - 9, 4, 9, "#3b2a22");
+    drawRect(px + 15, baseline - 9, 4, 9, "#3b2a22");
+    drawRect(px + 4, baseline - 17, 8, 4, "#b9823e");
+    drawRect(px + 6, baseline - 21, 3, 8, "#7bd4c6");
+    drawRect(px + 11, baseline - 16, 6, 2, "#d3b25f");
+    drawRect(px + 13, baseline - 19, 2, 4, "#7560b6");
+    if (Math.floor(frame / 34) % 4 === 1) drawRect(px + 8, baseline - 23, 1, 1, "#d8fff7");
     return;
   }
   const rows = { Marla: 0, Harl: 1, Nyx: 2, Rava: 3, Kaeldrin: 4, Lyrsa: 5 };
@@ -2810,23 +2946,37 @@ function drawTileMap() {
   else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, p[2]);
   drawAmbient(map.set, map.panorama);
   drawExitMarkers();
-  visibleSpawns().forEach(spawnPoint => drawWorldEnemy(spawnPoint));
-  visiblePoints().forEach(point => {
-    if (point.chest) {
-      drawChest(point);
-      return;
-    }
-    drawFieldShadow(point.x * TILE + 8, point.y * TILE + 17 + offsetY, point.id === "Kaeldrin" ? 9 : 7);
-    drawSprite(point.id, point.x * TILE, point.y * TILE - 7 + offsetY, 0, "idle");
-  });
-  drawObjectiveMarker();
-  if (state.escort) {
-    drawFieldShadow(state.renderX + 3, state.renderY + 28 + offsetY, 7);
-    drawSprite(state.escort, state.renderX - 13, state.renderY - 3 + offsetY, state.facing, tick < state.walkUntil ? "walk" : "idle");
-  }
   updateRenderPosition();
-  drawFieldShadow(state.renderX + 8, state.renderY + 25 + offsetY, spriteScale[state.activeParty[0]]?.field[0] > 30 ? 10 : 7);
-  drawSprite(state.activeParty[0], state.renderX, state.renderY - 7 + offsetY, state.facing, tick < state.walkUntil ? "walk" : "idle");
+  const spawns = visibleSpawns();
+  spawns.forEach(updateWorldEnemyRender);
+  const entities = [
+    ...spawns.map(spawnPoint => ({ depth: spawnPoint.renderY + 25, draw: () => drawWorldEnemy(spawnPoint) })),
+    ...visiblePoints().map(point => ({
+      depth: point.y * TILE + (point.chest ? 18 : 25),
+      draw: () => {
+        if (point.chest) return drawChest(point);
+        if (point.id !== "Stage") drawFieldShadow(point.x * TILE + 8, point.y * TILE + 25 + offsetY, point.id === "Kaeldrin" ? 9 : point.id === "Workshop Bench" ? 12 : 7);
+        drawSprite(point.id, point.x * TILE, point.y * TILE - 7 + offsetY, 0, "idle");
+      }
+    })),
+    ...(state.escort ? [{
+      depth: state.renderY + 24,
+      draw: () => {
+        drawFieldShadow(state.renderX + 3, state.renderY + 28 + offsetY, 7);
+        drawSprite(state.escort, state.renderX - 13, state.renderY - 3 + offsetY, state.facing, tick < state.walkUntil ? "walk" : "idle");
+      }
+    }] : []),
+    {
+      depth: state.renderY + 25,
+      player: true,
+      draw: () => {
+        drawFieldShadow(state.renderX + 8, state.renderY + 25 + offsetY, spriteScale[state.activeParty[0]]?.field[0] > 30 ? 10 : 7);
+        drawSprite(state.activeParty[0], state.renderX, state.renderY - 7 + offsetY, state.facing, tick < state.walkUntil ? "walk" : "idle");
+      }
+    }
+  ];
+  entities.sort((a, b) => a.depth - b.depth || Number(Boolean(a.player)) - Number(Boolean(b.player))).forEach(entity => entity.draw());
+  drawObjectiveMarker();
   const labelSize = map.name.length > 29 ? 7 : map.name.length > 23 ? 8 : 9;
   drawText(map.name, 9, 13, "#0b090d", labelSize);
   drawText(map.name, 8, 12, "#ffe0a1", labelSize);
@@ -2862,8 +3012,11 @@ function drawChest(pointData) {
 }
 
 function drawMapBackground(map, image, offsetX = 0, offsetY = 0) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
   if (!Number.isFinite(map.view)) {
     ctx.drawImage(image, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    ctx.restore();
     return;
   }
   const views = Math.max(2, map.views || 2);
@@ -2871,6 +3024,7 @@ function drawMapBackground(map, image, offsetX = 0, offsetY = 0) {
   const maxX = Math.max(0, image.width - cropWidth);
   const sourceX = Math.round(maxX * map.view / (views - 1));
   ctx.drawImage(image, sourceX, 0, cropWidth, image.height, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  ctx.restore();
 }
 
 function drawScreenSlide() {
@@ -3788,6 +3942,23 @@ function terrainPassable(x, y, mapId = state.map) {
   return true;
 }
 
+function nearestMapEntry(mapId, preferredX, preferredY) {
+  const startX = Math.max(1, Math.min(14, Number.isFinite(preferredX) ? preferredX : 8));
+  const startY = Math.max(1, Math.min(12, Number.isFinite(preferredY) ? preferredY : 8));
+  if (terrainPassable(startX, startY, mapId)) return { x: startX, y: startY };
+  for (let radius = 1; radius <= 13; radius++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) !== radius) continue;
+        const x = startX + dx;
+        const y = startY + dy;
+        if (terrainPassable(x, y, mapId)) return { x, y };
+      }
+    }
+  }
+  return { x: 8, y: 8 };
+}
+
 function passable(x, y) {
   if (!terrainPassable(x, y)) return false;
   if (visiblePoints().some(p => p.x === x && p.y === y)) return false;
@@ -3867,8 +4038,9 @@ function move(dx, dy, facing) {
   if (exit) {
     const from = currentMap();
     state.map = exit.to;
-    state.x = exit.tx;
-    state.y = exit.ty;
+    const entry = nearestMapEntry(exit.to, exit.tx, exit.ty);
+    state.x = entry.x;
+    state.y = entry.y;
     state.renderX = state.x * TILE;
     state.renderY = state.y * TILE;
     screenSlide = { from, to: currentMap(), dx: Math.sign(dx), dy: Math.sign(dy), t: 0 };
@@ -4790,7 +4962,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     }
 
     if (!selectedSkill.encore && !skillTargetsEnemies(sk) && sk.anim !== "ultimate") battle.lastSupport = { ...sk };
-    const echoChance = affixValue(u.id, "echoing");
+    const echoChance = effectValue(u.id, "echoing");
     const echoKey = `echoing:${u.id}`;
     if (echoChance && !battle.usedOnce[echoKey] && Math.random() < echoChance) {
       battle.usedOnce[echoKey] = true;
@@ -5443,7 +5615,7 @@ function renderMenu() {
     }).join("");
     const slots = Object.entries(h.gear).map(([slot, name]) => {
       const gear = gearByName(name);
-      const rare = gear ? `${gearRarityHtml(gear.name)}${gear.effect ? `<small class="rare-effect">Special: ${gear.effect.label}</small>` : ""}${gearAffixHtml(gear.name)}` : "";
+      const rare = gear ? `${gearRarityHtml(gear.name)}${gearEffectHtml(gear)}${gearAffixHtml(gear.name)}` : "";
       const choices = gearDb[slot].filter(candidate => state.ownedGear.includes(candidate.name) && canEquip(id, candidate)).length;
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
       const iconSheet = gear ? gearIconSheet(gear, id) : "gear-empty";
@@ -5458,7 +5630,7 @@ function renderMenu() {
       const occupied = holders.filter(heroId => heroId !== id);
       const copies = gearCopyCount(gear.name);
       const holderText = holders.length ? `Equipped: ${holders.join(", ")} / owned x${copies}` : `In equipment inventory / owned x${copies}`;
-      return `<button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${gear.name}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gear.name}</strong>${gearRarityHtml(gear.name)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gear.effect ? `<em>${gear.effect.label}</em>` : ""}${gearAffixHtml(gear.name)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>`;
+      return `<button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${gear.name}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gear.name}</strong>${gearRarityHtml(gear.name)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "gear-choice-effects")}${gearAffixHtml(gear.name)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>`;
     }).join("")}<button type="button" class="gear-choice gear-unequip" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${pixelIconHtml("gear-empty", choiceIndex, "gear-choice-icon")}<span><strong>Unequip</strong><small>Move this piece back to the Items inventory.</small></span><b>${h.gear[selectedGearSlot] ? "REMOVE" : "EMPTY"}</b></button></div></section>`;
     el.menuBody.innerHTML = `<p class="gear-instruction">Choose a hero, then choose one of their five equipment slots.</p><div class="gear-roster">${roster}</div><div class="gear-layout"><section class="gear-summary"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><section class="menu-card gear-card">${slots}</section></div>${picker}`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
@@ -5494,7 +5666,7 @@ function renderMenu() {
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
       const iconHero = holders[0] || gearOwners[gear.name]?.[0] || state.activeParty[0];
       const status = holders.length ? `Equipped by ${holders.join(", ")} (${holders.length}/${copies})` : `Unequipped (${copies} owned)`;
-      return `<div class="menu-card item-card gear-inventory-card">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "inventory-icon")}<div class="item-copy"><strong>${gear.name}<span>x${copies}</span></strong>${gearRarityHtml(gear.name)}<small>${gear.slot.toUpperCase()} / ${status}</small><p>${statLine(gear.stats)}. ${gear.desc}</p>${gear.effect ? `<small class="item-effect">Special: ${gear.effect.label}</small>` : ""}${gearAffixHtml(gear.name)}</div></div>`;
+      return `<div class="menu-card item-card gear-inventory-card">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "inventory-icon")}<div class="item-copy"><strong>${gear.name}<span>x${copies}</span></strong>${gearRarityHtml(gear.name)}<small>${gear.slot.toUpperCase()} / ${status}</small><p>${statLine(gear.stats)}. ${gear.desc}</p>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(gear.name)}</div></div>`;
     };
     const fieldSkills = state.party.flatMap(casterId => baseJobs[casterId].skills
       .filter(sk => sk.anim !== "ultimate" && (sk.power < 0 || sk.anim === "block"))
@@ -5768,7 +5940,10 @@ function renderVendor() {
     const owned = ware.kind === "gear" && state.ownedGear.includes(ware.name);
     const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
     const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
-    const details = gear ? `${gearRarity(gear.name)}. ${statLine(gear.stats)}. ${gear.desc}${gear.effect ? ` Special: ${gear.effect.label}.` : ""}` : ware.desc;
+    const effects = gear ? gearEffectLabels(gear) : [];
+    const generatedAffixes = gear ? RARITY_AFFIX_COUNTS[gearRarity(gear.name)] || 0 : 0;
+    const rollText = gear && (echoForgeGearNames.has(gear.name) || zoneStarterGear.includes(gear)) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
+    const details = gear ? `${gearRarity(gear.name)}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
     const icon = gear
       ? pixelIconHtml(gearIconSheet(gear, gearOwners[gear.name]?.[0] || state.party[0]), { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
       : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
@@ -5832,7 +6007,9 @@ function inventorySellPrice(name) {
 function gearSellPrice(gear) {
   if (!gear || gearOwners[gear.name] || gear.name === "Echo-Thread Lute") return 0;
   const shopWare = Object.values(vendors).flatMap(vendor => vendor.wares).find(ware => ware.kind === "gear" && ware.name === gear.name);
-  const value = shopWare?.price || Object.values(gear.stats).reduce((sum, stat) => sum + stat, 0) * 14 + (gear.effect ? 45 : 0);
+  const rarityBonus = Math.max(0, RARITY_ORDER.indexOf(gearRarity(gear.name))) * 35;
+  const effectBonus = gearEffects(gear).length * 45;
+  const value = shopWare?.price || Object.values(gear.stats).reduce((sum, stat) => sum + stat, 0) * 14 + effectBonus + rarityBonus;
   return Math.max(1, Math.floor(value * .45));
 }
 
@@ -5862,7 +6039,11 @@ function buyWare(index) {
   if (ware.kind === "gear" && state.ownedGear.includes(ware.name)) return;
   if (ware.kind === "item" && inventoryUsed() >= state.inventorySlots) return;
   state.gold -= price;
-  if (ware.kind === "gear") addOwnedGear(ware.name);
+  if (ware.kind === "gear") {
+    const gear = gearByName(ware.name);
+    addOwnedGear(ware.name, 1, { rarity: defaultGearRarity(ware.name), rollAffixes: true, theme: activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp" });
+    if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(gear.name, gearRarity(gear.name), "dragon");
+  }
   else if (ware.kind === "upgrade") {
     state.inventorySlots += 10;
     state.bagUpgrades++;
@@ -6260,8 +6441,25 @@ function runQaChecks() {
 
     const affixCounts = RARITY_ORDER.map(rarity => [rarity, rollGearAffixes(gearByName("Ashrunner Knife"), rarity, "mountain").length]);
     check("affix-counts", affixCounts.every(([rarity, count]) => count === RARITY_AFFIX_COUNTS[rarity]), JSON.stringify(affixCounts));
+    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4 }));
     const rangedAffixes = Array.from({ length: 20 }, () => rollGearAffixes(gearByName("Ashrunner Knife"), "Epic", "mountain")).flat();
     check("affix-ranges", rangedAffixes.every(entry => entry.value >= entry.min && entry.value <= entry.max));
+    check("early-status-gear", zoneStarterGear.filter(gear => gear.slot === "weapon").every(gear => gearEffects(gear).some(effect => effect.type === "statusOnHit")) && zoneStarterGear.some(gear => gear.slot === "armour" && gearEffects(gear).some(effect => effect.type === "statusOnHit")));
+    check("status-affix-slots", [affixPools.weapon, affixPools.armour, affixPools.accessory].every(pool => ["poison", "sleep", "stun"].every(status => pool.some(entry => entry.type === "statusOnHit" && entry.status === status))));
+
+    const echoIdentity = echoForgeGear.every(gear => {
+      const base = gearByName(gear.echoBase);
+      const blueprint = echoForgeBlueprints[gear.slot][Math.floor((gear.echoRank - 1) / echoForgeSlots.length)];
+      const unique = gearEffects(gear).filter(effect => effect.echoUnique);
+      const inherited = gearEffects(gear).filter(effect => effect.label?.startsWith("Inherited:"));
+      return base && gear.echoRarity === nextGearRarity(blueprint.rarity) && unique.length === 1 && inherited.length === gearEffects(base).length && Object.entries(base.stats).every(([stat, value]) => gear.stats[stat] > value);
+    });
+    check("echo-upgrade-identity", echoIdentity);
+    check("legendary-echo-unique", postgameGear.every(gear => gearEffects(gear).filter(effect => effect.echoUnique).length === 1));
+
+    const routeEntries = Object.entries(maps).flatMap(([mapId, map]) => map.exits.map(exit => ({ mapId, exit, entry: maps[exit.to] ? nearestMapEntry(exit.to, exit.tx, exit.ty) : null })));
+    const invalidEntries = routeEntries.filter(({ exit, entry }) => !maps[exit.to] || !entry || !terrainPassable(entry.x, entry.y, exit.to));
+    check("map-entry-safety", invalidEntries.length === 0, invalidEntries.map(({ mapId, exit }) => `${mapId}->${exit.to}`).join(","));
 
     battle.party.push(battleUnit("Mira"));
     grantImmediateTurn(qaHero, {});
@@ -6299,6 +6497,32 @@ function runQaChecks() {
     const loadedSave = loadGame();
     check("save-load-compatible", wroteSave && loadedSave && state.gold === 4321);
     check("affix-save-load", state.gearAffixes["Ashrunner Knife"]?.length === RARITY_AFFIX_COUNTS.Rare);
+
+    const echoName = echoForgeGear[0].name;
+    const legendaryName = postgameGear[0].name;
+    const gearMigrationBackup = {
+      ownedGear: [...state.ownedGear],
+      echoRarity: state.gearRarities[echoName],
+      echoAffixes: state.gearAffixes[echoName],
+      legendaryRarity: state.gearRarities[legendaryName],
+      legendaryAffixes: state.gearAffixes[legendaryName]
+    };
+    if (!state.ownedGear.includes(echoName)) state.ownedGear.push(echoName);
+    if (!state.ownedGear.includes(legendaryName)) state.ownedGear.push(legendaryName);
+    state.gearRarities[echoName] = "Epic";
+    state.gearAffixes[echoName] = rollGearAffixes(gearByName(echoName), "Uncommon", "dragon");
+    const preservedAffix = { ...affixPools.weapon.find(entry => entry.key === "keen"), value: .07 };
+    preservedAffix.text = formatAffix(preservedAffix);
+    state.gearRarities[legendaryName] = "Legendary";
+    state.gearAffixes[legendaryName] = [preservedAffix];
+    upgradeOwnedLegendaryGear();
+    check("echo-save-no-downgrade", state.gearRarities[echoName] === "Epic");
+    check("legendary-save-top-up", state.gearAffixes[legendaryName].length === 4 && state.gearAffixes[legendaryName].some(entry => entry.key === preservedAffix.key && entry.value === preservedAffix.value));
+    state.ownedGear = gearMigrationBackup.ownedGear;
+    if (gearMigrationBackup.echoRarity === undefined) delete state.gearRarities[echoName]; else state.gearRarities[echoName] = gearMigrationBackup.echoRarity;
+    if (gearMigrationBackup.echoAffixes === undefined) delete state.gearAffixes[echoName]; else state.gearAffixes[echoName] = gearMigrationBackup.echoAffixes;
+    if (gearMigrationBackup.legendaryRarity === undefined) delete state.gearRarities[legendaryName]; else state.gearRarities[legendaryName] = gearMigrationBackup.legendaryRarity;
+    if (gearMigrationBackup.legendaryAffixes === undefined) delete state.gearAffixes[legendaryName]; else state.gearAffixes[legendaryName] = gearMigrationBackup.legendaryAffixes;
     if (savedBackup === null) localStorage.removeItem(SAVE_KEY);
     else localStorage.setItem(SAVE_KEY, savedBackup);
     state.gold = oldGold;
