@@ -86,6 +86,8 @@ let codexIndex = 0;
 let battleActionIndex = 0;
 let heldDirection = null;
 let nextHeldMove = 0;
+let fieldDestination = null;
+let nextFieldMove = 0;
 let activeVendor = null;
 let vendorTab = "buy";
 let audioContext = null;
@@ -3169,10 +3171,12 @@ function draw() {
   ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  if (mode !== "walk") fieldDestination = null;
   if (mode === "walk" && heldDirection && tick >= nextHeldMove) {
     handleControl(heldDirection);
     nextHeldMove = tick + PLAYER_STEP_TICKS;
   }
+  if (mode === "walk" && !heldDirection && fieldDestination && tick >= nextFieldMove) advanceFieldDestination();
   if (mode === "walk") updateFieldEnemies();
   if (mode === "title") drawTitle();
   else if (mode === "atlas") drawAtlas();
@@ -3235,6 +3239,7 @@ function enemyCanOccupy(spawnPoint, x, y, activeSpawns) {
 function beginFieldEncounter(encounter) {
   if (!encounter || mode !== "walk") return false;
   heldDirection = null;
+  fieldDestination = null;
   const enemies = encounter.enemies.map(unit => ({ ...unit, hp: unit.max, stagger: 0, anim: "idle", animTick: 0 }));
   const launch = () => startBattle(encounter.name, enemies, undefined, encounter);
   if (encounter.boss) showBossIntro(encounter.name, enemies[0], launch);
@@ -3281,7 +3286,7 @@ function updateFieldEnemies() {
 }
 
 function move(dx, dy, facing) {
-  if (mode !== "walk") return;
+  if (mode !== "walk") return false;
   state.facing = facing;
   const nx = state.x + dx, ny = state.y + dy;
   const exit = currentMap().exits.find(e => e.x === nx && e.y === ny && (!e.needs || state.flags[e.needs]));
@@ -3298,20 +3303,22 @@ function move(dx, dy, facing) {
     checkSideQuestMap(state.map);
     updatePanels();
     updateMusic();
-    return;
+    return true;
   }
   const encounter = visibleSpawns().find(spawnPoint => spawnPoint.boss
     ? Math.abs(spawnPoint.x - nx) <= 1 && Math.abs(spawnPoint.y - ny) <= 1
     : spawnPoint.x === nx && spawnPoint.y === ny);
   if (encounter) {
     beginFieldEncounter(encounter);
-    return;
+    return true;
   }
   if (passable(nx, ny)) {
     state.x = nx;
     state.y = ny;
     state.walkUntil = tick + PLAYER_STEP_TICKS;
+    return true;
   }
+  return false;
 }
 
 function interact() {
@@ -5179,6 +5186,7 @@ function handleControl(control) {
     else if (control === "down" || control === "right") moveTitleSelection(1);
     return;
   }
+  fieldDestination = null;
   if (control === "confirm") return mode === "battle" ? confirmBattleAction() : interact();
   if (control === "menu") return toggleMenu();
   if (control === "party") return toggleAtlas();
@@ -5195,6 +5203,7 @@ function handleControl(control) {
 
 function startHeldDirection(control) {
   if (mode === "battle") return handleControl(control);
+  fieldDestination = null;
   heldDirection = control;
   handleControl(control);
   nextHeldMove = tick + PLAYER_STEP_TICKS;
@@ -5217,19 +5226,113 @@ function directionToward(dx, dy) {
   return dy > 0 ? [0, 1, 0] : [0, -1, 2];
 }
 
+const fieldDirections = [[0, -1, 2], [-1, 0, 1], [1, 0, 3], [0, 1, 0]];
+
+function fieldTileKey(x, y) {
+  return `${x},${y}`;
+}
+
+function fieldPathTo(targetX, targetY, interactionRadius = 0) {
+  const startKey = fieldTileKey(state.x, state.y);
+  const queue = [{ x: state.x, y: state.y }];
+  const parents = new Map([[startKey, null]]);
+  let closest = queue[0];
+  let closestScore = Math.max(0, Math.abs(state.x - targetX) + Math.abs(state.y - targetY) - interactionRadius);
+  let endpoint = null;
+
+  for (let index = 0; index < queue.length; index++) {
+    const current = queue[index];
+    const score = Math.max(0, Math.abs(current.x - targetX) + Math.abs(current.y - targetY) - interactionRadius);
+    if (score < closestScore) {
+      closest = current;
+      closestScore = score;
+    }
+    if (score === 0) {
+      endpoint = current;
+      break;
+    }
+
+    for (const [dx, dy, facing] of fieldDirections) {
+      const x = current.x + dx;
+      const y = current.y + dy;
+      const key = fieldTileKey(x, y);
+      if (parents.has(key) || x < 1 || x > 14 || y < 1 || y > 12) continue;
+      const activeExit = currentMap().exits.find(exit => exit.x === x && exit.y === y && (!exit.needs || state.flags[exit.needs]));
+      if (activeExit && (x !== targetX || y !== targetY || interactionRadius > 0)) continue;
+      if (!passable(x, y) && !activeExit) continue;
+      parents.set(key, { key: fieldTileKey(current.x, current.y), step: [dx, dy, facing] });
+      queue.push({ x, y });
+    }
+  }
+
+  endpoint ||= closest;
+  const path = [];
+  let key = fieldTileKey(endpoint.x, endpoint.y);
+  while (key !== startKey) {
+    const parent = parents.get(key);
+    if (!parent) return [];
+    path.unshift(parent.step);
+    key = parent.key;
+  }
+  return path;
+}
+
+function destinationTarget() {
+  if (!fieldDestination?.target) return fieldDestination;
+  if (fieldDestination.kind === "point" && !visiblePoints().includes(fieldDestination.target)) return null;
+  if (fieldDestination.kind === "spawn" && !visibleSpawns().includes(fieldDestination.target)) return null;
+  return { ...fieldDestination, x: fieldDestination.target.x, y: fieldDestination.target.y };
+}
+
+function advanceFieldDestination() {
+  if (!fieldDestination || fieldDestination.map !== state.map || mode !== "walk") {
+    fieldDestination = null;
+    return;
+  }
+  const destination = destinationTarget();
+  if (!destination) {
+    fieldDestination = null;
+    return;
+  }
+  const dx = destination.x - state.x;
+  const dy = destination.y - state.y;
+  const distance = Math.abs(dx) + Math.abs(dy);
+  if (distance <= destination.radius) {
+    if (dx || dy) state.facing = directionToward(dx, dy)[2];
+    const shouldInteract = destination.interact;
+    fieldDestination = null;
+    if (shouldInteract) interact();
+    return;
+  }
+
+  const path = fieldPathTo(destination.x, destination.y, destination.radius);
+  if (!path.length) {
+    fieldDestination = null;
+    return;
+  }
+  const [stepX, stepY, facing] = path[0];
+  const moved = move(stepX, stepY, facing);
+  nextFieldMove = tick + PLAYER_STEP_TICKS;
+  if (!moved || mode !== "walk") fieldDestination = null;
+}
+
 function handleFieldTap(x, y) {
   const targetX = Math.max(1, Math.min(14, Math.floor(x / TILE)));
   const targetY = Math.max(1, Math.min(12, Math.floor((y - fieldRenderOffsetY()) / TILE)));
-  const dx = targetX - state.x;
-  const dy = targetY - state.y;
-  if (!dx && !dy) return interact();
-  const [stepX, stepY, facing] = directionToward(dx, dy);
-  state.facing = facing;
   const tappedPoint = visiblePoints().find(point => point.x === targetX && point.y === targetY);
   const tappedSpawn = visibleSpawns().find(spawnPoint => Math.abs(spawnPoint.x - targetX) <= (spawnPoint.boss ? 1 : 0) && Math.abs(spawnPoint.y - targetY) <= (spawnPoint.boss ? 1 : 0));
-  const distance = Math.abs(dx) + Math.abs(dy);
-  if (distance <= 1 && (tappedPoint || tappedSpawn)) return interact();
-  move(stepX, stepY, facing);
+  if (targetX === state.x && targetY === state.y) return interact();
+  fieldDestination = {
+    map: state.map,
+    x: targetX,
+    y: targetY,
+    target: tappedSpawn || tappedPoint || null,
+    kind: tappedSpawn ? "spawn" : tappedPoint ? "point" : "ground",
+    radius: tappedSpawn ? (tappedSpawn.boss ? 2 : 1) : tappedPoint ? 1 : 0,
+    interact: Boolean(tappedPoint || tappedSpawn)
+  };
+  nextFieldMove = tick;
+  advanceFieldDestination();
 }
 
 window.addEventListener("keydown", e => {
