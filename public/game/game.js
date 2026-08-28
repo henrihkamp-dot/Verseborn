@@ -88,6 +88,14 @@ let activeVendor = null;
 let vendorTab = "buy";
 let audioContext = null;
 let screenSlide = null;
+let titleMenuIndex = 0;
+
+const titleMenuEntries = ["New Game", "Continue", "Options"];
+const titleTwinkles = [
+  { x: 135, y: 170, phase: 0, color: "#fff2b8" },
+  { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
+  { x: 1115, y: 344, phase: 220, color: "#c7e8ff" }
+];
 
 const portraitSources = {
   Verseborn: "assets/portraits/verseborn.png",
@@ -211,6 +219,7 @@ const spriteScale = {
 const spriteSheets = {};
 const walkSpriteSheets = {};
 const animationSheets = {};
+const npcBattleSheets = {};
 const animatedNpcFiles = {
   Marla: "marla",
   Nyx: "nyx",
@@ -269,11 +278,15 @@ const enemyAbilityProfiles = {
   Marla: { row: 7, element: "Heart", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true }
 };
 const animationLayouts = {
+  Marla: { columns: 4, rows: 7, chromaBlack: true },
+  Nyx: { columns: 4, rows: 7 },
+  Rava: { columns: 4, rows: 7 },
+  Jory: { columns: 4, rows: 7 },
   Harl: { columns: 6, rows: 4, chromaBlack: true },
-  Kaeldrin: { columns: 4, rows: 7, chromaBlack: true },
-  Lyrsa: { columns: 4, rows: 7, chromaBlack: true },
+  Kaeldrin: { columns: 4, rows: 7 },
+  Lyrsa: { columns: 4, rows: 7 },
   Shade: { columns: 4, rows: 7, chromaBlack: true },
-  Grumm: { columns: 4, rows: 7, chromaBlack: true }
+  Grumm: { columns: 4, rows: 7 }
 };
 const mapImages = {};
 const battleImages = {};
@@ -442,6 +455,44 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
     };
     image.onerror = () => { if (spriteScale[id]) spriteLoadProgress++; resolve(); };
     image.src = `assets/sprites/animation/${fileName}.png`;
+  });
+}
+
+function loadMarlaBattleSheet() {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      const columns = 4;
+      const rows = 2;
+      const cellWidth = 180;
+      const cellHeight = 220;
+      const packed = document.createElement("canvas");
+      packed.width = columns * cellWidth;
+      packed.height = rows * cellHeight;
+      const paint = packed.getContext("2d");
+      paint.imageSmoothingEnabled = false;
+      const frames = [
+        [840, 37, 160, 184], [1010, 35, 160, 188], [1175, 35, 160, 188], [840, 37, 160, 184],
+        [690, 815, 169, 185], [859, 815, 169, 185], [1197, 815, 169, 185], [1366, 815, 170, 185]
+      ];
+      frames.forEach(([sx, sy, sw, sh], index) => {
+        const col = index % columns;
+        const row = Math.floor(index / columns);
+        const dx = col * cellWidth + Math.round((cellWidth - sw) / 2);
+        const dy = row * cellHeight + cellHeight - sh;
+        paint.drawImage(image, sx, sy, sw, sh, dx, dy, sw, sh);
+      });
+      npcBattleSheets.Marla = {
+        image: packed,
+        columns,
+        rows,
+        referenceHeight: 185,
+        battleOnly: true
+      };
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = "assets/sprites/animation/marla-battle.png";
   });
 }
 
@@ -649,6 +700,7 @@ Promise.all([
   loadWorldEnemySheet(),
   loadNpcSheet(),
   loadTitleImage(),
+  loadMarlaBattleSheet(),
   loadEchoProjectileSheet(),
   ...["ash-quarter", "reverie", "guildspire", "ember-hall", "false-dawn"].map(loadBattleImage),
   ...["lantern", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
@@ -2035,17 +2087,129 @@ function drawSpark(x, y, color, frame) {
 }
 
 function drawTitle() {
-  if (titleImage) ctx.drawImage(titleImage, 0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-  else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#121015");
-  drawRect(34, 43, 188, 87, "#090b19c7");
-  ctx.strokeStyle = "#9f7045";
-  ctx.strokeRect(37, 46, 182, 81);
-  drawText("VERSEBORN", 128, 73, "#ffd27d", 20, "center");
-  drawText("GETTING STARTED", 128, 94, "#f0d8aa", 9, "center");
-  drawText("THE FALSE DAWN", 128, 111, "#c89561", 7, "center");
-  drawText(runtimeAssetsReady ? "Z / ENTER" : "LOADING ART", 128, 145, "#fff1c6", 8, "center");
-  const starPhase = tick % 180;
-  if (starPhase < 24) drawSubtlePulse(104, 24, 0, "#c4a9ff", 180);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.fillStyle = "#050413";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (!titleImage) {
+    ctx.fillStyle = "#fff1c6";
+    ctx.font = "bold 24px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("LOADING ART", canvas.width / 2, canvas.height / 2);
+    ctx.restore();
+    return;
+  }
+
+  const layout = titleImageLayout();
+  ctx.drawImage(titleImage, layout.x, layout.y, layout.width, layout.height);
+  drawTitleTwinkles(layout);
+  drawTitleMenu(layout);
+  ctx.restore();
+}
+
+function titleImageLayout() {
+  const width = titleImage?.naturalWidth || 1448;
+  const height = titleImage?.naturalHeight || 1086;
+  const scale = Math.min(canvas.width / width, canvas.height / height);
+  const drawWidth = Math.round(width * scale);
+  const drawHeight = Math.round(height * scale);
+  return {
+    x: Math.round((canvas.width - drawWidth) / 2),
+    y: Math.round((canvas.height - drawHeight) / 2),
+    width: drawWidth,
+    height: drawHeight,
+    scale
+  };
+}
+
+function drawTitleTwinkles(layout) {
+  titleTwinkles.forEach(star => {
+    const phase = ((tick + star.phase) % 360) / 360;
+    const glow = Math.max(0, Math.sin(phase * Math.PI * 2));
+    if (glow < 0.62) return;
+    const alpha = Math.pow((glow - 0.62) / 0.38, 2) * 0.68;
+    const x = Math.round(layout.x + star.x * layout.scale);
+    const y = Math.round(layout.y + star.y * layout.scale);
+    const arm = Math.max(2, Math.round(7 * layout.scale));
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = star.color;
+    ctx.fillRect(x - arm, y, arm * 2 + 1, 1);
+    ctx.fillRect(x, y - arm, 1, arm * 2 + 1);
+    ctx.fillRect(x - 1, y - 1, 3, 3);
+    ctx.globalAlpha = 1;
+  });
+}
+
+function drawTitleMenu(layout) {
+  const sx = value => Math.round(layout.x + value * layout.scale);
+  const sy = value => Math.round(layout.y + value * layout.scale);
+  const panelX = sx(570);
+  const panelY = sy(438);
+  const panelWidth = Math.round(310 * layout.scale);
+  const panelHeight = Math.round(151 * layout.scale);
+  ctx.fillStyle = "rgba(5, 11, 39, 0.97)";
+  ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+  ctx.strokeStyle = "#9c6fd2";
+  ctx.lineWidth = Math.max(1, Math.round(2 * layout.scale));
+  ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
+
+  const fontSize = Math.max(14, Math.round(30 * layout.scale));
+  ctx.font = `bold ${fontSize}px "Courier New", monospace`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  titleMenuEntries.forEach((entry, index) => {
+    const top = sy(443 + index * 49);
+    const height = Math.round(43 * layout.scale);
+    if (index === titleMenuIndex) {
+      ctx.fillStyle = "rgba(77, 35, 126, 0.78)";
+      ctx.fillRect(sx(576), top, Math.round(296 * layout.scale), height);
+    }
+    ctx.fillStyle = index === titleMenuIndex ? "#fff0bd" : "#f0e4c6";
+    ctx.fillText(entry, sx(732), sy(465 + index * 49));
+  });
+
+  const arrowBob = Math.round(Math.sin(tick / 18) * 2);
+  ctx.fillStyle = "#ffd46f";
+  ctx.textAlign = "center";
+  ctx.fillText(">", sx(612) + arrowBob, sy(465 + titleMenuIndex * 49));
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+}
+
+function moveTitleSelection(direction) {
+  if (!runtimeAssetsReady) return;
+  titleMenuIndex = (titleMenuIndex + direction + titleMenuEntries.length) % titleMenuEntries.length;
+  playSfx("menu");
+}
+
+function startTitleGame() {
+  if (!runtimeAssetsReady) return;
+  mode = "walk";
+  updateMusic();
+  showTalk([["Narrator", "Issue 1: The Man With the Enormous Voice"], ["Verseborn", "A warm room, a quiet stage, and Marla looking like she has work for me."]]);
+}
+
+function activateTitleSelection() {
+  if (!runtimeAssetsReady) return;
+  if (titleMenuIndex === 2) {
+    toggleMusic();
+    playSfx("menu");
+    return;
+  }
+  startTitleGame();
+}
+
+function titleMenuPointerIndex(event) {
+  if (!titleImage) return null;
+  const rect = canvas.getBoundingClientRect();
+  const canvasX = (event.clientX - rect.left) * canvas.width / rect.width;
+  const canvasY = (event.clientY - rect.top) * canvas.height / rect.height;
+  const layout = titleImageLayout();
+  const sourceX = (canvasX - layout.x) / layout.scale;
+  const sourceY = (canvasY - layout.y) / layout.scale;
+  if (sourceX < 570 || sourceX > 880 || sourceY < 438 || sourceY > 589) return null;
+  return Math.max(0, Math.min(2, Math.floor((sourceY - 438) / 49)));
 }
 
 function drawTileMap() {
@@ -2663,10 +2827,12 @@ function battleOffset(u) {
 
 function drawNpcBattleEnemy(e, px, py) {
   const id = e.sprite || e.name;
-  const sheet = animationSheets[id];
+  const sheet = npcBattleSheets[id] || animationSheets[id];
   if (!sheet || !animatedNpcFiles[id]) return false;
   const attacking = e.anim === "attack";
-  const row = attacking && sheet.rows >= 7 ? (e.attackStyle === "magic" ? 6 : 4) : 0;
+  const row = attacking
+    ? (sheet.battleOnly ? 1 : e.attackStyle === "magic" ? (sheet.rows >= 7 ? 6 : sheet.rows >= 6 ? 5 : 0) : (sheet.rows >= 7 ? 4 : sheet.rows >= 6 ? 3 : 0))
+    : 0;
   const duration = 24;
   const progress = attacking ? Math.min(1, (e.animTick || 0) / duration) : 0;
   const col = attacking
@@ -3115,10 +3281,7 @@ function move(dx, dy, facing) {
 function interact() {
   unlockMusic();
   if (mode === "title") {
-    if (!runtimeAssetsReady) return;
-    mode = "walk";
-    updateMusic();
-    showTalk([["Narrator", "Issue 1: The Man With the Enormous Voice"], ["Verseborn", "A warm room, a quiet stage, and Marla looking like she has work for me."]]);
+    activateTitleSelection();
     return;
   }
   if (mode === "talk") return nextTalk();
@@ -4944,6 +5107,12 @@ function cycleLeader(direction) {
 function handleControl(control) {
   if (control === "music") return toggleMusic();
   unlockMusic();
+  if (mode === "title") {
+    if (control === "confirm") activateTitleSelection();
+    else if (control === "up" || control === "left") moveTitleSelection(-1);
+    else if (control === "down" || control === "right") moveTitleSelection(1);
+    return;
+  }
   if (control === "confirm") return mode === "battle" ? confirmBattleAction() : interact();
   if (control === "menu") return toggleMenu();
   if (control === "party") return toggleAtlas();
@@ -5001,10 +5170,17 @@ window.addEventListener("blur", () => { heldDirection = null; });
 canvas.addEventListener("pointerdown", event => {
   canvas.focus();
   unlockMusic();
-  if (mode === "title") interact();
 });
 
 canvas.addEventListener("click", event => {
+  if (mode === "title") {
+    const index = titleMenuPointerIndex(event);
+    if (index !== null) {
+      titleMenuIndex = index;
+      activateTitleSelection();
+    }
+    return;
+  }
   if (mode === "battle") {
     const rect = canvas.getBoundingClientRect();
     const x = (event.clientX - rect.left) * LOGICAL_WIDTH / rect.width;
