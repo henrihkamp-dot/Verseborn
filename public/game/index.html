@@ -4,12 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Verseborn getting started</title>
-  <link rel="stylesheet" href="styles.css?v=title-action-sheets-runtime-11">
+  <link rel="stylesheet" href="styles.css?v=milestone-title-audio-runtime-14">
 </head>
 <body>
   <main class="shell">
     <section class="game">
       <canvas id="screen" width="768" height="672" tabindex="0" aria-label="Verseborn getting started game screen"></canvas>
+      <button id="skillPointNotice" class="skill-point-notice hidden" type="button" aria-label="Open beschikbare skill points">
+        <span class="skill-point-icon" aria-hidden="true">+</span>
+        <span><strong>SKILL POINT READY</strong><small id="skillPointNoticeDetail"></small></span>
+      </button>
       <div class="hud">
         <div>
           <strong id="chapter">Issue 1</strong>
@@ -117,6 +121,6 @@
     </aside>
   </main>
 
-  <script src="game.js?v=title-action-sheets-runtime-11"></script>
+  <script src="game.js?v=milestone-title-audio-runtime-14"></script>
 </body>
 </html>

@@ -53,10 +53,81 @@ canvas {
   background: #111;
   outline: none;
   cursor: crosshair;
+  touch-action: none;
 }
 
 canvas:focus {
   box-shadow: inset 0 0 0 3px #d59b42;
+}
+
+.skill-point-notice {
+  position: absolute;
+  z-index: 10;
+  top: 12px;
+  right: 12px;
+  width: min(230px, calc(100% - 24px));
+  min-height: 50px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 2px solid #e0b45f;
+  border-radius: 4px;
+  background: #17121eee;
+  color: #fff0c4;
+  box-shadow: inset 0 0 0 1px #6f5336, 0 5px 16px #0009;
+  text-align: left;
+  cursor: pointer;
+  animation: skill-point-ready 1.8s ease-in-out infinite;
+}
+
+.skill-point-notice:hover,
+.skill-point-notice:focus-visible {
+  background: #2b1d2c;
+  border-color: #ffe09a;
+  outline: none;
+}
+
+.skill-point-notice > span:last-child,
+.skill-point-notice strong,
+.skill-point-notice small {
+  display: block;
+  min-width: 0;
+}
+
+.skill-point-notice strong {
+  color: #ffd477;
+  font: 700 12px/1.15 "Segoe UI", Arial, sans-serif;
+}
+
+.skill-point-notice small {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #e4d5ba;
+  font: 10px/1.2 "Segoe UI", Arial, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-point-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e0b45f;
+  background: #4a2f35;
+  color: #fff1b4;
+  font: 700 22px/28px "Segoe UI", Arial, sans-serif;
+}
+
+@keyframes skill-point-ready {
+  0%, 100% { box-shadow: inset 0 0 0 1px #6f5336, 0 5px 16px #0009; }
+  50% { box-shadow: inset 0 0 0 1px #9e7643, 0 5px 20px #d59b4255; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-point-notice { animation: none; }
 }
 
 .hud {
@@ -1971,5 +2042,42 @@ h1 {
 
   .dialogue-portrait figcaption {
     display: none;
+  }
+}
+
+@media (max-width: 560px), (hover: none), (pointer: coarse) {
+  .gamepad {
+    min-height: 88px;
+    display: flex;
+    padding: 6px 10px;
+  }
+
+  .dpad {
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(2, 40px);
+  }
+
+  .command-pad {
+    grid-template-columns: repeat(4, 44px);
+  }
+
+  .gamepad button {
+    min-width: 40px;
+    height: 40px;
+  }
+
+  .dialogue,
+  .menu {
+    bottom: 122px;
+  }
+
+  .battle:not(.hidden) {
+    bottom: 118px;
+  }
+
+  .skill-point-notice {
+    top: 8px;
+    right: 8px;
+    width: min(214px, calc(100% - 16px));
   }
 }

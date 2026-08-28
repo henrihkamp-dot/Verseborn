@@ -60,7 +60,9 @@ const el = {
   codexNext: $("codexNext"),
   musicToggle: $("musicToggle"),
   gold: $("gold"),
-  hint: $("hint")
+  hint: $("hint"),
+  skillPointNotice: $("skillPointNotice"),
+  skillPointNoticeDetail: $("skillPointNoticeDetail")
 };
 
 const TILE = 16;
@@ -121,6 +123,7 @@ const bossPortraitSources = {
 const enemyPortraitCache = new Map();
 
 const music = {
+  title: new Audio("assets/audio/verseborn-title.mp3"),
   inhouse: new Audio("assets/audio/inhouse-jrpg.mp3"),
   overworld: new Audio("assets/audio/overworld-jrpg.mp3"),
   battle: new Audio("assets/audio/battle-jrpg.mp3")
@@ -135,12 +138,13 @@ let activeMusic = null;
 let musicMuted = false;
 
 function trackForScene() {
+  if (mode === "title") return "title";
   if (mode === "battle") return "battle";
   return currentMap()?.music === "overworld" ? "overworld" : "inhouse";
 }
 
 function updateMusic(force) {
-  if (!musicUnlocked || mode === "title" || musicMuted || document.hidden) return;
+  if (!musicUnlocked || musicMuted || document.hidden) return;
   const wanted = force || trackForScene();
   if (activeMusic === wanted && !music[wanted].paused) return;
   Object.entries(music).forEach(([name, track]) => {
@@ -1020,6 +1024,7 @@ const baseJobs = {
 };
 
 const MAX_LEVEL = 20;
+const SKILL_MILESTONE_LEVELS = [5, 10, 15, 20];
 const talentTrees = {
   Verseborn: [
     talent(5, "Open Chorus", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
@@ -1114,7 +1119,7 @@ const state = {
   endgameRank: 0,
   echoForgeRank: 0,
   ngPlus: 0,
-  heroProgress: Object.fromEntries(Object.keys(baseJobs).map(id => [id, { level: 1, xp: 0, talents: [] }])),
+  heroProgress: Object.fromEntries(Object.keys(baseJobs).map(id => [id, { level: 1, xp: 0, talents: [], pendingMilestones: [] }])),
   discoveredMaps: ["lantern"],
   escort: null,
   fieldWard: false,
@@ -1509,8 +1514,33 @@ function effectValue(id, type) {
 }
 
 function progressFor(id) {
-  if (!state.heroProgress[id]) state.heroProgress[id] = { level: 1, xp: 0, talents: [] };
-  return state.heroProgress[id];
+  if (!state.heroProgress[id]) state.heroProgress[id] = { level: 1, xp: 0, talents: [], pendingMilestones: [] };
+  const progress = state.heroProgress[id];
+  if (!Array.isArray(progress.talents)) progress.talents = [];
+  if (!Array.isArray(progress.pendingMilestones)) progress.pendingMilestones = [];
+  return progress;
+}
+
+function pendingSkillPoints() {
+  return state.party.flatMap(id => progressFor(id).pendingMilestones.map(level => ({ id, level })));
+}
+
+function updateSkillPointNotice() {
+  const pending = pendingSkillPoints();
+  const hidden = !pending.length || !["walk", "atlas"].includes(mode);
+  el.skillPointNotice.classList.toggle("hidden", hidden);
+  if (!pending.length) return;
+  const first = pending[0];
+  const extra = pending.length > 1 ? ` / +${pending.length - 1} more` : "";
+  el.skillPointNotice.querySelector("strong").textContent = pending.length === 1 ? "SKILL POINT READY" : `${pending.length} SKILL POINTS READY`;
+  el.skillPointNoticeDetail.textContent = `${first.id} / Level ${first.level}${extra}`;
+  el.skillPointNotice.setAttribute("aria-label", `${pending.length} skill point${pending.length === 1 ? "" : "s"} ready. Open Skills.`);
+}
+
+function spendPendingSkillPoint(id, level) {
+  const progress = progressFor(id);
+  progress.pendingMilestones = progress.pendingMilestones.filter(milestone => milestone !== level);
+  updateSkillPointNotice();
 }
 
 function xpForNextLevel(level) {
@@ -1558,6 +1588,9 @@ function awardHeroXp(id, amount) {
     progress.xp -= xpForNextLevel(progress.level);
     progress.level++;
     gained.push(progress.level);
+    if (SKILL_MILESTONE_LEVELS.includes(progress.level) && !progress.pendingMilestones.includes(progress.level)) {
+      progress.pendingMilestones.push(progress.level);
+    }
   }
   if (progress.level >= MAX_LEVEL) progress.xp = 0;
   if (gained.length) {
@@ -1575,6 +1608,7 @@ function awardPartyXp(amount, reason = "Progress", reserveRate = .65) {
     const levels = awardHeroXp(id, share);
     if (levels.length) levelUps.push(`${id} Lv ${levels.at(-1)}`);
   });
+  updateSkillPointNotice();
   if (levelUps.length) showHudNotice(`LEVEL UP - ${levelUps.join(" / ")}`);
   return `${amount} XP${reason ? ` (${reason})` : ""}${levelUps.length ? ` / LEVEL UP: ${levelUps.join(", ")}` : ""}`;
 }
@@ -2187,6 +2221,7 @@ function startTitleGame() {
   if (!runtimeAssetsReady) return;
   mode = "walk";
   updateMusic();
+  updateSkillPointNotice();
   showTalk([["Narrator", "Issue 1: The Man With the Enormous Voice"], ["Verseborn", "A warm room, a quiet stage, and Marla looking like she has work for me."]]);
 }
 
@@ -3165,6 +3200,7 @@ function updatePanels() {
     const progress = progressFor(id);
     return `<div class="hero-row"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>LV ${progress.level} / ${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${h.hp}/${t.max}</span></div>`;
   }).join("");
+  updateSkillPointNotice();
 }
 
 function updateCodex() {
@@ -3315,6 +3351,7 @@ function pointDialogue(p) {
 
 function showTalk(lines, options = {}) {
   mode = "talk";
+  updateSkillPointNotice();
   talkQueue = lines.slice();
   talkPortraits = (options.portraits || []).slice(0, 2);
   talkAfter = typeof options.after === "function" ? options.after : null;
@@ -3340,6 +3377,7 @@ function nextTalk() {
     if (completedPoint?.chest) openChest(completedPoint);
     if (completedPoint && completedPoint.vendor && mode === "walk") openVendor(completedPoint.vendor);
     if (after && mode === "walk") after();
+    updateSkillPointNotice();
     return;
   }
   el.speaker.textContent = line[0];
@@ -3600,7 +3638,12 @@ function addParty(id) {
   if (newlyRecruited) state.party.push(id);
   if (!state.activeParty.includes(id) && state.activeParty.length < 3) state.activeParty.push(id);
   if (newlyRecruited) {
-    state.heroProgress[id] = { level: recruitLevel, xp: 0, talents: [] };
+    state.heroProgress[id] = {
+      level: recruitLevel,
+      xp: 0,
+      talents: [],
+      pendingMilestones: []
+    };
     Object.values(baseJobs[id].gear).forEach(name => {
       addOwnedGear(name);
     });
@@ -4543,6 +4586,7 @@ function toggleMenu() {
   if (mode === "menu") {
     mode = "walk";
     el.menu.classList.add("hidden");
+    updateSkillPointNotice();
     return;
   }
   if (mode !== "walk" && mode !== "atlas") return;
@@ -4551,6 +4595,25 @@ function toggleMenu() {
   document.querySelector(".menu-tabs").classList.remove("hidden");
   el.menu.classList.remove("hidden");
   renderMenu();
+  updateSkillPointNotice();
+}
+
+function openSkillPointMenu() {
+  const pending = pendingSkillPoints();
+  if (!pending.length) return;
+  if (mode === "battle" || !el.dialogue.classList.contains("hidden")) {
+    showHudNotice("SKILL POINT READY - open Skills after the current scene");
+    return;
+  }
+  if (mode !== "walk" && mode !== "atlas" && mode !== "menu") return;
+  selectedSkillHero = pending[0].id;
+  menuTab = "skills";
+  mode = "menu";
+  el.menu.classList.remove("is-shop");
+  document.querySelector(".menu-tabs").classList.remove("hidden");
+  el.menu.classList.remove("hidden");
+  renderMenu();
+  updateSkillPointNotice();
 }
 
 function xpProgressHtml(id) {
@@ -4572,6 +4635,7 @@ function toggleTalent(value) {
   else {
     if (progress.talents.length >= 2) return showHudNotice("SKILL TREE - deselect one of the two active skills first");
     progress.talents.push(name);
+    spendPendingSkillPoint(id, entry.level);
   }
   playSfx("menu");
   updatePanels();
@@ -4618,13 +4682,15 @@ function renderMenu() {
     const chosen = new Set(progress.talents);
     const roster = state.party.map(heroId => {
       const current = progressFor(heroId);
-      return `<button type="button" class="skill-hero ${heroId === id ? "is-selected" : ""}" data-skill-hero="${heroId}"><span class="dot" style="background:${baseJobs[heroId].color}"></span><strong>${heroId}</strong><small>Level ${current.level} / ${current.talents.length} of 2 active</small></button>`;
+      const ready = current.pendingMilestones.length ? ` / ${current.pendingMilestones.length} POINT${current.pendingMilestones.length === 1 ? "" : "S"} READY` : "";
+      return `<button type="button" class="skill-hero ${heroId === id ? "is-selected" : ""}" data-skill-hero="${heroId}"><span class="dot" style="background:${baseJobs[heroId].color}"></span><strong>${heroId}</strong><small>Level ${current.level} / ${current.talents.length} of 2 active${ready}</small></button>`;
     }).join("");
     const choices = talentTrees[id].map(entry => {
       const selected = chosen.has(entry.name);
       const locked = progress.level < entry.level;
       const full = !selected && chosen.size >= 2;
-      const stateText = locked ? `UNLOCKS AT LV ${entry.level}` : selected ? "ACTIVE" : full ? "2 / 2 ACTIVE" : "AVAILABLE";
+      const ready = progress.pendingMilestones.includes(entry.level);
+      const stateText = locked ? `UNLOCKS AT LV ${entry.level}` : selected ? "ACTIVE" : ready ? "SKILL POINT READY" : full ? "2 / 2 ACTIVE" : "AVAILABLE";
       return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" ${locked || full ? "disabled" : ""}><span class="talent-level">LV ${entry.level}</span><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p><small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : "+"}</b></button>`;
     }).join("");
     el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Milestone Skills</strong><p>Unlock choices at levels 5, 10, 15 and 20. Activate any two; you may change them outside battle.</p></div><span>${hero.name} / ${chosen.size} of 2 active</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small></div>${xpProgressHtml(id)}</header><div class="talent-grid">${choices}</div></section>`;
@@ -5138,6 +5204,34 @@ function stopHeldDirection(control) {
   if (heldDirection === control) heldDirection = null;
 }
 
+function canvasLogicalPoint(event) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left) * LOGICAL_WIDTH / rect.width,
+    y: (event.clientY - rect.top) * LOGICAL_HEIGHT / rect.height
+  };
+}
+
+function directionToward(dx, dy) {
+  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? [1, 0, 3] : [-1, 0, 1];
+  return dy > 0 ? [0, 1, 0] : [0, -1, 2];
+}
+
+function handleFieldTap(x, y) {
+  const targetX = Math.max(1, Math.min(14, Math.floor(x / TILE)));
+  const targetY = Math.max(1, Math.min(12, Math.floor((y - fieldRenderOffsetY()) / TILE)));
+  const dx = targetX - state.x;
+  const dy = targetY - state.y;
+  if (!dx && !dy) return interact();
+  const [stepX, stepY, facing] = directionToward(dx, dy);
+  state.facing = facing;
+  const tappedPoint = visiblePoints().find(point => point.x === targetX && point.y === targetY);
+  const tappedSpawn = visibleSpawns().find(spawnPoint => Math.abs(spawnPoint.x - targetX) <= (spawnPoint.boss ? 1 : 0) && Math.abs(spawnPoint.y - targetY) <= (spawnPoint.boss ? 1 : 0));
+  const distance = Math.abs(dx) + Math.abs(dy);
+  if (distance <= 1 && (tappedPoint || tappedSpawn)) return interact();
+  move(stepX, stepY, facing);
+}
+
 window.addEventListener("keydown", e => {
   const key = e.key.toLowerCase();
   const movement = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key);
@@ -5181,10 +5275,17 @@ canvas.addEventListener("click", event => {
     }
     return;
   }
+  if (mode === "talk") {
+    interact();
+    return;
+  }
+  if (mode === "walk") {
+    const point = canvasLogicalPoint(event);
+    handleFieldTap(point.x, point.y);
+    return;
+  }
   if (mode === "battle") {
-    const rect = canvas.getBoundingClientRect();
-    const x = (event.clientX - rect.left) * LOGICAL_WIDTH / rect.width;
-    const y = (event.clientY - rect.top) * LOGICAL_HEIGHT / rect.height;
+    const { x, y } = canvasLogicalPoint(event);
     if (x >= 4 && x <= 98 && y >= 168 && y <= 218) {
       const index = Math.floor((y - 168) / 9);
       if (index >= 0 && index < el.actions.children.length) {
@@ -5226,6 +5327,8 @@ document.querySelectorAll(".menu-tabs button").forEach(btn => {
     renderMenu();
   });
 });
+
+el.skillPointNotice.addEventListener("click", openSkillPointMenu);
 
 el.codexPrev.onclick = () => { codexIndex = (codexIndex + codex.length - 1) % codex.length; updateCodex(); };
 el.codexNext.onclick = () => { codexIndex = (codexIndex + 1) % codex.length; updateCodex(); };
