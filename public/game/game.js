@@ -835,6 +835,56 @@ const postgameGear = [
     { type: "weaknessDamage", value: .28, label: "+28% weakness damage" },
     { type: "statusOnHit", status: "sleep", value: .15, label: "15% chance to Sleep on hit", echoUnique: true },
     { type: "statusChance", value: .15, label: "+15% status application chance" }
+  ]),
+  item("Venomwake Sabre", "weapon", { str: 11, agi: 8, mag: 3 }, "A loop-forged blade whose green edge remembers every unfinished wound.", [
+    { type: "statusOnHit", status: "poison", value: .2, label: "20% chance to Poison on hit", echoUnique: true },
+    { type: "poisonDamage", value: .35, label: "+35% Poison damage" },
+    { type: "afflictedDamage", value: .15, label: "+15% damage against afflicted targets" }
+  ]),
+  item("Astral Refrain", "weapon", { mag: 12, agi: 7, stam: 3 }, "A focus tuned to repeat one impossible note from the next turn.", [
+    { type: "echoing", value: .1, label: "10% skill Echo turn progress", echoUnique: true },
+    { type: "magicDamage", value: .18, label: "+18% magic damage" },
+    { type: "openingResonance", value: 16, label: "+16 Resonance at battle start" }
+  ]),
+  item("Dreamwarden Mail", "armour", { stam: 12, mag: 8, agi: 3 }, "Silent plates that keep watch while their wearer crosses a dangerous dream.", [
+    { type: "statusResistance", status: "sleep", value: .5, label: "+50% Sleep resistance", echoUnique: true },
+    { type: "allStatusResistance", value: .12, label: "+12% resistance to all statuses" },
+    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+  ]),
+  item("Faultline Carapace", "armour", { stam: 15, str: 6 }, "Mountain armour that turns a stopped blow into stored momentum.", [
+    { type: "blockPower", value: .3, label: "30% stronger personal guard", echoUnique: true },
+    { type: "statusResistance", status: "stun", value: .35, label: "+35% Stun resistance" },
+    { type: "hpOnHit", value: 5, label: "Restore 5 HP after dealing damage" }
+  ]),
+  item("Cindercoil Band", "ring", { str: 7, mag: 6, agi: 7 }, "A hot metal coil that snaps shut around hesitation.", [
+    { type: "statusOnHit", status: "stun", value: .18, label: "18% chance to Stun on hit", echoUnique: true },
+    { type: "critChance", value: .1, label: "+10% critical chance" },
+    { type: "statusChance", value: .12, label: "+12% status application chance" }
+  ]),
+  item("Nightglass Seal", "ring", { mag: 9, agi: 9, stam: 2 }, "Its dark face reflects the instant before an enemy wakes.", [
+    { type: "statusOnHit", status: "sleep", value: .18, label: "18% chance to Sleep on hit", echoUnique: true },
+    { type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" },
+    { type: "openingTurnProgress", value: .12, label: "+12% opening turn progress" }
+  ]),
+  item("Venom Psalm Pendant", "necklace", { mag: 8, agi: 7, stam: 6 }, "A forbidden refrain sealed beneath a green-glass hymn plate.", [
+    { type: "poisonDamage", value: .5, label: "+50% Poison damage", echoUnique: true },
+    { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" },
+    { type: "statusChance", value: .15, label: "+15% status application chance" }
+  ]),
+  item("Bastion Echo Chain", "necklace", { stam: 11, mag: 7, str: 3 }, "Every link repeats the promise to remain standing.", [
+    { type: "battleRegen", value: 28, label: "Restore 28 HP after victory", echoUnique: true },
+    { type: "allStatusResistance", value: .18, label: "+18% resistance to all statuses" },
+    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+  ]),
+  item("Firstlight Crown", "helmet", { mag: 11, agi: 7, stam: 4 }, "A bright circlet recovered from the dawn before the False Dawn.", [
+    { type: "openingResonance", value: 28, label: "+28 Resonance at battle start", echoUnique: true },
+    { type: "magicDamage", value: .16, label: "+16% magic damage" },
+    { type: "echoing", value: .07, label: "7% skill Echo turn progress" }
+  ]),
+  item("Silent Execution Hood", "helmet", { str: 9, agi: 10, stam: 3 }, "A hood that marks every weakness without announcing the verdict.", [
+    { type: "afflictedDamage", value: .28, label: "+28% damage against afflicted targets", echoUnique: true },
+    { type: "critChance", value: .12, label: "+12% critical chance" },
+    { type: "statusChance", value: .12, label: "+12% status application chance" }
   ])
 ];
 postgameGear.forEach(gear => gearDb[gear.slot].push(gear));
@@ -855,37 +905,81 @@ const ngPlusGear = [
 ];
 ngPlusGear.forEach(gear => gearDb[gear.slot].push(gear));
 
+const ngPlusChestGear = [
+  item("Loopglass Sabre", "weapon", { str: 9, agi: 7, mag: 2 }, "A chest-found blade whose edge changes with every completed route.", { type: "statusOnHit", status: "poison", value: .14, label: "14% chance to Poison on hit" }),
+  item("Reverie Hexrod", "weapon", { mag: 10, agi: 5, stam: 3 }, "A recovered focus that turns archived dreams into practical spellwork.", { type: "statusOnHit", status: "sleep", value: .14, label: "14% chance to Sleep on hit" }),
+  item("Stonewake Maul", "weapon", { str: 12, stam: 5 }, "Heavy Stonewake steel that carries the mountain into the next loop.", { type: "statusOnHit", status: "stun", value: .14, label: "14% chance to Stun on hit" }),
+  item("Cinder Repeater", "weapon", { str: 8, mag: 8, agi: 4 }, "A Flameguard weapon rebuilt to reward exact timing.", { type: "critChance", value: .09, label: "+9% critical chance" }),
+  item("Second-Road Plate", "armour", { stam: 12, str: 4 }, "Roadwarden armour reinforced with memories of the first journey.", { type: "blockPower", value: .18, label: "18% stronger personal guard" }),
+  item("Dreamstitch Coat", "armour", { stam: 8, mag: 7, agi: 3 }, "Reverie thread closes itself whenever a nightmare finds the seam.", { type: "statusResistance", status: "sleep", value: .3, label: "+30% Sleep resistance" }),
+  item("Cinderproof Harness", "armour", { stam: 10, agi: 5, str: 2 }, "A flexible harness tested against ash, sparks and bad second ideas.", { type: "allStatusResistance", value: .12, label: "+12% resistance to all statuses" }),
+  item("Clockwork Mantle", "armour", { stam: 7, mag: 8, agi: 5 }, "Glimmer added a timing wheel where a sensible tailor would not.", { type: "openingTurnProgress", value: .1, label: "+10% opening turn progress" }),
+  item("Recursion Band", "ring", { str: 6, agi: 7, mag: 3 }, "The engraving returns to its first line without repeating the same mistake.", { type: "echoing", value: .05, label: "5% skill Echo turn progress" }),
+  item("Ember Thread Signet", "ring", { mag: 6, stam: 6, str: 3 }, "Warm orphan-thread circles a signet rescued from an abandoned route.", { type: "battleRegen", value: 14, label: "Restore 14 HP after victory" }),
+  item("Nullscript Ring", "ring", { mag: 7, agi: 6, stam: 2 }, "A blank command ring ready to accept less obedient magic.", { type: "statusChance", value: .12, label: "+12% status application chance" }),
+  item("Fault Echo Loop", "ring", { str: 7, stam: 5, agi: 4 }, "A cracked loop that releases a sharp pulse when struck.", { type: "statusOnHit", status: "stun", value: .1, label: "10% chance to Stun on hit" }),
+  item("Routekeeper Chain", "necklace", { stam: 7, agi: 6, mag: 3 }, "Its links tug gently toward an opening only a returning traveler can see.", { type: "openingTurnProgress", value: .12, label: "+12% opening turn progress" }),
+  item("Orphanfire Pendant", "necklace", { mag: 7, stam: 6, str: 3 }, "A small hearth that refuses to go dark between battles.", { type: "hpOnHit", value: 4, label: "Restore 4 HP after dealing damage" }),
+  item("Cogheart Locket", "necklace", { mag: 8, agi: 5, stam: 3 }, "A tiny engine catches loose spellwork and winds itself again.", { type: "mpOnHit", value: 3, label: "Restore 3 MP after dealing damage" }),
+  item("Ash Memory Charm", "necklace", { mag: 6, str: 5, agi: 5 }, "Ash settles into the shape of every weakness already discovered.", { type: "afflictedDamage", value: .12, label: "+12% damage against afflicted targets" }),
+  item("Pathseer Hood", "helmet", { agi: 8, mag: 5, stam: 2 }, "A travel hood that remembers how long an opening should remain.", { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" }),
+  item("Waking Visor", "helmet", { agi: 7, stam: 6, mag: 3 }, "Its bright inner lens keeps the wearer's thoughts close to the surface.", { type: "statusResistance", status: "sleep", value: .35, label: "+35% Sleep resistance" }),
+  item("Dawnless Circlet", "helmet", { mag: 9, agi: 5, stam: 3 }, "A dark circlet that stores the resonance the False Dawn discarded.", { type: "openingResonance", value: 15, label: "+15 Resonance at battle start" }),
+  item("Stone Echo Helm", "helmet", { stam: 9, str: 5, agi: 2 }, "A close-fitting helm that lets the mountain absorb the first shock.", { type: "statusResistance", status: "stun", value: .3, label: "+30% Stun resistance" })
+];
+ngPlusChestGear.forEach(gear => gearDb[gear.slot].push(gear));
+
 const echoForgeSlots = ["weapon", "armour", "ring", "necklace", "helmet"];
 const echoForgeBlueprints = {
   weapon: [
     { base: "Voice of Verse", rarity: "Common", effect: { type: "buffDuration", value: 1, label: "support buffs last +1 turn" } },
+    { base: "Shelter Staff", rarity: "Common", effect: { type: "magicDamage", value: .14, label: "+14% magic damage" } },
     { base: "Ashrunner Knife", rarity: "Uncommon", effect: { type: "poisonDamage", value: .35, label: "+35% Poison damage" } },
+    { base: "Guildsteel Saber", rarity: "Uncommon", effect: { type: "statusOnHit", status: "stun", value: .14, label: "14% chance to Stun on hit" } },
     { base: "Echo-Thread Lute", rarity: "Rare", effect: { type: "echoing", value: .08, label: "8% skill Echo turn progress" } },
-    { base: "Cinderbite Edge", rarity: "Epic", effect: { type: "afflictedDamage", value: .24, label: "+24% damage against afflicted targets" } }
+    { base: "Loopglass Sabre", rarity: "Rare", effect: { type: "statusChance", value: .18, label: "+18% status application chance" } },
+    { base: "Cinderbite Edge", rarity: "Epic", effect: { type: "afflictedDamage", value: .24, label: "+24% damage against afflicted targets" } },
+    { base: "Astral Refrain", rarity: "Epic", effect: { type: "magicDamage", value: .22, label: "+22% magic damage" } }
   ],
   armour: [
     { base: "Ashcloak", rarity: "Common", effect: { type: "openingTurnProgress", value: .12, label: "+12% opening turn progress" } },
+    { base: "Sootweave Coat", rarity: "Common", effect: { type: "statusDuration", value: 1, label: "inflicted statuses last +1 turn" } },
     { base: "Sootweave Coat", rarity: "Uncommon", effect: { type: "statusDuration", value: 1, label: "inflicted statuses last +1 turn" } },
+    { base: "Reverie Mantle", rarity: "Uncommon", effect: { type: "statusResistance", status: "sleep", value: .25, label: "+25% Sleep resistance" } },
     { base: "Sealbreak Vestment", rarity: "Rare", effect: { type: "allStatusResistance", value: .18, label: "+18% resistance to all statuses" } },
-    { base: "Nightneedle Harness", rarity: "Epic", effect: { type: "statusOnHit", status: "sleep", value: .16, label: "16% chance to Sleep on hit" } }
+    { base: "Roadwarden Plate", rarity: "Rare", effect: { type: "blockPower", value: .22, label: "22% stronger personal guard" } },
+    { base: "Nightneedle Harness", rarity: "Epic", effect: { type: "statusOnHit", status: "sleep", value: .16, label: "16% chance to Sleep on hit" } },
+    { base: "Dawnforged Aegis", rarity: "Epic", effect: { type: "buffDuration", value: 1, label: "defensive buffs last +1 turn" } }
   ],
   ring: [
     { base: "Promise Ring", rarity: "Common", effect: { type: "buffDuration", value: 1, label: "support buffs last +1 turn" } },
+    { base: "Red Ember Band", rarity: "Common", effect: { type: "afflictedDamage", value: .14, label: "+14% damage against afflicted targets" } },
     { base: "Red Ember Band", rarity: "Uncommon", effect: { type: "afflictedDamage", value: .14, label: "+14% damage against afflicted targets" } },
+    { base: "Rava's Guard Ring", rarity: "Uncommon", effect: { type: "blockPower", value: .18, label: "18% stronger personal guard" } },
     { base: "Faultline Signet", rarity: "Rare", effect: { type: "statusOnHit", status: "stun", value: .15, label: "15% chance to Stun on hit" } },
-    { base: "Songbound Rosin", rarity: "Epic", effect: { type: "echoing", value: .07, label: "7% skill Echo turn progress" } }
+    { base: "Stonefather Gauntlet", rarity: "Rare", effect: { type: "hpOnHit", value: 6, label: "restore 6 HP after dealing damage" } },
+    { base: "Songbound Rosin", rarity: "Epic", effect: { type: "echoing", value: .07, label: "7% skill Echo turn progress" } },
+    { base: "Loopbreaker Ring", rarity: "Epic", effect: { type: "openingTurnProgress", value: .18, label: "+18% opening turn progress" } }
   ],
   necklace: [
     { base: "Cinder Star", rarity: "Common", effect: { type: "magicDamage", value: .1, label: "+10% magic damage" } },
+    { base: "Veln Crest Token", rarity: "Common", effect: { type: "statusChance", value: .14, label: "+14% status application chance" } },
     { base: "Veln Crest Token", rarity: "Uncommon", effect: { type: "statusChance", value: .14, label: "+14% status application chance" } },
+    { base: "Emberwell Chain", rarity: "Uncommon", effect: { type: "battleRegen", value: 16, label: "restore 16 HP after victory" } },
     { base: "Wyrmheart Ember", rarity: "Rare", effect: { type: "magicDamage", value: .18, label: "+18% magic damage" } },
-    { base: "Hearthwall Crest", rarity: "Epic", effect: { type: "buffDuration", value: 1, label: "defensive buffs last +1 turn" } }
+    { base: "Silent Reliquary", rarity: "Rare", effect: { type: "mpOnHit", value: 4, label: "restore 4 MP after dealing damage" } },
+    { base: "Hearthwall Crest", rarity: "Epic", effect: { type: "buffDuration", value: 1, label: "defensive buffs last +1 turn" } },
+    { base: "Memory Chain", rarity: "Epic", effect: { type: "statusDuration", value: 1, label: "inflicted statuses last +1 turn" } }
   ],
   helmet: [
     { base: "Songweaver Hood", rarity: "Common", effect: { type: "openingResonance", value: 10, label: "+10 Resonance at battle start" } },
+    { base: "Glimmer Goggles", rarity: "Common", effect: { type: "echoing", value: .05, label: "5% skill Echo turn progress" } },
     { base: "Mira Top Hat", rarity: "Uncommon", effect: { type: "statusOnHit", status: "sleep", value: .1, label: "10% chance to Sleep on hit" } },
+    { base: "Stone Brow Guard", rarity: "Uncommon", effect: { type: "statusResistance", status: "stun", value: .25, label: "+25% Stun resistance" } },
     { base: "Local Truth Lens", rarity: "Rare", effect: { type: "statusChance", value: .2, label: "+20% status application chance" } },
-    { base: "Impossible Lens", rarity: "Epic", effect: { type: "afflictedDamage", value: .22, label: "+22% damage against afflicted targets" } }
+    { base: "Fleetglass Circlet", rarity: "Rare", effect: { type: "openingTurnProgress", value: .16, label: "+16% opening turn progress" } },
+    { base: "Impossible Lens", rarity: "Epic", effect: { type: "afflictedDamage", value: .22, label: "+22% damage against afflicted targets" } },
+    { base: "Starless Visor", rarity: "Epic", effect: { type: "statusOnHit", status: "sleep", value: .18, label: "18% chance to Sleep on hit" } }
   ]
 };
 
@@ -894,22 +988,24 @@ function nextGearRarity(rarity) {
   return order[Math.min(order.length - 1, Math.max(0, order.indexOf(rarity)) + 1)];
 }
 
-const echoForgeGear = Array.from({ length: 20 }, (_, index) => {
-  const rank = index + 1;
-  const slot = echoForgeSlots[index % echoForgeSlots.length];
-  const tier = Math.floor(index / echoForgeSlots.length);
-  const blueprint = echoForgeBlueprints[slot][tier];
+const echoForgeGear = Array.from({ length: 40 }, (_, index) => {
+  const rank = Math.floor(index / 2) + 1;
+  const variant = index % 2;
+  const slot = echoForgeSlots[(rank - 1) % echoForgeSlots.length];
+  const tier = Math.floor((rank - 1) / echoForgeSlots.length);
+  const blueprint = echoForgeBlueprints[slot][tier * 2 + variant];
   const baseGear = gearByName(blueprint.base);
-  const boost = 1 + tier + Math.floor(rank / 10);
+  const boost = 2 + tier + Math.floor(rank / 10);
   const stats = Object.fromEntries(Object.entries(baseGear.stats).map(([stat, value]) => [stat, value + boost]));
   const coreStat = { weapon: "str", armour: "stam", ring: "agi", necklace: "mag", helmet: "agi" }[slot];
-  stats[coreStat] = (stats[coreStat] || 0) + 1 + tier;
-  const inheritedEffects = gearEffects(baseGear).map(effect => ({ ...effect, label: `Inherited: ${effect.label}` }));
+  stats[coreStat] = (stats[coreStat] || 0) + 2 + tier;
+  const inheritedEffects = gearEffects(baseGear).map(({ echoUnique, ...effect }) => ({ ...effect, label: `Inherited: ${effect.label}` }));
   const echoEffect = { ...blueprint.effect, echoUnique: true, label: `ECHO: ${blueprint.effect.label}` };
-  const echoRarity = nextGearRarity(blueprint.rarity);
+  const echoRarity = "Legendary";
+  const name = variant === 0 ? `Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}` : `Echo-Forged ${blueprint.base}`;
   return Object.assign(
-    item(`Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}`, slot, stats, `An ${echoRarity} Echo upgrade of ${blueprint.base}, preserving its role after Echo Hunt rank ${rank}.`, [...inheritedEffects, echoEffect]),
-    { echoRank: rank, echoBase: blueprint.base, echoRarity, price: 240 + rank * 110 + tier * 180 }
+    item(name, slot, stats, `A Legendary Echo upgrade of ${blueprint.base}, preserving its identity while opening a new build path at Echo Hunt rank ${rank}.`, [...inheritedEffects, echoEffect]),
+    { echoRank: rank, echoBase: blueprint.base, echoRarity, echoVariant: variant, price: 420 + rank * 135 + variant * 70 + tier * 220 }
   );
 });
 echoForgeGear.forEach(gear => gearDb[gear.slot].push(gear));
@@ -955,10 +1051,12 @@ const generalDropGear = new Set([
   ...questGear,
   ...chestGear,
   ...postgameGear,
+  ...ngPlusChestGear,
   ...ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name))
 ].map(gear => gear.name));
 const postgameGearNames = new Set(postgameGear.map(gear => gear.name));
 const ngPlusGearNames = new Set(ngPlusGear.map(gear => gear.name));
+const ngPlusChestGearNames = new Set(ngPlusChestGear.map(gear => gear.name));
 const echoForgeGearNames = new Set(echoForgeGear.map(gear => gear.name));
 
 function gearIconSheet(gear, heroId) {
@@ -972,6 +1070,7 @@ function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
   if (ngPlusSignatureNames.has(gear?.name)) return `NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
   if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / ${gear.echoRarity.toUpperCase()} UPGRADE OF ${gear.echoBase.toUpperCase()} / ALL HEROES`;
+  if (ngPlusChestGearNames.has(gear?.name)) return "NG+ RANDOM CHEST GEAR / ALL HEROES";
   if (ngPlusGearNames.has(gear?.name)) return "NG+ LEGENDARY DROP / ALL HEROES";
   if (chestGear.includes(gear)) return gearOwners[gear.name] ? `EPIC CHEST / ${gearOwners[gear.name][0].toUpperCase()} ONLY` : "EPIC CHEST / ALL HEROES";
   if (postgameGearNames.has(gear?.name)) return "ENDGAME DROP / ALL HEROES";
@@ -1072,6 +1171,7 @@ function defaultGearRarity(name) {
   if (!gear) return "Common";
   if (ngPlusSignatureNames.has(name) || postgameGearNames.has(name)) return "Legendary";
   if (echoForgeGearNames.has(name)) return gear.echoRarity || "Legendary";
+  if (ngPlusChestGearNames.has(name)) return "Epic";
   if (ngPlusGearNames.has(name)) return "Epic";
   if (chestGear.includes(gear)) return "Epic";
   if (rareGear.includes(gear) || questGear.includes(gear)) return "Rare";
@@ -1183,8 +1283,12 @@ function rollEquipmentRarity(enemyUnit) {
   const roll = Math.random();
   const elite = enemyUnit?.resistanceTier === "elite";
   const boss = enemyUnit?.resistanceTier === "boss";
+  if (state.ngPlus > 0) {
+    const legendaryChance = Math.min(.58, .2 + Math.max(1, state.ngPlus) * .09 + (boss ? .12 : elite ? .06 : 0));
+    return roll < legendaryChance ? "Legendary" : "Epic";
+  }
   if (boss) return roll < .18 ? "Legendary" : roll < .68 ? "Epic" : "Rare";
-  if (elite || state.ngPlus > 0) return roll < .16 ? "Epic" : roll < .62 ? "Rare" : "Uncommon";
+  if (elite) return roll < .16 ? "Epic" : roll < .62 ? "Rare" : "Uncommon";
   return roll < .08 ? "Epic" : roll < .38 ? "Rare" : "Uncommon";
 }
 
@@ -1193,6 +1297,8 @@ const inventoryDb = {
   "Clockwork Tonic": { type: "Tonic / MP", desc: "Restores 18 MP to a chosen hero, in or outside battle.", battle: "mp", field: "mp", value: 18, short: "MP +18" },
   "Emberheart Stew": { type: "NG+ Food / HP", desc: "Restores 70 HP to a chosen hero, in or outside battle.", battle: "hp", field: "hp", value: 70, short: "HP +70" },
   "Resonance Draught": { type: "NG+ Tonic / MP", desc: "Restores 50 MP to a chosen hero, in or outside battle.", battle: "mp", field: "mp", value: 50, short: "MP +50" },
+  "Royal Ember Stew": { type: "NG+ Royal Food / HP", desc: "Restores 110 HP to a chosen hero, in or outside battle.", battle: "hp", field: "hp", value: 110, short: "HP +110" },
+  "Grand Resonance Draught": { type: "NG+ Grand Tonic / MP", desc: "Restores 75 MP to a chosen hero, in or outside battle.", battle: "mp", field: "mp", value: 75, short: "MP +75" },
   "Ash Ward": { type: "Ward / Guard", desc: "Halves incoming party damage for one enemy turn. Outside battle it prepares an opening ward.", battle: "guard", field: "guard", value: 1, short: "Party Guard" },
   "Old Registry Key": { type: "Key Item", desc: "Opens an old registry lock in the Ash Quarter." },
   "Ledger Scrap": { type: "Battle Loot", desc: "Discarded ledger paper. Useful to collectors and clerks." },
@@ -1220,7 +1326,7 @@ function inventoryInfo(name) {
 }
 
 function inventoryIcon(name) {
-  const itemIcons = { "Marla's Soup": 0, "Emberheart Stew": 0, "Clockwork Tonic": 1, "Resonance Draught": 1, "Ash Ward": 2, "Old Registry Key": 3 };
+  const itemIcons = { "Marla's Soup": 0, "Emberheart Stew": 0, "Royal Ember Stew": 0, "Clockwork Tonic": 1, "Resonance Draught": 1, "Grand Resonance Draught": 1, "Ash Ward": 2, "Old Registry Key": 3 };
   if (Number.isFinite(itemIcons[name])) return { sheet: "item", index: itemIcons[name] };
   const lootIcons = { "Ledger Scrap": 0, "Iron Chain Link": 1, "Broken Wax Seal": 2, "Ash Ink": 3, "Living Ash Ink": 3, "Resonant Stone": 4 };
   if (Number.isFinite(lootIcons[name])) return { sheet: "loot", index: lootIcons[name] };
@@ -4419,19 +4525,49 @@ function showBossIntro(title, enemyUnit, launch) {
   });
 }
 
+function leastOwnedGearCandidates(pool) {
+  if (!pool.length) return [];
+  const lowestCopyCount = Math.min(...pool.map(gear => gearCopyCount(gear.name)));
+  return pool.filter(gear => gearCopyCount(gear.name) === lowestCopyCount);
+}
+
+function rollNgPlusChestReward(chestData, mapId = state.map) {
+  const loop = Math.max(1, state.ngPlus);
+  const pool = [
+    ...ngPlusChestGear,
+    ...postgameGear,
+    ...ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name)),
+    ...chestGear,
+    ...rareGear
+  ];
+  const candidates = leastOwnedGearCandidates(pool);
+  const gear = candidates[Math.floor(Math.random() * candidates.length)];
+  const legendaryChance = Math.min(.9, .36 + loop * .14);
+  const rarity = loop >= 4 || Math.random() < legendaryChance ? "Legendary" : "Epic";
+  const itemPool = ["Emberheart Stew", "Resonance Draught", "Ash Ward"];
+  if (loop >= 2) itemPool.push("Royal Ember Stew", "Grand Resonance Draught");
+  const items = {};
+  const itemRolls = Math.min(2, 1 + Math.floor(loop / 2));
+  for (let roll = 0; roll < itemRolls; roll++) {
+    const name = itemPool[Math.floor(Math.random() * itemPool.length)];
+    items[name] = (items[name] || 0) + 1 + Math.floor((loop - 1) / 2);
+  }
+  return {
+    gold: (chestData?.reward?.gold || 45) + loop * 24 + Math.floor(Math.random() * 31),
+    items,
+    gear: gear?.name || ngPlusChestGear[0].name,
+    rarity,
+    theme: lootThemeForMap(mapId)
+  };
+}
+
 function openChest(pointData) {
   const chestData = pointData?.chest;
   if (!chestData || state.flags[`chest:${chestData.id}`]) return;
   chestOpenTicks[chestData.id] = tick;
   state.flags[`chest:${chestData.id}`] = true;
   const fixedReward = chestData.reward || {};
-  const reward = state.ngPlus > 0 ? { gold: fixedReward.gold || 45, items: {}, gear: null } : fixedReward;
-  if (state.ngPlus > 0) {
-    const improvedItems = ["Emberheart Stew", "Resonance Draught", "Ash Ward"];
-    reward.items[improvedItems[Math.floor(Math.random() * improvedItems.length)]] = 1 + Math.floor(state.ngPlus / 2);
-    const randomPool = [...postgameGear, ...ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name))].filter(gear => gearCopyCount(gear.name) < 3);
-    if (randomPool.length) reward.gear = randomPool[Math.floor(Math.random() * randomPool.length)].name;
-  }
+  const reward = state.ngPlus > 0 ? rollNgPlusChestReward(chestData) : { ...fixedReward, rarity: "Epic", theme: lootThemeForMap() };
   const found = [];
   if (reward.gold) {
     state.gold += reward.gold;
@@ -4442,9 +4578,8 @@ function openChest(pointData) {
     found.push(`${name} x${amount}`);
   });
   if (reward.gear) {
-    const rarity = state.ngPlus > 0 ? "Legendary" : "Epic";
-    addOwnedGear(reward.gear, 1, { rarity, rollAffixes: true, theme: lootThemeForMap() });
-    found.push(`${rarity.toUpperCase()}: ${reward.gear}${gearAffixes(reward.gear).length ? ` / ${gearAffixes(reward.gear).map(entry => entry.text).join(", ")}` : ""}`);
+    const rarity = reward.rarity || "Epic";
+    awardGearDrop(reward.gear, rarity, found, { theme: reward.theme || lootThemeForMap(), label: state.ngPlus > 0 ? `NG+ CHEST ${rarity.toUpperCase()}` : rarity.toUpperCase() });
   }
   playSfx("item");
   updatePanels();
@@ -5393,7 +5528,7 @@ function winBattle(log) {
     h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + effectValue(u.id, "battleRegen") + talentValue(u.id, "battleRegenTalent")));
     h.mp = u.mp;
   });
-  const echoHuntBattle = battle.winFlag === "endgameHuntWon";
+  const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
   const rewards = rollBattleLoot(battle.defeated, { forceGearRarity: echoHuntBattle ? "Legendary" : null });
   const bossBattle = Boolean(battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
   const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
@@ -5407,7 +5542,7 @@ function winBattle(log) {
     rewards.gold += echoGold;
     addInventoryItem("False Dawn Cog", cogs);
     rewards.drops.push(`False Dawn Cog x${cogs}`);
-    guaranteeEchoHuntGearReward(rewards);
+    guaranteeEchoHuntGearReward(rewards, battle.echoHuntRank || state.endgameRank);
   }
   if (battle.spawnRef) {
     battle.spawnRef.available = false;
@@ -5434,19 +5569,18 @@ function awardGearDrop(name, requestedRarity, drops, options = {}) {
   const currentRarity = gearRarity(name);
   if (RARITY_ORDER.indexOf(requestedRarity) > RARITY_ORDER.indexOf(currentRarity)) state.gearRarities[name] = requestedRarity;
   const rarity = gearRarity(name);
-  if (rarity === "Legendary") topUpGearAffixes(name, rarity, options.theme || "dragon");
+  topUpGearAffixes(name, rarity, options.theme || "dragon");
   const affixes = gearAffixes(name);
   drops.push(`${options.label || rarity.toUpperCase()}: ${name}${affixes.length ? ` / ${affixes.map(entry => entry.text).join(", ")}` : ""}`);
   return { name, rarity };
 }
 
-function guaranteeEchoHuntGearReward(rewards) {
+function guaranteeEchoHuntGearReward(rewards, rank = state.endgameRank || 1) {
   if (!Array.isArray(rewards.gearDrops)) rewards.gearDrops = [];
-  if (rewards.gearDrops.length) return null;
-  const lowestCopyCount = Math.min(...postgameGear.map(gear => gearCopyCount(gear.name)));
-  const candidates = postgameGear.filter(gear => gearCopyCount(gear.name) === lowestCopyCount);
-  const gear = candidates[Math.floor(Math.random() * candidates.length)];
-  const awarded = awardGearDrop(gear.name, "Legendary", rewards.drops, { theme: "dragon", label: "ECHO HUNT LEGENDARY" });
+  if (!Array.isArray(rewards.drops)) rewards.drops = [];
+  const candidates = leastOwnedGearCandidates(postgameGear);
+  const gear = candidates[(Math.max(1, rank) - 1) % candidates.length];
+  const awarded = awardGearDrop(gear.name, "Legendary", rewards.drops, { theme: "dragon", label: "GUARANTEED ECHO HUNT LEGENDARY" });
   rewards.gearDrops.push(awarded);
   return awarded;
 }
@@ -5483,7 +5617,9 @@ function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = []) {
     ["Orphan Ember Thread", 1 + Math.floor(loop / 3)],
     ["Stonewake Medal", 1],
     ["Emberheart Stew", 1],
-    ["Resonance Draught", 1]
+    ["Resonance Draught", 1],
+    ["Royal Ember Stew", Math.max(1, Math.floor(loop / 2))],
+    ["Grand Resonance Draught", Math.max(1, Math.floor(loop / 2))]
   ];
   const rolls = Math.min(3, 1 + Math.floor((loop - 1) / 2));
   for (let roll = 0; roll < rolls; roll++) {
@@ -5491,10 +5627,15 @@ function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = []) {
     const stored = addInventoryItem(name, amount);
     drops.push(`NG+ RANDOM: ${name} x${amount}${stored ? "" : " (Marla stash)"}`);
   }
-  const randomGear = ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name) && gearCopyCount(gear.name) < 3);
-  const gearChance = Math.min(.48, .14 + loop * .055 + (state.endgameRank || 0) * .01);
+  const randomGear = [
+    ...ngPlusChestGear,
+    ...ngPlusGear.filter(gear => !ngPlusSignatureNames.has(gear.name)),
+    ...postgameGear
+  ];
+  const gearChance = Math.min(.68, .18 + loop * .07 + (state.endgameRank || 0) * .012);
   if (randomGear.length && Math.random() < gearChance) {
-    const gear = randomGear[Math.floor(Math.random() * randomGear.length)];
+    const candidates = leastOwnedGearCandidates(randomGear);
+    const gear = candidates[Math.floor(Math.random() * candidates.length)];
     gearDrops.push(awardGearDrop(gear.name, "Legendary", drops, { theme: "dragon", label: "NG+ RANDOM LEGENDARY" }));
   }
   const level = enemyUnit.level || 1;
@@ -6070,6 +6211,7 @@ function startEndgameHunt() {
   const formation = formations[(rank - 1) % formations.length];
   el.menu.classList.add("hidden");
   startBattle(`Echo Hunt ${rank}: ${formation.name}`, formation.enemies, "endgameHuntWon");
+  battle.echoHuntRank = rank;
 }
 
 function beginNewGamePlus() {
@@ -6140,6 +6282,12 @@ function vendorWares(id) {
       { kind: "item", name: "Resonance Draught", price: 96, desc: inventoryDb["Resonance Draught"].desc }
     );
   }
+  if (state.ngPlus > 1) {
+    wares.push(
+      { kind: "item", name: "Royal Ember Stew", price: 136, desc: inventoryDb["Royal Ember Stew"].desc },
+      { kind: "item", name: "Grand Resonance Draught", price: 154, desc: inventoryDb["Grand Resonance Draught"].desc }
+    );
+  }
   const unlockedRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   echoForgeGear.filter(gear => gear.echoRank <= unlockedRank).forEach(gear => {
     wares.push({ kind: "gear", name: gear.name, price: gear.price });
@@ -6182,7 +6330,7 @@ function renderVendor() {
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop"
-    ? `Echo Forge rank ${forgeRank}/20. Every cleared Echo Hunt rank unlocks one stronger all-hero equipment piece here. NG+ also unlocks improved consumables.`
+    ? `Echo Forge rank ${forgeRank}/20. Every cleared Echo Hunt rank unlocks two different Legendary all-hero upgrades here, each with a fixed Echo effect and four random affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
   el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
@@ -6203,6 +6351,8 @@ function inventorySellPrice(name) {
   const values = {
     "Emberheart Stew": 33,
     "Resonance Draught": 38,
+    "Royal Ember Stew": 54,
+    "Grand Resonance Draught": 62,
     "Ledger Scrap": 6,
     "Broken Wax Seal": 8,
     "Ash Ink": 10,
@@ -6679,13 +6829,18 @@ function runQaChecks() {
 
     const echoIdentity = echoForgeGear.every(gear => {
       const base = gearByName(gear.echoBase);
-      const blueprint = echoForgeBlueprints[gear.slot][Math.floor((gear.echoRank - 1) / echoForgeSlots.length)];
+      const tier = Math.floor((gear.echoRank - 1) / echoForgeSlots.length);
+      const blueprint = echoForgeBlueprints[gear.slot][tier * 2 + gear.echoVariant];
       const unique = gearEffects(gear).filter(effect => effect.echoUnique);
       const inherited = gearEffects(gear).filter(effect => effect.label?.startsWith("Inherited:"));
-      return base && gear.echoRarity === nextGearRarity(blueprint.rarity) && unique.length === 1 && inherited.length === gearEffects(base).length && Object.entries(base.stats).every(([stat, value]) => gear.stats[stat] > value);
+      return base && gear.echoRarity === "Legendary" && blueprint?.base === gear.echoBase && unique.length === 1 && inherited.length === gearEffects(base).length && Object.entries(base.stats).every(([stat, value]) => gear.stats[stat] > value);
     });
     check("echo-upgrade-identity", echoIdentity);
+    check("echo-forge-two-per-rank", echoForgeGear.length === 40 && new Set(echoForgeGear.map(gear => gear.name)).size === 40 && Array.from({ length: 20 }, (_, index) => echoForgeGear.filter(gear => gear.echoRank === index + 1).length === 2).every(Boolean));
+    check("echo-forge-all-legendary", echoForgeGear.every(gear => defaultGearRarity(gear.name) === "Legendary"));
     check("legendary-echo-unique", postgameGear.every(gear => gearEffects(gear).filter(effect => effect.echoUnique).length === 1));
+    check("echo-hunt-legendary-variety", postgameGear.length >= 15 && echoForgeSlots.every(slot => postgameGear.filter(gear => gear.slot === slot).length >= 3));
+    check("ngplus-chest-variety", ngPlusChestGear.length >= 20 && echoForgeSlots.every(slot => ngPlusChestGear.filter(gear => gear.slot === slot).length >= 4));
 
     const echoLootBackup = {
       ownedGear: [...state.ownedGear],
@@ -6694,15 +6849,31 @@ function runQaChecks() {
       gearAffixes: structuredClone(state.gearAffixes),
       inventory: { ...state.inventory },
       stash: { ...state.stash },
-      gold: state.gold
+      gold: state.gold,
+      ngPlus: state.ngPlus
     };
     const guaranteedEchoRewards = { drops: [], gearDrops: [] };
     const guaranteedEchoGear = guaranteeEchoHuntGearReward(guaranteedEchoRewards);
     check("echo-hunt-guaranteed-drop", guaranteedEchoRewards.gearDrops.length === 1 && guaranteedEchoGear?.rarity === "Legendary");
     check("echo-hunt-four-affixes", guaranteedEchoGear && gearAffixes(guaranteedEchoGear.name).length === RARITY_AFFIX_COUNTS.Legendary);
+    const mixedEchoRewards = { drops: ["EPIC: QA DROP"], gearDrops: [{ name: "QA Drop", rarity: "Epic" }] };
+    const mixedEchoGuarantee = guaranteeEchoHuntGearReward(mixedEchoRewards, 2);
+    check("echo-hunt-guarantee-survives-other-loot", mixedEchoRewards.gearDrops.length === 2 && mixedEchoGuarantee?.rarity === "Legendary" && mixedEchoRewards.drops.some(drop => drop.startsWith("GUARANTEED ECHO HUNT LEGENDARY:")));
     state.gearCopies["Stonewake Oathblade"] = 0;
     const forcedEchoLoot = rollBattleLoot([{ name: "Kaeldrin", resistanceTier: "normal", level: 30 }], { forceGearRarity: "Legendary", allowNgPlusLoot: false });
     check("echo-hunt-legendary-only", forcedEchoLoot.gearDrops.length >= 1 && forcedEchoLoot.gearDrops.every(drop => drop.rarity === "Legendary" && gearAffixes(drop.name).length === RARITY_AFFIX_COUNTS.Legendary));
+    state.ngPlus = 1;
+    const loopOneChestRolls = Array.from({ length: 24 }, () => rollNgPlusChestReward({ reward: { gold: 40 } }, "ashQuarter"));
+    check("ngplus-chest-always-gear", loopOneChestRolls.every(reward => gearByName(reward.gear) && ["Epic", "Legendary"].includes(reward.rarity) && Object.keys(reward.items).length >= 1));
+    const chestSample = loopOneChestRolls[0];
+    const chestSampleDrops = [];
+    const chestSampleGear = awardGearDrop(chestSample.gear, chestSample.rarity, chestSampleDrops, { theme: chestSample.theme, label: "QA NG+ CHEST" });
+    check("ngplus-chest-affixes", gearAffixes(chestSampleGear.name).length === RARITY_AFFIX_COUNTS[chestSampleGear.rarity]);
+    state.ngPlus = 4;
+    const loopFourChestRolls = Array.from({ length: 12 }, () => rollNgPlusChestReward({ reward: {} }, "dawnCore"));
+    check("ngplus-late-loop-legendary", loopFourChestRolls.every(reward => reward.rarity === "Legendary"));
+    const ngPlusRarityRolls = Array.from({ length: 20 }, () => rollEquipmentRarity({ resistanceTier: "normal" }));
+    check("ngplus-affix-quality-floor", ngPlusRarityRolls.every(rarity => ["Epic", "Legendary"].includes(rarity)));
     state.ownedGear = echoLootBackup.ownedGear;
     state.gearCopies = echoLootBackup.gearCopies;
     state.gearRarities = echoLootBackup.gearRarities;
@@ -6710,6 +6881,7 @@ function runQaChecks() {
     state.inventory = echoLootBackup.inventory;
     state.stash = echoLootBackup.stash;
     state.gold = echoLootBackup.gold;
+    state.ngPlus = echoLootBackup.ngPlus;
 
     const routeEntries = Object.entries(maps).flatMap(([mapId, map]) => map.exits.map(exit => ({ mapId, exit, entry: maps[exit.to] ? nearestMapEntry(exit.to, exit.tx, exit.ty) : null })));
     const invalidEntries = routeEntries.filter(({ exit, entry }) => !maps[exit.to] || !entry || !terrainPassable(entry.x, entry.y, exit.to));
@@ -6850,7 +7022,7 @@ function runQaChecks() {
     state.gearRarities[legendaryName] = "Legendary";
     state.gearAffixes[legendaryName] = [preservedAffix];
     upgradeOwnedLegendaryGear();
-    check("echo-save-no-downgrade", state.gearRarities[echoName] === "Epic");
+    check("echo-save-upgrades-to-legendary", state.gearRarities[echoName] === "Legendary" && state.gearAffixes[echoName].length === RARITY_AFFIX_COUNTS.Legendary);
     check("legendary-save-top-up", state.gearAffixes[legendaryName].length === 4 && state.gearAffixes[legendaryName].some(entry => entry.key === preservedAffix.key && entry.value === preservedAffix.value));
     state.ownedGear = gearMigrationBackup.ownedGear;
     if (gearMigrationBackup.echoRarity === undefined) delete state.gearRarities[echoName]; else state.gearRarities[echoName] = gearMigrationBackup.echoRarity;
