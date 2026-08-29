@@ -1565,6 +1565,7 @@ function loadGame() {
       if (Number.isFinite(saved.retryAt)) spawnPoint.retryAt = saved.retryAt;
     });
   });
+  sanitizeWorldSpawns();
   Object.keys(baseJobs).forEach(id => {
     progressFor(id);
     clampHeroVitals(id);
@@ -1920,6 +1921,35 @@ const fieldPathMasks = {
   dawnCauseway: [[1, 7, 9, 8], [8, 5, 14, 9]],
   dawnStation: [[1, 7, 6, 8], [5, 5, 9, 8], [6, 4, 13, 6], [12, 5, 14, 8]],
   dawnGate: [[1, 7, 8, 8], [7, 4, 10, 8], [9, 3, 14, 8]]
+};
+
+// Redraw the front edge of existing scenery after actors so they can walk
+// naturally behind tables, rails, planters, and machinery.
+const mapForegroundZones = {
+  lantern: [
+    [52, 164, 48, 29],
+    [149, 179, 65, 29]
+  ],
+  reverieArchive: [
+    [44, 101, 43, 36],
+    [173, 108, 47, 33],
+    [84, 138, 23, 24],
+    [149, 138, 23, 24]
+  ],
+  guildCouncil: [
+    [39, 82, 55, 42],
+    [162, 82, 59, 42],
+    [91, 51, 75, 31]
+  ],
+  emberCellar: [
+    [25, 83, 70, 36],
+    [156, 111, 82, 53]
+  ],
+  alarm: [
+    [9, 92, 51, 32],
+    [105, 91, 45, 37],
+    [178, 48, 68, 49]
+  ]
 };
 
 const npc = {
@@ -2504,8 +2534,16 @@ function drawExitMarkers() {
     if (exit.x <= 1) { symbol = "<<"; x = centerX + phase; y = centerY; }
     else if (exit.x >= 14) { symbol = ">>"; x = centerX - phase; y = centerY; }
     else if (exit.y >= 10) { symbol = "vv"; y = centerY - phase; }
-    drawRect(centerX - 8, centerY - 7, 16, 12, objective ? "#392619dd" : "#100d15aa");
-    drawRect(centerX - 6, centerY + 5, 12, 1, objective ? "#ffd66d" : unlocked ? "#d59b4266" : "#4f424866");
+    const edge = objective ? "#ffd66d" : unlocked ? "#d59b4277" : "#4f424877";
+    if (exit.x <= 1 || exit.x >= 14) {
+      drawRect(centerX - 9, centerY - 9, 18, 18, "#100d1599");
+      drawRect(centerX + (exit.x <= 1 ? 7 : -8), centerY - 10, 1, 20, edge);
+      drawRect(centerX + (exit.x <= 1 ? 5 : -6), centerY - 7, 1, 14, `${edge.slice(0, 7)}55`);
+    } else {
+      drawRect(centerX - 9, centerY - 8, 18, 16, "#100d1599");
+      drawRect(centerX - 10, centerY + (exit.y >= 10 ? -7 : 6), 20, 1, edge);
+      drawRect(centerX - 7, centerY + (exit.y >= 10 ? -5 : 4), 14, 1, `${edge.slice(0, 7)}55`);
+    }
     drawText(symbol, x, y, color, 7, "center");
     if (objective) drawText("!", centerX, centerY - 9, "#fff1a3", 7, "center");
   });
@@ -2741,15 +2779,27 @@ function drawNpc(id, px, py, dir, anim, frame) {
   }
   if (id === "Workshop Bench") {
     const baseline = py + 32;
-    drawRect(px - 5, baseline - 13, 26, 4, "#815536");
-    drawRect(px - 4, baseline - 12, 24, 2, "#c0874a");
-    drawRect(px - 2, baseline - 9, 4, 9, "#3b2a22");
-    drawRect(px + 15, baseline - 9, 4, 9, "#3b2a22");
-    drawRect(px + 4, baseline - 17, 8, 4, "#b9823e");
-    drawRect(px + 6, baseline - 21, 3, 8, "#7bd4c6");
-    drawRect(px + 11, baseline - 16, 6, 2, "#d3b25f");
-    drawRect(px + 13, baseline - 19, 2, 4, "#7560b6");
-    if (Math.floor(frame / 34) % 4 === 1) drawRect(px + 8, baseline - 23, 1, 1, "#d8fff7");
+    drawRect(px - 7, baseline - 16, 30, 4, "#21191a");
+    drawRect(px - 6, baseline - 15, 28, 3, "#a36b35");
+    drawRect(px - 4, baseline - 12, 24, 12, "#3a2922");
+    drawRect(px - 3, baseline - 11, 22, 9, "#694226");
+    drawRect(px - 1, baseline - 9, 8, 5, "#2a2222");
+    drawRect(px + 10, baseline - 9, 7, 5, "#2a2222");
+    drawRect(px + 2, baseline - 7, 2, 1, "#c5984e");
+    drawRect(px + 12, baseline - 7, 2, 1, "#c5984e");
+    drawRect(px - 5, baseline - 2, 4, 3, "#241a1a");
+    drawRect(px + 17, baseline - 2, 4, 3, "#241a1a");
+    drawRect(px - 2, baseline - 19, 8, 3, "#3b4448");
+    drawRect(px, baseline - 21, 4, 3, "#98a7a4");
+    drawRect(px + 8, baseline - 18, 7, 2, "#d0a655");
+    drawRect(px + 12, baseline - 23, 4, 7, "#33434b");
+    drawRect(px + 13, baseline - 25, 2, 5, "#73d8cf");
+    drawRect(px + 14, baseline - 24, 1, 2, "#d9fff7");
+    drawRect(px + 18, baseline - 20, 2, 4, "#7762a9");
+    if (Math.floor(frame / 38) % 5 === 1) {
+      drawRect(px + 16, baseline - 27, 1, 1, "#d9fff7");
+      drawRect(px + 19, baseline - 24, 1, 1, "#d8bdff");
+    }
     return;
   }
   const rows = { Marla: 0, Harl: 1, Nyx: 2, Rava: 3, Kaeldrin: 4, Lyrsa: 5 };
@@ -2779,6 +2829,26 @@ function drawNpc(id, px, py, dir, anim, frame) {
     cell.w,
     cell.h
   );
+}
+
+function drawVendorGrounding(pointData, anchorX, baseline) {
+  if (!pointData.vendor) return;
+  const workshop = pointData.vendor === "workshop";
+  const outer = workshop ? "#55cfc399" : "#d7a84b88";
+  const inner = workshop ? "#9af7e9aa" : "#ffe29a99";
+  ctx.save();
+  ctx.globalAlpha = .8;
+  drawRect(anchorX - 10, baseline - 2, 20, 3, "#120f13aa");
+  drawRect(anchorX - 9, baseline - 3, 3, 1, outer);
+  drawRect(anchorX + 6, baseline - 3, 3, 1, outer);
+  drawRect(anchorX - 6, baseline, 12, 1, outer);
+  drawRect(anchorX - 1, baseline - 4, 3, 1, inner);
+  if ((tick + pointData.x * 13) % 126 < 18) {
+    drawRect(anchorX, baseline - 6, 1, 1, inner);
+    drawRect(anchorX - 2, baseline - 4, 1, 1, outer);
+    drawRect(anchorX + 2, baseline - 4, 1, 1, outer);
+  }
+  ctx.restore();
 }
 
 function drawDragon(px, py, anim, frame) {
@@ -2955,6 +3025,7 @@ function drawTileMap() {
       depth: point.y * TILE + (point.chest ? 18 : 25),
       draw: () => {
         if (point.chest) return drawChest(point);
+        drawVendorGrounding(point, point.x * TILE + 8, point.y * TILE + 25 + offsetY);
         if (point.id !== "Stage") drawFieldShadow(point.x * TILE + 8, point.y * TILE + 25 + offsetY, point.id === "Kaeldrin" ? 9 : point.id === "Workshop Bench" ? 12 : 7);
         drawSprite(point.id, point.x * TILE, point.y * TILE - 7 + offsetY, 0, "idle");
       }
@@ -2976,6 +3047,7 @@ function drawTileMap() {
     }
   ];
   entities.sort((a, b) => a.depth - b.depth || Number(Boolean(a.player)) - Number(Boolean(b.player))).forEach(entity => entity.draw());
+  if (background) drawMapForeground(map, background);
   drawObjectiveMarker();
   const labelSize = map.name.length > 29 ? 7 : map.name.length > 23 ? 8 : 9;
   drawText(map.name, 9, 13, "#0b090d", labelSize);
@@ -3011,19 +3083,35 @@ function drawChest(pointData) {
   if (!opened && tick % 150 < 12) drawSubtlePulse(anchorX, baseline - 22, 0, rarity === "epic" ? "#d899ff" : rarity === "rare" ? "#9ed8ff" : "#ffe29a", 150);
 }
 
+function mapSourceFrame(map, image) {
+  if (!Number.isFinite(map.view)) return { x: 0, y: 0, width: image.width, height: image.height };
+  const views = Math.max(2, map.views || 2);
+  const width = Math.min(image.width, Math.round(image.height * LOGICAL_WIDTH / LOGICAL_HEIGHT));
+  const maxX = Math.max(0, image.width - width);
+  return { x: Math.round(maxX * map.view / (views - 1)), y: 0, width, height: image.height };
+}
+
 function drawMapBackground(map, image, offsetX = 0, offsetY = 0) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  if (!Number.isFinite(map.view)) {
-    ctx.drawImage(image, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    ctx.restore();
-    return;
-  }
-  const views = Math.max(2, map.views || 2);
-  const cropWidth = Math.min(image.width, Math.round(image.height * LOGICAL_WIDTH / LOGICAL_HEIGHT));
-  const maxX = Math.max(0, image.width - cropWidth);
-  const sourceX = Math.round(maxX * map.view / (views - 1));
-  ctx.drawImage(image, sourceX, 0, cropWidth, image.height, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  const source = mapSourceFrame(map, image);
+  ctx.drawImage(image, source.x, source.y, source.width, source.height, offsetX, offsetY, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  ctx.restore();
+}
+
+function drawMapForeground(map, image) {
+  const zones = mapForegroundZones[state.map];
+  if (!zones?.length) return;
+  const source = mapSourceFrame(map, image);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  zones.forEach(([x, y, width, height]) => {
+    const sx = Math.round(source.x + x / LOGICAL_WIDTH * source.width);
+    const sy = Math.round(source.y + y / LOGICAL_HEIGHT * source.height);
+    const sw = Math.max(1, Math.round(width / LOGICAL_WIDTH * source.width));
+    const sh = Math.max(1, Math.round(height / LOGICAL_HEIGHT * source.height));
+    ctx.drawImage(image, sx, sy, sw, sh, x, y, width, height);
+  });
   ctx.restore();
 }
 
@@ -3943,20 +4031,47 @@ function terrainPassable(x, y, mapId = state.map) {
 }
 
 function nearestMapEntry(mapId, preferredX, preferredY) {
+  return nearestMapTile(mapId, preferredX, preferredY);
+}
+
+function nearestMapTile(mapId, preferredX, preferredY, accepts = () => true) {
   const startX = Math.max(1, Math.min(14, Number.isFinite(preferredX) ? preferredX : 8));
   const startY = Math.max(1, Math.min(12, Number.isFinite(preferredY) ? preferredY : 8));
-  if (terrainPassable(startX, startY, mapId)) return { x: startX, y: startY };
+  if (terrainPassable(startX, startY, mapId) && accepts(startX, startY)) return { x: startX, y: startY };
   for (let radius = 1; radius <= 13; radius++) {
     for (let dy = -radius; dy <= radius; dy++) {
       for (let dx = -radius; dx <= radius; dx++) {
         if (Math.abs(dx) + Math.abs(dy) !== radius) continue;
         const x = startX + dx;
         const y = startY + dy;
-        if (terrainPassable(x, y, mapId)) return { x, y };
+        if (terrainPassable(x, y, mapId) && accepts(x, y)) return { x, y };
       }
     }
   }
   return { x: 8, y: 8 };
+}
+
+function sanitizeWorldSpawns() {
+  Object.entries(maps).forEach(([mapId, map]) => {
+    const reserved = new Set([
+      ...map.points.map(pointData => fieldTileKey(pointData.x, pointData.y)),
+      ...map.exits.map(exit => fieldTileKey(exit.x, exit.y))
+    ]);
+    const occupied = new Set();
+    (map.spawns || []).forEach(spawnPoint => {
+      const accepts = (x, y) => !reserved.has(fieldTileKey(x, y)) && !occupied.has(fieldTileKey(x, y));
+      const safe = nearestMapTile(mapId, spawnPoint.x, spawnPoint.y, accepts);
+      spawnPoint.x = safe.x;
+      spawnPoint.y = safe.y;
+      spawnPoint.renderX = safe.x * TILE;
+      spawnPoint.renderY = safe.y * TILE;
+      occupied.add(fieldTileKey(safe.x, safe.y));
+      if (!terrainPassable(spawnPoint.homeX, spawnPoint.homeY, mapId) || reserved.has(fieldTileKey(spawnPoint.homeX, spawnPoint.homeY))) {
+        spawnPoint.homeX = safe.x;
+        spawnPoint.homeY = safe.y;
+      }
+    });
+  });
 }
 
 function passable(x, y) {
@@ -5278,11 +5393,12 @@ function winBattle(log) {
     h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + effectValue(u.id, "battleRegen") + talentValue(u.id, "battleRegenTalent")));
     h.mp = u.mp;
   });
-  const rewards = rollBattleLoot(battle.defeated);
+  const echoHuntBattle = battle.winFlag === "endgameHuntWon";
+  const rewards = rollBattleLoot(battle.defeated, { forceGearRarity: echoHuntBattle ? "Legendary" : null });
   const bossBattle = Boolean(battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
   const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
   const xpSummary = awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
-  if (battle.winFlag === "endgameHuntWon") {
+  if (echoHuntBattle) {
     state.endgameRank++;
     state.echoForgeRank = Math.max(state.echoForgeRank || 0, state.endgameRank);
     const echoGold = 100 + state.endgameRank * 35;
@@ -5291,11 +5407,7 @@ function winBattle(log) {
     rewards.gold += echoGold;
     addInventoryItem("False Dawn Cog", cogs);
     rewards.drops.push(`False Dawn Cog x${cogs}`);
-    const unclaimed = postgameGear.filter(gear => !state.ownedGear.includes(gear.name));
-    if (unclaimed.length && (state.endgameRank === 1 || state.endgameRank % 2 === 0)) {
-      addOwnedGear(unclaimed[0].name, 1, { rarity: "Legendary", rollAffixes: true, theme: "dragon" });
-      rewards.drops.push(`ENDGAME: ${unclaimed[0].name}`);
-    }
+    guaranteeEchoHuntGearReward(rewards);
   }
   if (battle.spawnRef) {
     battle.spawnRef.available = false;
@@ -5317,9 +5429,32 @@ function winBattle(log) {
   showTalk([["Victory", `${log} ${xpSummary}.`], ["Loot", `${rewards.gold} gold. ${dropText}.`]]);
 }
 
-function rollBattleLoot(enemies) {
+function awardGearDrop(name, requestedRarity, drops, options = {}) {
+  addOwnedGear(name, 1, { rarity: requestedRarity, rollAffixes: true, theme: options.theme || lootThemeForMap() });
+  const currentRarity = gearRarity(name);
+  if (RARITY_ORDER.indexOf(requestedRarity) > RARITY_ORDER.indexOf(currentRarity)) state.gearRarities[name] = requestedRarity;
+  const rarity = gearRarity(name);
+  if (rarity === "Legendary") topUpGearAffixes(name, rarity, options.theme || "dragon");
+  const affixes = gearAffixes(name);
+  drops.push(`${options.label || rarity.toUpperCase()}: ${name}${affixes.length ? ` / ${affixes.map(entry => entry.text).join(", ")}` : ""}`);
+  return { name, rarity };
+}
+
+function guaranteeEchoHuntGearReward(rewards) {
+  if (!Array.isArray(rewards.gearDrops)) rewards.gearDrops = [];
+  if (rewards.gearDrops.length) return null;
+  const lowestCopyCount = Math.min(...postgameGear.map(gear => gearCopyCount(gear.name)));
+  const candidates = postgameGear.filter(gear => gearCopyCount(gear.name) === lowestCopyCount);
+  const gear = candidates[Math.floor(Math.random() * candidates.length)];
+  const awarded = awardGearDrop(gear.name, "Legendary", rewards.drops, { theme: "dragon", label: "ECHO HUNT LEGENDARY" });
+  rewards.gearDrops.push(awarded);
+  return awarded;
+}
+
+function rollBattleLoot(enemies, options = {}) {
   let gold = 0;
   const drops = [];
+  const gearDrops = [];
   enemies.forEach(enemyUnit => {
     const tables = [lootTables[enemyUnit.name]].filter(Boolean);
     tables.forEach(table => {
@@ -5331,18 +5466,17 @@ function rollBattleLoot(enemies) {
       });
       table.rare.forEach(([name, chance]) => {
         if (Math.random() > chance || gearCopyCount(name) >= 3) return;
-        const rarity = rollEquipmentRarity(enemyUnit);
-        addOwnedGear(name, 1, { rarity, rollAffixes: true, theme: lootThemeForMap() });
-        drops.push(`${rarity.toUpperCase()}: ${name}${gearAffixes(name).length ? ` / ${gearAffixes(name).map(entry => entry.text).join(", ")}` : ""}`);
+        const rarity = options.forceGearRarity || rollEquipmentRarity(enemyUnit);
+        gearDrops.push(awardGearDrop(name, rarity, drops, { theme: options.forceGearRarity ? "dragon" : lootThemeForMap() }));
       });
     });
-    if (state.ngPlus > 0) gold += rollNgPlusRandomLoot(enemyUnit, drops);
+    if (state.ngPlus > 0 && options.allowNgPlusLoot !== false) gold += rollNgPlusRandomLoot(enemyUnit, drops, gearDrops);
   });
   state.gold += gold;
-  return { gold, drops };
+  return { gold, drops, gearDrops };
 }
 
-function rollNgPlusRandomLoot(enemyUnit, drops) {
+function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = []) {
   const loop = Math.max(1, state.ngPlus);
   const commonPool = [
     ["Loopglass Shard", 1 + Math.floor(loop / 2)],
@@ -5361,8 +5495,7 @@ function rollNgPlusRandomLoot(enemyUnit, drops) {
   const gearChance = Math.min(.48, .14 + loop * .055 + (state.endgameRank || 0) * .01);
   if (randomGear.length && Math.random() < gearChance) {
     const gear = randomGear[Math.floor(Math.random() * randomGear.length)];
-    addOwnedGear(gear.name, 1, { rarity: "Legendary", rollAffixes: true, theme: lootThemeForMap() });
-    drops.push(`NG+ RANDOM LEGENDARY: ${gear.name}${gearAffixes(gear.name).length ? ` / ${gearAffixes(gear.name).map(entry => entry.text).join(", ")}` : ""}`);
+    gearDrops.push(awardGearDrop(gear.name, "Legendary", drops, { theme: "dragon", label: "NG+ RANDOM LEGENDARY" }));
   }
   const level = enemyUnit.level || 1;
   return 22 + level * 4 + Math.floor(Math.random() * (18 + loop * 8));
@@ -5794,7 +5927,7 @@ function renderMenu() {
     el.menuBody.innerHTML = `<h3>Issue Chronicle</h3><div class="menu-grid">${knownIssues.length ? knownIssues.map((q, i) => `<div class="menu-card"><strong>Issue ${i + 1}: ${q[0]}</strong><p>${q[2]}</p><p>${q[1]}</p></div>`).join("") : `<div class="menu-card"><strong>No issue recorded</strong><p>Your chronicle begins when someone entrusts you with a quest.</p></div>`}</div><h3>Rare & Miniboss Field Notes</h3><div class="menu-grid">${fieldNotes.map(spawnPoint => `<div class="menu-card"><strong>${spawnPoint.name}</strong><small>${spawnPoint.rare ? "RARE SPAWN" : "ONE-TIME MINIBOSS"} / ${state.flags[`spawn:${spawnPoint.id}`] ? "DEFEATED" : spawnPoint.available ? "ACTIVE" : "DORMANT"}</small><p>${spawnPoint.lore}</p><p>${spawnPoint.boss ? "Does not respawn." : `Rare return window: roughly ${spawnPoint.respawn}-${spawnPoint.respawn + 30}s.`}</p></div>`).join("")}</div>`;
   }
   if (menuTab === "system") {
-    const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear. New Game Plus carries levels, milestone choices, companions, equipment, items and gold into zones that scale toward level 40, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
+    const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear and guarantee at least one Legendary gear drop with four affixes. New Game Plus carries levels, milestone choices, companions, equipment, items and gold into zones that scale toward level 40, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
     el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>AGI creates one shared turn order. Poison, Sleep, Stun and timed buffs are processed consistently each turn.</p></div><div class="menu-card"><strong>Levels & Skills</strong><p>The level cap is 40. New two-way skill choices unlock at levels 25, 30, 35 and 40.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Dropped equipment can gain readable rarity-based affixes without replacing its fixed stats or unique effect.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${postgame}`;
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
@@ -6554,9 +6687,113 @@ function runQaChecks() {
     check("echo-upgrade-identity", echoIdentity);
     check("legendary-echo-unique", postgameGear.every(gear => gearEffects(gear).filter(effect => effect.echoUnique).length === 1));
 
+    const echoLootBackup = {
+      ownedGear: [...state.ownedGear],
+      gearCopies: { ...state.gearCopies },
+      gearRarities: { ...state.gearRarities },
+      gearAffixes: structuredClone(state.gearAffixes),
+      inventory: { ...state.inventory },
+      stash: { ...state.stash },
+      gold: state.gold
+    };
+    const guaranteedEchoRewards = { drops: [], gearDrops: [] };
+    const guaranteedEchoGear = guaranteeEchoHuntGearReward(guaranteedEchoRewards);
+    check("echo-hunt-guaranteed-drop", guaranteedEchoRewards.gearDrops.length === 1 && guaranteedEchoGear?.rarity === "Legendary");
+    check("echo-hunt-four-affixes", guaranteedEchoGear && gearAffixes(guaranteedEchoGear.name).length === RARITY_AFFIX_COUNTS.Legendary);
+    state.gearCopies["Stonewake Oathblade"] = 0;
+    const forcedEchoLoot = rollBattleLoot([{ name: "Kaeldrin", resistanceTier: "normal", level: 30 }], { forceGearRarity: "Legendary", allowNgPlusLoot: false });
+    check("echo-hunt-legendary-only", forcedEchoLoot.gearDrops.length >= 1 && forcedEchoLoot.gearDrops.every(drop => drop.rarity === "Legendary" && gearAffixes(drop.name).length === RARITY_AFFIX_COUNTS.Legendary));
+    state.ownedGear = echoLootBackup.ownedGear;
+    state.gearCopies = echoLootBackup.gearCopies;
+    state.gearRarities = echoLootBackup.gearRarities;
+    state.gearAffixes = echoLootBackup.gearAffixes;
+    state.inventory = echoLootBackup.inventory;
+    state.stash = echoLootBackup.stash;
+    state.gold = echoLootBackup.gold;
+
     const routeEntries = Object.entries(maps).flatMap(([mapId, map]) => map.exits.map(exit => ({ mapId, exit, entry: maps[exit.to] ? nearestMapEntry(exit.to, exit.tx, exit.ty) : null })));
     const invalidEntries = routeEntries.filter(({ exit, entry }) => !maps[exit.to] || !entry || !terrainPassable(entry.x, entry.y, exit.to));
     check("map-entry-safety", invalidEntries.length === 0, invalidEntries.map(({ mapId, exit }) => `${mapId}->${exit.to}`).join(","));
+
+    const cardinalTiles = (x, y) => fieldDirections.map(([dx, dy]) => ({ x: x + dx, y: y + dy }));
+    const passableApproaches = (mapId, x, y) => cardinalTiles(x, y).filter(tile => terrainPassable(tile.x, tile.y, mapId));
+    const exitApproaches = (mapId, exit) => {
+      const triggerTiles = [];
+      if (exit.x <= 1 || exit.x >= 14) {
+        for (let y = exit.y - 1; y <= exit.y + 1; y++) triggerTiles.push({ x: exit.x, y });
+      } else {
+        for (let x = exit.x - 1; x <= exit.x + 1; x++) triggerTiles.push({ x, y: exit.y });
+      }
+      const seen = new Set();
+      return triggerTiles.flatMap(tile => cardinalTiles(tile.x, tile.y)).filter(tile => {
+        const key = fieldTileKey(tile.x, tile.y);
+        if (seen.has(key) || !terrainPassable(tile.x, tile.y, mapId)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+    const reachableFrom = (mapId, start) => {
+      const reachable = new Set([fieldTileKey(start.x, start.y)]);
+      const queue = [start];
+      for (let index = 0; index < queue.length; index++) {
+        cardinalTiles(queue[index].x, queue[index].y).forEach(tile => {
+          const key = fieldTileKey(tile.x, tile.y);
+          if (reachable.has(key) || !terrainPassable(tile.x, tile.y, mapId)) return;
+          reachable.add(key);
+          queue.push(tile);
+        });
+      }
+      return reachable;
+    };
+    const routeProblems = [];
+    const pointProblems = [];
+    const exitProblems = [];
+    Object.entries(maps).forEach(([mapId, map]) => {
+      const groups = [
+        ...map.exits.map(exit => ({ label: `exit:${exit.to}`, tiles: exitApproaches(mapId, exit) })),
+        ...map.points.map(pointData => ({ label: `point:${pointData.id}`, tiles: passableApproaches(mapId, pointData.x, pointData.y) })),
+        ...(map.spawns || []).map(spawnPoint => ({ label: `spawn:${spawnPoint.id}`, tiles: terrainPassable(spawnPoint.x, spawnPoint.y, mapId) ? [{ x: spawnPoint.x, y: spawnPoint.y }] : [] }))
+      ];
+      map.points.forEach(pointData => {
+        if (!passableApproaches(mapId, pointData.x, pointData.y).length) pointProblems.push(`${mapId}:${pointData.id}`);
+      });
+      map.exits.forEach(exit => {
+        if (!exitApproaches(mapId, exit).length) exitProblems.push(`${mapId}->${exit.to}`);
+      });
+      const start = groups.find(group => group.tiles.length)?.tiles[0];
+      if (!start) {
+        routeProblems.push(`${mapId}:no-entry`);
+        return;
+      }
+      const reachable = reachableFrom(mapId, start);
+      groups.forEach(group => {
+        if (!group.tiles.some(tile => reachable.has(fieldTileKey(tile.x, tile.y)))) routeProblems.push(`${mapId}:${group.label}`);
+      });
+    });
+    check("map-point-approaches", pointProblems.length === 0, pointProblems.join(","));
+    check("map-exit-approaches", exitProblems.length === 0, exitProblems.join(","));
+    check("map-route-connectivity", routeProblems.length === 0, routeProblems.join(","));
+
+    const spawnProblems = Object.entries(maps).flatMap(([mapId, map]) => (map.spawns || []).filter(spawnPoint => {
+      const reserved = map.points.some(pointData => pointData.x === spawnPoint.x && pointData.y === spawnPoint.y)
+        || map.exits.some(exit => exit.x === spawnPoint.x && exit.y === spawnPoint.y);
+      return reserved || !terrainPassable(spawnPoint.x, spawnPoint.y, mapId);
+    }).map(spawnPoint => `${mapId}:${spawnPoint.id}`));
+    check("map-spawn-grounding", spawnProblems.length === 0, spawnProblems.join(","));
+
+    const migrationSpawnEntry = Object.entries(maps).find(([, map]) => map.spawns?.length);
+    if (migrationSpawnEntry) {
+      const [migrationMapId, migrationMap] = migrationSpawnEntry;
+      const migrationSpawn = migrationMap.spawns[0];
+      const previousPosition = { x: migrationSpawn.x, y: migrationSpawn.y };
+      migrationSpawn.x = 0;
+      migrationSpawn.y = 0;
+      sanitizeWorldSpawns();
+      check("legacy-spawn-recovery", terrainPassable(migrationSpawn.x, migrationSpawn.y, migrationMapId) && migrationSpawn.x >= 1 && migrationSpawn.y >= 1);
+      migrationSpawn.x = previousPosition.x;
+      migrationSpawn.y = previousPosition.y;
+      sanitizeWorldSpawns();
+    }
 
     battle.party.push(battleUnit("Mira"));
     grantImmediateTurn(qaHero, {});
@@ -6635,7 +6872,8 @@ function runQaChecks() {
     results
   };
   document.body.setAttribute("data-qa-result", JSON.stringify(summary));
-  const qaMode = new URLSearchParams(location.search).get("qa");
+  const qaParams = new URLSearchParams(location.search);
+  const qaMode = qaParams.get("qa");
   if (qaMode === "battle") {
     mode = "walk";
     addParty("Mira");
@@ -6675,10 +6913,25 @@ function runQaChecks() {
     addOwnedGear("Ashrunner Knife", 1, { rarity: "Epic", rollAffixes: true, theme: "mountain" });
     el.menu.classList.remove("hidden");
     renderMenu();
+  } else if (qaMode === "map") {
+    const mapId = qaParams.get("qaMap");
+    if (maps[mapId]) {
+      mode = "walk";
+      battle = null;
+      state.map = mapId;
+      maps[mapId].points.forEach(pointData => { if (pointData.needs) state.flags[pointData.needs] = true; });
+      const entry = nearestMapEntry(mapId, Number(qaParams.get("x")) || 8, Number(qaParams.get("y")) || 8);
+      state.x = entry.x;
+      state.y = entry.y;
+      state.renderX = entry.x * TILE;
+      state.renderY = entry.y * TILE;
+      updatePanels();
+    }
   }
 }
 
 
+sanitizeWorldSpawns();
 refreshHeroVitals();
 updateCodex();
 updatePanels();
