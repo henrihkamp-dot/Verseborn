@@ -5526,6 +5526,92 @@ function xpProgressHtml(id) {
   return `<div class="xp-progress"><span><b>Level ${progress.level}</b><small>${copy}</small></span><i><em style="width:${percent}%"></em></i></div>`;
 }
 
+const characterSpecialties = {
+  Verseborn: ["Party buffer", "Resonance support", "Tempo control"],
+  Mira: ["Fast physical damage", "Status setup", "Afflicted execution"],
+  Seerin: ["Paladin guard", "Defensive support", "Stun control"],
+  Kael: ["Dedicated healing", "Cleanse", "Magic support"],
+  Torren: ["Front-line tank", "Stagger damage", "Retaliation"],
+  Glimmer: ["Tech magic", "Speed manipulation", "Stun support"],
+  Sparky: ["Magic burst", "Ancient fire", "Area damage"]
+};
+
+const statusStatHelp = [
+  ["STR", "Physical and melee damage"],
+  ["AGI", "Turn speed and action frequency"],
+  ["MAG", "Spell damage and maximum MP"],
+  ["STAM", "Maximum HP and durability"],
+  ["CRIT", "Chance for double damage"],
+  ["DPS / HPS", "AGI-adjusted non-ultimate output"]
+];
+
+function estimatedHeroOutput(id) {
+  const t = totals(id);
+  const skills = battleSkills(id);
+  const crit = Math.min(.65, talentValue(id, "critChance") + effectValue(id, "critChance"));
+  const afflictedCrit = Math.min(.65, crit + typedTalentValue(id, "afflictedCrit"));
+  const actionRate = .75 + t.agi / 40;
+  const damageOptions = skills.filter(sk => sk.anim !== "ultimate" && sk.power > 0 && skillTargetsEnemies(sk)).map(sk => {
+    const kind = sk.anim === "magic" ? "magic" : "melee";
+    const stat = kind === "magic" ? t.mag : t.str;
+    const base = sk.power + stat + 2.5;
+    const multiplier = 1 + effectValue(id, kind === "magic" ? "magicDamage" : "physicalDamage");
+    return { name: sk.name, value: base * multiplier * (1 + crit) * actionRate };
+  });
+  const healingOptions = skills.filter(sk => sk.anim !== "ultimate" && sk.power < 0).map(sk => {
+    const partyWide = sk.partyWide || talentValue(id, "partyHeal", sk.name) > 0;
+    const targetFactor = partyWide ? 1 + Math.max(0, state.activeParty.length - 1) * .5 : 1;
+    const value = Math.abs(sk.power) * (1 + talentValue(id, "healBoost")) * targetFactor * actionRate;
+    return { name: sk.name, value };
+  });
+  const bestDamage = damageOptions.sort((a, b) => b.value - a.value)[0] || { name: "None", value: 0 };
+  const bestHealing = healingOptions.sort((a, b) => b.value - a.value)[0] || { name: "None", value: 0 };
+  return {
+    crit,
+    afflictedCrit,
+    dps: Math.round(bestDamage.value),
+    dpsSkill: bestDamage.name,
+    hps: Math.round(bestHealing.value),
+    hpsSkill: bestHealing.name
+  };
+}
+
+function equippedProcChances(id) {
+  const applicationBonus = typedTalentValue(id, "statusChance") + effectValue(id, "statusChance");
+  return ["poison", "sleep", "stun"].map(type => {
+    const raw = effectValue(id, "statusOnHit", type);
+    const normalChance = Math.min(.95, raw * (STATUS_TIER_CHANCES.normal[type] || 1) * (1 + applicationBonus));
+    return { type, raw, normalChance };
+  }).filter(entry => entry.raw > 0);
+}
+
+function statusEquipmentHtml(id) {
+  return Object.entries(baseJobs[id].gear).map(([slot, name]) => {
+    const gear = gearByName(name);
+    if (!gear) return "";
+    const fixed = gearEffects(gear).map(effect => {
+      const label = effect.echoUnique ? `ECHO EFFECT: ${effect.label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : effect.label;
+      return `<small class="${effect.echoUnique ? "is-echo" : "is-fixed"}">${label}</small>`;
+    });
+    const random = gearAffixes(name).map(entry => `<small class="is-affix">${entry.text || formatAffix(entry)}</small>`);
+    const details = [...fixed, ...random];
+    return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${name}</strong>${gearRarityHtml(name)}</span><div>${details.length ? details.join("") : `<small>No fixed effect or random affix.</small>`}</div></div>`;
+  }).join("");
+}
+
+function statusCardHtml(id) {
+  const h = baseJobs[id];
+  const t = totals(id);
+  const chosen = activeTalents(id);
+  const output = estimatedHeroOutput(id);
+  const procs = equippedProcChances(id);
+  const activeLabel = state.activeParty.includes(id) ? `ACTIVE SLOT ${state.activeParty.indexOf(id) + 1}` : "RESERVE";
+  const portrait = portraitSources[id];
+  const specialties = characterSpecialties[id] || [h.title];
+  const procHtml = procs.length ? procs.map(entry => `<span><b>${entry.type.toUpperCase()}</b><strong>${Math.round(entry.raw * 100)}%</strong><small>${Math.round(entry.normalChance * 100)}% vs normal foes</small></span>`).join("") : `<p class="status-empty">No Poison, Sleep or Stun proc equipped.</p>`;
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${output.afflictedCrit > output.crit ? `${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "Double damage"}</em></span><span><small>DPS EST.</small><strong>${output.dps}</strong><em>${output.dpsSkill}</em></span><span><small>HPS EST.</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen milestones</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No milestone skills chosen yet."}</p></section></article>`;
+}
+
 function toggleTalent(value) {
   const separator = value.indexOf(":");
   const id = value.slice(0, separator);
@@ -5548,10 +5634,8 @@ function toggleTalent(value) {
 function renderMenu() {
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
-    el.menuBody.innerHTML = `<div class="menu-grid">${state.party.map(id => {
-      const h = baseJobs[id], t = totals(id), chosen = activeTalents(id);
-      return `<div class="menu-card status-card"><strong>${h.name} - ${h.title}</strong><small>${state.activeParty.includes(id) ? `ACTIVE SLOT ${state.activeParty.indexOf(id) + 1}` : "RESERVE"}</small>${xpProgressHtml(id)}<p>STR ${t.str} / AGI ${t.agi} / MAG ${t.mag} / STAM ${t.stam}</p><p>HP ${h.hp}/${t.max} MP ${h.mp}/${t.mp}. ${h.element} class.</p><small>${chosen.length ? `Active skills: ${chosen.map(entry => entry.name).join(", ")}` : "No milestone skills active."}</small></div>`;
-    }).join("")}</div>`;
+    const glossary = statusStatHelp.map(([stat, detail]) => `<span><b>${stat}</b><small>${detail}</small></span>`).join("");
+    el.menuBody.innerHTML = `<div class="status-glossary">${glossary}</div><p class="status-estimate-note">DPS and HPS compare the strongest non-ultimate command after AGI, before enemy defense or weakness. Proc rates show the combined equipped chance and its expected rate against a normal enemy.</p><div class="status-menu-grid">${state.party.map(statusCardHtml).join("")}</div>`;
   }
   if (menuTab === "party") {
     const activeSlots = Array.from({ length: 3 }, (_, index) => {
@@ -6446,6 +6530,19 @@ function runQaChecks() {
     check("affix-ranges", rangedAffixes.every(entry => entry.value >= entry.min && entry.value <= entry.max));
     check("early-status-gear", zoneStarterGear.filter(gear => gear.slot === "weapon").every(gear => gearEffects(gear).some(effect => effect.type === "statusOnHit")) && zoneStarterGear.some(gear => gear.slot === "armour" && gearEffects(gear).some(effect => effect.type === "statusOnHit")));
     check("status-affix-slots", [affixPools.weapon, affixPools.armour, affixPools.accessory].every(pool => ["poison", "sleep", "stun"].every(status => pool.some(entry => entry.type === "statusOnHit" && entry.status === status))));
+
+    const profileIds = Object.keys(baseJobs);
+    check("status-profiles", profileIds.every(id => characterSpecialties[id]?.length >= 3 && portraitSources[id]));
+    check("status-output-estimates", profileIds.every(id => {
+      const output = estimatedHeroOutput(id);
+      return Number.isFinite(output.dps) && output.dps >= 0 && Number.isFinite(output.hps) && output.hps >= 0 && output.crit >= 0 && output.crit <= .65;
+    }));
+    check("status-equipment-breakdown", ["WEAPON", "ARMOUR", "RING", "HELMET"].every(slot => statusEquipmentHtml("Verseborn").includes(slot)));
+    const oldStatusWeapon = baseJobs.Verseborn.gear.weapon;
+    baseJobs.Verseborn.gear.weapon = "Ashrunner Knife";
+    const poisonProc = equippedProcChances("Verseborn").find(entry => entry.type === "poison");
+    check("status-proc-breakdown", poisonProc?.raw >= .1 && poisonProc.normalChance > 0);
+    baseJobs.Verseborn.gear.weapon = oldStatusWeapon;
 
     const echoIdentity = echoForgeGear.every(gear => {
       const base = gearByName(gear.echoBase);
