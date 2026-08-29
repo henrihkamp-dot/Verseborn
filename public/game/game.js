@@ -1390,7 +1390,17 @@ const baseJobs = {
 };
 
 const MAX_LEVEL = 40;
+const MAX_BATTLE_ROUNDS = 20;
 const SKILL_MILESTONE_LEVELS = [5, 10, 15, 20, 25, 30, 35, 40];
+const BATTLE_RETRY_EVENTS = {
+  harborWon: "harbor",
+  clergyWon: "clergy",
+  ravaWaveWon: "ravaWave",
+  emberWon: "ember",
+  dawnWon: "dawn",
+  ngStonewakeWon: "ngStonewakeTrial",
+  ngOrphanTrialWon: "ngOrphanTrial"
+};
 const talentTrees = {
   Verseborn: [
     talent(5, "Open Chorus", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
@@ -3668,9 +3678,9 @@ function drawBattleTurnRail() {
   const turns = battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive);
   drawRect(3, 3, LOGICAL_WIDTH - 6, 17, "#090a11dd");
   drawRect(4, 4, LOGICAL_WIDTH - 8, 1, "#8b6a45");
-  drawText(`R${battle.round}`, 8, 15, "#f0c97a", 6);
+  drawText(`R${battle.round}/${MAX_BATTLE_ROUNDS}`, 8, 15, "#f0c97a", 6);
   if (!turns.length) return;
-  const startX = 25;
+  const startX = 39;
   const gap = 2;
   const available = LOGICAL_WIDTH - startX - 6;
   const chipWidth = Math.max(24, Math.floor((available - gap * (turns.length - 1)) / turns.length));
@@ -4720,6 +4730,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
   updateSkillPointNotice();
   battleFloaters = [];
   const preparedWard = Boolean(state.fieldWard);
+  const startingResonance = state.resonance;
   state.fieldWard = false;
   const scriptedBoss = ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(winFlag);
   const preparedEnemies = enemies.map((unit, index) => {
@@ -4729,7 +4740,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
     return prepared;
   });
   const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
-  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, usedOnce: {}, lastSupport: null, extraTurns: 0 };
+  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, startingResonance, usedOnce: {}, lastSupport: null, extraTurns: 0 };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -4768,9 +4779,14 @@ function renderTurnOrder() {
   el.turnOrder.innerHTML = remaining.map((turn, index) => `<span class="turn-chip ${turn.side} ${index === 0 ? "is-current" : ""}">${index === 0 ? "NOW " : ""}${turn.name}<small>AGI ${turn.agi}</small></span>`).join("");
 }
 
+function battleRoundLimitReached(currentBattle = battle) {
+  return Boolean(currentBattle && currentBattle.round >= MAX_BATTLE_ROUNDS);
+}
+
 function runCurrentTurn(log) {
   while (currentTurn() && !turnIsAlive(currentTurn())) battle.turnIndex++;
   if (!currentTurn()) {
+    if (battleRoundLimitReached()) return endBattleDraw(log);
     battle.round++;
     buildTurnOrder();
     if (!currentTurn()) return;
@@ -4818,6 +4834,32 @@ function finishTurn(log) {
   if (faded.length) log = `${log} ${faded.join(" ")}`;
   battle.turnIndex++;
   runCurrentTurn(log);
+}
+
+function endBattleDraw(log = "") {
+  if (!battle || mode !== "battle") return false;
+  battle.resolving = true;
+  battle.party.forEach(unit => {
+    const hero = baseJobs[unit.id];
+    if (!hero) return;
+    hero.hp = Math.max(1, Math.min(totals(unit.id).max, unit.hp));
+    hero.mp = Math.max(0, Math.min(totals(unit.id).mp, unit.mp));
+  });
+  state.resonance = Number.isFinite(battle.startingResonance) ? battle.startingResonance : state.resonance;
+  if (battle.retryEvent) delete state.flags[battle.retryEvent];
+  hideBattlePreview();
+  effect = null;
+  el.turnOrder.innerHTML = "";
+  el.battle.classList.add("hidden");
+  mode = "walk";
+  updateMusic();
+  updatePanels();
+  playSfx("block");
+  showTalk([
+    ["Draw", `Round ${MAX_BATTLE_ROUNDS} ends with both sides still standing. The battle is a draw.`],
+    ["System", `No XP, gold, loot or victory progress was awarded.${log ? " You can prepare and challenge the fight again." : ""}`]
+  ]);
+  return true;
 }
 
 function renderBattle(log) {
@@ -5510,6 +5552,7 @@ function resolveEnemyTurn(turn, prev) {
 function winBattle(log) {
   battle.defeated.push(...battle.enemies);
   if (battle.waves.length) {
+    if (battleRoundLimitReached()) return endBattleDraw(log);
     const nextWave = battle.waves.shift();
     battle.name = nextWave.name;
     battle.enemies = nextWave.enemies;
@@ -6713,6 +6756,7 @@ if (new URLSearchParams(location.search).has("qa")) {
     snapshot: () => ({
       mode,
       maxLevel: MAX_LEVEL,
+      maxBattleRounds: MAX_BATTLE_ROUNDS,
       milestones: [...SKILL_MILESTONE_LEVELS],
       state: JSON.parse(JSON.stringify(state)),
       heroes: Object.fromEntries(Object.keys(baseJobs).map(id => [id, { ...baseJobs[id], gear: { ...baseJobs[id].gear } }])),
@@ -6770,6 +6814,9 @@ function runQaChecks() {
   const check = (name, pass, detail = "") => { results[name] = { pass: Boolean(pass), detail }; };
   try {
     check("level-cap", MAX_LEVEL === 40, MAX_LEVEL);
+    check("battle-round-cap", MAX_BATTLE_ROUNDS === 20, MAX_BATTLE_ROUNDS);
+    check("battle-round-limit-boundary", !battleRoundLimitReached({ round: 19 }) && battleRoundLimitReached({ round: 20 }) && battleRoundLimitReached({ round: 21 }));
+    check("battle-draw-retry-mapping", BATTLE_RETRY_EVENTS.dawnWon === "dawn" && BATTLE_RETRY_EVENTS.ngOrphanTrialWon === "ngOrphanTrial");
     check("milestones", [25, 30, 35, 40].every(level => SKILL_MILESTONE_LEVELS.includes(level)), SKILL_MILESTONE_LEVELS.join(","));
     check("two-way-late-choices", Object.keys(baseJobs).every(id => [25, 30, 35, 40].every(level => talentTrees[id].filter(entry => entry.level === level).length === 2)));
 
