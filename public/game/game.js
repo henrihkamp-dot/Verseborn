@@ -1834,7 +1834,7 @@ const maps = {
     spawn("market-chain-1", 11, 8, "Chain Runners", [enemy("Chain Warden", 64, 9, "Shadow", "#4a4542", 1)], { respawn: 30 })
   ] }),
 
-  ashDock: map("Ash Quarter - Ledger Docks", "Issue 1", "ash", [{ x: 1, y: 8, to: "sootMarket", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieCourt", tx: 2, ty: 8, needs: "issue1" }], [
+  ashDock: map("Ash Quarter - Ledger Docks", "Issue 1", "ash", [{ x: 1, y: 8, to: "sootMarket", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieCourt", tx: 3, ty: 10, needs: "issue1" }], [
     recruitPoint(7, 7, "Mira", [["Mira", "You came alone. Good. Quiet footsteps survive longer on these docks."], ["Verseborn", "I can do quiet. Briefly."], ["Mira", "The route is physical. The lie is administrative. Together, that makes a dungeon."], ["Mira", "Draw your lute. I will cover the blind side."]], "harbor"),
     chest(4, 8, "ash-echo", { gear: "Echo Collector", gold: 30 })
   ], ["A4 - Ledger Docks", "The first story battle sits beyond two explorable field units."], { background: "ash-route", panorama: true, view: 2, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [3, 2], gridSize: [5, 5], spawns: [
@@ -1846,33 +1846,33 @@ const maps = {
     chest(4, 7, "ash-nightneedle", { gear: "Nightneedle Harness", items: { "Clockwork Tonic": 1 } })
   ], ["A3b - Ledger House", "Optional interior, clue room and escort side quest."], { background: "ash", collision: "ash", grid: [2, 1], gridSize: [5, 5] }),
 
-  reverieCourt: map("Reverie - Courtyard", "Issue 2", "reverie", [{ x: 1, y: 8, to: "ashDock", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieDorm", tx: 2, ty: 8 }, { x: 8, y: 4, to: "reverieArchive", tx: 8, ty: 11, needs: "clergyWon" }], [
+  reverieCourt: map("Reverie - Courtyard", "Issue 2", "reverie", [{ x: 3, y: 11, direction: "down", to: "ashDock", tx: 13, ty: 8 }, { x: 13, y: 5, direction: "up", to: "reverieDorm", tx: 7, ty: 6 }, { x: 10, y: 5, direction: "up", to: "reverieArchive", tx: 8, ty: 11, needs: "clergyWon" }], [
     recruitPoint(6, 7, "Seerin", [["Seerin", "You may inspect the building. You may not take a child."], ["Verseborn", "Then stand with me while we prove who tried."], ["Seerin", "My oath is to life. You are confusing that with authority."], ["Seerin", "I will hold the line. You make them listen."]], "clergy"),
     chest(4, 8, "reverie-hearthwall", { gear: "Hearthwall Crest", gold: 38 })
   ], ["B1 - Shelter Courtyard", "Protection comes before institutional permission."], { background: "reverie-route", panorama: true, view: 0, views: 3, walkable: [[1, 5, 14, 10]], grid: [3, 3], gridSize: [5, 5], spawns: [
-    spawn("court-seal-1", 11, 8, "Clergy Seal Patrol", [enemy("Seal Bearer", 70, 10, "Shadow", "#9d5436", 1)], { respawn: 38 })
+    spawn("court-seal-1", 11, 9, "Clergy Seal Patrol", [enemy("Seal Bearer", 70, 10, "Shadow", "#9d5436", 1)], { respawn: 38 })
   ] }),
 
-  reverieDorm: map("Reverie - Dormitory Wing", "Issue 2", "reverie", [{ x: 1, y: 8, to: "reverieCourt", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieSeal", tx: 2, ty: 8 }], [
-    point(6, 7, "Nyx", [["Nyx", "Adults pretend punctuation cannot hurt people."], ["Nyx", "The supply locker is less interesting than the archive. It is still useful."]], undefined, undefined, "shelter", "nyxInk"),
-    point(10, 7, "Rava", [["Rava", "Three waves. No speeches. Keep them away from the little kids."]], "ravaWave"),
-    point(13, 7, "Jory", [["Jory", "The first loop taught us where the Flameguard leaves openings."], ["Rava", "You wanted stronger opponents. Try not to complain when you get them."], ["Nyx", "I documented seventeen likely mistakes. We only need one."]], "ngOrphanTrial", "newGamePlus"),
-    chest(4, 8, "reverie-silent", { gear: "Silent Reliquary", items: { "Ash Ward": 1 } })
+  reverieDorm: map("Reverie - Dormitory Wing", "Issue 2", "reverie", [{ x: 6, y: 5, direction: "up", to: "reverieCourt", tx: 13, ty: 5 }, { x: 14, y: 7, direction: "right", to: "reverieSeal", tx: 11, ty: 9 }], [
+    point(8, 6, "Nyx", [["Nyx", "Adults pretend punctuation cannot hurt people."], ["Nyx", "The supply locker is less interesting than the archive. It is still useful."]], undefined, undefined, "shelter", "nyxInk"),
+    point(10, 6, "Rava", [["Rava", "Three waves. No speeches. Keep them away from the little kids."]], "ravaWave"),
+    point(13, 6, "Jory", [["Jory", "The first loop taught us where the Flameguard leaves openings."], ["Rava", "You wanted stronger opponents. Try not to complain when you get them."], ["Nyx", "I documented seventeen likely mistakes. We only need one."]], "ngOrphanTrial", "newGamePlus"),
+    chest(9, 8, "reverie-silent", { gear: "Silent Reliquary", items: { "Ash Ward": 1 } })
   ], ["B2 - Dormitory Wing", "NPC side quests and a wave-defense encounter live off the main route."], { background: "reverie-route", panorama: true, view: 1, views: 3, walkable: [[1, 5, 14, 10]], grid: [4, 3], gridSize: [5, 5], spawns: [
-    spawn("dorm-scribe-1", 12, 8, "Ash Scribe Remnant", [enemy("Ash Scribe", 58, 8, "Sound", "#6d5948", 2)], { respawn: 34 })
+    spawn("dorm-scribe-1", 12, 7, "Ash Scribe Remnant", [enemy("Ash Scribe", 58, 8, "Sound", "#6d5948", 2)], { respawn: 34 })
   ] }),
 
-  reverieSeal: map("Reverie - Sealed Hall", "Issue 2", "reverie", [{ x: 1, y: 8, to: "reverieDorm", tx: 13, ty: 8 }, { x: 14, y: 8, to: "guildSteps", tx: 2, ty: 8, needs: "issue2" }], [
-    chest(6, 8, "reverie-roadwarden", { gear: "Roadwarden Plate", gold: 42 })
+  reverieSeal: map("Reverie - Sealed Hall", "Issue 2", "reverie", [{ x: 11, y: 10, direction: "down", to: "reverieDorm", tx: 13, ty: 7 }, { x: 12, y: 4, direction: "up", to: "guildSteps", tx: 2, ty: 8, needs: "issue2" }], [
+    chest(13, 8, "reverie-roadwarden", { gear: "Roadwarden Plate", gold: 42 })
   ], ["B3 - Sealed Hall", "A cold threshold and a rare lore encounter."], { background: "reverie-route", panorama: true, view: 2, views: 3, walkable: [[1, 5, 14, 10]], grid: [4, 4], gridSize: [5, 5], spawns: [
-    spawn("reverie-rare-sigil", 9, 7, "Rare: Orphaned Sigil", [enemy("Orphaned Sigil", 108, 14, "Tech", "#b9a274", 2, "Seal Bearer")], { respawn: 120, rare: true, lore: "A protection rite that outlived the priest who abandoned it." })
+    spawn("reverie-rare-sigil", 12, 6, "Rare: Orphaned Sigil", [enemy("Orphaned Sigil", 108, 14, "Tech", "#b9a274", 2, "Seal Bearer")], { respawn: 120, rare: true, lore: "A protection rite that outlived the priest who abandoned it." })
   ] }),
 
-  reverieArchive: map("Reverie - Clergy Archive", "Issue 2", "reverie", [{ x: 8, y: 12, to: "reverieCourt", tx: 8, ty: 5 }], [
+  reverieArchive: map("Reverie - Clergy Archive", "Issue 2", "reverie", [{ x: 8, y: 12, direction: "down", to: "reverieCourt", tx: 10, ty: 5 }], [
     recruitPoint(7, 7, "Kael", [["Kael", "I will keep the seal. Not as obedience. As evidence."], ["Verseborn", "Evidence travels better with witnesses."], ["Kael", "Then I will walk with the Flameguard. Quietly."]], "issue2", "clergyWon"),
     chest(5, 7, "reverie-echo", { gear: "Echo Collector", items: { "Clockwork Tonic": 1 } })
   ], ["B2b - Clergy Archive", "A short moral dungeon interior with a permanent custodian miniboss."], { background: "reverie", collision: "reverie", grid: [3, 4], gridSize: [5, 5], spawns: [
-    spawn("archive-custodian", 11, 7, "Miniboss: Archive Custodian", [enemy("Archive Custodian", 142, 16, "Earth", "#6d5948", 2, "Ash Scribe")], { boss: true, lore: "It files people under the rules they broke." })
+    spawn("archive-custodian", 8, 6, "Miniboss: Archive Custodian", [enemy("Archive Custodian", 142, 16, "Earth", "#6d5948", 2, "Ash Scribe")], { boss: true, lore: "It files people under the rules they broke." })
   ] }),
 
   guildSteps: map("Guildspire - Crown Steps", "Issue 3", "guildspire", [{ x: 1, y: 8, to: "reverieSeal", tx: 13, ty: 8 }, { x: 14, y: 8, to: "guildRegistry", tx: 2, ty: 8 }], [
@@ -1884,7 +1884,7 @@ const maps = {
     chest(4, 8, "guild-fleetglass", { gear: "Fleetglass Circlet", items: { "Ash Ward": 1 } })
   ], ["C2 - Registry", "Main registration, equipment vendor and a branch to the council chamber."], { background: "guildspire-route", panorama: true, view: 1, views: 3, walkable: [[1, 4, 14, 10]], grid: [2, 1], gridSize: [3, 3] }),
 
-  guildHall: map("Guildspire - Audience Hall", "Issue 3", "guildspire", [{ x: 1, y: 8, to: "guildRegistry", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberYard", tx: 2, ty: 8, needs: "registered" }], [
+  guildHall: map("Guildspire - Audience Hall", "Issue 3", "guildspire", [{ x: 1, y: 8, to: "guildRegistry", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberYard", tx: 4, ty: 10, needs: "registered" }], [
     point(8, 6, "Lyrsa", [["Lyrsa", "Mira Veln refusing privilege is still a privilege. Fascinating posture."]]),
     chest(5, 8, "guild-cinderbite", { gear: "Cinderbite Edge", gold: 55 })
   ], ["C3 - Audience Hall", "Political dialogue and a rare archive apparition."], { background: "guildspire-route", panorama: true, view: 2, views: 3, walkable: [[1, 4, 14, 10]], grid: [2, 2], gridSize: [3, 3], spawns: [
@@ -1897,61 +1897,61 @@ const maps = {
     chest(5, 8, "guild-emberwell", { gear: "Emberwell Chain", items: { "Marla's Soup": 2 } })
   ], ["C2b - Council Chamber", "A branch room for Torren's return and later contracts."], { background: "guildspire", collision: "guildspire", grid: [1, 2], gridSize: [3, 3] }),
 
-  emberYard: map("Ember Hall - Training Yard", "Issue 3", "ember", [{ x: 1, y: 8, to: "guildHall", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberHearth", tx: 2, ty: 8 }], [
-    chest(4, 8, "ember-lens", { gear: "Impossible Lens", gold: 60 })
+  emberYard: map("Ember Hall - Training Yard", "Issue 3", "ember", [{ x: 4, y: 12, direction: "down", to: "guildHall", tx: 13, ty: 8 }, { x: 8, y: 6, direction: "right", to: "emberHearth", tx: 9, ty: 6 }], [
+    chest(2, 9, "ember-lens", { gear: "Impossible Lens", gold: 60 })
   ], ["D1 - Training Yard", "A broad home-base field with repeatable training constructs."], { background: "ember-route", panorama: true, view: 0, views: 5, music: "overworld", walkable: [[1, 3, 14, 11]], grid: [0, 2], gridSize: [5, 5], spawns: [
-    spawn("yard-construct", 9, 8, "Training Construct", [enemy("Buried Construct", 78, 11, "Earth", "#6f5540", 1)], { respawn: 22 })
+    spawn("yard-construct", 4, 5, "Training Construct", [enemy("Buried Construct", 78, 11, "Earth", "#6f5540", 1)], { respawn: 22 })
   ] }),
 
-  emberHearth: map("Ember Hall - Hearth Room", "Issue 3", "ember", [{ x: 1, y: 8, to: "emberYard", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberWorkshop", tx: 2, ty: 8 }, { x: 8, y: 11, to: "emberCellar", tx: 8, ty: 11, needs: "torren" }], [
-    chest(4, 8, "ember-bell", { gear: "Elder Ember Bell", items: { "Marla's Soup": 1 } })
+  emberHearth: map("Ember Hall - Hearth Room", "Issue 3", "ember", [{ x: 8, y: 6, direction: "left", to: "emberYard", tx: 7, ty: 6 }, { x: 13, y: 3, direction: "up", to: "emberWorkshop", tx: 7, ty: 10 }, { x: 11, y: 12, direction: "down", to: "emberCellar", tx: 8, ty: 10, needs: "torren" }], [
+    chest(10, 8, "ember-bell", { gear: "Elder Ember Bell", items: { "Marla's Soup": 1 } })
   ], ["D2 - Hearth Room", "The route branches down into the resonance cellar."], { background: "ember-route", panorama: true, view: 1, views: 5, walkable: [[1, 4, 14, 10]], grid: [1, 2], gridSize: [5, 5] }),
 
-  emberWorkshop: map("Ember Hall - Workshop", "Issue 3", "ember", [{ x: 1, y: 8, to: "emberHearth", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberArmory", tx: 2, ty: 8 }], [
+  emberWorkshop: map("Ember Hall - Workshop", "Issue 3", "ember", [{ x: 7, y: 12, direction: "down", to: "emberHearth", tx: 13, ty: 4 }, { x: 10, y: 3, direction: "up", to: "emberArmory", tx: 7, ty: 4 }], [
     recruitPoint(9, 7, "Sparky", [["Sparky", "Prrrp."], ["Verseborn", "You remember that flame, do you not?"], ["Sparky", "Prrrp!"], ["Verseborn", "Tiny dragon. Ancient heart. Absolutely coming with us."]], "sparky", "emberWon"),
     point(11, 7, "Workshop Bench", [["Workshop Bench", "Glimmer labelled every drawer except the one that bites."]], undefined, "sparky", "workshop")
   ], ["D3 - Workshop", "Recruit Sparky, buy crafted gear and inspect Glimmer's machines."], { background: "ember-route", panorama: true, view: 2, views: 5, walkable: [[1, 4, 14, 10]], grid: [2, 2], gridSize: [5, 5] }),
 
-  emberArmory: map("Ember Hall - Armory Passage", "Issue 3", "ember", [{ x: 1, y: 8, to: "emberWorkshop", tx: 13, ty: 8 }, { x: 14, y: 8, to: "emberRoof", tx: 2, ty: 8 }], [
-    chest(5, 8, "ember-roadwarden", { gear: "Roadwarden Plate", items: { "Ash Ward": 1 } })
+  emberArmory: map("Ember Hall - Armory Passage", "Issue 3", "ember", [{ x: 6, y: 4, direction: "up", to: "emberWorkshop", tx: 10, ty: 4 }, { x: 8, y: 5, direction: "up", to: "emberRoof", tx: 10, ty: 6 }], [
+    chest(9, 6, "ember-roadwarden", { gear: "Roadwarden Plate", items: { "Ash Ward": 1 } })
   ], ["D4 - Armory Passage", "A combat-ready branch with respawning equipment husks."], { background: "ember-route", panorama: true, view: 3, views: 5, walkable: [[1, 4, 14, 10]], grid: [3, 2], gridSize: [5, 5], spawns: [
     spawn("armory-pillar", 10, 8, "Cracked Armory Pillar", [enemy("Cracked Pillar", 74, 9, "Tech", "#55473c", 2)], { respawn: 31 })
   ] }),
 
-  emberRoof: map("Ember Hall - Roof Watch", "Issue 3", "ember", [{ x: 1, y: 8, to: "emberArmory", tx: 13, ty: 8 }, { x: 14, y: 8, to: "dawnCauseway", tx: 2, ty: 8, needs: "sparky" }], [
-    chest(5, 8, "ember-echo", { gear: "Echo Collector", gold: 68 })
+  emberRoof: map("Ember Hall - Roof Watch", "Issue 3", "ember", [{ x: 10, y: 6, direction: "left", to: "emberArmory", tx: 8, ty: 6 }, { x: 14, y: 6, direction: "right", to: "dawnCauseway", tx: 2, ty: 8, needs: "sparky" }], [
+    chest(14, 9, "ember-echo", { gear: "Echo Collector", gold: 68 })
   ], ["D5 - Roof Watch", "The home-base grid ends at the road to False Dawn."], { background: "ember-route", panorama: true, view: 4, views: 5, walkable: [[1, 4, 14, 10]], grid: [4, 2], gridSize: [5, 5], spawns: [
-    spawn("roof-rare-memory", 10, 7, "Rare: First Ember Memory", [enemy("First Ember Memory", 124, 16, "Sigil", "#5a2f52", 3, "Ash Wyrm")], { respawn: 145, rare: true, lore: "A dragon memory that recognizes Sparky before anyone else does." })
+    spawn("roof-rare-memory", 11, 7, "Rare: First Ember Memory", [enemy("First Ember Memory", 124, 16, "Sigil", "#5a2f52", 3, "Ash Wyrm")], { respawn: 145, rare: true, lore: "A dragon memory that recognizes Sparky before anyone else does." })
   ] }),
 
-  emberCellar: map("Ember Hall - Resonance Cellar", "Issue 3", "ember", [{ x: 8, y: 12, to: "emberHearth", tx: 8, ty: 10 }], [
+  emberCellar: map("Ember Hall - Resonance Cellar", "Issue 3", "ember", [{ x: 8, y: 12, to: "emberHearth", tx: 11, ty: 10 }], [
     point(6, 7, "Torren", [["Torren", "Tell me what has to stay still."], ["Verseborn", "Us, preferably."]], "ember")
   ], ["D2b - Resonance Cellar", "A permanent story encounter beneath the branching home base."], { background: "ember", collision: "ember", grid: [1, 3], gridSize: [5, 5] }),
 
-  dawnCauseway: map("False Dawn - Storm Causeway", "Issue 4", "alarm", [{ x: 1, y: 8, to: "emberRoof", tx: 13, ty: 8 }, { x: 14, y: 8, to: "dawnStation", tx: 2, ty: 8 }], [
+  dawnCauseway: map("False Dawn - Storm Causeway", "Issue 4", "alarm", [{ x: 1, y: 8, to: "emberRoof", tx: 13, ty: 6 }, { x: 14, y: 8, to: "dawnStation", tx: 2, ty: 8 }], [
     chest(4, 8, "dawn-songbound", { gear: "Songbound Rosin", gold: 72 })
   ], ["E1 - Storm Causeway", "A consistent high-altitude tech dungeon begins."], { background: "dawn-route", panorama: true, view: 0, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [0, 1], gridSize: [3, 3], spawns: [
     spawn("dawn-bell-1", 9, 8, "Wrong Bell Patrol", [enemy("Wrong Bell", 78, 11, "Tech", "#a66a35", 2)], { respawn: 42 })
   ] }),
 
-  dawnStation: map("False Dawn - Calibration Station", "Issue 4", "alarm", [{ x: 1, y: 8, to: "dawnCauseway", tx: 13, ty: 8 }, { x: 14, y: 8, to: "dawnGate", tx: 2, ty: 8 }], [
-    point(4, 7, "Field Clerk", [["Field Clerk", "The central system marked these supplies obsolete. Locally, they still work."], ["Verseborn", "That is becoming a theme."]], undefined, undefined, "dawn"),
+  dawnStation: map("False Dawn - Calibration Station", "Issue 4", "alarm", [{ x: 1, y: 8, direction: "left", to: "dawnCauseway", tx: 13, ty: 8 }, { x: 9, y: 4, direction: "up", to: "dawnGate", tx: 2, ty: 8 }], [
+    point(4, 7, "Harl", [["Harl", "The central system marked these supplies obsolete. Locally, they still work."], ["Verseborn", "That is becoming a theme."]], undefined, undefined, "dawn"),
     chest(6, 8, "dawn-nightneedle", { gear: "Nightneedle Harness", items: { "Clockwork Tonic": 2 } })
   ], ["E2 - Calibration Station", "Side platforms hold regular and rare system remnants."], { background: "dawn-route", panorama: true, view: 1, views: 3, walkable: [[1, 5, 14, 10]], grid: [1, 1], gridSize: [3, 3], spawns: [
     spawn("station-lock-1", 8, 8, "Calibration Husk", [enemy("Gate Lock", 76, 10, "Earth", "#58616b", 1)], { respawn: 45 }),
     spawn("dawn-rare-null", 12, 7, "Rare: Dawn Null", [enemy("Dawn Null", 132, 17, "Sound", "#26353e", 2, "Wrong Bell")], { respawn: 160, rare: true, lore: "A local truth the central alarm failed to overwrite." })
   ] }),
 
-  dawnGate: map("False Dawn - Exterior Gate", "Issue 4", "alarm", [{ x: 1, y: 8, to: "dawnStation", tx: 13, ty: 8 }, { x: 14, y: 8, to: "alarm", tx: 2, ty: 8, needs: "spawn:gate-sentinel" }], [
+  dawnGate: map("False Dawn - Exterior Gate", "Issue 4", "alarm", [{ x: 1, y: 8, to: "dawnStation", tx: 9, ty: 5 }, { x: 14, y: 8, to: "alarm", tx: 2, ty: 6, needs: "spawn:gate-sentinel" }], [
     chest(5, 8, "dawn-emberwell", { gear: "Emberwell Chain", items: { "Ash Ward": 2 } })
   ], ["E3 - Exterior Gate", "The gate sentinel is a miniboss and never respawns."], { background: "dawn-route", panorama: true, view: 2, views: 3, walkable: [[1, 5, 14, 10]], grid: [2, 1], gridSize: [3, 3], spawns: [
     spawn("gate-sentinel", 10, 8, "Miniboss: Dawn Gate Sentinel", [enemy("Dawn Gate Sentinel", 168, 18, "Ancient Fire", "#58616b", 1, "Gate Lock")], { boss: true, lore: "The last lock between command and observation." })
   ] }),
 
-  alarm: map("False Dawn - Alarm Core", "Issue 4", "alarm", [{ x: 1, y: 8, to: "dawnGate", tx: 13, ty: 8 }], [
+  alarm: map("False Dawn - Alarm Core", "Issue 4", "alarm", [{ x: 1, y: 6, direction: "left", to: "dawnGate", tx: 13, ty: 8 }], [
     recruitPoint(5, 7, "Glimmer", [["Glimmer", "The alarm is not broken. It is obeying the wrong truth."], ["Verseborn", "Then we give it a better verse."], ["Glimmer", "Everything stays still except me."], ["Glimmer", "That was an invitation. Keep up."]], "dawn"),
-    point(10, 5, "Glimmer", [["Kaeldrin", "Your rank still stands."], ["Glimmer", "I know. You came back when you needed the machine. They came when they needed me."], ["Glimmer", "Also, the parts bench is open. Do not lick anything glowing."]], "ending", "dawnWon", "workshop"),
-    chest(8, 8, "dawn-fleetglass", { gear: "Fleetglass Circlet", gold: 90 }, "dawnWon")
+    point(11, 5, "Glimmer", [["Kaeldrin", "Your rank still stands."], ["Glimmer", "I know. You came back when you needed the machine. They came when they needed me."], ["Glimmer", "Also, the parts bench is open. Do not lick anything glowing."]], "ending", "dawnWon", "workshop"),
+    chest(12, 8, "dawn-fleetglass", { gear: "Fleetglass Circlet", gold: 90 }, "dawnWon")
   ], ["E4 - Alarm Core", "Story boss and ending; its bosses never join the respawn pool."], { background: "alarm", collision: "alarm", grid: [2, 2], gridSize: [3, 3] })
 };
 
@@ -2002,8 +2002,13 @@ const collisionMasks = {
     [1, 5, 2, 6], [13, 7, 14, 9]
   ],
   reverie: [
-    [1, 1, 5, 4], [10, 1, 14, 4], [7, 1, 8, 2],
-    [1, 5, 3, 7], [12, 5, 14, 7], [1, 9, 5, 12], [10, 9, 14, 12]
+    [1, 2, 5, 3], [10, 2, 14, 3],
+    [1, 4, 4, 4], [11, 4, 14, 4],
+    [5, 4, 6, 5], [9, 4, 10, 5],
+    [3, 6, 4, 7], [10, 6, 12, 7],
+    [5, 8, 6, 9], [9, 8, 10, 9],
+    [1, 8, 4, 9], [11, 8, 14, 9],
+    [1, 10, 5, 11], [10, 10, 14, 11]
   ],
   guildspire: [
     [1, 1, 5, 4], [10, 1, 14, 4], [2, 5, 5, 7],
@@ -2014,8 +2019,30 @@ const collisionMasks = {
     [10, 6, 14, 7], [10, 9, 14, 12], [1, 10, 5, 12]
   ],
   alarm: [
-    [1, 1, 6, 3], [8, 1, 14, 4], [7, 1, 7, 5],
-    [7, 8, 7, 12], [1, 9, 5, 12], [8, 8, 10, 9], [12, 7, 14, 12]
+    [3, 1, 4, 2], [4, 4, 5, 6], [1, 8, 3, 10],
+    [7, 1, 8, 5], [7, 7, 8, 12],
+    [10, 2, 12, 4], [9, 8, 10, 9], [13, 7, 14, 10]
+  ],
+  reverieDorm: [
+    [7, 8, 8, 9], [10, 8, 10, 9], [12, 8, 12, 9]
+  ],
+  reverieSeal: [
+    [9, 3, 10, 5], [14, 3, 14, 5], [9, 7, 9, 9], [13, 7, 14, 8]
+  ],
+  emberYard: [
+    [1, 3, 2, 4],
+    [1, 5, 2, 6], [5, 5, 5, 6],
+    [1, 7, 2, 8], [3, 8, 5, 8],
+    [1, 10, 2, 11], [5, 10, 6, 11]
+  ],
+  emberHearth: [
+    [6, 6, 8, 8], [5, 9, 8, 9], [13, 7, 13, 11]
+  ],
+  emberWorkshop: [
+    [11, 8, 14, 11]
+  ],
+  emberRoof: [
+    [12, 5, 12, 6], [12, 7, 13, 8], [13, 10, 14, 10]
   ]
 };
 
@@ -2023,34 +2050,28 @@ const fieldPathMasks = {
   ashLane: [[1, 5, 14, 8], [7, 5, 9, 7]],
   sootMarket: [[1, 5, 14, 8]],
   ashDock: [[1, 5, 10, 8], [9, 7, 14, 8]],
-  reverieCourt: [[1, 6, 14, 9], [7, 4, 9, 8]],
-  reverieDorm: [[1, 6, 14, 8]],
-  reverieSeal: [[1, 6, 14, 9]],
+  reverieCourt: [[3, 7, 4, 11], [4, 7, 6, 8], [6, 8, 7, 9], [7, 9, 13, 9], [10, 5, 10, 9], [13, 5, 13, 9]],
+  reverieDorm: [[6, 5, 7, 7], [7, 7, 14, 7]],
+  reverieSeal: [[12, 4, 12, 10], [10, 9, 12, 10]],
+  reverieArchive: [[1, 3, 14, 11], [7, 2, 8, 12]],
   guildSteps: [[1, 5, 14, 9]],
   guildRegistry: [[1, 5, 14, 9], [7, 5, 9, 11]],
   guildHall: [[1, 5, 14, 9]],
-  emberYard: [[1, 6, 14, 9], [5, 4, 11, 10]],
-  emberHearth: [[1, 5, 14, 9], [7, 3, 9, 11]],
-  emberWorkshop: [[1, 6, 14, 9]],
-  emberArmory: [[1, 6, 14, 9]],
-  emberRoof: [[1, 5, 14, 9]],
+  emberYard: [[1, 4, 6, 10], [3, 10, 4, 12], [6, 6, 8, 6]],
+  emberHearth: [[8, 6, 12, 6], [9, 5, 12, 11], [11, 10, 11, 12], [13, 3, 13, 5]],
+  emberWorkshop: [[6, 5, 10, 10], [7, 10, 7, 12], [10, 3, 10, 7], [10, 6, 12, 7]],
+  emberArmory: [[6, 4, 8, 6], [7, 5, 11, 6], [10, 6, 11, 8]],
+  emberRoof: [[10, 5, 14, 10], [10, 4, 10, 6], [14, 6, 14, 9]],
   dawnCauseway: [[1, 7, 9, 8], [8, 5, 14, 9]],
-  dawnStation: [[1, 7, 6, 8], [5, 5, 9, 8], [6, 4, 13, 6], [12, 5, 14, 8]],
-  dawnGate: [[1, 7, 8, 8], [7, 4, 10, 8], [9, 3, 14, 8]]
+  dawnStation: [[1, 7, 5, 8], [5, 8, 9, 8], [8, 7, 10, 8], [9, 4, 10, 8], [10, 7, 14, 8]],
+  dawnGate: [[1, 7, 8, 8], [7, 4, 10, 8], [9, 3, 14, 8]],
+  alarm: [[1, 6, 6, 7], [3, 3, 6, 10], [5, 3, 6, 4], [5, 7, 7, 10], [6, 6, 9, 6], [8, 6, 13, 10], [10, 4, 13, 7], [10, 1, 13, 4]]
 };
 
-// Redraw the front edge of existing scenery after actors so they can walk
-// naturally behind tables, rails, planters, and machinery.
 const mapForegroundZones = {
   lantern: [
     [52, 164, 48, 29],
     [149, 179, 65, 29]
-  ],
-  reverieArchive: [
-    [44, 101, 43, 36],
-    [173, 108, 47, 33],
-    [84, 138, 23, 24],
-    [149, 138, 23, 24]
   ],
   guildCouncil: [
     [39, 82, 55, 42],
@@ -2060,11 +2081,6 @@ const mapForegroundZones = {
   emberCellar: [
     [25, 83, 70, 36],
     [156, 111, 82, 53]
-  ],
-  alarm: [
-    [9, 92, 51, 32],
-    [105, 91, 45, 37],
-    [178, 48, 68, 49]
   ]
 };
 
@@ -2636,6 +2652,13 @@ function updateWorldEnemyRender(spawnPoint) {
   spawnPoint.fieldMoving = moving;
 }
 
+function exitDirection(exit) {
+  if (exit.direction) return exit.direction;
+  if (exit.x <= 1) return "left";
+  if (exit.x >= 14) return "right";
+  return exit.y >= 10 ? "down" : "up";
+}
+
 function drawExitMarkers() {
   const offsetY = fieldRenderOffsetY();
   const nextExit = objectiveExit();
@@ -2646,19 +2669,20 @@ function drawExitMarkers() {
     const centerX = exit.x * TILE + 8;
     const centerY = exit.y * TILE + 8 + offsetY;
     const color = objective ? "#fff1a3" : unlocked ? "#d5aa68aa" : "#7b667088";
+    const direction = exitDirection(exit);
     let symbol = "^^", x = centerX, y = centerY + phase;
-    if (exit.x <= 1) { symbol = "<<"; x = centerX + phase; y = centerY; }
-    else if (exit.x >= 14) { symbol = ">>"; x = centerX - phase; y = centerY; }
-    else if (exit.y >= 10) { symbol = "vv"; y = centerY - phase; }
+    if (direction === "left") { symbol = "<<"; x = centerX + phase; y = centerY; }
+    else if (direction === "right") { symbol = ">>"; x = centerX - phase; y = centerY; }
+    else if (direction === "down") { symbol = "vv"; y = centerY - phase; }
     const edge = objective ? "#ffd66d" : unlocked ? "#d59b4277" : "#4f424877";
-    if (exit.x <= 1 || exit.x >= 14) {
+    if (direction === "left" || direction === "right") {
       drawRect(centerX - 9, centerY - 9, 18, 18, "#100d1599");
-      drawRect(centerX + (exit.x <= 1 ? 7 : -8), centerY - 10, 1, 20, edge);
-      drawRect(centerX + (exit.x <= 1 ? 5 : -6), centerY - 7, 1, 14, `${edge.slice(0, 7)}55`);
+      drawRect(centerX + (direction === "left" ? 7 : -8), centerY - 10, 1, 20, edge);
+      drawRect(centerX + (direction === "left" ? 5 : -6), centerY - 7, 1, 14, `${edge.slice(0, 7)}55`);
     } else {
       drawRect(centerX - 9, centerY - 8, 18, 16, "#100d1599");
-      drawRect(centerX - 10, centerY + (exit.y >= 10 ? -7 : 6), 20, 1, edge);
-      drawRect(centerX - 7, centerY + (exit.y >= 10 ? -5 : 4), 14, 1, `${edge.slice(0, 7)}55`);
+      drawRect(centerX - 10, centerY + (direction === "down" ? -7 : 6), 20, 1, edge);
+      drawRect(centerX - 7, centerY + (direction === "down" ? -5 : 4), 14, 1, `${edge.slice(0, 7)}55`);
     }
     drawText(symbol, x, y, color, 7, "center");
     if (objective) drawText("!", centerX, centerY - 9, "#fff1a3", 7, "center");
@@ -3120,6 +3144,12 @@ function titleMenuPointerIndex(event) {
 }
 
 function drawTileMap() {
+  if (new URLSearchParams(location.search).has("qa")) {
+    canvas.dataset.qaMap = state.map;
+    canvas.dataset.qaPosition = `${state.x},${state.y}`;
+    canvas.dataset.qaDestination = fieldDestination ? `${fieldDestination.x},${fieldDestination.y}` : "";
+    canvas.dataset.qaMode = mode;
+  }
   if (screenSlide) {
     drawScreenSlide();
     return;
@@ -3131,6 +3161,7 @@ function drawTileMap() {
   if (background) drawMapBackground(map, background);
   else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, p[2]);
   drawAmbient(map.set, map.panorama);
+  drawQaNavigationOverlay();
   drawExitMarkers();
   updateRenderPosition();
   const spawns = visibleSpawns();
@@ -3228,6 +3259,23 @@ function drawMapForeground(map, image) {
     const sh = Math.max(1, Math.round(height / LOGICAL_HEIGHT * source.height));
     ctx.drawImage(image, sx, sy, sw, sh, x, y, width, height);
   });
+  ctx.restore();
+}
+
+function drawQaNavigationOverlay() {
+  if (new URLSearchParams(location.search).get("qaGrid") !== "1") return;
+  const offsetY = fieldRenderOffsetY();
+  ctx.save();
+  ctx.lineWidth = 1;
+  for (let y = 1; y <= 12; y++) {
+    for (let x = 1; x <= 14; x++) {
+      const passableTile = terrainPassable(x, y);
+      ctx.fillStyle = passableTile ? "#24c96b22" : "#e23b4d38";
+      ctx.strokeStyle = passableTile ? "#72f0a688" : "#ff849088";
+      ctx.fillRect(x * TILE, y * TILE + offsetY, TILE, TILE);
+      ctx.strokeRect(x * TILE + .5, y * TILE + offsetY + .5, TILE - 1, TILE - 1);
+    }
+  }
   ctx.restore();
 }
 
@@ -4199,7 +4247,8 @@ function passable(x, y) {
 function exitAtPosition(x, y) {
   return currentMap().exits.find(exit => {
     if (exit.needs && !state.flags[exit.needs]) return false;
-    if (exit.x <= 1 || exit.x >= 14) return x === exit.x && Math.abs(y - exit.y) <= 1;
+    const direction = exitDirection(exit);
+    if (direction === "left" || direction === "right") return x === exit.x && Math.abs(y - exit.y) <= 1;
     return y === exit.y && Math.abs(x - exit.x) <= 1;
   });
 }
@@ -6955,7 +7004,8 @@ function runQaChecks() {
     const passableApproaches = (mapId, x, y) => cardinalTiles(x, y).filter(tile => terrainPassable(tile.x, tile.y, mapId));
     const exitApproaches = (mapId, exit) => {
       const triggerTiles = [];
-      if (exit.x <= 1 || exit.x >= 14) {
+      const direction = exitDirection(exit);
+      if (direction === "left" || direction === "right") {
         for (let y = exit.y - 1; y <= exit.y + 1; y++) triggerTiles.push({ x: exit.x, y });
       } else {
         for (let x = exit.x - 1; x <= exit.x + 1; x++) triggerTiles.push({ x, y: exit.y });
@@ -7009,6 +7059,44 @@ function runQaChecks() {
     check("map-point-approaches", pointProblems.length === 0, pointProblems.join(","));
     check("map-exit-approaches", exitProblems.length === 0, exitProblems.join(","));
     check("map-route-connectivity", routeProblems.length === 0, routeProblems.join(","));
+    const staleForegroundMaps = ["reverieArchive", "alarm"].filter(mapId => mapForegroundZones[mapId]?.length);
+    check("map-no-stale-foreground-overlays", staleForegroundMaps.length === 0, staleForegroundMaps.join(","));
+    const stationHarl = maps.dawnStation.points.find(pointData => pointData.id === "Harl");
+    check("map-harl-sprite-and-vendor", stationHarl?.vendor === "dawn");
+
+    const blockedVisualAnchors = [
+      ["reverieCourt", 11, 3],
+      ["reverieCourt", 8, 8],
+      ["reverieArchive", 3, 6],
+      ["reverieDorm", 9, 8],
+      ["emberYard", 9, 7],
+      ["emberYard", 6, 3],
+      ["emberHearth", 7, 7],
+      ["emberWorkshop", 5, 7],
+      ["emberWorkshop", 12, 9],
+      ["emberArmory", 9, 9],
+      ["emberArmory", 14, 7],
+      ["emberRoof", 8, 7],
+      ["emberRoof", 12, 7],
+      ["dawnStation", 7, 5],
+      ["alarm", 8, 8]
+    ];
+    const openVisualAnchors = [
+      ["reverieCourt", 4, 8],
+      ["reverieArchive", 8, 7],
+      ["emberYard", 4, 5],
+      ["emberHearth", 10, 8],
+      ["emberWorkshop", 9, 7],
+      ["emberArmory", 10, 8],
+      ["emberRoof", 11, 7],
+      ["dawnStation", 9, 7],
+      ["alarm", 12, 8]
+    ];
+    const visualCollisionProblems = [
+      ...blockedVisualAnchors.filter(([mapId, x, y]) => terrainPassable(x, y, mapId)).map(([mapId, x, y]) => `${mapId}:${x},${y}:open`),
+      ...openVisualAnchors.filter(([mapId, x, y]) => !terrainPassable(x, y, mapId)).map(([mapId, x, y]) => `${mapId}:${x},${y}:blocked`)
+    ];
+    check("map-visual-collision-anchors", visualCollisionProblems.length === 0, visualCollisionProblems.join(","));
 
     const clickRouteBackup = {
       mode,
@@ -7022,15 +7110,16 @@ function runQaChecks() {
     };
     mode = "walk";
     battle = null;
-    state.map = "reverieDorm";
-    state.x = 2;
-    state.y = 8;
+    state.map = "emberHearth";
+    state.x = 9;
+    state.y = 9;
     state.renderX = state.x * TILE;
     state.renderY = state.y * TILE;
     fieldDestination = null;
-    handleFieldTap(14 * TILE + TILE / 2, 8 * TILE + fieldRenderOffsetY() + TILE / 2);
-    const clickStepDistance = Math.abs(state.x - 2) + Math.abs(state.y - 8);
-    check("map-click-walks-before-transition", state.map === "reverieDorm" && clickStepDistance === 1 && fieldDestination?.map === "reverieDorm");
+    const clickExit = maps.emberHearth.exits.find(exit => exit.to === "emberWorkshop");
+    handleFieldTap(clickExit.x * TILE + TILE / 2, clickExit.y * TILE + fieldRenderOffsetY() + TILE / 2);
+    const clickStepDistance = Math.abs(state.x - 9) + Math.abs(state.y - 9);
+    check("map-click-walks-before-transition", state.map === "emberHearth" && clickStepDistance === 1 && fieldDestination?.map === "emberHearth");
     mode = clickRouteBackup.mode;
     battle = clickRouteBackup.battle;
     state.map = clickRouteBackup.map;
@@ -7039,6 +7128,45 @@ function runQaChecks() {
     state.renderX = clickRouteBackup.renderX;
     state.renderY = clickRouteBackup.renderY;
     fieldDestination = clickRouteBackup.destination;
+
+    const yardClickBackup = {
+      mode,
+      battle,
+      screenSlide,
+      map: state.map,
+      x: state.x,
+      y: state.y,
+      renderX: state.renderX,
+      renderY: state.renderY,
+      destination: fieldDestination,
+      spawnFlag: state.flags["spawn:yard-construct"]
+    };
+    mode = "walk";
+    battle = null;
+    screenSlide = null;
+    state.map = "emberYard";
+    state.x = 4;
+    state.y = 9;
+    state.renderX = state.x * TILE;
+    state.renderY = state.y * TILE;
+    state.flags["spawn:yard-construct"] = true;
+    fieldDestination = null;
+    const yardDoor = maps.emberYard.exits.find(exit => exit.to === "emberHearth");
+    handleFieldTap(yardDoor.x * TILE + TILE / 2, yardDoor.y * TILE + fieldRenderOffsetY() + TILE / 2);
+    const yardFirstStep = state.map === "emberYard" && Boolean(fieldDestination);
+    for (let routeStep = 0; routeStep < 24 && state.map === "emberYard" && fieldDestination; routeStep++) advanceFieldDestination();
+    check("map-click-route-completes-at-door", yardFirstStep && state.map === "emberHearth" && state.x === 9 && state.y === 6);
+    mode = yardClickBackup.mode;
+    battle = yardClickBackup.battle;
+    screenSlide = yardClickBackup.screenSlide;
+    state.map = yardClickBackup.map;
+    state.x = yardClickBackup.x;
+    state.y = yardClickBackup.y;
+    state.renderX = yardClickBackup.renderX;
+    state.renderY = yardClickBackup.renderY;
+    fieldDestination = yardClickBackup.destination;
+    if (yardClickBackup.spawnFlag === undefined) delete state.flags["spawn:yard-construct"];
+    else state.flags["spawn:yard-construct"] = yardClickBackup.spawnFlag;
 
     const spawnProblems = Object.entries(maps).flatMap(([mapId, map]) => (map.spawns || []).filter(spawnPoint => {
       const reserved = map.points.some(pointData => pointData.x === spawnPoint.x && pointData.y === spawnPoint.y)
@@ -7185,7 +7313,9 @@ function runQaChecks() {
       mode = "walk";
       battle = null;
       state.map = mapId;
+      maps[mapId].exits.forEach(exit => { if (exit.needs) state.flags[exit.needs] = true; });
       maps[mapId].points.forEach(pointData => { if (pointData.needs) state.flags[pointData.needs] = true; });
+      maps[mapId].spawns.forEach(spawnPoint => { state.flags[`spawn:${spawnPoint.id}`] = true; });
       const entry = nearestMapEntry(mapId, Number(qaParams.get("x")) || 8, Number(qaParams.get("y")) || 8);
       state.x = entry.x;
       state.y = entry.y;
