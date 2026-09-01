@@ -232,6 +232,7 @@ const battleSpriteHeights = {
   Verseborn: 54, Mira: 56, Sparky: 44, Glimmer: 52, GlimmerMech: 62,
   Kael: 58, KaelShadow: 62, Torren: 57, Seerin: 56
 };
+const BATTLE_IDLE_FRAME_TICKS = 36;
 const battleFrameSequences = {
   Verseborn: { idle: [1, 2, 1, 2] },
   Mira: {
@@ -2926,7 +2927,7 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const duration = Math.max(1, activeEffect?.duration || 24);
   const progress = activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
   const defaultColumn = animation === "idle"
-    ? [0, 1, 2, 3, 2, 1][Math.floor((frame + (unit.id?.length || 0) * 3) / 12) % 6]
+    ? [0, 1, 2, 3, 2, 1][Math.floor((frame + (unit.id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS) % 6]
     : animation === "death"
       ? sheet.columns - 1
       : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
@@ -3734,9 +3735,9 @@ function drawFalseDawn(p) {
 }
 
 const battlePartyLayouts = {
-  1: [[82, 124]],
-  2: [[77, 108], [101, 140]],
-  3: [[75, 104], [98, 132], [75, 160]]
+  1: [[72, 124]],
+  2: [[62, 108], [82, 140]],
+  3: [[58, 104], [84, 132], [58, 160]]
 };
 const BATTLE_ARENA_HEIGHT = 188;
 
