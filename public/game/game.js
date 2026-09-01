@@ -1936,7 +1936,7 @@ const maps = {
 
   dawnStation: map("False Dawn - Calibration Station", "Issue 4", "alarm", [{ x: 1, y: 8, direction: "left", to: "dawnCauseway", tx: 13, ty: 8 }, { x: 9, y: 4, direction: "up", to: "dawnGate", tx: 2, ty: 8 }], [
     point(4, 7, "Harl", [["Harl", "The central system marked these supplies obsolete. Locally, they still work."], ["Verseborn", "That is becoming a theme."]], undefined, undefined, "dawn"),
-    chest(6, 8, "dawn-nightneedle", { gear: "Nightneedle Harness", items: { "Clockwork Tonic": 2 } })
+    chest(5, 7, "dawn-nightneedle", { gear: "Nightneedle Harness", items: { "Clockwork Tonic": 2 } })
   ], ["E2 - Calibration Station", "Side platforms hold regular and rare system remnants."], { background: "dawn-route", panorama: true, view: 1, views: 3, walkable: [[1, 5, 14, 10]], grid: [1, 1], gridSize: [3, 3], spawns: [
     spawn("station-lock-1", 8, 8, "Calibration Husk", [enemy("Gate Lock", 76, 10, "Earth", "#58616b", 1)], { respawn: 45 }),
     spawn("dawn-rare-null", 12, 7, "Rare: Dawn Null", [enemy("Dawn Null", 132, 17, "Sound", "#26353e", 2, "Wrong Bell")], { respawn: 160, rare: true, lore: "A local truth the central alarm failed to overwrite." })
@@ -2042,7 +2042,7 @@ const collisionMasks = {
     [11, 8, 14, 11]
   ],
   emberRoof: [
-    [12, 5, 12, 6], [12, 7, 13, 8], [13, 10, 14, 10]
+    [12, 5, 12, 6], [12, 8, 13, 8], [13, 10, 14, 10]
   ]
 };
 
@@ -7001,7 +7001,9 @@ function runQaChecks() {
     check("map-branch-single-visible-entry", branchRouteProblems.length === 0, branchRouteProblems.join(","));
 
     const cardinalTiles = (x, y) => fieldDirections.map(([dx, dy]) => ({ x: x + dx, y: y + dy }));
-    const passableApproaches = (mapId, x, y) => cardinalTiles(x, y).filter(tile => terrainPassable(tile.x, tile.y, mapId));
+    const routeTilePassable = (mapId, x, y) => terrainPassable(x, y, mapId)
+      && !maps[mapId].points.some(pointData => pointData.x === x && pointData.y === y);
+    const passableApproaches = (mapId, x, y) => cardinalTiles(x, y).filter(tile => routeTilePassable(mapId, tile.x, tile.y));
     const exitApproaches = (mapId, exit) => {
       const triggerTiles = [];
       const direction = exitDirection(exit);
@@ -7013,7 +7015,7 @@ function runQaChecks() {
       const seen = new Set();
       return triggerTiles.flatMap(tile => cardinalTiles(tile.x, tile.y)).filter(tile => {
         const key = fieldTileKey(tile.x, tile.y);
-        if (seen.has(key) || !terrainPassable(tile.x, tile.y, mapId)) return false;
+        if (seen.has(key) || !routeTilePassable(mapId, tile.x, tile.y)) return false;
         seen.add(key);
         return true;
       });
@@ -7024,7 +7026,7 @@ function runQaChecks() {
       for (let index = 0; index < queue.length; index++) {
         cardinalTiles(queue[index].x, queue[index].y).forEach(tile => {
           const key = fieldTileKey(tile.x, tile.y);
-          if (reachable.has(key) || !terrainPassable(tile.x, tile.y, mapId)) return;
+          if (reachable.has(key) || !routeTilePassable(mapId, tile.x, tile.y)) return;
           reachable.add(key);
           queue.push(tile);
         });
@@ -7077,7 +7079,6 @@ function runQaChecks() {
       ["emberArmory", 9, 9],
       ["emberArmory", 14, 7],
       ["emberRoof", 8, 7],
-      ["emberRoof", 12, 7],
       ["dawnStation", 7, 5],
       ["alarm", 8, 8]
     ];
@@ -7089,6 +7090,7 @@ function runQaChecks() {
       ["emberWorkshop", 9, 7],
       ["emberArmory", 10, 8],
       ["emberRoof", 11, 7],
+      ["emberRoof", 12, 7],
       ["dawnStation", 9, 7],
       ["alarm", 12, 8]
     ];
@@ -7167,6 +7169,55 @@ function runQaChecks() {
     fieldDestination = yardClickBackup.destination;
     if (yardClickBackup.spawnFlag === undefined) delete state.flags["spawn:yard-construct"];
     else state.flags["spawn:yard-construct"] = yardClickBackup.spawnFlag;
+
+    const roofMemory = maps.emberRoof.spawns.find(spawnPoint => spawnPoint.id === "roof-rare-memory");
+    const roofRouteBackup = {
+      mode,
+      battle,
+      screenSlide,
+      map: state.map,
+      x: state.x,
+      y: state.y,
+      renderX: state.renderX,
+      renderY: state.renderY,
+      destination: fieldDestination,
+      sparkyFlag: state.flags.sparky,
+      memoryAvailable: roofMemory.available,
+      memoryReturnAt: roofMemory.returnAt,
+      memoryRetryAt: roofMemory.retryAt
+    };
+    mode = "walk";
+    battle = null;
+    screenSlide = null;
+    state.map = "emberRoof";
+    state.x = 10;
+    state.y = 7;
+    state.renderX = state.x * TILE;
+    state.renderY = state.y * TILE;
+    state.flags.sparky = true;
+    roofMemory.available = false;
+    roofMemory.returnAt = Date.now() + 60000;
+    roofMemory.retryAt = 0;
+    fieldDestination = null;
+    const roofExit = maps.emberRoof.exits.find(exit => exit.to === "dawnCauseway");
+    handleFieldTap(roofExit.x * TILE + TILE / 2, roofExit.y * TILE + fieldRenderOffsetY() + TILE / 2);
+    const roofFirstStep = state.map === "emberRoof" && Boolean(fieldDestination);
+    for (let routeStep = 0; routeStep < 24 && state.map === "emberRoof" && fieldDestination; routeStep++) advanceFieldDestination();
+    check("map-roof-post-dragon-route", roofFirstStep && state.map === "dawnCauseway" && state.x === 2 && state.y === 8);
+    mode = roofRouteBackup.mode;
+    battle = roofRouteBackup.battle;
+    screenSlide = roofRouteBackup.screenSlide;
+    state.map = roofRouteBackup.map;
+    state.x = roofRouteBackup.x;
+    state.y = roofRouteBackup.y;
+    state.renderX = roofRouteBackup.renderX;
+    state.renderY = roofRouteBackup.renderY;
+    fieldDestination = roofRouteBackup.destination;
+    if (roofRouteBackup.sparkyFlag === undefined) delete state.flags.sparky;
+    else state.flags.sparky = roofRouteBackup.sparkyFlag;
+    roofMemory.available = roofRouteBackup.memoryAvailable;
+    roofMemory.returnAt = roofRouteBackup.memoryReturnAt;
+    roofMemory.retryAt = roofRouteBackup.memoryRetryAt;
 
     const spawnProblems = Object.entries(maps).flatMap(([mapId, map]) => (map.spawns || []).filter(spawnPoint => {
       const reserved = map.points.some(pointData => pointData.x === spawnPoint.x && pointData.y === spawnPoint.y)
