@@ -23,6 +23,9 @@ class Row:
     hide_after: int | None = None
     clear_bottom: int = 0
     alpha_threshold: int = 160
+    clear_top: int = 48
+    clear_left: int = 145
+    center_offset: int = 95
 
 
 SHEETS = {
@@ -36,6 +39,19 @@ SHEETS = {
             Row(810, 1080, (120, 365, 625, 890)),
             Row(1075, 1390, (115, 350, 610, 885)),
             Row(1370, 1536, (90, 285, 485, 685, 910)),
+        ],
+        "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
+    },
+    "Mira": {
+        "source": TEMP / "codex-clipboard-91b4c59e-860d-4307-9fd7-e9a42f80f02a.png",
+        "file": "mira.png",
+        "rows": [
+            Row(240, 405, (105, 270, 440, 605), 720, clear_top=0, clear_left=0, center_offset=0),
+            Row(455, 600, (105, 375, 625, 900), clear_top=0, clear_left=0, center_offset=0),
+            Row(655, 820, (105, 330, 570, 815, 1000), clear_top=0, clear_left=0, center_offset=0),
+            Row(875, 1035, (110, 365, 625, 900), clear_top=0, clear_left=0, center_offset=0),
+            Row(1090, 1265, (110, 375, 660, 925), clear_top=0, clear_left=0, center_offset=0),
+            Row(1320, 1448, (95, 300, 515, 735, 970), clear_top=0, clear_left=0, center_offset=0),
         ],
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
@@ -212,17 +228,21 @@ def row_groups(image: Image.Image, row: Row) -> list[dict[str, object]]:
     # still lays its animation beats left-to-right, so split only the usable artwork
     # area. Masking the label strip prevents headings and divider bars becoming
     # sprites; keeping every frame on a larger destination canvas prevents clipping.
-    alpha[:48, :] = False
-    alpha[:, :145] = False
+    if row.clear_top:
+        alpha[:row.clear_top, :] = False
+    if row.clear_left:
+        alpha[:, :row.clear_left] = False
     if row.clear_bottom:
         alpha[-row.clear_bottom:, :] = False
     if row.hide_after is not None:
         alpha[:, row.hide_after:] = False
-    centers = tuple(min(center + 95, image.width - 48) for center in row.centers)
+    centers = tuple(min(center + row.center_offset, image.width - 48) for center in row.centers)
     components: list[dict[str, object]] = []
     for runs in connected_runs(alpha):
         metrics = component_metrics(runs)
         if metrics["area"] < 8:
+            continue
+        if row.clear_top == 0 and metrics["max_y"] < 32:
             continue
         # The presentation sheets contain long ornamental row dividers. Some
         # begin just below the label mask and are otherwise close enough to a

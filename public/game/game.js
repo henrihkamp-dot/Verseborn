@@ -229,18 +229,26 @@ const walkSpriteSheets = {};
 const animationSheets = {};
 const battleAnimationSheets = {};
 const battleSpriteHeights = {
-  Verseborn: 54, Sparky: 44, Glimmer: 52, GlimmerMech: 62,
+  Verseborn: 54, Mira: 56, Sparky: 44, Glimmer: 52, GlimmerMech: 62,
   Kael: 58, KaelShadow: 62, Torren: 57, Seerin: 56
 };
 const battleFrameSequences = {
-  Verseborn: { idle: [1, 1, 1, 1, 1] },
-  Sparky: { idle: [1, 1, 1, 1, 1] },
-  Glimmer: { idle: [1, 1, 1, 1, 1], ultimate1: [1, 1, 2, 3, 3], ultimate2: [1, 2, 3, 3, 3] },
-  GlimmerMech: { idle: [1, 1, 1, 1, 1] },
-  KaelShadow: { idle: [1, 1, 1, 1, 1] },
-  Torren: { idle: [1, 1, 1, 1, 1] },
-  Seerin: { idle: [1, 1, 1, 1, 1] },
-  Kael: { idle: [1, 1, 1, 1, 1], melee: [0, 1, 4, 1, 0], block: [0, 1, 4, 1, 0], ultimate2: [1, 1, 2, 3, 4] }
+  Verseborn: { idle: [1, 2, 1, 2] },
+  Mira: {
+    idle: [0, 1, 2, 3],
+    melee: [0, 0, 1, 2, 3],
+    block: [0, 0, 1, 3, 4],
+    magic: [0, 0, 1, 3, 4],
+    ultimate1: [0, 0, 1, 2, 3],
+    ultimate2: [0, 0, 1, 2, 3]
+  },
+  Sparky: { idle: [1, 2, 1, 2] },
+  Glimmer: { idle: [1, 2, 1, 2], ultimate1: [1, 1, 2, 3, 3], ultimate2: [1, 2, 3, 3, 3] },
+  GlimmerMech: { idle: [1, 2, 1, 2] },
+  KaelShadow: { idle: [1, 2, 1, 2] },
+  Torren: { idle: [1, 2, 1, 2] },
+  Seerin: { idle: [1, 2, 1, 2] },
+  Kael: { idle: [1, 2, 1, 2], melee: [0, 1, 4, 1, 0], block: [0, 1, 4, 1, 0], ultimate2: [1, 1, 2, 3, 4] }
 };
 const npcBattleSheets = {};
 const animatedNpcFiles = {
@@ -483,7 +491,7 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
 
 async function loadBattleAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/battle/manifest.json?v=flame-guard-27j");
+    const response = await fetch("assets/sprites/battle/manifest.json?v=flame-guard-28a");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -493,7 +501,7 @@ async function loadBattleAnimationSheets() {
         resolve();
       };
       image.onerror = resolve;
-      image.src = `assets/sprites/battle/${config.file}?v=flame-guard-27j`;
+      image.src = `assets/sprites/battle/${config.file}?v=flame-guard-28a`;
     })));
   } catch (_) {
     // Stable world sprites remain the fallback if a battle-only asset fails.
@@ -2918,7 +2926,7 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const duration = Math.max(1, activeEffect?.duration || 24);
   const progress = activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
   const defaultColumn = animation === "idle"
-    ? [0, 1, 2, 1][Math.floor((frame + (unit.id?.length || 0) * 3) / 12) % 4]
+    ? [0, 1, 2, 3, 2, 1][Math.floor((frame + (unit.id?.length || 0) * 3) / 12) % 6]
     : animation === "death"
       ? sheet.columns - 1
       : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
@@ -3726,9 +3734,9 @@ function drawFalseDawn(p) {
 }
 
 const battlePartyLayouts = {
-  1: [[92, 124]],
-  2: [[86, 108], [117, 140]],
-  3: [[90, 104], [121, 132], [90, 160]]
+  1: [[82, 124]],
+  2: [[77, 108], [101, 140]],
+  3: [[75, 104], [98, 132], [75, 160]]
 };
 const BATTLE_ARENA_HEIGHT = 188;
 

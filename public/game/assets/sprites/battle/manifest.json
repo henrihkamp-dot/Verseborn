@@ -17,6 +17,24 @@
       "death": 5
     }
   },
+  "Mira": {
+    "file": "mira.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 480,
+    "cellHeight": 256,
+    "baseline": 242,
+    "referenceHeight": 165,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
   "Sparky": {
     "file": "sparky.png",
     "columns": 5,
