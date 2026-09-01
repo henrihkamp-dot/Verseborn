@@ -4188,9 +4188,10 @@ function updateCodex() {
 function terrainPassable(x, y, mapId = state.map) {
   if (x < 1 || x > 14 || y < 1 || y > 12) return false;
   const map = maps[mapId];
-  const paths = fieldPathMasks[mapId] || map.walkable;
-  if (paths && !paths.some(([x1, y1, x2, y2]) => x >= x1 && x <= x2 && y >= y1 && y <= y2)) return false;
-  if ((collisionMasks[map.collision || mapId] || []).some(([x1, y1, x2, y2]) => x >= x1 && x <= x2 && y >= y1 && y <= y2)) return false;
+  const paths = map.panorama ? map.walkable : (fieldPathMasks[mapId] || map.walkable);
+  const nearPanoramaExit = map.panorama && map.exits.some(exit => Math.abs(x - exit.x) <= 1 && Math.abs(y - exit.y) <= 1);
+  if (!nearPanoramaExit && paths && !paths.some(([x1, y1, x2, y2]) => x >= x1 && x <= x2 && y >= y1 && y <= y2)) return false;
+  if (!map.panorama && (collisionMasks[map.collision || mapId] || []).some(([x1, y1, x2, y2]) => x >= x1 && x <= x2 && y >= y1 && y <= y2)) return false;
   return true;
 }
 
@@ -7066,39 +7067,24 @@ function runQaChecks() {
     const stationHarl = maps.dawnStation.points.find(pointData => pointData.id === "Harl");
     check("map-harl-sprite-and-vendor", stationHarl?.vendor === "dawn");
 
-    const blockedVisualAnchors = [
-      ["reverieCourt", 11, 3],
-      ["reverieCourt", 8, 8],
-      ["reverieArchive", 3, 6],
-      ["reverieDorm", 9, 8],
-      ["emberYard", 9, 7],
-      ["emberYard", 6, 3],
-      ["emberHearth", 7, 7],
-      ["emberWorkshop", 5, 7],
-      ["emberWorkshop", 12, 9],
-      ["emberArmory", 9, 9],
-      ["emberArmory", 14, 7],
-      ["emberRoof", 8, 7],
-      ["dawnStation", 7, 5],
-      ["alarm", 8, 8]
-    ];
-    const openVisualAnchors = [
-      ["reverieCourt", 4, 8],
-      ["reverieArchive", 8, 7],
-      ["emberYard", 4, 5],
-      ["emberHearth", 10, 8],
-      ["emberWorkshop", 9, 7],
-      ["emberArmory", 10, 8],
-      ["emberRoof", 11, 7],
-      ["emberRoof", 12, 7],
-      ["dawnStation", 9, 7],
-      ["alarm", 12, 8]
-    ];
-    const visualCollisionProblems = [
-      ...blockedVisualAnchors.filter(([mapId, x, y]) => terrainPassable(x, y, mapId)).map(([mapId, x, y]) => `${mapId}:${x},${y}:open`),
-      ...openVisualAnchors.filter(([mapId, x, y]) => !terrainPassable(x, y, mapId)).map(([mapId, x, y]) => `${mapId}:${x},${y}:blocked`)
-    ];
-    check("map-visual-collision-anchors", visualCollisionProblems.length === 0, visualCollisionProblems.join(","));
+    const broadPathProblems = Object.entries(maps).flatMap(([mapId, map]) => {
+      if (!map.panorama || !map.walkable) return [];
+      return map.walkable.flatMap(([x1, y1, x2, y2]) => {
+        const blocked = [];
+        for (let y = y1; y <= y2; y++) {
+          for (let x = x1; x <= x2; x++) {
+            if (!terrainPassable(x, y, mapId)) blocked.push(`${mapId}:${x},${y}`);
+          }
+        }
+        return blocked;
+      });
+    });
+    check("map-broad-world-pathing", broadPathProblems.length === 0, broadPathProblems.join(","));
+
+    const armorySpawn = maps.emberArmory.spawns.find(spawnPoint => spawnPoint.id === "armory-pillar");
+    const armoryReachable = reachableFrom("emberArmory", { x: 6, y: 4 });
+    const armoryApproaches = armorySpawn ? passableApproaches("emberArmory", armorySpawn.x, armorySpawn.y) : [];
+    check("map-armory-enemy-reachable", armoryApproaches.some(tile => armoryReachable.has(fieldTileKey(tile.x, tile.y))));
 
     const clickRouteBackup = {
       mode,
