@@ -1,0 +1,146 @@
+{
+  "Verseborn": {
+    "file": "verseborn.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 544,
+    "cellHeight": 320,
+    "baseline": 306,
+    "referenceHeight": 156,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "Sparky": {
+    "file": "sparky.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 736,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 135,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "Glimmer": {
+    "file": "glimmer.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 768,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 165,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "GlimmerMech": {
+    "file": "glimmer-mech.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 672,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 147,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "Kael": {
+    "file": "kael.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 608,
+    "cellHeight": 256,
+    "baseline": 242,
+    "referenceHeight": 170,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 1,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "KaelShadow": {
+    "file": "kael-shadow.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 576,
+    "cellHeight": 256,
+    "baseline": 242,
+    "referenceHeight": 182,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "Torren": {
+    "file": "torren.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 608,
+    "cellHeight": 256,
+    "baseline": 242,
+    "referenceHeight": 157,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  },
+  "Seerin": {
+    "file": "seerin.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 576,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 159,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    }
+  }
+}
