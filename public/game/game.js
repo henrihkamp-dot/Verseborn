@@ -252,7 +252,6 @@ const animatedNpcHeights = {
 };
 const enemyAnimationFiles = {
   "Inkbound Auditor": "inkbound-auditor",
-  "Gate Lock": "gate-lock",
   "Dawn Gate Sentinel": "dawn-gate-sentinel",
   "Archive Custodian": "archive-custodian",
   "Dock Foreman": "dock-foreman",
@@ -262,7 +261,6 @@ const enemyAnimationFiles = {
 };
 const enemyAnimationHeights = {
   "Inkbound Auditor": 44,
-  "Gate Lock": 51,
   "Dawn Gate Sentinel": 51,
   "Archive Custodian": 47,
   "Dock Foreman": 45,
@@ -288,24 +286,15 @@ const enemyAbilityProfiles = {
   Marla: { row: 7, element: "Heart", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true }
 };
 const animationLayouts = {
-  Verseborn: { columns: 5, rows: 6 },
-  Mira: { columns: 5, rows: 6 },
-  Seerin: { columns: 5, rows: 6 },
-  Kael: { columns: 5, rows: 6 },
-  Torren: { columns: 5, rows: 6 },
-  Glimmer: { columns: 5, rows: 6 },
-  Sparky: { columns: 5, rows: 6 },
-  GlimmerMech: { columns: 5, rows: 5, rowMap: { idle: 0, melee: 1, block: 2, magic: 2, ultimate1: 3, ultimate2: 3, death: 4 } },
-  KaelShadow: { columns: 5, rows: 6 },
-  Marla: { columns: 5, rows: 5 },
-  Nyx: { columns: 5, rows: 5 },
-  Rava: { columns: 5, rows: 5 },
-  Jory: { columns: 5, rows: 5 },
+  Marla: { columns: 4, rows: 7, chromaBlack: true },
+  Nyx: { columns: 4, rows: 7 },
+  Rava: { columns: 4, rows: 7 },
+  Jory: { columns: 4, rows: 7 },
   Harl: { columns: 6, rows: 4, chromaBlack: true },
-  Kaeldrin: { columns: 5, rows: 5 },
+  Kaeldrin: { columns: 4, rows: 7 },
   Lyrsa: { columns: 4, rows: 7 },
-  Shade: { columns: 5, rows: 5 },
-  Grumm: { columns: 5, rows: 5 }
+  Shade: { columns: 4, rows: 7, chromaBlack: true },
+  Grumm: { columns: 4, rows: 7 }
 };
 const mapImages = {};
 const battleImages = {};
@@ -473,7 +462,7 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
       resolve();
     };
     image.onerror = () => { if (spriteScale[id]) spriteLoadProgress++; resolve(); };
-    image.src = `assets/sprites/animation/${fileName}.png?v=battle-sprites-1`;
+    image.src = `assets/sprites/animation/${fileName}.png`;
   });
 }
 
@@ -526,9 +515,8 @@ function loadEnemyAnimationSheet(id, fileName) {
       paint.imageSmoothingEnabled = false;
       paint.drawImage(image, 0, 0);
       const pixels = paint.getImageData(0, 0, cleaned.width, cleaned.height);
-      const rowCount = cleaned.height === 1024 ? 4 : 5;
-      const rows = Array.from({ length: rowCount }, (_, row) => Array.from({ length: 5 }, (_, col) => (
-        cellBounds(pixels, cleaned.width, cleaned.height, col, row, 5, rowCount)
+      const rows = Array.from({ length: 5 }, (_, row) => Array.from({ length: 5 }, (_, col) => (
+        cellBounds(pixels, cleaned.width, cleaned.height, col, row, 5, 5)
       )));
       const idleHeights = rows[0].map(cell => cell.h).sort((a, b) => a - b);
       enemyAnimationSheets[id] = {
@@ -539,7 +527,7 @@ function loadEnemyAnimationSheet(id, fileName) {
       resolve();
     };
     image.onerror = resolve;
-    image.src = `assets/sprites/enemies-animation/${fileName}.png?v=battle-sprites-1`;
+    image.src = `assets/sprites/enemies-animation/${fileName}.png`;
   });
 }
 
@@ -712,8 +700,6 @@ function loadEchoProjectileSheet() {
 
 Promise.all([
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
-  loadAnimationSheet("GlimmerMech", "glimmer-mech"),
-  loadAnimationSheet("KaelShadow", "kael-shadow"),
   ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
   ...Object.entries(enemyAnimationFiles).map(([id, fileName]) => loadEnemyAnimationSheet(id, fileName)),
   loadChestSheet(),
@@ -722,6 +708,7 @@ Promise.all([
   loadWorldEnemySheet(),
   loadNpcSheet(),
   loadTitleImage(),
+  loadMarlaBattleSheet(),
   loadEchoProjectileSheet(),
   ...["ash-quarter", "reverie", "guildspire", "ember-hall", "false-dawn"].map(loadBattleImage),
   ...["lantern", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
@@ -1437,7 +1424,7 @@ const talentTrees = {
     talent(5, "Mercy Without Permission", "healBoost", .4, "Healing commands restore 40% more HP."),
     talent(10, "Wide Sigil", "partyHeal", "Quiet Rite", "Quiet Rite restores HP to every living party member."),
     talent(15, "Discern the Command", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
-    talent(20, "Shadowpriest", "newSkill", skill("ULT II: Shadowpriest", "ultimate", "Shadow", 0, 100, "Become the Shadowpriest for four actions and replace the normal kit.", { targetSide: "self", transform: "shadowpriest", ultimateIndex: 2 }), "Unlocks Kael's persistent Shadowpriest form.")
+    talent(20, "Oath Without Chains", "newSkill", { ...skill("ULT: Oath Without Chains", "ultimate", "Sigil", -120, 100, "A complete party heal and ward."), partyWide: true }, "Unlocks a full-party healing ultimate.")
   ],
   Torren: [
     talent(5, "Faultline Instinct", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
@@ -1449,7 +1436,7 @@ const talentTrees = {
     talent(5, "Unsafe Overclock", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
     talent(10, "Scatterburst", "aoeSkill", "Klik-Wrench 7", "Klik-Wrench 7 strikes every living enemy."),
     talent(15, "Local Diagnostics", "revealWeakness", true, "Enemy weaknesses become visible to the whole active party."),
-    talent(20, "Mech Form", "newSkill", skill("ULT II: Mech Form", "ultimate", "Tech", 0, 100, "Enter Mech Form for four actions and replace the normal kit.", { targetSide: "self", transform: "mech", ultimateIndex: 2 }), "Unlocks Glimmer's persistent Mech form.")
+    talent(20, "Better Than Original", "newSkill", skill("ULT: Better Than Original", "ultimate", "Tech", 142, 100, "An impossible upgrade that detonates across all targets."), "Unlocks a new all-enemy ultimate.")
   ],
   Sparky: [
     talent(5, "Ember Mischief", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
@@ -1471,7 +1458,7 @@ const lateGameTalentChoices = {
     talent(40, "Finale Without End", "newSkill", skill("ULT: Finale Without End", "ultimate", "Sound", 154, 100, "All-enemy finale powered by active buffs.", { allEnemies: true, buffScaling: .1 }))
   ],
   Mira: [
-    talent(25, "Venomous Edge", "newSkill", skill("Venomous Edge", "melee", "Shadow", 30, 7, "Physical damage with strong Poison.", { status: { type: "poison", chance: .95, potency: "strong", duration: 5 } })),
+    talent(25, "Venomous Edge", "newSkill", skill("Venomous Edge", "melee", "Shadow", 30, 7, "Physical damage with Poison.", { status: { type: "poison", chance: .95 } })),
     talent(25, "Dreamdust", "newSkill", skill("Dreamdust", "magic", "Shadow", 8, 8, "Low damage with Sleep.", { status: { type: "sleep", chance: .9 } })),
     talent(30, "Lingering Venom", "statusDuration", { type: "poison", value: 2 }, "Mira's Poison lasts 2 additional turns."),
     talent(30, "Ambush", "afflictedDamage", .3, "Mira deals 30% more damage to afflicted enemies."),
@@ -1535,15 +1522,12 @@ const lateGameTalentChoices = {
 Object.entries(lateGameTalentChoices).forEach(([id, choices]) => talentTrees[id].push(...choices));
 
 const STATUS_DEFS = {
-  poison: { label: "POISON", short: "PSN", negative: true, duration: 4 },
+  poison: { label: "POISON", short: "PSN", negative: true, duration: 5 },
   sleep: { label: "SLEEP", short: "SLP", negative: true, duration: 5 },
   stun: { label: "STUN", short: "STN", negative: true, duration: 1 },
   strengthUp: { label: "STRENGTH UP", short: "STR", buff: true, duration: 3, value: .25 },
   magicUp: { label: "MAGIC UP", short: "MAG", buff: true, duration: 3, value: .25 },
   defenseUp: { label: "DEFENSE UP", short: "DEF", buff: true, duration: 3, value: .25 },
-  defenseDown: { label: "DEFENSE DOWN", short: "DWN", negative: true, duration: 3, value: .2 },
-  magicDefenseDown: { label: "MAGIC DEFENSE DOWN", short: "MR-", negative: true, duration: 3, value: .25 },
-  mechGuard: { label: "REINFORCED CHASSIS", short: "RIG", buff: true, duration: 2, value: .25 },
   damageUp: { label: "DAMAGE UP", short: "DMG", buff: true, duration: 3, value: .15 },
   agilityUp: { label: "AGILITY UP", short: "AGI", buff: true, duration: 3, value: .25 },
   overheated: { label: "OVERHEATED", short: "HOT", negative: true, duration: 2 }
@@ -1553,28 +1537,6 @@ const STATUS_TIER_CHANCES = {
   normal: { poison: .9, sleep: .75, stun: .65 },
   elite: { poison: .7, sleep: .45, stun: .35 },
   boss: { poison: .5, sleep: .1, stun: .2 }
-};
-
-const TRANSFORMATION_CONFIG = {
-  mech: { duration: 4, attack: .25, defense: .4, tech: .25, visual: "GlimmerMech" },
-  shadowpriest: { duration: 4, magic: .4, visual: "KaelShadow" }
-};
-
-const TRANSFORMED_SKILLS = {
-  mech: [
-    skill("Piston Impact", "melee", "Tech", 0, 0, "1.35x STR Tech strike with heavy stagger.", { coefficient: 1.35, staggerPower: 3, multiHit: 2 }),
-    skill("Gearstorm Barrage", "magic", "Tech", 0, 10, "1.9x MAG multi-hit barrage.", { coefficient: 1.9, multiHit: 4 }),
-    skill("Arc Reactor Burst", "magic", "Tech", 0, 12, "1.5x MAG to all enemies with Defense Down.", { coefficient: 1.5, allEnemies: true, status: { type: "defenseDown", chance: .6, duration: 3, value: .2 } }),
-    skill("Reinforced Chassis", "block", "Tech", 0, 8, "Reduce incoming damage by 25% for two actions.", { targetSide: "self", buffs: [{ type: "mechGuard", duration: 2, value: .25 }] }),
-    skill("Maximum Overdrive", "ultimate", "Tech", 0, 100, "2.8x MAG multi-hit blast against all enemies.", { coefficient: 2.8, allEnemies: true, multiHit: 5, ultimateIndex: 1 })
-  ],
-  shadowpriest: [
-    skill("Void Lance", "magic", "Shadow", 0, 0, "1.6x MAG shadow strike.", { coefficient: 1.6 }),
-    skill("Umbral Wave", "magic", "Shadow", 0, 10, "1.45x MAG against all enemies.", { coefficient: 1.45, allEnemies: true }),
-    skill("Soul Rend", "magic", "Shadow", 0, 12, "2.0x MAG and Magic Defense Down.", { coefficient: 2, status: { type: "magicDefenseDown", chance: 1, duration: 3, value: .25 } }),
-    skill("Dark Communion", "magic", "Shadow", 0, 10, "1.5x MAG and heal for 25% of damage dealt.", { coefficient: 1.5, selfHealRatio: .25 }),
-    skill("Eclipse", "ultimate", "Shadow", 0, 100, "2.75x MAG against all enemies with Magic Defense Down.", { coefficient: 2.75, allEnemies: true, multiHit: 4, ultimateIndex: 2, status: { type: "magicDefenseDown", chance: 1, duration: 2, value: .2 } })
-  ]
 };
 
 const zoneLevelBands = {
@@ -2271,40 +2233,10 @@ function statusApplicationChance(target, type, baseChance = 1, source = null) {
 
 function sourceBasicDamage(source) {
   if (source?.id) {
-    const basic = battleSkills(source.id, source).find(entry => entry.cost === 0 && (entry.power > 0 || entry.coefficient)) || baseJobs[source.id].skills[0];
+    const basic = battleSkills(source.id).find(entry => entry.cost === 0 && entry.power > 0) || baseJobs[source.id].skills[0];
     return Math.max(1, basic.power + totals(source.id).str);
   }
   return Math.max(1, (source?.atk || source?.stats?.str || 8) + 2);
-}
-
-function transformedStatMultiplier(source, stat) {
-  const config = source?.form ? TRANSFORMATION_CONFIG[source.form] : null;
-  if (!config) return 1;
-  if (source.form === "mech") return stat === "str" ? 1 + config.attack : 1 + config.tech;
-  if (source.form === "shadowpriest" && stat === "mag") return 1 + config.magic;
-  return 1;
-}
-
-function sourceRelevantStat(source, options = {}) {
-  const magicBased = ["magic", "ultimate"].includes(options.damageKind) || ["Tech", "Shadow", "Sigil"].includes(options.element);
-  if (source?.id) {
-    const stats = totals(source.id);
-    const stat = magicBased ? "mag" : "str";
-    return Math.max(1, Math.round(stats[stat] * transformedStatMultiplier(source, stat)));
-  }
-  return Math.max(1, magicBased ? (source?.stats?.mag || source?.atk || 8) : (source?.atk || source?.stats?.str || 8));
-}
-
-function poisonValueFor(target, source, options = {}) {
-  if (Number.isFinite(options.value)) return Math.max(1, Math.round(options.value));
-  const coefficients = { weak: .2, normal: .3, strong: .4 };
-  const coefficient = options.coefficient ?? coefficients[options.potency || "normal"];
-  const poisonBoost = source?.id ? 1 + typedTalentValue(source.id, "poisonDamage") + effectValue(source.id, "poisonDamage") : 1;
-  const scaled = sourceRelevantStat(source, options) * coefficient * poisonBoost;
-  const boss = target?.resistanceTier === "boss";
-  const floor = (target?.max || 1) * (boss ? .005 : .01);
-  const capped = boss ? Math.min(Math.max(scaled, floor), (target?.max || 1) * .015) : Math.max(scaled, floor);
-  return Math.max(1, Math.round(capped));
 }
 
 function statusDurationFor(source, type, requested) {
@@ -2326,23 +2258,17 @@ function applyStatus(target, type, source, options = {}) {
   let duration = statusDurationFor(source, type, options.duration);
   if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
   const existing = statusOf(target, type);
-  const poisonDurations = { weak: 3, normal: 4, strong: 5 };
-  if (type === "poison" && !options.duration) duration = statusDurationFor(source, type, poisonDurations[options.potency || "normal"]);
-  const value = type === "poison" ? poisonValueFor(target, source, options) : options.value ?? def.value;
-  const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .2, normal: .3, strong: .4 }[options.potency || "normal"]) : null;
+  const poisonBoost = source?.id ? 1 + typedTalentValue(source.id, "poisonDamage") + effectValue(source.id, "poisonDamage") : 1;
+  const value = options.value ?? (type === "poison" ? Math.max(1, Math.round(sourceBasicDamage(source) * .1 * poisonBoost)) : def.value);
   const data = {
     type,
     source: { id: source?.id || null, name: source?.name || source?.id || "Unknown" },
     remaining: duration,
-    value: existing && type === "poison" ? Math.max(existing.value || 0, value) : value,
-    coefficient: existing && type === "poison" ? Math.max(existing.coefficient || 0, coefficient) : coefficient,
+    value,
     appliedRound: battle?.round || 0,
     appliedTurn: combatantKey(source)
   };
-  if (existing) {
-    if (type === "poison") data.remaining = Math.max(existing.remaining || 0, duration);
-    Object.assign(existing, data);
-  }
+  if (existing) Object.assign(existing, data);
   else ensureStatuses(target).push(data);
   return { applied: true, message: def.label };
 }
@@ -2372,10 +2298,7 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
 }
 
 function incomingDamageMultiplier(unit) {
-  let multiplier = Math.max(.25, 1 - statusValue(unit, "defenseUp"));
-  if (unit?.form === "mech") multiplier *= 1 - TRANSFORMATION_CONFIG.mech.defense;
-  multiplier *= 1 - statusValue(unit, "mechGuard");
-  return Math.max(.15, multiplier);
+  return Math.max(.25, 1 - statusValue(unit, "defenseUp"));
 }
 
 function effectiveAgility(unit, base) {
@@ -2386,11 +2309,11 @@ function effectiveAgility(unit, base) {
 
 function applySkillStatuses(source, target, sk) {
   const applications = [];
-  if (sk.status) applications.push(applyStatus(target, sk.status.type, source, { ...sk.status, damageKind: sk.anim, element: sk.element }));
-  if (source?.id && (sk.power > 0 || sk.coefficient)) {
+  if (sk.status) applications.push(applyStatus(target, sk.status.type, source, sk.status));
+  if (source?.id && sk.power > 0) {
     ["poison", "sleep", "stun"].forEach(type => {
       const chance = effectValue(source.id, "statusOnHit", type);
-      if (chance > 0) applications.push(applyStatus(target, type, source, { chance, potency: type === "poison" ? "weak" : undefined, duration: type === "poison" ? 3 : undefined, damageKind: sk.anim, element: sk.element }));
+      if (chance > 0) applications.push(applyStatus(target, type, source, { chance }));
     });
   }
   return applications.map(result => result.message).filter(Boolean);
@@ -2401,7 +2324,7 @@ function applySkillBuffs(source, targets, sk) {
   (sk.buffs || []).forEach(buff => {
     targets.forEach(target => {
       const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 3) + (source?.id ? typedTalentValue(source.id, "buffDuration") + effectValue(source.id, "buffDuration") : 0);
-      const result = applyStatus(target, buff.type, source, { duration, chance: 1, value: buff.value });
+      const result = applyStatus(target, buff.type, source, { duration, chance: 1 });
       if (result.message) notes.push(`${target.name}: ${result.message}`);
     });
   });
@@ -2448,54 +2371,18 @@ function processTurnEnd(unit) {
   const expired = unit.statuses.filter(status => status.remaining <= 0);
   unit.statuses = unit.statuses.filter(status => status.remaining > 0);
   expired.forEach(status => notes.push(`${STATUS_DEFS[status.type]?.label || status.type} faded.`));
-  if (unit.form) {
-    const appliedNow = unit.formAppliedRound === battle?.round && unit.formAppliedTurn === combatantKey(unit);
-    if (!appliedNow) unit.formTurns--;
-    if (unit.formTurns <= 0) {
-      const oldForm = unit.form;
-      delete unit.form;
-      delete unit.formTurns;
-      delete unit.formAppliedRound;
-      delete unit.formAppliedTurn;
-      unit.statuses = unit.statuses.filter(status => status.type !== "mechGuard");
-      notes.push(`${oldForm === "mech" ? "Mech Form" : "Shadowpriest"} ended.`);
-    }
-  }
   return notes;
 }
 
-function battleSkills(id, unit = null) {
-  const combatUnit = unit || battle?.party?.find(member => member.id === id);
-  if (combatUnit?.form && TRANSFORMED_SKILLS[combatUnit.form]) return TRANSFORMED_SKILLS[combatUnit.form];
+function battleSkills(id) {
   const extra = activeTalents(id)
     .filter(entry => entry.type === "newSkill")
     .map(entry => ({
       ...entry.value,
       talentSkill: true,
-      ultimateIndex: entry.value.ultimateIndex ?? (entry.value.anim === "ultimate" ? 2 : undefined),
       allEnemies: entry.value.allEnemies ?? (entry.level <= 20 && entry.value.anim === "ultimate" && entry.value.power > 0)
     }));
-  return [...baseJobs[id].skills.map(entry => entry.anim === "ultimate" ? { ...entry, ultimateIndex: 1 } : entry), ...extra];
-}
-
-function battleAnimationName(sk) {
-  if (sk.anim !== "ultimate") return sk.anim;
-  return sk.ultimateIndex === 2 || sk.transform ? "ultimate2" : "ultimate1";
-}
-
-function battleVisualId(unit) {
-  return unit?.form ? TRANSFORMATION_CONFIG[unit.form]?.visual || unit.id : unit.id;
-}
-
-function activateTransformation(unit, form) {
-  const config = TRANSFORMATION_CONFIG[form];
-  if (!unit || !config) return false;
-  unit.form = form;
-  unit.formTurns = config.duration;
-  unit.anim = "idle";
-  unit.formAppliedRound = battle?.round || 0;
-  unit.formAppliedTurn = combatantKey(unit);
-  return true;
+  return [...baseJobs[id].skills, ...extra];
 }
 
 function skillHitsAll(id, sk) {
@@ -2863,14 +2750,13 @@ function drawBaseSprite(px, py, body, hair, trim, dir = 0, anim = "idle", frame 
 
 function animationColumn(id, anim, frame) {
   const columns = animationSheets[id]?.columns || 4;
-  const ownerId = id === "GlimmerMech" ? "Glimmer" : id === "KaelShadow" ? "Kael" : id;
   if (anim === "walk") return Math.floor(frame / 5) % columns;
   if (anim === "idle" && mode === "battle") {
-    const phase = Math.floor((frame + Object.keys(spriteScale).indexOf(ownerId) * 5) / 16) % 4;
+    const phase = Math.floor((frame + Object.keys(spriteScale).indexOf(id) * 5) / 16) % 4;
     return [0, 0, Math.min(3, columns - 1), 0][phase];
   }
-  if (["melee", "block", "magic", "ultimate", "ultimate1", "ultimate2", "death"].includes(anim)) {
-    const activeEffect = effect?.caster === ownerId ? effect : null;
+  if (["melee", "block", "magic", "ultimate"].includes(anim)) {
+    const activeEffect = effect?.caster === id ? effect : null;
     const duration = Math.max(1, activeEffect?.duration || 24);
     const progress = activeEffect ? activeEffect.t / duration : (frame % 24) / 24;
     return Math.max(0, Math.min(columns - 1, Math.floor(progress * columns)));
@@ -2889,20 +2775,15 @@ function animationFrameRect(sheet, col, row) {
 function drawAnimationSprite(id, px, py, dir, anim, frame) {
   const sheet = animationSheets[id];
   if (!sheet) return false;
-  const ownerId = id === "GlimmerMech" ? "Glimmer" : id === "KaelShadow" ? "Kael" : id;
-  const playable = Boolean(spriteScale[ownerId]);
-  const actionPose = ["melee", "block", "magic", "ultimate", "ultimate1", "ultimate2", "death"].includes(anim);
-  if (mode !== "battle" && !actionPose) return false;
+  const playable = Boolean(spriteScale[id]);
+  const actionPose = ["melee", "block", "magic", "ultimate"].includes(anim);
   const battlePose = playable && (mode === "battle" || actionPose);
   const directionRows = { 0: 0, 1: 1, 3: 2, 2: 3 };
-  const layout = animationLayouts[id] || {};
-  const actionRows = layout.rowMap || (sheet.rows === 5
-    ? { idle: 0, melee: 1, block: 2, magic: 2, ultimate: 3, ultimate1: 3, ultimate2: 3, death: 4 }
-    : { idle: 0, melee: 1, block: 2, magic: 2, ultimate: 3, ultimate1: 3, ultimate2: 4, death: 5 });
-  const row = battlePose ? (actionRows[anim] ?? actionRows.idle ?? 0) : (directionRows[dir] ?? 0);
+  const actionRows = { melee: 4, block: 5, magic: 6, ultimate: 6 };
+  const row = battlePose ? (actionRows[anim] ?? 4) : (directionRows[dir] ?? 0);
   const col = animationColumn(id, battlePose ? anim : (anim === "walk" ? "walk" : "idle"), frame);
   const targetHeight = playable
-    ? (battlePose ? spriteScale[ownerId].battle[1] : spriteScale[ownerId].field[1])
+    ? (battlePose ? spriteScale[id].battle[1] : spriteScale[id].field[1])
     : (animatedNpcHeights[id] || 26);
   const scale = targetHeight / Math.max(1, sheet.referenceHeight);
   const actionDuration = effect?.caster === id ? (effect.impactTicks || 24) : 24;
@@ -3879,9 +3760,7 @@ function drawBattleScene() {
     const hasTurn = turn?.side === "party" && turn.id === unit.id;
     if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
     drawFieldShadow(anchorX, baseline + 1, unit.id === "Torren" ? 14 : 10);
-    const visualId = battleVisualId(unit);
-    const visualAnim = unit.hp <= 0 ? "death" : unit.anim || "idle";
-    const drawUnit = () => drawSprite(visualId, anchorX - 24 + battleOffset(unit), baseline - 52, 0, visualAnim, tick);
+    const drawUnit = () => drawSprite(unit.id, anchorX - 24 + battleOffset(unit), baseline - 52, 0, unit.anim || "idle", tick);
     if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
     else drawUnit();
     drawBattleVitals(unit, anchorX, baseline);
@@ -3959,12 +3838,9 @@ function drawNpcBattleEnemy(e, px, py) {
   const sheet = npcBattleSheets[id] || animationSheets[id];
   if (!sheet || !animatedNpcFiles[id]) return false;
   const attacking = e.anim === "attack";
-  const dying = e.hp <= 0 || e.anim === "death";
-  const row = dying
-    ? Math.max(0, sheet.rows - 1)
-    : attacking
-      ? (sheet.battleOnly ? 1 : sheet.rows === 5 ? (e.attackStyle === "magic" ? 2 : 1) : e.attackStyle === "magic" ? (sheet.rows >= 7 ? 6 : sheet.rows >= 6 ? 2 : 0) : (sheet.rows >= 7 ? 4 : sheet.rows >= 6 ? 1 : 0))
-      : 0;
+  const row = attacking
+    ? (sheet.battleOnly ? 1 : e.attackStyle === "magic" ? (sheet.rows >= 7 ? 6 : sheet.rows >= 6 ? 5 : 0) : (sheet.rows >= 7 ? 4 : sheet.rows >= 6 ? 3 : 0))
+    : 0;
   const duration = 24;
   const progress = attacking ? Math.min(1, (e.animTick || 0) / duration) : 0;
   const col = attacking
@@ -3984,9 +3860,7 @@ function drawNpcBattleEnemy(e, px, py) {
   const destY = Math.round(baseline - (sourceHeight - 2) * scale);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.translate(destX + width, 0);
-  ctx.scale(-1, 1);
-  ctx.drawImage(sheet.image, source.x, source.y, sourceWidth, sourceHeight, 0, destY, width, height);
+  ctx.drawImage(sheet.image, source.x, source.y, sourceWidth, sourceHeight, destX, destY, width, height);
   ctx.restore();
   if (attacking && e.lastAnimDrawTick !== tick) {
     e.animTick = (e.animTick || 0) + 1;
@@ -4012,8 +3886,7 @@ function drawAnimatedEnemy(e, px, py) {
   if (!sheet) return false;
   const dying = e.hp <= 0 || e.anim === "death";
   const attacking = e.anim === "attack";
-  const modernRows = sheet.rows.length === 4;
-  const row = dying ? sheet.rows.length - 1 : attacking ? (modernRows ? (e.attackStyle === "magic" || magicEnemyAnimations.has(key) ? 2 : 1) : (e.attackStyle === "magic" || magicEnemyAnimations.has(key) ? 3 : 2)) : 0;
+  const row = dying ? 4 : attacking ? (e.attackStyle === "magic" || magicEnemyAnimations.has(key) ? 3 : 2) : 0;
   const cells = sheet.rows[row];
   let frame = Math.floor((tick + key.length * 3) / 12) % cells.length;
   if (attacking) frame = Math.min(cells.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
@@ -5043,7 +4916,7 @@ function renderBattle(log) {
   el.battleResonance.style.width = `${Math.max(0, Math.min(100, state.resonance))}%`;
   const turn = currentTurn();
   renderTurnOrder();
-  el.partyRows.innerHTML = battle.party.map(unit => unitHtml({ ...unit, name: unit.form ? `${unit.name} - ${unit.form === "mech" ? "MECH" : "SHADOWPRIEST"} ${unit.formTurns}` : unit.name }, turn?.side === "party" && turn.id === unit.id ? "is-active" : "")).join("");
+  el.partyRows.innerHTML = battle.party.map(unit => unitHtml(unit, turn?.side === "party" && turn.id === unit.id ? "is-active" : "")).join("");
   const revealWeakness = partyCanSeeWeaknesses();
   el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} Lv ${e.level} - Weak: ${revealWeakness ? e.weak : "???"}`, hp: e.hp, max: e.max, statuses: e.statuses })).join("");
   el.actions.innerHTML = "";
@@ -5055,7 +4928,7 @@ function renderBattle(log) {
   if (!u || u.hp <= 0) return finishTurn("A fallen ally loses their turn.");
   if (battle.itemMode) return renderBattleItems(u);
   if (battle.targetMode) return renderBattleTargets(u);
-  battleSkills(u.id, u).forEach(sk => {
+  battleSkills(u.id).forEach(sk => {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = sk.name;
@@ -5098,11 +4971,10 @@ function skillPreview(u, sk, target = null) {
   const partyHeal = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0;
   const heal = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")));
   if (sk.power < 0) return `Restores ${heal} HP${partyHeal ? " to every living ally" : " to the weakest ally"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
-  if (!skillTargetsEnemies(sk)) return `${sk.transform ? `Transformation for ${TRANSFORMATION_CONFIG[sk.transform]?.duration || 4} actions` : "Support command"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
+  if (!skillTargetsEnemies(sk)) return `Support command / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
   const statName = sk.anim === "magic" || sk.anim === "ultimate" ? "MAG" : "STR";
-  const statKey = statName === "MAG" ? "mag" : "str";
-  const stat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
-  const low = Math.round(sk.coefficient ? stat * sk.coefficient : sk.power + stat);
+  const stat = statName === "MAG" ? t.mag : t.str;
+  const low = sk.power + stat;
   const high = low + 5;
   const weaknessBonus = effectValue(u.id, "weaknessDamage");
   const hitsWeakness = target && target.weak === sk.element;
@@ -5290,7 +5162,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   battle.targetMode = false;
   battle.pendingSkill = null;
   battle.resolving = true;
-  u.anim = battleAnimationName(sk);
+  u.anim = sk.anim;
   if (selectedSkill.anim !== "ultimate") u.mp -= selectedSkill.cost;
   else state.resonance = 0;
   if (selectedSkill.oncePerBattle) battle.usedOnce[selectedSkill.oncePerBattle] = true;
@@ -5342,9 +5214,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       state.resonance = Math.min(100, state.resonance + 5);
       log += ` ${healTargets.length > 1 ? "The party recovers" : `${wounded.name} recovers`} ${totalRestored} HP.`;
     } else if (!skillTargetsEnemies(sk)) {
-      if (sk.transform && activateTransformation(u, sk.transform)) {
-        log += ` ${sk.transform === "mech" ? "Mech Form" : "Shadowpriest"} engaged for ${u.formTurns} actions.`;
-      }
       if (sk.cleanse) {
         let cleansed = 0;
         supportTargets.forEach(ally => {
@@ -5370,23 +5239,20 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const live = battle.enemies.filter(e => e.hp > 0);
       const t = totals(u.id);
       const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
-      let totalDamageDealt = 0;
       hitTargets.forEach(hitTarget => {
         const afflicted = hasNegativeStatus(hitTarget);
         let critChance = talentValue(u.id, "critChance") + effectValue(u.id, "critChance");
         if (afflicted) critChance += typedTalentValue(u.id, "afflictedCrit");
         critChance = Math.min(.65, critChance);
-        const statKey = sk.anim === "magic" || sk.anim === "ultimate" ? "mag" : "str";
-        const offensiveStat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
-        let dmg = (sk.coefficient ? offensiveStat * sk.coefficient : sk.power + offensiveStat) + Math.floor(Math.random() * 6);
+        let dmg = sk.power + (sk.anim === "magic" || sk.anim === "ultimate" ? t.mag : t.str) + Math.floor(Math.random() * 6);
         if (hitTarget.weak === sk.element) {
           dmg = Math.floor(dmg * 1.55);
           dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
-          hitTarget.stagger += (sk.staggerPower || 2) + effectValue(u.id, "stagger");
+          hitTarget.stagger += 2 + effectValue(u.id, "stagger");
           state.resonance = Math.min(100, state.resonance + 14);
           log += ` ${hitTarget.name}: Weakness!`;
         } else {
-          hitTarget.stagger += sk.staggerPower || 1;
+          hitTarget.stagger++;
           state.resonance = Math.min(100, state.resonance + 5);
         }
         if (hitTarget.stagger >= 3) {
@@ -5401,26 +5267,15 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           dmg *= 2;
           log += ` ${hitTarget.name}: CRITICAL!`;
         }
-        const defenseDebuff = statusValue(hitTarget, "defenseDown") + (statKey === "mag" ? statusValue(hitTarget, "magicDefenseDown") : 0);
-        const defense = Math.max(0, statusValue(hitTarget, "defenseUp") - defenseDebuff) * (1 - (sk.pierce || 0));
+        const defense = statusValue(hitTarget, "defenseUp") * (1 - (sk.pierce || 0));
         dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(u, sk.anim, hitTarget) * (1 - defense)));
         const sleepBreak = breakSleepFromDamage(hitTarget);
         if (sleepBreak) log += ` ${hitTarget.name}: ${sleepBreak}`;
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
         hitTarget.hp -= dmg;
-        totalDamageDealt += dmg;
         hitTarget.resonance = Math.min(100, (hitTarget.resonance || 0) + (critical ? 14 : 8));
         hitTarget.flash = 10;
-        if (sk.multiHit > 1) {
-          const baseHit = Math.floor(dmg / sk.multiHit);
-          let remainder = dmg - baseHit * sk.multiHit;
-          for (let hit = 0; hit < sk.multiHit; hit++) {
-            const amount = baseHit + (remainder-- > 0 ? 1 : 0);
-            addBattleFloater(hitTarget, amount, { damageType: sk.element, crit: critical && hit === sk.multiHit - 1 });
-          }
-        } else {
-          addBattleFloater(hitTarget, dmg, { damageType: sk.element, crit: critical });
-        }
+        addBattleFloater(hitTarget, dmg, { damageType: sk.element, crit: critical });
         const statusNotes = hitTarget.hp > 0 ? applySkillStatuses(u, hitTarget, sk) : [];
         if (statusNotes.length) log += ` ${hitTarget.name}: ${statusNotes.join(" / ")}.`;
         if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
@@ -5431,14 +5286,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         log += ` ${hitTarget.name} takes ${dmg}.`;
       });
-      if (sk.selfHealRatio && totalDamageDealt > 0) {
-        const restored = Math.min(Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio)), u.max - u.hp);
-        u.hp += restored;
-        if (restored) {
-          addBattleFloater(u, restored, { kind: "heal" });
-          log += ` ${u.name} drains ${restored} HP.`;
-        }
-      }
       playSfx("hit");
       const hpOnHit = effectValue(u.id, "hpOnHit");
       const mpOnHit = effectValue(u.id, "mpOnHit");
@@ -5725,7 +5572,7 @@ function resolveEnemyTurn(turn, prev) {
         defender.hp = Math.max(0, defender.hp - dmg);
         defender.flash = 12;
         addBattleFloater(defender, dmg, { damageType: action.kind === "melee" ? "Physical" : action.element, crit: action.kind === "ultimate" });
-        const statusResult = defender.hp > 0 && action.status ? applyStatus(defender, action.status.type, e, { ...action.status, damageKind: action.kind, element: action.element }) : null;
+        const statusResult = defender.hp > 0 && action.status ? applyStatus(defender, action.status.type, e, action.status) : null;
         actionLog += ` ${defender.name} takes ${dmg}.${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
       });
       battle.ward = false;
@@ -7007,35 +6854,7 @@ if (new URLSearchParams(location.search).has("qa")) {
     },
     rollAffixes: (name, rarity = "Epic", theme = "mountain") => rollGearAffixes(gearByName(name), rarity, theme),
     save: saveGame,
-    load: loadGame,
-    setupPartyBattle: (ids, enemyOptions = {}) => {
-      mode = "walk";
-      ids.forEach(id => {
-        addParty(id);
-        const progress = progressFor(id);
-        progress.level = Math.max(progress.level, 25);
-        const levelTwenty = talentTrees[id].find(entry => entry.level === 20);
-        if (levelTwenty && !progress.talents.includes(levelTwenty.name)) progress.talents.push(levelTwenty.name);
-        const total = totals(id);
-        baseJobs[id].hp = total.max;
-        baseJobs[id].mp = total.mp;
-      });
-      state.activeParty = ids.slice(0, 3);
-      state.resonance = 100;
-      const testEnemy = enemy(enemyOptions.name || "Dawn Gate Sentinel", enemyOptions.hp || 900, enemyOptions.atk || 5, enemyOptions.weak || "Tech", enemyOptions.color || "#655", enemyOptions.node || 3);
-      Object.assign(testEnemy, enemyOptions);
-      startBattle("QA Sprite & Form Battle", [testEnemy], null);
-      return true;
-    },
-    activateForm: (id, form) => activateTransformation(battle?.party?.find(unit => unit.id === id), form),
-    runQa: runQaChecks,
-    assetSummary: () => ({
-      Glimmer: animationSheets.Glimmer ? [animationSheets.Glimmer.columns, animationSheets.Glimmer.rows] : null,
-      GlimmerMech: animationSheets.GlimmerMech ? [animationSheets.GlimmerMech.columns, animationSheets.GlimmerMech.rows] : null,
-      KaelShadow: animationSheets.KaelShadow ? [animationSheets.KaelShadow.columns, animationSheets.KaelShadow.rows] : null,
-      DawnGateSentinel: enemyAnimationSheets["Dawn Gate Sentinel"]?.rows?.length || 0,
-      GateLock: enemyAnimationSheets["Gate Lock"]?.rows?.length || 0
-    })
+    load: loadGame
   };
 }
 
@@ -7063,38 +6882,6 @@ function runQaChecks() {
     processTurnEnd(qaEnemy);
     check("poison-refresh-no-stack", qaEnemy.statuses.filter(status => status.type === "poison").length === 1 && statusOf(qaEnemy, "poison").remaining === 4);
     check("poison-turn-damage", poisonBefore - qaEnemy.hp === 7 && poisonStart.notes.includes("POISON -7 HP"));
-
-    qaEnemy.statuses = [];
-    applyStatus(qaEnemy, "poison", qaHero, { force: true, potency: "weak", damageKind: "melee" });
-    const weakPoison = { ...statusOf(qaEnemy, "poison") };
-    applyStatus(qaEnemy, "poison", qaHero, { force: true, potency: "strong", damageKind: "magic", element: "Shadow" });
-    const strongPoison = statusOf(qaEnemy, "poison");
-    check("poison-stat-scaling", weakPoison.value >= Math.round(qaEnemy.max * .01) && weakPoison.coefficient === .2 && strongPoison.value >= weakPoison.value);
-    check("poison-strong-refresh", qaEnemy.statuses.filter(status => status.type === "poison").length === 1 && strongPoison.coefficient === .4 && strongPoison.remaining >= 5);
-    const qaBoss = prepareEnemyForBattle({ ...enemy("QA Boss", 10000, 12, "Sound", "#555", 3), resistanceTier: "boss" });
-    qaBoss.resistanceTier = "boss";
-    applyStatus(qaBoss, "poison", qaHero, { force: true, potency: "weak", damageKind: "melee" });
-    check("poison-boss-floor-cap", statusOf(qaBoss, "poison").value >= Math.round(qaBoss.max * .005) && statusOf(qaBoss, "poison").value <= Math.round(qaBoss.max * .015), statusOf(qaBoss, "poison").value);
-
-    const qaGlimmer = battleUnit("Glimmer");
-    const qaKael = battleUnit("Kael");
-    battle.party = [qaHero, qaGlimmer, qaKael];
-    activateTransformation(qaGlimmer, "mech");
-    activateTransformation(qaKael, "shadowpriest");
-    check("glimmer-mech-kit", battleSkills("Glimmer", qaGlimmer).map(entry => entry.name).join("|") === "Piston Impact|Gearstorm Barrage|Arc Reactor Burst|Reinforced Chassis|Maximum Overdrive");
-    check("kael-shadow-kit", battleSkills("Kael", qaKael).map(entry => entry.name).join("|") === "Void Lance|Umbral Wave|Soul Rend|Dark Communion|Eclipse");
-    check("transformation-stat-bonuses", transformedStatMultiplier(qaGlimmer, "str") === 1.25 && transformedStatMultiplier(qaGlimmer, "mag") === 1.25 && transformedStatMultiplier(qaKael, "mag") === 1.4 && incomingDamageMultiplier(qaGlimmer) <= .6);
-    processTurnEnd(qaGlimmer);
-    check("transformation-activation-turn", qaGlimmer.formTurns === 4);
-    for (let round = 2; round <= 5; round++) { battle.round = round; processTurnEnd(qaGlimmer); }
-    check("transformation-reverts", !qaGlimmer.form && battleSkills("Glimmer", qaGlimmer).some(entry => entry.name === "Klik-Wrench 7"));
-    const atlasLayoutSummary = {
-      glimmer: animationSheets.Glimmer?.rows || 0,
-      mech: animationSheets.GlimmerMech?.rows || 0,
-      shadow: animationSheets.KaelShadow?.rows || 0,
-      sentinel: enemyAnimationSheets["Dawn Gate Sentinel"]?.rows?.length || 0
-    };
-    check("battle-atlas-layouts", atlasLayoutSummary.glimmer === 6 && atlasLayoutSummary.mech === 5 && atlasLayoutSummary.shadow === 6 && atlasLayoutSummary.sentinel === 4, JSON.stringify(atlasLayoutSummary));
 
     applyStatus(qaEnemy, "sleep", qaHero, { force: true, duration: 5 });
     const sleepSkip = processTurnStart(qaEnemy).skip;
@@ -7532,33 +7319,7 @@ function runQaChecks() {
   document.body.setAttribute("data-qa-result", JSON.stringify(summary));
   const qaParams = new URLSearchParams(location.search);
   const qaMode = qaParams.get("qa");
-  if (qaMode === "guestbattle") {
-    mode = "walk";
-    state.activeParty = ["Verseborn"];
-    const total = totals("Verseborn");
-    baseJobs.Verseborn.hp = total.max;
-    baseJobs.Verseborn.mp = total.mp;
-    const guestEnemy = enemy("Jory", 2000, 1, "Shadow", "#655", 3);
-    guestEnemy.sprite = "Jory";
-    guestEnemy.npcBoss = true;
-    startBattle("QA Friendly Sprite Facing", [guestEnemy], null);
-  } else if (qaMode === "mechbattle" || qaMode === "shadowbattle") {
-    mode = "walk";
-    const heroId = qaMode === "mechbattle" ? "Glimmer" : "Kael";
-    addParty(heroId);
-    state.activeParty = [heroId];
-    const progress = progressFor(heroId);
-    progress.level = 25;
-    const transformationTalent = talentTrees[heroId].find(entry => entry.level === 20);
-    if (transformationTalent && !progress.talents.includes(transformationTalent.name)) progress.talents.push(transformationTalent.name);
-    const total = totals(heroId);
-    baseJobs[heroId].hp = total.max;
-    baseJobs[heroId].mp = total.mp;
-    state.resonance = 100;
-    const spriteEnemy = enemy("Dawn Gate Sentinel", 5000, 1, heroId === "Glimmer" ? "Tech" : "Shadow", "#655", 3);
-    spriteEnemy.npcBoss = true;
-    startBattle(`QA ${heroId} Transformation`, [spriteEnemy], null);
-  } else if (qaMode === "battle") {
+  if (qaMode === "battle") {
     mode = "walk";
     addParty("Mira");
     state.activeParty = ["Mira", "Verseborn"];
@@ -7621,8 +7382,5 @@ sanitizeWorldSpawns();
 refreshHeroVitals();
 updateCodex();
 updatePanels();
-if (new URLSearchParams(location.search).has("qa")) {
-  const runQaWhenReady = () => runtimeAssetsReady ? runQaChecks() : setTimeout(runQaWhenReady, 40);
-  runQaWhenReady();
-}
+if (new URLSearchParams(location.search).has("qa")) setTimeout(runQaChecks, 0);
 draw();
