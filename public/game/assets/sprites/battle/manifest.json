@@ -7,6 +7,13 @@
     "cellHeight": 320,
     "baseline": 306,
     "referenceHeight": 156,
+    "idleAnchorOffsets": [
+      28.46,
+      9.96,
+      -12.08,
+      -4.33,
+      28.46
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -25,6 +32,13 @@
     "cellHeight": 256,
     "baseline": 242,
     "referenceHeight": 165,
+    "idleAnchorOffsets": [
+      -0.21,
+      -17.75,
+      -31.27,
+      -44.49,
+      -0.21
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -43,6 +57,13 @@
     "cellHeight": 288,
     "baseline": 274,
     "referenceHeight": 135,
+    "idleAnchorOffsets": [
+      57.49,
+      43.33,
+      25.77,
+      -2.77,
+      57.49
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -61,6 +82,13 @@
     "cellHeight": 288,
     "baseline": 274,
     "referenceHeight": 165,
+    "idleAnchorOffsets": [
+      59.99,
+      40.51,
+      14.52,
+      23.57,
+      59.99
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -79,6 +107,13 @@
     "cellHeight": 288,
     "baseline": 274,
     "referenceHeight": 147,
+    "idleAnchorOffsets": [
+      24.97,
+      0.92,
+      -23.29,
+      -51.39,
+      24.97
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -97,6 +132,13 @@
     "cellHeight": 256,
     "baseline": 242,
     "referenceHeight": 170,
+    "idleAnchorOffsets": [
+      42.71,
+      0.78,
+      -40.94,
+      -66.07,
+      42.71
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -115,6 +157,13 @@
     "cellHeight": 256,
     "baseline": 242,
     "referenceHeight": 182,
+    "idleAnchorOffsets": [
+      50.28,
+      6.31,
+      -33.98,
+      -64.92,
+      50.28
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -133,6 +182,13 @@
     "cellHeight": 256,
     "baseline": 242,
     "referenceHeight": 157,
+    "idleAnchorOffsets": [
+      69.6,
+      65.27,
+      60.71,
+      0,
+      69.6
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,
@@ -151,6 +207,13 @@
     "cellHeight": 288,
     "baseline": 274,
     "referenceHeight": 159,
+    "idleAnchorOffsets": [
+      37.16,
+      2.1,
+      -39.99,
+      -7.83,
+      37.16
+    ],
     "rowMap": {
       "idle": 0,
       "melee": 1,

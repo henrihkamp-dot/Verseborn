@@ -492,7 +492,7 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
 
 async function loadBattleAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/battle/manifest.json?v=flame-guard-28a");
+    const response = await fetch("assets/sprites/battle/manifest.json?v=flame-guard-30a");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -502,7 +502,7 @@ async function loadBattleAnimationSheets() {
         resolve();
       };
       image.onerror = resolve;
-      image.src = `assets/sprites/battle/${config.file}?v=flame-guard-28a`;
+      image.src = `assets/sprites/battle/${config.file}?v=flame-guard-30a`;
     })));
   } catch (_) {
     // Stable world sprites remain the fallback if a battle-only asset fails.
@@ -2939,7 +2939,8 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const sourceY = row * sheet.cellHeight;
   const width = Math.round(sheet.cellWidth * scale);
   const height = Math.round(sheet.cellHeight * scale);
-  const destX = Math.round(anchorX - width / 2);
+  const idleAnchorOffset = animation === "idle" ? Number(sheet.idleAnchorOffsets?.[col] || 0) : 0;
+  const destX = Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
   const destY = Math.round(baseline - sheet.baseline * scale);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -3737,7 +3738,7 @@ function drawFalseDawn(p) {
 const battlePartyLayouts = {
   1: [[72, 124]],
   2: [[62, 108], [82, 140]],
-  3: [[58, 104], [84, 132], [58, 160]]
+  3: [[52, 104], [84, 132], [52, 160]]
 };
 const BATTLE_ARENA_HEIGHT = 188;
 

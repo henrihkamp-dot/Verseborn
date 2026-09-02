@@ -279,6 +279,20 @@ def build_sheet(name: str, config: dict[str, object]) -> dict[str, object]:
     rows: list[Row] = config["rows"]
     grouped_rows = [row_groups(image, row) for row in rows]
 
+    idle_groups = grouped_rows[0]
+    idle_frame_order = list(range(len(idle_groups)))
+    while len(idle_frame_order) < FRAME_COLUMNS:
+        idle_frame_order.append(0)
+    idle_anchor_offsets = []
+    for group_index in idle_frame_order[:FRAME_COLUMNS]:
+        group = idle_groups[group_index]
+        components = group["components"]
+        if not components:
+            idle_anchor_offsets.append(0)
+            continue
+        main_component = max(components, key=lambda component: component["metrics"]["area"])
+        idle_anchor_offsets.append(round(main_component["metrics"]["center_x"] - group["center"], 2))
+
     left_extent = right_extent = top_extent = 0
     idle_heights: list[int] = []
     for row_index, (row, groups) in enumerate(zip(rows, grouped_rows)):
@@ -333,6 +347,7 @@ def build_sheet(name: str, config: dict[str, object]) -> dict[str, object]:
         "cellHeight": cell_height,
         "baseline": cell_height - BASELINE_MARGIN,
         "referenceHeight": reference_height,
+        "idleAnchorOffsets": idle_anchor_offsets,
         "rowMap": config["row_map"],
     }
 
