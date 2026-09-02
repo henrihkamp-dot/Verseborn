@@ -90,6 +90,7 @@ let fieldDestination = null;
 let nextFieldMove = 0;
 let activeVendor = null;
 let vendorTab = "buy";
+let gearInstances = {};
 let audioContext = null;
 let screenSlide = null;
 let titleMenuIndex = 0;
@@ -1103,6 +1104,121 @@ const ngPlusGearNames = new Set(ngPlusGear.map(gear => gear.name));
 const ngPlusChestGearNames = new Set(ngPlusChestGear.map(gear => gear.name));
 const echoForgeGearNames = new Set(echoForgeGear.map(gear => gear.name));
 
+function gearInstance(ref) {
+  return typeof ref === "string" ? gearInstances[ref] || null : null;
+}
+
+function gearBaseName(ref) {
+  return gearInstance(ref)?.name || ref;
+}
+
+function echoGearInstanceRefs(name) {
+  const baseName = gearBaseName(name);
+  return Object.values(gearInstances)
+    .filter(instance => instance?.name === baseName)
+    .sort((a, b) => (a.copyNumber || 0) - (b.copyNumber || 0) || (a.serial || 0) - (b.serial || 0))
+    .map(instance => instance.id);
+}
+
+function gearDisplayName(ref) {
+  const instance = gearInstance(ref);
+  return instance ? `${instance.name} #${instance.copyNumber || 1}` : ref;
+}
+
+function gearAffixSignature(entries) {
+  return (entries || []).map(entry => `${entry.key}:${entry.value}`).sort().join("|");
+}
+
+function createEchoGearInstance(name, options = {}) {
+  const baseName = gearBaseName(name);
+  const gear = Object.values(gearDb).flat().find(entry => entry.name === baseName);
+  if (!gear || !echoForgeGearNames.has(baseName)) return null;
+  state.nextGearInstance = Math.max(1, Number(state.nextGearInstance) || 1);
+  let serial = state.nextGearInstance++;
+  let id = `echo_${serial}`;
+  while (gearInstances[id]) {
+    serial = state.nextGearInstance++;
+    id = `echo_${serial}`;
+  }
+  const siblings = echoGearInstanceRefs(baseName).map(ref => gearInstance(ref));
+  const copyNumber = Math.max(0, ...siblings.map(instance => Number(instance?.copyNumber) || 0)) + 1;
+  const rarity = options.rarity || defaultGearRarity(baseName);
+  let affixes = Array.isArray(options.affixes) ? options.affixes.map(entry => ({ ...entry })) : [];
+  if (!Array.isArray(options.affixes) && options.rollAffixes !== false) {
+    const existingSignatures = new Set(siblings.map(instance => gearAffixSignature(instance?.affixes)));
+    for (let attempt = 0; attempt < 16; attempt++) {
+      affixes = rollGearAffixes(gear, rarity);
+      if (!existingSignatures.has(gearAffixSignature(affixes))) break;
+    }
+  }
+  gearInstances[id] = { id, serial, copyNumber, name: baseName, rarity, affixes };
+  state.gearInstances = gearInstances;
+  return id;
+}
+
+function syncEchoForgeCopies(name) {
+  const baseName = gearBaseName(name);
+  const count = echoGearInstanceRefs(baseName).length;
+  state.gearCopies[baseName] = count;
+  if (count > 0 && !state.ownedGear.includes(baseName)) state.ownedGear.push(baseName);
+  if (!count) state.ownedGear = state.ownedGear.filter(ownedName => ownedName !== baseName);
+  return count;
+}
+
+function migrateEchoForgeInstances() {
+  state.gearInstances ||= {};
+  gearInstances = state.gearInstances;
+  const highestSerial = Math.max(0, ...Object.values(gearInstances).map(instance => Number(instance?.serial) || Number(String(instance?.id || "").replace(/^echo_/, "")) || 0));
+  state.nextGearInstance = Math.max(highestSerial + 1, Number(state.nextGearInstance) || 1);
+  const equippedRefs = Object.values(baseJobs).flatMap(hero => Object.values(hero.gear || {})).filter(Boolean);
+  const names = new Set([
+    ...state.ownedGear.filter(name => echoForgeGearNames.has(gearBaseName(name))).map(gearBaseName),
+    ...equippedRefs.filter(ref => echoForgeGearNames.has(gearBaseName(ref))).map(gearBaseName)
+  ]);
+  names.forEach(name => {
+    if (!state.ownedGear.includes(name)) state.ownedGear.push(name);
+    const legacyCount = Math.max(1, Number(state.gearCopies[name]) || 1);
+    const directHolders = Object.values(baseJobs).filter(hero => Object.values(hero.gear || {}).includes(name));
+    const desiredCount = Math.max(legacyCount, directHolders.length);
+    let refs = echoGearInstanceRefs(name);
+    while (refs.length < desiredCount) {
+      const preserveLegacyRoll = refs.length === 0 && Array.isArray(state.gearAffixes[name]);
+      createEchoGearInstance(name, {
+        rarity: state.gearRarities[name] || defaultGearRarity(name),
+        affixes: preserveLegacyRoll ? state.gearAffixes[name] : undefined,
+        rollAffixes: true
+      });
+      refs = echoGearInstanceRefs(name);
+    }
+    const used = new Set(equippedRefs.filter(ref => gearInstance(ref)?.name === name));
+    directHolders.forEach(hero => {
+      Object.keys(hero.gear).forEach(slot => {
+        if (hero.gear[slot] !== name) return;
+        const ref = refs.find(candidate => !used.has(candidate)) || refs[0];
+        hero.gear[slot] = ref;
+        used.add(ref);
+      });
+    });
+    syncEchoForgeCopies(name);
+  });
+}
+
+function ownedGearRefs(slot = null, heroId = null) {
+  return state.ownedGear.flatMap(name => {
+    const echoRefs = echoForgeGearNames.has(name) ? echoGearInstanceRefs(name) : [];
+    const refs = echoRefs.length ? echoRefs : [name];
+    return refs.filter(ref => {
+      const gear = gearByName(ref);
+      return gear && (!slot || gear.slot === slot) && (!heroId || canEquip(heroId, gear));
+    });
+  });
+}
+
+function ownsGearRef(ref) {
+  const instance = gearInstance(ref);
+  return instance ? state.ownedGear.includes(instance.name) : state.ownedGear.includes(ref);
+}
+
 function gearIconSheet(gear, heroId) {
   if (gear?.name === "Echo-Thread Lute") return "gear-verseborn";
   if (ngPlusSignatureNames.has(gear?.name)) return `gear-${gearOwners[gear.name][0].toLowerCase()}`;
@@ -1211,12 +1327,13 @@ function formatAffix(entry) {
 }
 
 function defaultGearRarity(name) {
-  const gear = gearByName(name);
+  const baseName = gearBaseName(name);
+  const gear = gearByName(baseName);
   if (!gear) return "Common";
-  if (ngPlusSignatureNames.has(name) || postgameGearNames.has(name)) return "Legendary";
-  if (echoForgeGearNames.has(name)) return gear.echoRarity || "Legendary";
-  if (ngPlusChestGearNames.has(name)) return "Epic";
-  if (ngPlusGearNames.has(name)) return "Epic";
+  if (ngPlusSignatureNames.has(baseName) || postgameGearNames.has(baseName)) return "Legendary";
+  if (echoForgeGearNames.has(baseName)) return gear.echoRarity || "Legendary";
+  if (ngPlusChestGearNames.has(baseName)) return "Epic";
+  if (ngPlusGearNames.has(baseName)) return "Epic";
   if (chestGear.includes(gear)) return "Epic";
   if (rareGear.includes(gear) || questGear.includes(gear)) return "Rare";
   if (zoneStarterGear.includes(gear)) return "Uncommon";
@@ -1240,6 +1357,12 @@ function rollGearAffixes(gear, rarity, theme = "") {
 }
 
 function ensureGearMetadata(name, options = {}) {
+  const instance = gearInstance(name);
+  if (instance) {
+    instance.rarity ||= options.rarity || defaultGearRarity(name);
+    if (!Array.isArray(instance.affixes)) instance.affixes = options.rollAffixes === true ? rollGearAffixes(gearByName(name), instance.rarity, options.theme) : [];
+    return;
+  }
   if (!state.gearAffixes || typeof state.gearAffixes !== "object") state.gearAffixes = {};
   if (!state.gearRarities || typeof state.gearRarities !== "object") state.gearRarities = {};
   if (!state.gearRarities[name]) state.gearRarities[name] = options.rarity || defaultGearRarity(name);
@@ -1269,31 +1392,44 @@ function topUpGearAffixes(name, rarity = gearRarity(name), theme = "dragon") {
       existing.push(rolled);
     });
   }
-  state.gearAffixes[name] = existing;
+  const instance = gearInstance(name);
+  if (instance) instance.affixes = existing;
+  else state.gearAffixes[name] = existing;
   return existing;
 }
 
 function upgradeOwnedLegendaryGear() {
   const equipped = Object.values(baseJobs).flatMap(hero => Object.values(hero.gear || {})).filter(Boolean);
-  [...new Set([...(state.ownedGear || []), ...equipped])].forEach(name => {
-    if (!gearByName(name)) return;
+  const owned = (state.ownedGear || []).flatMap(name => {
+    const refs = echoForgeGearNames.has(name) ? echoGearInstanceRefs(name) : [];
+    return refs.length ? refs : [name];
+  });
+  [...new Set([...owned, ...equipped])].forEach(ref => {
+    if (!gearByName(ref)) return;
+    const name = gearBaseName(ref);
     if (postgameGearNames.has(name)) state.gearRarities[name] = "Legendary";
     if (echoForgeGearNames.has(name)) {
-      const current = state.gearRarities[name] || "Common";
+      const instance = gearInstance(ref);
+      const current = gearRarity(ref) || "Common";
       const upgraded = defaultGearRarity(name);
-      state.gearRarities[name] = RARITY_ORDER.indexOf(current) > RARITY_ORDER.indexOf(upgraded) ? current : upgraded;
+      const rarity = RARITY_ORDER.indexOf(current) > RARITY_ORDER.indexOf(upgraded) ? current : upgraded;
+      if (instance) instance.rarity = rarity;
+      else state.gearRarities[name] = rarity;
     }
-    const rarity = gearRarity(name);
-    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || rarity === "Legendary") topUpGearAffixes(name, rarity, "dragon");
+    const rarity = gearRarity(ref);
+    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || rarity === "Legendary") topUpGearAffixes(ref, rarity, "dragon");
   });
 }
 
 function gearRarity(name) {
-  return state.gearRarities?.[name] || defaultGearRarity(name);
+  return gearInstance(name)?.rarity || state.gearRarities?.[gearBaseName(name)] || defaultGearRarity(name);
 }
 
 function gearAffixes(name) {
-  return Array.isArray(state.gearAffixes?.[name]) ? state.gearAffixes[name] : [];
+  const instance = gearInstance(name);
+  if (instance) return Array.isArray(instance.affixes) ? instance.affixes : [];
+  const baseName = gearBaseName(name);
+  return Array.isArray(state.gearAffixes?.[baseName]) ? state.gearAffixes[baseName] : [];
 }
 
 function affixValue(id, type, match = null) {
@@ -1657,6 +1793,8 @@ const state = {
   }, {}),
   gearAffixes: {},
   gearRarities: {},
+  gearInstances,
+  nextGearInstance: 1,
   endgameRank: 0,
   echoForgeRank: 0,
   ngPlus: 0,
@@ -1691,7 +1829,7 @@ function saveGame() {
       returnAt: spawnPoint.returnAt,
       retryAt: spawnPoint.retryAt
     }]))]));
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 2, state, heroes, questState, spawnState }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 3, state, heroes, questState, spawnState }));
     return true;
   } catch {
     return false;
@@ -1713,6 +1851,9 @@ function loadGame() {
   }
   if (!data?.state) return false;
   Object.assign(state, data.state);
+  state.gearInstances ||= {};
+  gearInstances = state.gearInstances;
+  state.nextGearInstance = Math.max(1, Number(state.nextGearInstance) || 1);
   state.party = Array.isArray(state.party) && state.party.length ? state.party.filter(id => baseJobs[id]) : ["Verseborn"];
   state.activeParty = Array.isArray(state.activeParty) && state.activeParty.length ? state.activeParty.filter(id => state.party.includes(id)).slice(0, 3) : [state.party[0]];
   state.heroProgress ||= {};
@@ -1732,6 +1873,7 @@ function loadGame() {
       if (!name || gearByName(name)) baseJobs[id].gear[slot] = name || null;
     });
   });
+  migrateEchoForgeInstances();
   upgradeOwnedLegendaryGear();
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
@@ -2165,23 +2307,35 @@ const npc = {
 };
 
 function gearByName(name) {
-  return Object.values(gearDb).flat().find(g => g.name === name);
+  const baseName = gearBaseName(name);
+  return Object.values(gearDb).flat().find(g => g.name === baseName);
 }
 
 function addOwnedGear(name, amount = 1, options = {}) {
-  if (!name || amount < 1) return;
-  if (!state.ownedGear.includes(name)) state.ownedGear.push(name);
-  state.gearCopies[name] = (state.gearCopies[name] || 0) + amount;
-  ensureGearMetadata(name, options);
+  const baseName = gearBaseName(name);
+  if (!baseName || amount < 1) return [];
+  if (!state.ownedGear.includes(baseName)) state.ownedGear.push(baseName);
+  if (echoForgeGearNames.has(baseName)) {
+    const refs = Array.from({ length: amount }, () => createEchoGearInstance(baseName, options)).filter(Boolean);
+    syncEchoForgeCopies(baseName);
+    return refs;
+  }
+  state.gearCopies[baseName] = (state.gearCopies[baseName] || 0) + amount;
+  ensureGearMetadata(baseName, options);
+  return Array.from({ length: amount }, () => baseName);
 }
 
 function equippedGearUsers(name) {
   if (!name) return [];
-  return state.party.filter(id => Object.values(baseJobs[id].gear).includes(name));
+  const instance = gearInstance(name);
+  return state.party.filter(id => Object.values(baseJobs[id].gear).some(ref => instance ? ref === name : gearBaseName(ref) === gearBaseName(name)));
 }
 
 function gearCopyCount(name) {
-  return state.gearCopies[name] || (state.ownedGear.includes(name) ? 1 : 0);
+  if (gearInstance(name)) return 1;
+  const baseName = gearBaseName(name);
+  if (echoForgeGearNames.has(baseName)) return echoGearInstanceRefs(baseName).length;
+  return state.gearCopies[baseName] || (state.ownedGear.includes(baseName) ? 1 : 0);
 }
 
 function canEquip(id, gear) {
@@ -5864,14 +6018,18 @@ function winBattle(log) {
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
-  addOwnedGear(name, 1, { rarity: requestedRarity, rollAffixes: true, theme: options.theme || lootThemeForMap() });
-  const currentRarity = gearRarity(name);
-  if (RARITY_ORDER.indexOf(requestedRarity) > RARITY_ORDER.indexOf(currentRarity)) state.gearRarities[name] = requestedRarity;
-  const rarity = gearRarity(name);
-  topUpGearAffixes(name, rarity, options.theme || "dragon");
-  const affixes = gearAffixes(name);
+  const ref = addOwnedGear(name, 1, { rarity: requestedRarity, rollAffixes: true, theme: options.theme || lootThemeForMap() })[0] || name;
+  const currentRarity = gearRarity(ref);
+  if (RARITY_ORDER.indexOf(requestedRarity) > RARITY_ORDER.indexOf(currentRarity)) {
+    const instance = gearInstance(ref);
+    if (instance) instance.rarity = requestedRarity;
+    else state.gearRarities[name] = requestedRarity;
+  }
+  const rarity = gearRarity(ref);
+  topUpGearAffixes(ref, rarity, options.theme || "dragon");
+  const affixes = gearAffixes(ref);
   drops.push(`${options.label || rarity.toUpperCase()}: ${name}${affixes.length ? ` / ${affixes.map(entry => entry.text).join(", ")}` : ""}`);
-  return { name, rarity };
+  return { name, rarity, ref };
 }
 
 function guaranteeEchoHuntGearReward(rewards, rank = state.endgameRank || 1) {
@@ -6168,7 +6326,7 @@ function statusEquipmentHtml(id) {
     });
     const random = gearAffixes(name).map(entry => `<small class="is-affix">${entry.text || formatAffix(entry)}</small>`);
     const details = [...fixed, ...random];
-    return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${name}</strong>${gearRarityHtml(name)}</span><div>${details.length ? details.join("") : `<small>No fixed effect or random affix.</small>`}</div></div>`;
+    return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${gearDisplayName(name)}</strong>${gearRarityHtml(name)}</span><div>${details.length ? details.join("") : `<small>No fixed effect or random affix.</small>`}</div></div>`;
   }).join("");
 }
 
@@ -6272,22 +6430,23 @@ function renderMenu() {
     }).join("");
     const slots = Object.entries(h.gear).map(([slot, name]) => {
       const gear = gearByName(name);
-      const rare = gear ? `${gearRarityHtml(gear.name)}${gearEffectHtml(gear)}${gearAffixHtml(gear.name)}` : "";
-      const choices = gearDb[slot].filter(candidate => state.ownedGear.includes(candidate.name) && canEquip(id, candidate)).length;
+      const rare = gear ? `${gearRarityHtml(name)}${gearEffectHtml(gear)}${gearAffixHtml(name)}` : "";
+      const choices = ownedGearRefs(slot, id).length;
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
       const iconSheet = gear ? gearIconSheet(gear, id) : "gear-empty";
-      return `<div class="gear-slot ${selectedGearSlot === slot ? "is-selected" : ""}">${pixelIconHtml(iconSheet, iconIndex, "gear-slot-icon")}<span class="gear-slot-name">${slot}</span><div class="gear-detail"><strong>${name || "Empty slot"}</strong><small>${gear ? statLine(gear.stats) : "No stat bonus"}</small><p>${gear?.desc || "Unequipped gear remains in the Items inventory."}</p>${gear ? `<small class="gear-access">${gearAccessLabel(gear)}</small>${rare}` : ""}</div><button type="button" data-gear-slot="${slot}">Manage ${choices}</button></div>`;
+      return `<div class="gear-slot ${selectedGearSlot === slot ? "is-selected" : ""}">${pixelIconHtml(iconSheet, iconIndex, "gear-slot-icon")}<span class="gear-slot-name">${slot}</span><div class="gear-detail"><strong>${name ? gearDisplayName(name) : "Empty slot"}</strong><small>${gear ? statLine(gear.stats) : "No stat bonus"}</small><p>${gear?.desc || "Unequipped gear remains in the Items inventory."}</p>${gear ? `<small class="gear-access">${gearAccessLabel(gear)}</small>${rare}` : ""}</div><button type="button" data-gear-slot="${slot}">Manage ${choices}</button></div>`;
     }).join("");
-    const slotChoices = gearDb[selectedGearSlot]
-      .filter(candidate => state.ownedGear.includes(candidate.name) && canEquip(id, candidate));
+    const slotChoices = ownedGearRefs(selectedGearSlot, id).map(ref => ({ ref, gear: gearByName(ref) }));
     const choiceIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
-    const picker = `<section class="gear-picker"><header><strong>Choose ${selectedGearSlot}</strong><small>${h.name} can equip ${slotChoices.length} owned pieces</small></header><div class="gear-choice-list">${slotChoices.map(gear => {
-      const equipped = h.gear[selectedGearSlot] === gear.name;
-      const holders = equippedGearUsers(gear.name);
+    const picker = `<section class="gear-picker"><header><strong>Choose ${selectedGearSlot}</strong><small>${h.name} can equip ${slotChoices.length} owned pieces</small></header><div class="gear-choice-list">${slotChoices.map(({ ref, gear }) => {
+      const equipped = h.gear[selectedGearSlot] === ref;
+      const holders = equippedGearUsers(ref);
       const occupied = holders.filter(heroId => heroId !== id);
-      const copies = gearCopyCount(gear.name);
-      const holderText = holders.length ? `Equipped: ${holders.join(", ")} / owned x${copies}` : `In equipment inventory / owned x${copies}`;
-      return `<button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${gear.name}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gear.name}</strong>${gearRarityHtml(gear.name)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "gear-choice-effects")}${gearAffixHtml(gear.name)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>`;
+      const copies = gearCopyCount(ref);
+      const holderText = gearInstance(ref)
+        ? (holders.length ? `Separate copy / equipped: ${holders.join(", ")}` : "Separate Echo-Forge copy / unequipped")
+        : (holders.length ? `Equipped: ${holders.join(", ")} / owned x${copies}` : `In equipment inventory / owned x${copies}`);
+      return `<button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${ref}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "gear-choice-effects")}${gearAffixHtml(ref)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>`;
     }).join("")}<button type="button" class="gear-choice gear-unequip" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${pixelIconHtml("gear-empty", choiceIndex, "gear-choice-icon")}<span><strong>Unequip</strong><small>Move this piece back to the Items inventory.</small></span><b>${h.gear[selectedGearSlot] ? "REMOVE" : "EMPTY"}</b></button></div></section>`;
     el.menuBody.innerHTML = `<p class="gear-instruction">Choose a hero, then choose one of their five equipment slots.</p><div class="gear-roster">${roster}</div><div class="gear-layout"><section class="gear-summary"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><section class="menu-card gear-card">${slots}</section></div>${picker}`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
@@ -6316,14 +6475,14 @@ function renderMenu() {
       }).join("")}</div>` : "";
       return `<div class="menu-card item-card">${pixelIconHtml(icon.sheet, icon.index, "inventory-icon")}<div class="item-copy"><strong>${name}<span>x${amount}</span></strong><small>${info.type}</small><p>${info.desc}</p>${battleEffect}${targets}</div></div>`;
     };
-    const equipment = state.ownedGear.map(name => gearByName(name)).filter(Boolean);
-    const equipmentCard = gear => {
-      const holders = equippedGearUsers(gear.name);
-      const copies = gearCopyCount(gear.name);
+    const equipment = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
+    const equipmentCard = ({ ref, gear }) => {
+      const holders = equippedGearUsers(ref);
+      const copies = gearCopyCount(ref);
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
       const iconHero = holders[0] || gearOwners[gear.name]?.[0] || state.activeParty[0];
       const status = holders.length ? `Equipped by ${holders.join(", ")} (${holders.length}/${copies})` : `Unequipped (${copies} owned)`;
-      return `<div class="menu-card item-card gear-inventory-card">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "inventory-icon")}<div class="item-copy"><strong>${gear.name}<span>x${copies}</span></strong>${gearRarityHtml(gear.name)}<small>${gear.slot.toUpperCase()} / ${status}</small><p>${statLine(gear.stats)}. ${gear.desc}</p>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(gear.name)}</div></div>`;
+      return `<div class="menu-card item-card gear-inventory-card">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "inventory-icon")}<div class="item-copy"><strong>${gearDisplayName(ref)}<span>${gearInstance(ref) ? "SEPARATE COPY" : `x${copies}`}</span></strong>${gearRarityHtml(ref)}<small>${gear.slot.toUpperCase()} / ${status}</small><p>${statLine(gear.stats)}. ${gear.desc}</p>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(ref)}</div></div>`;
     };
     const fieldSkills = state.party.flatMap(casterId => baseJobs[casterId].skills
       .filter(sk => sk.anim !== "ultimate" && (sk.power < 0 || sk.anim === "block"))
@@ -6438,7 +6597,7 @@ function equipGear(value) {
     return renderMenu();
   }
   const gear = gearByName(name);
-  if (!gear || gear.slot !== slot || !state.ownedGear.includes(name) || !canEquip(id, gear)) return;
+  if (!gear || gear.slot !== slot || !ownsGearRef(name) || !canEquip(id, gear)) return;
   const holders = state.party.filter(heroId => heroId !== id && baseJobs[heroId].gear[slot] === name);
   const usedCopies = state.party.filter(heroId => baseJobs[heroId].gear[slot] === name).length;
   if (holders.length && usedCopies >= gearCopyCount(name)) {
@@ -6601,35 +6760,40 @@ function renderVendor() {
   const stashEntries = Object.entries(state.stash).filter(([, amount]) => amount > 0);
   const buyList = `<div class="shop-list">${wares.map((ware, index) => {
     const gear = ware.kind === "gear" ? gearByName(ware.name) : null;
-    const owned = ware.kind === "gear" && state.ownedGear.includes(ware.name);
+    const repeatableEcho = gear && echoForgeGearNames.has(gear.name);
+    const owned = ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho;
     const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
     const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
     const effects = gear ? gearEffectLabels(gear) : [];
-    const generatedAffixes = gear ? RARITY_AFFIX_COUNTS[gearRarity(gear.name)] || 0 : 0;
-    const rollText = gear && (echoForgeGearNames.has(gear.name) || zoneStarterGear.includes(gear)) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
-    const details = gear ? `${gearRarity(gear.name)}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
+    const displayedRarity = gear ? (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name)) : "Common";
+    const generatedAffixes = gear ? RARITY_AFFIX_COUNTS[displayedRarity] || 0 : 0;
+    const rollText = repeatableEcho
+      ? ` Every separate copy rolls a fresh, fully random set of ${generatedAffixes} affixes.`
+      : gear && zoneStarterGear.includes(gear) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
+    const details = gear ? `${displayedRarity}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
     const icon = gear
       ? pixelIconHtml(gearIconSheet(gear, gearOwners[gear.name]?.[0] || state.party[0]), { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
       : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
-    return `<div class="shop-row">${icon}<div><strong>${ware.name}</strong><small>${details}</small></div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : "Buy"}</button></div>`;
+    const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
+    return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong><small>${details}</small></div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
   }).join("")}</div>${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
   }).join("")}</div>` : ""}`;
   const sellItems = Object.entries(state.inventory).filter(([name, amount]) => amount > 0 && inventorySellPrice(name) > 0);
-  const sellGear = state.ownedGear.map(name => gearByName(name)).filter(gear => gear && gearSellPrice(gear) > 0 && gearCopyCount(gear.name) > equippedGearUsers(gear.name).length);
+  const sellGear = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(({ ref, gear }) => gear && gearSellPrice(gear) > 0 && gearCopyCount(ref) > equippedGearUsers(ref).length);
   const sellList = `<div class="shop-list">${sellItems.map(([name, amount]) => {
     const info = inventoryInfo(name);
     const icon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(icon.sheet, icon.index, "shop-icon")}<div><strong>${name} x${amount}</strong><small>${info.type}. ${info.desc}</small></div><span>${inventorySellPrice(name)} G</span><button type="button" data-sell-kind="item" data-sell-name="${name}">Sell 1</button></div>`;
-  }).join("")}${sellGear.map(gear => {
+  }).join("")}${sellGear.map(({ ref, gear }) => {
     const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
-    const available = gearCopyCount(gear.name) - equippedGearUsers(gear.name).length;
-    return `<div class="shop-row">${pixelIconHtml(gearIconSheet(gear, state.party[0]), iconIndex, "shop-icon")}<div><strong>${gear.name} x${available} spare</strong><small>${gearRarity(gear.name)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(gear.name)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${gear.name}">Sell 1</button></div>`;
+    const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
+    return `<div class="shop-row">${pixelIconHtml(gearIconSheet(gear, state.party[0]), iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(ref)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop"
-    ? `Echo Forge rank ${forgeRank}/20. Every cleared Echo Hunt rank unlocks two different Legendary all-hero upgrades here, each with a fixed Echo effect and four random affixes. NG+ also unlocks improved consumables.`
+    ? `Echo Forge rank ${forgeRank}/20. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
   el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
@@ -6686,11 +6850,19 @@ function sellVendorItem(kind, name) {
     state.inventory[name]--;
     state.gold += price;
   } else if (kind === "gear") {
-    const gear = gearByName(name);
+    const ref = name;
+    const gear = gearByName(ref);
     const price = gearSellPrice(gear);
-    if (!price || gearCopyCount(name) <= equippedGearUsers(name).length) return;
-    state.gearCopies[name] = Math.max(0, gearCopyCount(name) - 1);
-    if (!state.gearCopies[name]) state.ownedGear = state.ownedGear.filter(ownedName => ownedName !== name);
+    if (!price || gearCopyCount(ref) <= equippedGearUsers(ref).length) return;
+    const instance = gearInstance(ref);
+    if (instance) {
+      const baseName = instance.name;
+      delete gearInstances[ref];
+      syncEchoForgeCopies(baseName);
+    } else {
+      state.gearCopies[ref] = Math.max(0, gearCopyCount(ref) - 1);
+      if (!state.gearCopies[ref]) state.ownedGear = state.ownedGear.filter(ownedName => ownedName !== ref);
+    }
     state.gold += price;
   } else return;
   playSfx("coin");
@@ -6702,13 +6874,15 @@ function buyWare(index) {
   const ware = vendorWares(activeVendor)[index];
   const price = ware?.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware?.price;
   if (!ware || state.gold < price) return;
-  if (ware.kind === "gear" && state.ownedGear.includes(ware.name)) return;
+  const repeatableEcho = ware.kind === "gear" && echoForgeGearNames.has(ware.name);
+  if (ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho) return;
   if (ware.kind === "item" && inventoryUsed() >= state.inventorySlots) return;
   state.gold -= price;
   if (ware.kind === "gear") {
     const gear = gearByName(ware.name);
-    addOwnedGear(ware.name, 1, { rarity: defaultGearRarity(ware.name), rollAffixes: true, theme: activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp" });
-    if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(gear.name, gearRarity(gear.name), "dragon");
+    const refs = addOwnedGear(ware.name, 1, { rarity: defaultGearRarity(ware.name), rollAffixes: true, theme: repeatableEcho ? "" : activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp" });
+    const ref = refs[0] || gear?.name;
+    if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(ref, gearRarity(ref), repeatableEcho ? "" : "dragon");
   }
   else if (ware.kind === "upgrade") {
     state.inventorySlots += 10;
@@ -7147,6 +7321,37 @@ function runQaChecks() {
     check("echo-upgrade-identity", echoIdentity);
     check("echo-forge-two-per-rank", echoForgeGear.length === 40 && new Set(echoForgeGear.map(gear => gear.name)).size === 40 && Array.from({ length: 20 }, (_, index) => echoForgeGear.filter(gear => gear.echoRank === index + 1).length === 2).every(Boolean));
     check("echo-forge-all-legendary", echoForgeGear.every(gear => defaultGearRarity(gear.name) === "Legendary"));
+    const echoInstanceBackup = {
+      ownedGear: [...state.ownedGear],
+      gearCopies: { ...state.gearCopies },
+      gearInstances: structuredClone(state.gearInstances),
+      nextGearInstance: state.nextGearInstance,
+      echoForgeRank: state.echoForgeRank,
+      gold: state.gold,
+      activeVendor
+    };
+    const repeatableEchoWeapon = echoForgeGear.find(gear => gear.slot === "weapon");
+    const originalEchoRefs = new Set(echoGearInstanceRefs(repeatableEchoWeapon.name));
+    state.echoForgeRank = Math.max(1, state.echoForgeRank || 0);
+    state.gold = repeatableEchoWeapon.price * 3;
+    activeVendor = "workshop";
+    const repeatableWareIndex = vendorWares("workshop").findIndex(ware => ware.kind === "gear" && ware.name === repeatableEchoWeapon.name);
+    buyWare(repeatableWareIndex);
+    buyWare(repeatableWareIndex);
+    const [echoCopyA, echoCopyB] = echoGearInstanceRefs(repeatableEchoWeapon.name).filter(ref => !originalEchoRefs.has(ref));
+    check("echo-forge-repeatable-shop", repeatableWareIndex >= 0 && Boolean(echoCopyA) && Boolean(echoCopyB));
+    check("echo-forge-separate-copy-ids", echoCopyA !== echoCopyB && gearInstance(echoCopyA)?.name === repeatableEchoWeapon.name && gearInstance(echoCopyB)?.name === repeatableEchoWeapon.name);
+    check("echo-forge-separate-affix-storage", gearAffixes(echoCopyA) !== gearAffixes(echoCopyB) && gearAffixes(echoCopyA).length === 4 && gearAffixes(echoCopyB).length === 4);
+    check("echo-forge-fresh-affix-rolls", gearAffixSignature(gearAffixes(echoCopyA)) !== gearAffixSignature(gearAffixes(echoCopyB)));
+    check("echo-forge-picker-sees-copies", ownedGearRefs("weapon", "Verseborn").includes(echoCopyA) && ownedGearRefs("weapon", "Verseborn").includes(echoCopyB));
+    state.ownedGear = echoInstanceBackup.ownedGear;
+    state.gearCopies = echoInstanceBackup.gearCopies;
+    state.gearInstances = echoInstanceBackup.gearInstances;
+    state.nextGearInstance = echoInstanceBackup.nextGearInstance;
+    state.echoForgeRank = echoInstanceBackup.echoForgeRank;
+    state.gold = echoInstanceBackup.gold;
+    activeVendor = echoInstanceBackup.activeVendor;
+    gearInstances = state.gearInstances;
     check("legendary-echo-unique", postgameGear.every(gear => gearEffects(gear).filter(effect => effect.echoUnique).length === 1));
     check("echo-hunt-legendary-variety", postgameGear.length >= 15 && echoForgeSlots.every(slot => postgameGear.filter(gear => gear.slot === slot).length >= 3));
     check("ngplus-chest-variety", ngPlusChestGear.length >= 20 && echoForgeSlots.every(slot => ngPlusChestGear.filter(gear => gear.slot === slot).length >= 4));
@@ -7464,16 +7669,32 @@ function runQaChecks() {
     const savedBackup = localStorage.getItem(SAVE_KEY);
     const oldGold = state.gold;
     const oldTestAffixes = state.gearAffixes["Ashrunner Knife"];
+    const savedEchoState = {
+      ownedGear: [...state.ownedGear],
+      gearCopies: { ...state.gearCopies },
+      gearInstances: structuredClone(state.gearInstances),
+      nextGearInstance: state.nextGearInstance
+    };
     battle = null;
     mode = "walk";
     state.gold = 4321;
     state.gearAffixes["Ashrunner Knife"] = rollGearAffixes(gearByName("Ashrunner Knife"), "Rare", "mountain");
+    const savedEchoName = echoForgeGear.find(gear => gear.slot === "weapon").name;
+    const [savedEchoRef] = addOwnedGear(savedEchoName, 1, { rarity: "Legendary", rollAffixes: true });
+    const savedEchoAffixes = gearAffixSignature(gearAffixes(savedEchoRef));
     const wroteSave = saveGame();
     state.gold = 1;
     state.gearAffixes["Ashrunner Knife"] = [];
+    delete gearInstances[savedEchoRef];
     const loadedSave = loadGame();
     check("save-load-compatible", wroteSave && loadedSave && state.gold === 4321);
     check("affix-save-load", state.gearAffixes["Ashrunner Knife"]?.length === RARITY_AFFIX_COUNTS.Rare);
+    check("echo-copy-save-load", gearInstance(savedEchoRef)?.name === savedEchoName && gearAffixSignature(gearAffixes(savedEchoRef)) === savedEchoAffixes);
+    state.ownedGear = savedEchoState.ownedGear;
+    state.gearCopies = savedEchoState.gearCopies;
+    state.gearInstances = savedEchoState.gearInstances;
+    state.nextGearInstance = savedEchoState.nextGearInstance;
+    gearInstances = state.gearInstances;
 
     const echoName = echoForgeGear[0].name;
     const legendaryName = postgameGear[0].name;
