@@ -2783,6 +2783,29 @@ function totals(id) {
   return { ...out, max: Math.round(max * (1 + affixValue(id, "hpPct"))), mp };
 }
 
+function agilityCritBonusFromAgi(agility) {
+  const stepsAboveFifty = Math.floor((Math.max(0, agility) - 50) / 10);
+  return Math.max(0, Math.min(.08, stepsAboveFifty * .01));
+}
+
+function heroCritBreakdown(id) {
+  const base = Math.max(0, talentValue(id, "critChance") + effectValue(id, "critChance"));
+  const agilityBonus = agilityCritBonusFromAgi(totals(id).agi);
+  const baseCapped = Math.min(.65, base);
+  const total = Math.min(.65, base + agilityBonus);
+  return {
+    base: baseCapped,
+    agilityBonus,
+    agilityApplied: Math.max(0, total - baseCapped),
+    total
+  };
+}
+
+function heroCritChance(id, afflicted = false) {
+  const normal = heroCritBreakdown(id).total;
+  return Math.min(.65, normal + (afflicted ? typedTalentValue(id, "afflictedCrit") : 0));
+}
+
 function refreshHeroVitals() {
   Object.keys(baseJobs).forEach(id => {
     const t = totals(id);
@@ -5322,7 +5345,7 @@ function skillPreview(u, sk, target = null) {
   const cost = sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`;
   const targetText = target ? ` Against ${target.name}: ${targetLow}-${targetHigh} damage${hitsWeakness && revealWeakness ? " including weakness" : ""}.` : "";
   const areaText = skillHitsAll(u.id, sk) ? " Hits every living enemy." : " Hits one selected enemy.";
-  const critChance = Math.min(.5, talentValue(u.id, "critChance") + effectValue(u.id, "critChance"));
+  const critChance = heroCritChance(u.id, Boolean(target && hasNegativeStatus(target)));
   const critText = critChance ? ` ${Math.round(critChance * 100)}% critical chance for double damage.` : "";
   return `${sk.element} ${sk.anim} / ${low}-${high} base damage from ${statName} ${stat} / costs ${cost}.${targetText}${areaText}${critText}${revealWeakness ? weakText : " Weaknesses are hidden until a reveal talent is active."} ${sk.desc}`;
 }
@@ -5581,9 +5604,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       let totalDamageDealt = 0;
       hitTargets.forEach(hitTarget => {
         const afflicted = hasNegativeStatus(hitTarget);
-        let critChance = talentValue(u.id, "critChance") + effectValue(u.id, "critChance");
-        if (afflicted) critChance += typedTalentValue(u.id, "afflictedCrit");
-        critChance = Math.min(.65, critChance);
+        const critChance = heroCritChance(u.id, afflicted);
         const statKey = sk.anim === "magic" || sk.anim === "ultimate" ? "mag" : "str";
         const offensiveStat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
         let dmg = (sk.coefficient ? offensiveStat * sk.coefficient : sk.power + offensiveStat) + Math.floor(Math.random() * 6);
@@ -6268,43 +6289,92 @@ const characterSpecialties = {
 };
 
 const statusStatHelp = [
-  ["STR", "Physical and melee damage"],
-  ["AGI", "Turn speed and action frequency"],
-  ["MAG", "Spell damage and maximum MP"],
-  ["STAM", "Maximum HP and durability"],
-  ["CRIT", "Chance for double damage"],
-  ["DPS / HPS", "AGI-adjusted non-ultimate output"]
+  ["STR", "+1 base damage per point for most physical and melee skills."],
+  ["AGI", "Turn order. Every 10 points above 50 grants +1% CRIT, capped at +8% from 130 AGI."],
+  ["MAG", "+1 base damage per point for most magic skills and +3 maximum MP per point."],
+  ["STAM", "+4 maximum HP per point. Every hero also has 30 base HP."],
+  ["HP / MP", "HP keeps a hero standing. MP is spent on non-ultimate skills."],
+  ["CRIT", "Chance to deal double damage. For example, 25% CRIT adds 25% average damage over many hits."],
+  ["DMG / ACTION", "Expected damage from the strongest non-ultimate command, including average critical damage."],
+  ["HEAL / ALLY", "HP restored to one ally by the strongest non-ultimate heal. Group heals restore this to each ally."]
 ];
 
 function estimatedHeroOutput(id) {
   const t = totals(id);
   const skills = battleSkills(id);
-  const crit = Math.min(.65, talentValue(id, "critChance") + effectValue(id, "critChance"));
+  const critInfo = heroCritBreakdown(id);
+  const crit = critInfo.total;
   const afflictedCrit = Math.min(.65, crit + typedTalentValue(id, "afflictedCrit"));
-  const actionRate = .75 + t.agi / 40;
   const damageOptions = skills.filter(sk => sk.anim !== "ultimate" && sk.power > 0 && skillTargetsEnemies(sk)).map(sk => {
     const kind = sk.anim === "magic" ? "magic" : "melee";
-    const stat = kind === "magic" ? t.mag : t.str;
-    const base = sk.power + stat + 2.5;
-    const multiplier = 1 + effectValue(id, kind === "magic" ? "magicDamage" : "physicalDamage");
-    return { name: sk.name, value: base * multiplier * (1 + crit) * actionRate };
+    const statKey = kind === "magic" ? "mag" : "str";
+    const stat = t[statKey];
+    const statContribution = sk.coefficient ? stat * sk.coefficient : stat;
+    const base = (sk.coefficient ? statContribution : sk.power + statContribution) + 2.5;
+    const gearDamageBonus = effectValue(id, kind === "magic" ? "magicDamage" : "physicalDamage");
+    const damageBeforeCrit = base * (1 + gearDamageBonus);
+    const damageWithoutAgiCrit = damageBeforeCrit * (1 + critInfo.base);
+    const value = damageBeforeCrit * (1 + crit);
+    return {
+      name: sk.name,
+      value,
+      damageBeforeCrit,
+      damageWithoutAgiCrit,
+      statName: statKey.toUpperCase(),
+      statValue: stat,
+      statContribution,
+      statShare: base ? statContribution / base : 0,
+      gearDamageBonus
+    };
   });
   const healingOptions = skills.filter(sk => sk.anim !== "ultimate" && sk.power < 0).map(sk => {
-    const partyWide = sk.partyWide || talentValue(id, "partyHeal", sk.name) > 0;
-    const targetFactor = partyWide ? 1 + Math.max(0, state.activeParty.length - 1) * .5 : 1;
-    const value = Math.abs(sk.power) * (1 + talentValue(id, "healBoost")) * targetFactor * actionRate;
+    const value = Math.abs(sk.power) * (1 + talentValue(id, "healBoost"));
     return { name: sk.name, value };
   });
-  const bestDamage = damageOptions.sort((a, b) => b.value - a.value)[0] || { name: "None", value: 0 };
+  const bestDamage = damageOptions.sort((a, b) => b.value - a.value)[0] || {
+    name: "None",
+    value: 0,
+    damageBeforeCrit: 0,
+    damageWithoutAgiCrit: 0,
+    statName: "STR",
+    statValue: t.str,
+    statContribution: 0,
+    statShare: 0,
+    gearDamageBonus: 0
+  };
   const bestHealing = healingOptions.sort((a, b) => b.value - a.value)[0] || { name: "None", value: 0 };
+  const agiDamageGain = Math.max(0, bestDamage.value - bestDamage.damageWithoutAgiCrit);
+  const agiDamagePercent = bestDamage.damageWithoutAgiCrit ? agiDamageGain / bestDamage.damageWithoutAgiCrit : 0;
   return {
     crit,
     afflictedCrit,
+    critInfo,
     dps: Math.round(bestDamage.value),
     dpsSkill: bestDamage.name,
+    damageBeforeCrit: Math.round(bestDamage.damageBeforeCrit),
+    agiDamageGain: Math.round(agiDamageGain),
+    agiDamagePercent,
+    damageStatName: bestDamage.statName,
+    damageStatValue: bestDamage.statValue,
+    damageStatContribution: Math.round(bestDamage.statContribution),
+    damageStatPercent: bestDamage.statShare,
+    gearDamageBonus: bestDamage.gearDamageBonus,
     hps: Math.round(bestHealing.value),
     hpsSkill: bestHealing.name
   };
+}
+
+function statusStatImpactHtml(t, output) {
+  const baseHp = 30 + t.stam * 4;
+  const bonusHp = t.max - baseHp;
+  const agiCrit = Math.round(output.critInfo.agilityBonus * 100);
+  const appliedAgiCrit = Math.round(output.critInfo.agilityApplied * 100);
+  const baseCrit = Math.round(output.critInfo.base * 100);
+  const totalCrit = Math.round(output.crit * 100);
+  const agiCapNote = appliedAgiCrit < agiCrit ? ` (${appliedAgiCrit}% applied at the 65% total cap)` : "";
+  const gearDamage = Math.round(output.gearDamageBonus * 100);
+  const hpBonusText = bonusHp ? ` Equipment HP bonuses add ${bonusHp > 0 ? "+" : ""}${bonusHp}.` : "";
+  return `<div class="status-stat-impact"><span><b>OFFENSE</b><small><strong>${output.damageStatName} ${output.damageStatValue}</strong> contributes ${output.damageStatContribution} base damage to ${output.dpsSkill} (${Math.round(output.damageStatPercent * 100)}% of its pre-crit output). ${gearDamage ? `Damage gear adds +${gearDamage}%. ` : ""}${output.damageBeforeCrit} before crit becomes ${output.dps} average damage.</small></span><span><b>AGI + CRIT</b><small><strong>AGI ${t.agi}</strong> grants +${agiCrit}% CRIT${agiCapNote}. Base gear/talent CRIT is ${baseCrit}%, for ${totalCrit}% total. AGI adds about ${output.agiDamageGain} damage/action (+${Math.round(output.agiDamagePercent * 100)}%).</small></span><span><b>VITALS</b><small><strong>STAM ${t.stam}</strong> supplies ${t.stam * 4} HP plus 30 base HP.${hpBonusText} <strong>MAG ${t.mag}</strong> supplies ${t.mag * 3} MP plus 12 base MP.</small></span></div>`;
 }
 
 function equippedProcChances(id) {
@@ -6340,7 +6410,10 @@ function statusCardHtml(id) {
   const portrait = portraitSources[id];
   const specialties = characterSpecialties[id] || [h.title];
   const procHtml = procs.length ? procs.map(entry => `<span><b>${entry.type.toUpperCase()}</b><strong>${Math.round(entry.raw * 100)}%</strong><small>${Math.round(entry.normalChance * 100)}% vs normal foes</small></span>`).join("") : `<p class="status-empty">No Poison, Sleep or Stun proc equipped.</p>`;
-  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${output.afflictedCrit > output.crit ? `${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "Double damage"}</em></span><span><small>DPS EST.</small><strong>${output.dps}</strong><em>${output.dpsSkill}</em></span><span><small>HPS EST.</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen milestones</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No milestone skills chosen yet."}</p></section></article>`;
+  const baseCrit = Math.round(output.critInfo.base * 100);
+  const agiCrit = Math.round(output.critInfo.agilityBonus * 100);
+  const afflictedText = output.afflictedCrit > output.crit ? ` / ${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "";
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div><section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen milestones</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No milestone skills chosen yet."}</p></section></article>`;
 }
 
 function toggleTalent(value) {
@@ -6366,7 +6439,7 @@ function renderMenu() {
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
     const glossary = statusStatHelp.map(([stat, detail]) => `<span><b>${stat}</b><small>${detail}</small></span>`).join("");
-    el.menuBody.innerHTML = `<div class="status-glossary">${glossary}</div><p class="status-estimate-note">DPS and HPS compare the strongest non-ultimate command after AGI, before enemy defense or weakness. Proc rates show the combined equipped chance and its expected rate against a normal enemy.</p><div class="status-menu-grid">${state.party.map(statusCardHtml).join("")}</div>`;
+    el.menuBody.innerHTML = `<div class="status-glossary">${glossary}</div><p class="status-estimate-note">AGI changes turn order and critical chance, but does not create extra normal turns. Damage/action uses the average random roll and total CRIT, including damage gear; it excludes enemy defense, weakness, temporary buffs, afflicted bonuses and extra area targets. Proc rates show the equipped chance and the expected rate against a normal enemy.</p><div class="status-menu-grid">${state.party.map(statusCardHtml).join("")}</div>`;
   }
   if (menuTab === "party") {
     const activeSlots = Array.from({ length: 3 }, (_, index) => {
@@ -7234,6 +7307,7 @@ if (new URLSearchParams(location.search).has("qa")) {
       return applyStatus(target, type, target, { duration, force: true });
     },
     rollAffixes: (name, rarity = "Epic", theme = "mountain") => rollGearAffixes(gearByName(name), rarity, theme),
+    heroStats: id => ({ totals: totals(id), crit: heroCritBreakdown(id), output: estimatedHeroOutput(id) }),
     save: saveGame,
     load: loadGame
   };
@@ -7303,6 +7377,12 @@ function runQaChecks() {
       const output = estimatedHeroOutput(id);
       return Number.isFinite(output.dps) && output.dps >= 0 && Number.isFinite(output.hps) && output.hps >= 0 && output.crit >= 0 && output.crit <= .65;
     }));
+    check("agility-crit-scale", [[50, 0], [70, .02], [90, .04], [110, .06], [130, .08], [137, .08], [200, .08]].every(([agi, expected]) => Math.abs(agilityCritBonusFromAgi(agi) - expected) < .0001));
+    check("status-output-per-action", profileIds.every(id => {
+      const output = estimatedHeroOutput(id);
+      return output.dps === Math.round(output.damageBeforeCrit * (1 + output.crit)) && output.agiDamageGain >= 0 && output.agiDamagePercent >= 0;
+    }));
+    check("status-stat-impact", profileIds.every(id => statusStatImpactHtml(totals(id), estimatedHeroOutput(id)).includes("AGI + CRIT")));
     check("status-equipment-breakdown", ["WEAPON", "ARMOUR", "RING", "HELMET"].every(slot => statusEquipmentHtml("Verseborn").includes(slot)));
     const oldStatusWeapon = baseJobs.Verseborn.gear.weapon;
     baseJobs.Verseborn.gear.weapon = "Ashrunner Knife";

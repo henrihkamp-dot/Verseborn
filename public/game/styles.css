@@ -341,7 +341,7 @@ canvas:focus {
 
 .status-glossary {
   display: grid;
-  grid-template-columns: repeat(6, minmax(105px, 1fr));
+  grid-template-columns: repeat(4, minmax(145px, 1fr));
   gap: 6px;
   margin-bottom: 7px;
   padding: 8px 0 10px;
@@ -487,6 +487,43 @@ canvas:focus {
   font-size: 10px;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.status-stat-impact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.status-stat-impact > span {
+  min-width: 0;
+  padding: 6px;
+  background: #0d0a11;
+}
+
+.status-stat-impact b,
+.status-stat-impact small,
+.status-stat-impact strong {
+  display: block;
+}
+
+.status-stat-impact b {
+  margin-bottom: 3px;
+  color: #d8b06b;
+  font-size: 9px;
+}
+
+.status-stat-impact small {
+  color: #bfae8d;
+  font-size: 9px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.status-stat-impact strong {
+  display: inline;
+  margin: 0;
+  color: #f4dfad;
 }
 
 .status-procs {
@@ -2258,6 +2295,11 @@ h1 {
 
   .status-core-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .status-glossary,
+  .status-stat-impact {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .status-gear-row {
