@@ -82,6 +82,7 @@ let talkAfter = null;
 let battle = null;
 let effect = null;
 let battleFloaters = [];
+const BATTLE_FLOATER_LIFETIME = 78;
 let codexIndex = 0;
 let battleActionIndex = 0;
 let heldDirection = null;
@@ -1967,7 +1968,7 @@ const compactTalentTrees = {
 
 const HEAL_CONVERSION_BUFFS = {
   Seerin: { "Cinder Guard": { type: "holyFollowUp", value: .1, duration: 1, label: "Holy Follow-up", description: "their next damaging action adds 10% Holy damage" } },
-  Glimmer: { "Patch Job": { type: "combatDrone", value: .25, duration: 2, label: "Combat Drone", description: "grants Combat Drone for 2 actions" } },
+  Glimmer: { "Patch Job": { type: "combatDrone", value: .4, duration: 2, label: "Combat Drone", description: "grants Combat Drone for 2 actions; it fires after each damaging action" } },
   Kael: { "Quiet Rite": { type: "defenseUp", value: .12, duration: 2, label: "12% Damage Reduction", description: "grants 12% Damage Reduction for 2 actions" } }
 };
 
@@ -4454,12 +4455,12 @@ function addBattleFloater(target, amount, options = {}) {
 }
 
 function drawBattleFloaters() {
-  battleFloaters = battleFloaters.filter(floater => tick - floater.born < 48);
+  battleFloaters = battleFloaters.filter(floater => tick - floater.born < BATTLE_FLOATER_LIFETIME);
   battleFloaters.forEach(floater => {
     const age = tick - floater.born;
     if (age < 0) return;
-    const rise = Math.round(age * .28);
-    const alpha = Math.min(1, (48 - age) / 12);
+    const rise = Math.round(Math.min(age, 48) * .28);
+    const alpha = Math.min(1, (BATTLE_FLOATER_LIFETIME - age) / 12);
     const healing = floater.kind === "heal";
     const main = `${healing ? "+" : ""}${floater.amount}`;
     const mainSize = floater.crit ? 13 : 10;
@@ -6320,14 +6321,24 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         applyStatus(spreadTarget, "burn", u, { force: true, duration: 3, scaling: "mag", element: "Ancient Fire" });
         log += ` Wildfire spreads to ${spreadTarget.name}.`;
       }
-      if (statusOf(u, "combatDrone") && totalDamageDealt > 0) {
-        const dronePower = statusValue(u, "combatDrone") * (1 + typedTalentValue(u.id, "dronePower") + typedTalentValue(u.id, "gadgetCapstone"));
-        const droneTargets = typedTalentValue(u.id, "dronePower") ? battle.enemies.filter(enemy => enemy.hp > 0).slice(0, 2) : battle.enemies.filter(enemy => enemy.hp > 0).slice(0, 1);
+      const droneStatus = statusOf(u, "combatDrone");
+      if (droneStatus && totalDamageDealt > 0) {
+        const droneOwnerId = baseJobs[droneStatus.source?.id] ? droneStatus.source.id : u.id;
+        const droneTalentPower = typedTalentValue(droneOwnerId, "dronePower");
+        const dronePower = (droneStatus.value ?? STATUS_DEFS.combatDrone.value) * (1 + droneTalentPower + typedTalentValue(droneOwnerId, "gadgetCapstone"));
+        const actionAssist = (totalDamageDealt / Math.max(1, hitTargets.length)) * .15;
+        const droneDamage = Math.max(1, Math.round(totals(droneOwnerId).mag * dronePower + actionAssist));
+        const droneTargets = battle.enemies.filter(enemy => enemy.hp > 0).slice(0, droneTalentPower ? 2 : 1);
         droneTargets.forEach(enemy => {
-          const droneDamage = Math.max(1, Math.round(totals(u.id).mag * dronePower));
           enemy.hp = Math.max(0, enemy.hp - droneDamage);
-          addBattleFloater(enemy, droneDamage, { damageType: "Tech" });
-          log += ` Drone hits ${enemy.name} for ${droneDamage}.`;
+          enemy.flash = 10;
+          addBattleFloater(enemy, droneDamage, { damageType: "Drone Tech" });
+          if (enemy.hp <= 0 && !enemy.defeatUntil) {
+            enemy.anim = "death";
+            enemy.deathTick = tick;
+            enemy.defeatUntil = tick + (enemyAnimationSheetFor(enemy) ? 30 : 12);
+          }
+          log += ` Combat Drone hits ${enemy.name} for ${droneDamage}.`;
         });
       }
       if (sk.selfHealRatio && totalDamageDealt > 0) {
