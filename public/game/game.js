@@ -276,39 +276,62 @@ const animatedNpcHeights = {
   Grumm: 24
 };
 const enemyAnimationFiles = {
-  "Inkbound Auditor": "inkbound-auditor",
-  "Dawn Gate Sentinel": "dawn-gate-sentinel",
-  "Archive Custodian": "archive-custodian",
-  "Dock Foreman": "dock-foreman",
-  "Seal Bearer": "clergy-seal-patrol",
-  "Cracked Pillar": "cracked-armory-pillar",
-  "Ash Wyrm": "ash-wyrm"
+  "Inkbound Auditor": "Inkbound Auditor",
+  "King Maeric": "King Maeric",
+  Grumm: "Grumm",
+  Kaeldrin: "Kaeldrin",
+  Marla: "Marla",
+  Lyrsa: "Lyrsa",
+  Nyx: "Nyx",
+  Rava: "Rava",
+  Shade: "Shade",
+  Tja: "Tja",
+  "Archive Custodian": "Archive Custodian",
+  "Ash Wyrm": "Ash Wyrm",
+  "Cracked Pillar": "Cracked Pillar",
+  "Seal Bearer": "Seal Bearer",
+  "Dock Foreman": "Dock Foreman",
+  "Dawn Gate Sentinel": "Dawn Gate Sentinel",
+  Jory: "Jory"
 };
 const enemyAnimationHeights = {
-  "Inkbound Auditor": 44,
-  "Dawn Gate Sentinel": 51,
-  "Archive Custodian": 47,
-  "Dock Foreman": 45,
-  "Seal Bearer": 45,
-  "Cracked Pillar": 55,
-  "Ash Wyrm": 60
+  "Inkbound Auditor": 47,
+  "King Maeric": 54,
+  Grumm: 55,
+  Kaeldrin: 55,
+  Marla: 49,
+  Lyrsa: 51,
+  Nyx: 48,
+  Rava: 51,
+  Shade: 50,
+  Tja: 50,
+  "Archive Custodian": 49,
+  "Ash Wyrm": 62,
+  "Cracked Pillar": 58,
+  "Seal Bearer": 51,
+  "Dock Foreman": 53,
+  "Dawn Gate Sentinel": 58,
+  Jory: 49
 };
-const magicEnemyAnimations = new Set([
-  "Inkbound Auditor",
-  "Archive Custodian",
-  "Seal Bearer",
-  "Ash Wyrm"
-]);
 const magicNpcAnimations = new Set(["Lyrsa", "Nyx", "Jory"]);
 const enemyAbilityProfiles = {
-  Jory: { row: 0, element: "Sound", magic: "Star Note", ultimate: "Grand Chord" },
-  Nyx: { row: 1, element: "Shadow", magic: "Shadow Bolt", ultimate: "Gravebind" },
-  Rava: { row: 2, element: "Ancient Fire", magic: "Ember Javelin", ultimate: "Dragon's Breath" },
-  Grumm: { row: 3, element: "Earth", magic: "Boulder Toss", ultimate: "Mountain Breaker" },
-  Kaeldrin: { row: 4, element: "Holy Fire", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn" },
-  Lyrsa: { row: 5, element: "Sigil", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence" },
-  Shade: { row: 6, element: "Shadow", magic: "Throwing Daggers", ultimate: "Shadow Storm" },
-  Marla: { row: 7, element: "Heart", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true }
+  Jory: { row: 0, element: "Sound", melee: "Lute Crack", magic: "Star Note", ultimate: "Grand Chord", pattern: ["magic", "melee", "magic", "ultimate"] },
+  Nyx: { row: 1, element: "Shadow", melee: "Margin Snap", magic: "Quiet Index", ultimate: "Gravebind", pattern: ["magic", "melee", "magic", "ultimate"] },
+  Rava: { row: 2, element: "Ancient Fire", melee: "Cinder Spear", magic: "Ember Javelin", ultimate: "Dragon's Breath", pattern: ["melee", "magic", "melee", "ultimate"] },
+  Grumm: { row: 3, element: "Earth", melee: "Granite Cleave", magic: "Boulder Toss", ultimate: "Mountain Breaker", pattern: ["melee", "magic", "melee", "ultimate"] },
+  Kaeldrin: { row: 4, element: "Holy Fire", melee: "Rankbreaker", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn", pattern: ["melee", "heal", "magic", "ultimate"] },
+  Lyrsa: { row: 5, element: "Sigil", melee: "Spellstaff Sweep", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence", pattern: ["magic", "heal", "melee", "ultimate"] },
+  Shade: { row: 6, element: "Shadow", melee: "Twin Fang", magic: "Throwing Daggers", ultimate: "Shadow Storm", pattern: ["melee", "magic", "melee", "ultimate"] },
+  Marla: { row: 7, element: "Heart", melee: "Pan Swing", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true, pattern: ["melee", "heal", "magic", "ultimate"] },
+  "King Maeric": { element: "Holy Fire", melee: "Sceptre Judgment", magic: "Lion Seal", heal: "Royal Bulwark", ultimate: "Crown of Cindervale", pattern: ["melee", "heal", "magic", "ultimate"] },
+  Tja: { element: "Sigil", melee: "Frost Flourish", magic: "Crystal Waltz", ultimate: "Winter Encore", pattern: ["magic", "melee", "magic", "ultimate"] },
+  "Inkbound Auditor": { element: "Shadow", melee: "Quill Rend", magic: "Red Ink Edict", ultimate: "Audit of the Nameless", pattern: ["magic", "melee", "magic", "ultimate"] },
+  "Archive Custodian": { element: "Sigil", melee: "Ledger Crush", magic: "Forbidden Index", heal: "Restore Entry", ultimate: "Archive Lock", pattern: ["magic", "heal", "melee", "ultimate"] },
+  "Ash Wyrm": { element: "Ancient Fire", melee: "Cinder Claw", magic: "Ash Breath", ultimate: "First Ember Eruption", pattern: ["melee", "magic", "magic", "ultimate"] },
+  "Cracked Pillar": { element: "Earth", melee: "Stonefall", magic: "Faultline Pulse", ultimate: "Armory Collapse", pattern: ["melee", "magic", "melee", "ultimate"] },
+  "Seal Bearer": { element: "Holy Fire", melee: "Mace Seal", magic: "Binding Litany", heal: "Clergy Ward", ultimate: "Final Absolution", pattern: ["melee", "heal", "magic", "ultimate"] },
+  "Dock Foreman": { element: "Shadow", melee: "Hook Lash", magic: "Drowned Order", ultimate: "Anchor Below", pattern: ["melee", "magic", "melee", "ultimate"] },
+  "Dawn Gate Sentinel": { element: "Holy Fire", melee: "Gate Halberd", magic: "Dawn Window", heal: "Sentinel Ward", ultimate: "Last Gate Protocol", pattern: ["melee", "heal", "magic", "ultimate"] }
 };
 const animationLayouts = {
   Marla: { columns: 4, rows: 7, chromaBlack: true },
@@ -548,31 +571,23 @@ function loadMarlaBattleSheet() {
   });
 }
 
-function loadEnemyAnimationSheet(id, fileName) {
-  return new Promise(resolve => {
-    const image = new Image();
-    image.onload = () => {
-      const cleaned = document.createElement("canvas");
-      cleaned.width = image.naturalWidth;
-      cleaned.height = image.naturalHeight;
-      const paint = cleaned.getContext("2d", { willReadFrequently: true });
-      paint.imageSmoothingEnabled = false;
-      paint.drawImage(image, 0, 0);
-      const pixels = paint.getImageData(0, 0, cleaned.width, cleaned.height);
-      const rows = Array.from({ length: 5 }, (_, row) => Array.from({ length: 5 }, (_, col) => (
-        cellBounds(pixels, cleaned.width, cleaned.height, col, row, 5, 5)
-      )));
-      const idleHeights = rows[0].map(cell => cell.h).sort((a, b) => a - b);
-      enemyAnimationSheets[id] = {
-        image: cleaned,
-        rows,
-        referenceHeight: idleHeights[Math.floor(idleHeights.length / 2)] || cleaned.height / 5
+async function loadEnemyAnimationSheets() {
+  try {
+    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-34a");
+    if (!response.ok) return;
+    const manifest = await response.json();
+    await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => {
+        enemyAnimationSheets[id] = { ...config, image, battleOnly: true };
+        resolve();
       };
-      resolve();
-    };
-    image.onerror = resolve;
-    image.src = `assets/sprites/enemies-animation/${fileName}.png`;
-  });
+      image.onerror = resolve;
+      image.src = `assets/sprites/enemies-battle/${config.file}?v=opponents-34a`;
+    })));
+  } catch (_) {
+    // The original compact battle sprites remain available if an opponent sheet fails.
+  }
 }
 
 function loadChestSheet() {
@@ -746,7 +761,7 @@ Promise.all([
   loadBattleAnimationSheets(),
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
   ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
-  ...Object.entries(enemyAnimationFiles).map(([id, fileName]) => loadEnemyAnimationSheet(id, fileName)),
+  loadEnemyAnimationSheets(),
   loadChestSheet(),
   loadEnemySheet(),
   loadEnemyAttackSheet(),
@@ -3049,7 +3064,7 @@ function drawWorldEnemy(spawnPoint) {
   const baseline = Math.round(spawnPoint.renderY + 25 + offsetY + stride);
   const key = enemyAnimationKey(enemyUnit);
   const animatedSheet = key ? enemyAnimationSheets[key] : null;
-  if (animatedSheet) {
+  if (animatedSheet && !animatedSheet.battleOnly) {
     const row = moving ? 1 : 0;
     const cells = animatedSheet.rows[row];
     const frame = moving ? Math.floor(tick / 6) % cells.length : Math.floor((tick + spawnPoint.phase) / 14) % cells.length;
@@ -4359,8 +4374,8 @@ function drawNpcBattleEnemy(e, px, py) {
 }
 
 function enemyAnimationKey(e) {
-  if (enemyAnimationFiles[e.name]) return e.name;
-  if (enemyAnimationFiles[e.sprite]) return e.sprite;
+  if (enemyAnimationFiles[e.name]) return enemyAnimationFiles[e.name];
+  if (enemyAnimationFiles[e.sprite]) return enemyAnimationFiles[e.sprite];
   return null;
 }
 
@@ -4375,24 +4390,42 @@ function drawAnimatedEnemy(e, px, py) {
   if (!sheet) return false;
   const dying = e.hp <= 0 || e.anim === "death";
   const attacking = e.anim === "attack";
-  const row = dying ? 4 : attacking ? (e.attackStyle === "magic" || magicEnemyAnimations.has(key) ? 3 : 2) : 0;
-  const cells = sheet.rows[row];
-  let frame = Math.floor((tick + key.length * 3) / 12) % cells.length;
-  if (attacking) frame = Math.min(cells.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
-  if (dying) frame = Math.min(cells.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
-  const cell = cells[frame];
+  const animation = dying
+    ? "death"
+    : attacking
+      ? (e.attackStyle === "ultimate" && sheet.rowMap?.ultimate !== undefined ? "ultimate" : e.attackStyle === "melee" ? "melee" : "magic")
+      : "idle";
+  const row = sheet.rowMap?.[animation] ?? sheet.rowMap?.idle ?? 0;
+  const sequence = sheet.frameSequences?.[animation] || [0, 1, 2, 3, 4];
+  let sequenceIndex = Math.floor((tick + key.length * 3) / 18) % sequence.length;
+  if (attacking) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
+  if (dying) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
+  const column = Math.max(0, Math.min(sheet.columns - 1, sequence[sequenceIndex] ?? 0));
   const targetHeight = enemyAnimationHeights[key] || 46;
-  const scale = targetHeight / Math.max(1, sheet.referenceHeight);
-  const width = Math.max(1, Math.round(cell.w * scale));
-  const height = Math.max(1, Math.round(cell.h * scale));
-  const progress = attacking ? Math.min(1, (e.animTick || 0) / 24) : 0;
-  const lunge = attacking ? Math.round(Math.sin(progress * Math.PI) * 7) : 0;
-  const bob = !attacking && !dying && Math.floor((tick + key.length) / 18) % 3 === 1 ? -1 : 0;
-  const anchorX = px + 8 - lunge;
-  const baseline = py + 31 + bob;
+  const anchorX = px + 8;
+  const baseline = py + 31;
+  const scale = Math.min(
+    targetHeight / Math.max(1, sheet.referenceHeight),
+    (baseline - 2) / Math.max(1, sheet.baseline),
+    (LOGICAL_WIDTH - 4) / Math.max(1, sheet.cellWidth)
+  );
+  const width = Math.max(1, Math.round(sheet.cellWidth * scale));
+  const height = Math.max(1, Math.round(sheet.cellHeight * scale));
+  const destX = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
+  const destY = Math.max(2, Math.round(baseline - sheet.baseline * scale));
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sheet.image, cell.x, cell.y, cell.w, cell.h, Math.round(anchorX - width / 2), Math.round(baseline - height), width, height);
+  ctx.drawImage(
+    sheet.image,
+    column * sheet.cellWidth,
+    row * sheet.cellHeight,
+    sheet.cellWidth,
+    sheet.cellHeight,
+    destX,
+    destY,
+    width,
+    height
+  );
   ctx.restore();
   if (attacking && e.lastAnimDrawTick !== tick) {
     e.animTick = (e.animTick || 0) + 1;
@@ -4994,11 +5027,22 @@ function enemyPortraitDataUrl(name) {
     paint.fillRect(5, 5, 86, 86);
     paint.fillStyle = "#171822";
     paint.fillRect(8, 8, 80, 80);
-    const cell = animatedEnemySheet.rows[0][0];
-    const scale = Math.min(1, 74 / Math.max(cell.w, cell.h));
-    const width = Math.max(1, Math.round(cell.w * scale));
-    const height = Math.max(1, Math.round(cell.h * scale));
-    paint.drawImage(animatedEnemySheet.image, cell.x, cell.y, cell.w, cell.h, Math.round((96 - width) / 2), 85 - height, width, height);
+    const column = animatedEnemySheet.frameSequences?.idle?.[0] || 0;
+    const row = animatedEnemySheet.rowMap?.idle || 0;
+    const scale = 54 / Math.max(1, animatedEnemySheet.referenceHeight);
+    const width = Math.max(1, Math.round(animatedEnemySheet.cellWidth * scale));
+    const height = Math.max(1, Math.round(animatedEnemySheet.cellHeight * scale));
+    paint.drawImage(
+      animatedEnemySheet.image,
+      column * animatedEnemySheet.cellWidth,
+      row * animatedEnemySheet.cellHeight,
+      animatedEnemySheet.cellWidth,
+      animatedEnemySheet.cellHeight,
+      Math.round((96 - width) / 2),
+      Math.round(85 - animatedEnemySheet.baseline * scale),
+      width,
+      height
+    );
     paint.fillStyle = "#d8b06b";
     paint.fillRect(8, 8, 80, 2);
     paint.fillRect(8, 86, 80, 2);
@@ -5961,24 +6005,42 @@ function enemyStatusFor(unit, actionKind) {
   return { type, chance: actionKind === "ultimate" ? .8 : .48 };
 }
 
+function enemyActionForKind(unit, kind, target = null) {
+  const profile = enemyAbilityProfile(unit);
+  if (kind === "heal") return { kind, name: profile?.heal || "Seal Mend", element: profile?.element || "Holy Fire", target, healing: true };
+  if (kind === "ultimate") {
+    const action = { kind, name: profile?.ultimate || "Resonant Rupture", element: profile?.element || enemyMagicElement(unit), target: profile?.ultimateHeal ? unit : null, healing: Boolean(profile?.ultimateHeal) };
+    action.status = action.healing ? null : enemyStatusFor(unit, kind);
+    return action;
+  }
+  if (kind === "magic") {
+    const element = enemyMagicElement(unit);
+    return { kind, name: profile?.magic || `${element} Pulse`, element, status: enemyStatusFor(unit, kind) };
+  }
+  return { kind: "melee", name: profile?.melee || "Melee Strike", element: "Physical" };
+}
+
 function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
   const wounded = battle.enemies
     .filter(ally => ally.hp > 0 && ally.hp / ally.max < .58)
     .sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
   if ((unit.resonance || 0) >= 100) {
-    const action = { kind: "ultimate", name: profile?.ultimate || "Resonant Rupture", element: profile?.element || enemyMagicElement(unit), target: profile?.ultimateHeal ? unit : null, healing: Boolean(profile?.ultimateHeal) };
-    action.status = action.healing ? null : enemyStatusFor(unit, "ultimate");
-    return action;
+    return enemyActionForKind(unit, "ultimate");
+  }
+  if (profile?.pattern && (unit.npcBoss || unit.resistanceTier === "boss" || battle.echoHuntRank)) {
+    const kind = profile.pattern[(unit.patternStep || 0) % profile.pattern.length];
+    unit.patternStep = (unit.patternStep || 0) + 1;
+    if (kind === "heal" && !wounded) return enemyActionForKind(unit, "magic");
+    return enemyActionForKind(unit, kind, kind === "heal" ? wounded : null);
   }
   if (wounded && enemyCanHeal(unit) && Math.random() < .68) {
-    return { kind: "heal", name: profile?.heal || "Seal Mend", element: profile?.element || "Holy Fire", target: wounded, healing: true };
+    return enemyActionForKind(unit, "heal", wounded);
   }
   if (Math.random() < .44) {
-    const element = enemyMagicElement(unit);
-    return { kind: "magic", name: profile?.magic || `${element} Pulse`, element, status: enemyStatusFor(unit, "magic") };
+    return enemyActionForKind(unit, "magic");
   }
-  return { kind: "melee", name: "Melee Strike", element: "Physical" };
+  return enemyActionForKind(unit, "melee");
 }
 
 function makeEnemyBattleEffect(unit, target, action) {
@@ -6039,7 +6101,7 @@ function resolveEnemyTurn(turn, prev) {
   const timing = battleActionTiming(timingKey);
   e.anim = "attack";
   e.animTick = 0;
-  e.attackStyle = action.kind === "melee" ? "melee" : "magic";
+  e.attackStyle = action.kind === "melee" ? "melee" : action.kind === "ultimate" ? "ultimate" : "magic";
   effect = makeEnemyBattleEffect(e, target, action);
   playSfx(action.kind === "melee" ? (e.npcBoss ? "boss" : "melee") : "magic");
   renderBattle(`${e.name} prepares ${action.name}${action.kind === "ultimate" ? " - ULTIMATE" : ""}...`);
@@ -6954,7 +7016,8 @@ function startEndgameHunt() {
     { name: "Stonewake Shadows", enemies: [rankedEnemy("Shade", 104, 18, "Holy Fire", "#4b2633", 2, "Shade", true), rankedEnemy("Grumm", 132, 20, "Sound", "#755034", 1, "Grumm", true)] },
     { name: "Lantern Name-Runners", enemies: [rankedEnemy("Marla", 110, 17, "Shadow", "#8a5b3d", 2, "Marla", true), rankedEnemy("Harl", 118, 19, "Tech", "#5b4a40", 1, "Harl", true)] },
     { name: "Stonewake Command", enemies: [rankedEnemy("Kaeldrin", 138, 22, "Sound", "#62554a", 2, "Kaeldrin", true), rankedEnemy("Lyrsa", 124, 21, "Shadow", "#4c556b", 1, "Lyrsa", true)] },
-    { name: "Reverie Counter-Echo", enemies: [rankedEnemy("Nyx", 106, 20, "Holy Fire", "#473c62", 1, "Nyx", true), rankedEnemy("Rava", 126, 21, "Earth", "#43685a", 2, "Rava", true), rankedEnemy("Jory", 116, 23, "Sound", "#755247", 3, "Jory", true)] }
+    { name: "Reverie Counter-Echo", enemies: [rankedEnemy("Nyx", 106, 20, "Holy Fire", "#473c62", 1, "Nyx", true), rankedEnemy("Rava", 126, 21, "Earth", "#43685a", 2, "Rava", true), rankedEnemy("Jory", 116, 23, "Sound", "#755247", 3, "Jory", true)] },
+    { name: "Crown and Winter", enemies: [rankedEnemy("King Maeric", 166, 24, "Shadow", "#d4a94f", 3, "King Maeric", true), rankedEnemy("Tja", 122, 22, "Ancient Fire", "#4c88a8", 2, "Tja", true)] }
   ];
   const formation = formations[(rank - 1) % formations.length];
   el.menu.classList.add("hidden");

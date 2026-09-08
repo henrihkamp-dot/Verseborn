@@ -1,0 +1,1000 @@
+{
+  "Inkbound Auditor": {
+    "file": "inkbound-auditor.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 197,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "walk": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "melee": [
+        0,
+        1,
+        1,
+        4,
+        0
+      ],
+      "magic": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "King Maeric": {
+    "file": "king-maeric.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 190,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "walk": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "melee": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "magic": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "ultimate": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        4,
+        4
+      ]
+    },
+    "battleOnly": true
+  },
+  "Grumm": {
+    "file": "grumm.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 176,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        1,
+        2,
+        2,
+        1
+      ],
+      "walk": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "melee": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "magic": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "ultimate": [
+        0,
+        0,
+        4,
+        4,
+        0
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Kaeldrin": {
+    "file": "kaeldrin.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 175,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "walk": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "melee": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "magic": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "ultimate": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "death": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "battleOnly": true
+  },
+  "Marla": {
+    "file": "marla.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 200,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "melee": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "magic": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "ultimate": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "death": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Lyrsa": {
+    "file": "lyrsa.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 183,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        0,
+        4,
+        4,
+        0
+      ],
+      "walk": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "melee": [
+        0,
+        0,
+        4,
+        4,
+        0
+      ],
+      "magic": [
+        0,
+        1,
+        1,
+        4,
+        0
+      ],
+      "ultimate": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "death": [
+        0,
+        0,
+        1,
+        4,
+        4
+      ]
+    },
+    "battleOnly": true
+  },
+  "Nyx": {
+    "file": "nyx.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 193,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "melee": [
+        3,
+        3,
+        4,
+        4,
+        3
+      ],
+      "magic": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "ultimate": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        2,
+        2
+      ]
+    },
+    "battleOnly": true
+  },
+  "Rava": {
+    "file": "rava.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 184,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "melee": [
+        0,
+        1,
+        2,
+        4,
+        0
+      ],
+      "magic": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "ultimate": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "death": [
+        0,
+        0,
+        1,
+        2,
+        2
+      ]
+    },
+    "battleOnly": true
+  },
+  "Shade": {
+    "file": "shade.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 192,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "melee": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "magic": [
+        0,
+        0,
+        4,
+        4,
+        0
+      ],
+      "ultimate": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "death": [
+        0,
+        0,
+        1,
+        2,
+        2
+      ]
+    },
+    "battleOnly": true
+  },
+  "Tja": {
+    "file": "tja.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 199,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "walk": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "melee": [
+        3,
+        3,
+        4,
+        4,
+        3
+      ],
+      "magic": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "ultimate": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        4,
+        4
+      ]
+    },
+    "battleOnly": true
+  },
+  "Archive Custodian": {
+    "file": "archive-custodian.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 211,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        1,
+        1,
+        2,
+        2,
+        1
+      ],
+      "melee": [
+        1,
+        2,
+        2,
+        4,
+        1
+      ],
+      "magic": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "death": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Ash Wyrm": {
+    "file": "ash-wyrm.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 181,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "walk": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "melee": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "magic": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Cracked Pillar": {
+    "file": "cracked-armory-pillar.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 215,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "melee": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "magic": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "death": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Seal Bearer": {
+    "file": "clergy-seal-patrol.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 215,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "walk": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "melee": [
+        0,
+        1,
+        1,
+        4,
+        0
+      ],
+      "magic": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "death": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Dock Foreman": {
+    "file": "dock-foreman.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 195,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "melee": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "magic": [
+        1,
+        2,
+        3,
+        4,
+        1
+      ],
+      "death": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Dawn Gate Sentinel": {
+    "file": "dawn-gate-sentinel.png",
+    "columns": 5,
+    "rows": 5,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 233,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 4
+    },
+    "frameSequences": {
+      "idle": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "walk": [
+        1,
+        2,
+        2,
+        3,
+        1
+      ],
+      "melee": [
+        1,
+        1,
+        4,
+        4,
+        1
+      ],
+      "magic": [
+        0,
+        3,
+        3,
+        4,
+        0
+      ],
+      "death": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "battleOnly": true
+  },
+  "Jory": {
+    "file": "jory.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 304,
+    "baseline": 286,
+    "referenceHeight": 195,
+    "rowMap": {
+      "idle": 0,
+      "walk": 1,
+      "melee": 2,
+      "magic": 3,
+      "death": 5,
+      "ultimate": 4
+    },
+    "frameSequences": {
+      "idle": [
+        0,
+        1,
+        3,
+        4,
+        0
+      ],
+      "walk": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "melee": [
+        0,
+        1,
+        2,
+        4,
+        0
+      ],
+      "magic": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "ultimate": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "death": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "battleOnly": true
+  }
+}
