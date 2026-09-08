@@ -419,7 +419,7 @@ canvas:focus {
 
 .status-core-stats {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
 }
 
@@ -2484,6 +2484,16 @@ h1 {
 .talent-pair .talent-choice { grid-template-columns: minmax(0, 1fr) auto; height: 100%; align-items: start; }
 .talent-choice small { display: block; margin-top: 5px; }
 .talent-choice p, .talent-choice strong { overflow-wrap: anywhere; }
+.talent-tiers { display: grid; gap: 14px; margin-top: 10px; }
+.talent-tier { padding: 8px; border-left: 3px solid #6e5647; background: #0d0a11; }
+.talent-tier.is-locked { border-left-color: #43343d; }
+.talent-tier > header { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 7px; color: #ffd27d; }
+.talent-tier > header span { color: #bfae8d; font-size: 10px; text-align: right; }
+.talent-tier-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.talent-tier-grid .talent-choice { grid-template-columns: minmax(0, 1fr) 24px; height: 100%; align-items: start; }
+.talent-reset { margin-top: 7px; padding: 5px 8px; border: 1px solid #d8b06b; background: #3a2234; color: #ffe5ad; cursor: pointer; }
+.talent-reset:disabled { opacity: .45; cursor: default; }
+.is-basic-attack { color: #ffd27d !important; }
 .combat-caps { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 0; margin-bottom: 12px; border-bottom: 1px solid #776046; font-size: 12px; color: #c9dfda; }
 .combat-caps strong { width: 100%; color: #ffd982; }
 .gear-candidate { min-width: 0; border-bottom: 1px solid #776046; padding-bottom: 10px; }
@@ -2509,6 +2519,7 @@ h1 {
 .forge-reroll p { font-size: 13px; }
 @media (max-width: 650px) {
   .talent-pair { grid-template-columns: 1fr; }
+  .talent-tier-grid { grid-template-columns: 1fr; }
   .reroll-row { grid-template-columns: minmax(0, 1fr); }
   .combat-caps { flex-direction: column; }
 }
