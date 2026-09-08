@@ -1381,7 +1381,7 @@ canvas:focus {
 
 .shop-mode-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 150px));
+  grid-template-columns: repeat(3, minmax(0, 150px));
   gap: 6px;
   margin: 10px 0 4px;
 }
@@ -2476,4 +2476,39 @@ h1 {
     right: 8px;
     width: min(214px, calc(100% - 16px));
   }
+}
+
+.talent-milestones { display: grid; gap: 18px; }
+.talent-milestone > header { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #776046; padding: 6px 0; }
+.talent-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.talent-pair .talent-choice { grid-template-columns: minmax(0, 1fr) auto; height: 100%; align-items: start; }
+.talent-choice small { display: block; margin-top: 5px; }
+.talent-choice p, .talent-choice strong { overflow-wrap: anywhere; }
+.combat-caps { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 0; margin-bottom: 12px; border-bottom: 1px solid #776046; font-size: 12px; color: #c9dfda; }
+.combat-caps strong { width: 100%; color: #ffd982; }
+.gear-candidate { min-width: 0; border-bottom: 1px solid #776046; padding-bottom: 10px; }
+.gear-candidate .gear-choice { width: 100%; }
+.gear-favorite { display: flex; gap: 8px; align-items: center; margin: 8px 0; font-size: 13px; cursor: pointer; }
+.gear-favorite input { width: 18px; height: 18px; accent-color: #dfb963; }
+.gear-comparison, .skill-catalogue { margin: 8px 0; font-size: 13px; }
+.gear-comparison summary, .skill-catalogue summary { cursor: pointer; padding: 8px 0; color: #f4cf87; }
+.comparison-scroll { overflow-x: auto; }
+.gear-comparison table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.gear-comparison th, .gear-comparison td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #59454c; }
+.gear-comparison th:first-child { width: 44%; }
+.gear-comparison small { display: block; color: #a8dcd3; }
+.skill-catalogue-list article { padding: 10px 0; border-bottom: 1px solid #59454c; }
+.skill-catalogue-list small { display: block; color: #a8dcd3; margin-top: 5px; }
+.skill-catalogue-list p { margin: 5px 0; }
+.reroll-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; align-items: end; gap: 10px; border-bottom: 1px solid #776046; padding: 14px 0; }
+.reroll-row label { display: grid; gap: 5px; min-width: 0; }
+.reroll-row select { width: 100%; min-width: 0; background: #241d29; color: #ffe5ad; padding: 8px; border: 1px solid #b89a61; }
+.reroll-row button { background: #3a2234; color: #ffe5ad; padding: 9px; border: 2px solid #d8b06b; cursor: pointer; }
+.reroll-row button:disabled { opacity: .45; cursor: default; }
+.forge-reroll [role="status"] { color: #a8dcd3; overflow-wrap: anywhere; }
+.forge-reroll p { font-size: 13px; }
+@media (max-width: 650px) {
+  .talent-pair { grid-template-columns: 1fr; }
+  .reroll-row { grid-template-columns: minmax(0, 1fr); }
+  .combat-caps { flex-direction: column; }
 }

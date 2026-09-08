@@ -1316,6 +1316,8 @@ function randomAffixValue(entry) {
 
 function formatAffix(entry) {
   const value = entry.value;
+  if (entry.type === "echoing") return `${entry.label}: ${Math.round(value * 100)}% chance after an action to grant an immediate ally action; once per wearer per battle, shares the 2-action cap`;
+  if (entry.type === "openingTurnProgress") return `${entry.label}: +${Math.round(value * 100)}% initiative in round 1 only (no extra action or CRIT)`;
   if (entry.type === "statPct") return `${entry.label}: ${entry.stat.toUpperCase()} +${Math.round(value * 100)}%`;
   if (entry.type === "hpPct") return `${entry.label}: HP +${Math.round(value * 100)}%`;
   if (entry.type === "statusOnHit") return `${entry.label}: ${Math.round(value * 100)}% ${entry.status.toUpperCase()} on hit`;
@@ -1443,7 +1445,7 @@ function affixValue(id, type, match = null) {
 function gearAffixHtml(name) {
   const entries = gearAffixes(name);
   if (!entries.length) return "";
-  return `<span class="gear-affixes">${entries.map(entry => `<small>${entry.text || formatAffix(entry)}</small>`).join("")}</span>`;
+  return `<span class="gear-affixes">${entries.map(entry => `<small>${formatAffix(entry)}</small>`).join("")}</span>`;
 }
 
 function gearRarityHtml(name) {
@@ -1609,7 +1611,7 @@ const talentTrees = {
   Torren: [
     talent(5, "Faultline Instinct", "critChance", .2, "All damaging commands gain a 20% chance to deal double damage."),
     talent(10, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break strikes every living enemy."),
-    talent(15, "Granite Memory", "blockTalent", .18, "Defend and block commands reduce another 18% damage."),
+    talent(15, "Granite Memory", "blockTalent", .18, "Personal Defend blocks another 18 percentage points of incoming damage. Does not strengthen Party Guard."),
     talent(20, "The Mountain Chooses Us", "newSkill", skill("ULT: The Mountain Chooses Us", "ultimate", "Earth", 138, 100, "A battlefield-wide stone rupture."), "Unlocks a new all-enemy ultimate.")
   ],
   Glimmer: [
@@ -1651,7 +1653,7 @@ const lateGameTalentChoices = {
     talent(25, "Shield of Dawn", "newSkill", skill("Shield of Dawn", "block", "Holy Fire", 0, 9, "Party Defense Up.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp" }] })),
     talent(25, "Judgment Bash", "newSkill", skill("Judgment Bash", "melee", "Holy Fire", 31, 8, "Shield damage with Stun.", { status: { type: "stun", chance: .9 } })),
     talent(30, "Steadfast Light", "statusResistance", .2, "Seerin gains 20% status resistance."),
-    talent(30, "Guardian's Answer", "guardCounter", .35, "Blocking a direct hit triggers a 35% counterattack."),
+    talent(30, "Guardian's Answer", "guardCounter", .35, "After a personally defended hit, counter for 35% of Attack base damage. Party Guard alone does not trigger this."),
     talent(35, "Earthen Bastion", "newSkill", skill("Earthen Bastion", "block", "Holy Fire", 0, 12, "Party Defense Up and Party Guard.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp", duration: 4 }], grantsWard: true })),
     talent(35, "Dawnbreaker", "newSkill", skill("Dawnbreaker", "magic", "Holy Fire", 50, 12, "Hits all enemies with Stun chance.", { allEnemies: true, status: { type: "stun", chance: .55 } })),
     talent(40, "Aegis of Chosen Kin", "newSkill", skill("ULT: Aegis of Chosen Kin", "ultimate", "Holy Fire", 0, 100, "Party Guard, Defense Up and Damage Up.", { targetSide: "party", partyWide: true, grantsWard: true, buffs: [{ type: "defenseUp" }, { type: "damageUp" }] })),
@@ -1670,7 +1672,7 @@ const lateGameTalentChoices = {
   Torren: [
     talent(25, "Stoneguard", "newSkill", skill("Stoneguard", "block", "Earth", 0, 6, "Torren gains Strength Up and Defense Up.", { targetSide: "self", buffs: [{ type: "strengthUp", duration: 3 }, { type: "defenseUp", duration: 4 }] })),
     talent(25, "Quaking Blow", "newSkill", skill("Quaking Blow", "melee", "Earth", 38, 8, "Heavy damage with Stun.", { status: { type: "stun", chance: .9 } })),
-    talent(30, "Granite Retort", "guardCounter", .5, "Blocking a direct hit triggers a 50% counterattack."),
+    talent(30, "Granite Retort", "guardCounter", .5, "After a personally defended hit, counter for 50% of Attack base damage. Party Guard alone does not trigger this."),
     talent(30, "Unyielding", "statusResistance", .3, "Torren gains 30% status resistance."),
     talent(35, "Earthen Bastion", "newSkill", skill("Earthen Bastion", "block", "Earth", 0, 12, "Party Defense Up for 4 turns.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp", duration: 4 }] })),
     talent(35, "Faultline Roar", "newSkill", skill("Faultline Roar", "melee", "Earth", 48, 13, "Hits all enemies with Stun chance.", { allEnemies: true, status: { type: "stun", chance: .6 } })),
@@ -1700,6 +1702,84 @@ const lateGameTalentChoices = {
 };
 
 Object.entries(lateGameTalentChoices).forEach(([id, choices]) => talentTrees[id].push(...choices));
+
+const earlyTalentAlternatives = {
+  Verseborn: [
+    talent(5, "Gentle Chorus", "healBoost", .25, "Healing restores 25% more HP."),
+    talent(10, "Focused Verse", "magicDamage", .15, "All MAG attacks deal 15% more damage; Resonant Verse stays single-target."),
+    talent(15, "Sustained Song", "buffDuration", 1, "Timed buffs last one additional action."),
+    talent(20, "Chorus of Shelter", "newSkill", skill("ULT: Chorus of Shelter", "ultimate", "Sound", -70, 100, "Heal the party and grant Defense Up.", { partyWide: true, buffs: [{ type: "defenseUp" }] }))
+  ],
+  Mira: [
+    talent(5, "Dagger Discipline", "physicalDamage", .15, "STR attacks deal 15% more damage."),
+    talent(10, "Marked Prey", "afflictedDamage", .2, "Deal 20% more damage against enemies with a negative status."),
+    talent(15, "Patient Venom", "statusDuration", { type: "poison", value: 1 }, "Poison lasts one extra action."),
+    talent(20, "Veil of Blades", "newSkill", skill("ULT: Veil of Blades", "ultimate", "Shadow", 110, 100, "STR strike with strong Poison.", { scaling: "str", allEnemies: false, status: { type: "poison", chance: 1, potency: "strong" } }))
+  ],
+  Seerin: [
+    talent(5, "Tempered Edge", "physicalDamage", .15, "STR attacks deal 15% more damage."),
+    talent(10, "Steady Flame", "buffDuration", 1, "Timed buffs last one extra action."),
+    talent(15, "Unbroken Light", "statusResistance", .15, "15% resistance to negative statuses."),
+    talent(20, "Sanctuary", "newSkill", skill("ULT: Sanctuary", "ultimate", "Holy Fire", -65, 100, "Heal all allies and grant Party Guard.", { partyWide: true, grantsWard: true }))
+  ],
+  Kael: [
+    talent(5, "Sigil Focus", "magicDamage", .15, "MAG attacks deal 15% more damage, including Shadowpriest."),
+    talent(10, "Deep Rite", "healBoost", .3, "30% stronger healing; Quiet Rite stays single-target."),
+    talent(15, "Enduring Faith", "buffDuration", 1, "Timed buffs last one extra action."),
+    talent(20, "Radiant Covenant", "newSkill", skill("ULT: Radiant Covenant", "ultimate", "Sigil", -85, 100, "Heal and cleanse all allies.", { partyWide: true, cleanse: true }))
+  ],
+  Torren: [
+    talent(5, "Crushing Weight", "physicalDamage", .15, "STR attacks deal 15% more damage."),
+    talent(10, "Faultline Precision", "physicalDamage", .2, "20% more STR damage; Foundation Break stays single-target."),
+    talent(15, "Stonewise", "revealWeakness", true, "Reveal and remember enemy weaknesses."),
+    talent(20, "Mountain Shelter", "newSkill", skill("ULT: Mountain Shelter", "ultimate", "Earth", 0, 100, "Party Guard and Defense Up for four actions.", { targetSide: "party", partyWide: true, grantsWard: true, buffs: [{ type: "defenseUp", duration: 4 }] }))
+  ],
+  Glimmer: [
+    talent(5, "Calibrated Reactor", "magicDamage", .15, "MAG attacks deal 15% more damage."),
+    talent(10, "Focused Coil", "statusChance", { type: "stun", value: .25 }, "25% stronger Stun application; Klik-Wrench stays single-target."),
+    talent(15, "Insulated Circuit", "statusResistance", .2, "20% resistance to negative statuses."),
+    talent(20, "Emergency Rebuild", "newSkill", skill("ULT: Emergency Rebuild", "ultimate", "Tech", -75, 100, "Heal all allies and grant Magic Up.", { partyWide: true, buffs: [{ type: "magicUp" }] }))
+  ],
+  Sparky: [
+    talent(5, "Focused Flame", "magicDamage", .15, "MAG attacks deal 15% more damage."),
+    talent(10, "Kindled Core", "magicDamage", .2, "20% more MAG damage; Memory Flare stays single-target."),
+    talent(15, "Ancient Sight", "revealWeakness", true, "Reveal and remember enemy weaknesses."),
+    talent(20, "Hearthkeeper", "newSkill", skill("ULT: Hearthkeeper", "ultimate", "Heart", -65, 100, "Heal the party and grant Defense Up.", { partyWide: true, buffs: [{ type: "defenseUp" }] }))
+  ]
+};
+Object.entries(earlyTalentAlternatives).forEach(([id, choices]) => talentTrees[id].push(...choices));
+
+// Keep saved talent names intact while correcting the mechanics they describe.
+Object.entries(baseJobs).forEach(([id, hero]) => {
+  const skills = [...hero.skills, ...talentTrees[id].filter(t => t.type === "newSkill").map(t => t.value)];
+  skills.forEach(sk => {
+    if (id === "Torren" && sk.power > 0) sk.scaling = "str";
+    if (id === "Mira" && sk.anim === "ultimate" && !sk.name.includes("Night Without")) sk.scaling = "str";
+    if (sk.name === "Shared Warning") sk.partyWide = true;
+    if (sk.name === "Hold the Door") sk.targetSide = "self";
+    if (sk.name === "Foundation Break") sk.staggerPower = 3;
+    if (sk.name === "ULT: Oath Unbound") {
+      sk.partyWide = true;
+      sk.cleanse = true;
+      sk.desc = "Heal and cleanse all allies; grant Party Guard.";
+    }
+    if (sk.name === "ULT: The Woman in the Door") {
+      sk.grantsWard = true;
+      sk.desc = "Holy Fire damage and Party Guard.";
+    }
+    if (sk.name === "ULT: The Name I Chose") sk.allEnemies = true;
+    if (sk.name === "ULT: Between Two Names") sk.desc = "STR-based eclipse strike against every enemy; uses your normal critical chance.";
+    if (sk.name === "Voidthorn Mark") sk.desc = "MAG-based Shadow damage. Exploits Shadow weakness.";
+    if (sk.name === "Patch Job") sk.desc = "Heal the most wounded ally.";
+    if (sk.pierce) sk.desc = sk.desc.replace("ignores defenses", "partially penetrates Defense Up");
+    if (sk.buffs?.some(buff => buff.type === "agilityUp")) {
+      sk.desc += sk.immediateTurn ? " Reorders remaining normal actions; extra action shares the party's 2-per-battle limit." : " Reorders remaining normal actions immediately; grants no extra action.";
+    }
+  });
+  talentTrees[id].forEach(entry => {
+    if (entry.type === "newSkill") entry.unlockDesc = entry.value.desc;
+  });
+});
 
 const STATUS_DEFS = {
   poison: { label: "POISON", short: "PSN", negative: true, duration: 4 },
@@ -1761,7 +1841,7 @@ function slotsFrom(names) {
 }
 
 function skill(name, anim, element, power, cost, desc, options = {}) {
-  return { name, anim, element, power, cost, desc, ...options };
+  return { name, anim, element, power, cost, desc, scaling: anim === "melee" ? "str" : "mag", healScaling: .3, ...options };
 }
 
 function talent(level, name, type, value, desc = null, unlockDesc = null) {
@@ -1770,6 +1850,8 @@ function talent(level, name, type, value, desc = null, unlockDesc = null) {
 }
 
 const state = {
+  knownWeaknesses: {},
+  favoriteGear: {},
   map: "lantern",
   x: 8,
   y: 8,
@@ -1851,6 +1933,8 @@ function loadGame() {
   }
   if (!data?.state) return false;
   Object.assign(state, data.state);
+  state.knownWeaknesses = data.state.knownWeaknesses || {};
+  state.favoriteGear = data.state.favoriteGear || {};
   state.gearInstances ||= {};
   gearInstances = state.gearInstances;
   state.nextGearInstance = Math.max(1, Number(state.nextGearInstance) || 1);
@@ -2471,7 +2555,7 @@ function transformedStatMultiplier(source, stat) {
 }
 
 function sourceRelevantStat(source, options = {}) {
-  const magicBased = ["magic", "ultimate"].includes(options.damageKind) || ["Tech", "Shadow", "Sigil"].includes(options.element);
+  const magicBased = options.scaling ? options.scaling === "mag" : ["magic", "ultimate"].includes(options.damageKind) || ["Tech", "Shadow", "Sigil"].includes(options.element);
   if (source?.id) {
     const stats = totals(source.id);
     const stat = magicBased ? "mag" : "str";
@@ -2509,10 +2593,10 @@ function applyStatus(target, type, source, options = {}) {
     return { applied: false, message: `${def.label} RESISTED` };
   }
   let duration = statusDurationFor(source, type, options.duration);
-  if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
   const existing = statusOf(target, type);
   const poisonDurations = { weak: 3, normal: 4, strong: 5 };
   if (type === "poison" && !options.duration) duration = statusDurationFor(source, type, poisonDurations[options.potency || "normal"]);
+  if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
   const value = type === "poison" ? poisonValueFor(target, source, options) : options.value ?? def.value;
   const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .2, normal: .3, strong: .4 }[options.potency || "normal"]) : null;
   const data = {
@@ -2538,6 +2622,17 @@ function cleanseStatuses(target) {
   return before - target.statuses.length;
 }
 
+function cleanseWithTalent(source, target) {
+  const removed = cleanseStatuses(target);
+  const bonus = source?.id ? typedTalentValue(source.id, "cleanseHeal") : 0;
+  if (removed && bonus) {
+    const restored = Math.min(Math.round(target.max * bonus), target.max - target.hp);
+    target.hp += restored;
+    if (restored) addBattleFloater(target, restored, { kind: "heal" });
+  }
+  return removed;
+}
+
 function breakSleepFromDamage(target) {
   const asleep = statusOf(target, "sleep");
   if (!asleep) return "";
@@ -2550,7 +2645,8 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
   if (kind === "melee") multiplier *= 1 + statusValue(unit, "strengthUp");
   if (kind === "magic" || kind === "ultimate") multiplier *= 1 + statusValue(unit, "magicUp");
   if (unit?.id) {
-    multiplier *= 1 + effectValue(unit.id, kind === "melee" ? "physicalDamage" : "magicDamage");
+    const damageType = kind === "melee" ? "physicalDamage" : "magicDamage";
+    multiplier *= 1 + effectValue(unit.id, damageType) + typedTalentValue(unit.id, damageType);
     if (target && hasNegativeStatus(target)) multiplier *= 1 + typedTalentValue(unit.id, "afflictedDamage") + effectValue(unit.id, "afflictedDamage");
   }
   return multiplier;
@@ -2571,11 +2667,11 @@ function effectiveAgility(unit, base) {
 
 function applySkillStatuses(source, target, sk) {
   const applications = [];
-  if (sk.status) applications.push(applyStatus(target, sk.status.type, source, { ...sk.status, damageKind: sk.anim, element: sk.element }));
+  if (sk.status) applications.push(applyStatus(target, sk.status.type, source, { ...sk.status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
   if (source?.id && (sk.power > 0 || sk.coefficient)) {
     ["poison", "sleep", "stun"].forEach(type => {
       const chance = effectValue(source.id, "statusOnHit", type);
-      if (chance > 0) applications.push(applyStatus(target, type, source, { chance, potency: type === "poison" ? "weak" : undefined, duration: type === "poison" ? 3 : undefined, damageKind: sk.anim, element: sk.element }));
+      if (chance > 0) applications.push(applyStatus(target, type, source, { chance, potency: type === "poison" ? "weak" : undefined, duration: type === "poison" ? 3 : undefined, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
     });
   }
   return applications.map(result => result.message).filter(Boolean);
@@ -2590,6 +2686,7 @@ function applySkillBuffs(source, targets, sk) {
       if (result.message) notes.push(`${target.name}: ${result.message}`);
     });
   });
+  if (sk.buffs?.some(buff => buff.type === "agilityUp")) reorderRemainingTurns();
   return notes;
 }
 
@@ -2647,6 +2744,35 @@ function processTurnEnd(unit) {
     }
   }
   return notes;
+}
+
+function reorderRemainingTurns() {
+  if (!battle?.turnQueue) return;
+  const remaining = battle.turnQueue.slice(battle.turnIndex + 1);
+  const normal = remaining.filter(turn => !turn.extra).map(turn => {
+    const unit = turn.side === "party" ? battle.party.find(p => p.id === turn.id) : battle.enemies[turn.index];
+    return { ...turn, agi: effectiveAgility(unit, turn.side === "party" ? totals(turn.id).agi : unit.stats.agi) };
+  }).sort((a, b) => b.agi - a.agi);
+  battle.turnQueue.splice(battle.turnIndex + 1, remaining.length, ...remaining.map(turn => turn.extra ? turn : normal.shift()));
+}
+
+function skillScaling(sk) {
+  return sk.scaling || (sk.anim === "melee" ? "str" : "mag");
+}
+
+function healingAmount(id, sk, unit = null) {
+  return Math.round((Math.abs(sk.power) + totals(id).mag * (sk.healScaling ?? .3))
+    * (1 + talentValue(id, "healBoost")) * (1 + statusValue(unit, "magicUp")));
+}
+
+function knownWeakness(unit) {
+  return Boolean(unit && (partyCanSeeWeaknesses() || state.knownWeaknesses[unit.name] === unit.weak));
+}
+
+function rememberWeakness(unit) {
+  if (!unit?.weak || state.knownWeaknesses[unit.name] === unit.weak) return false;
+  state.knownWeaknesses[unit.name] = unit.weak;
+  return true;
 }
 
 function battleSkills(id, unit = null) {
@@ -4050,6 +4176,12 @@ function drawBattleVitalBar(anchorX, y, value, max, label, colour, width = 42) {
 
 function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
   if (unit.hp <= 0) return;
+  if (enemySide) {
+    if (partyCanSeeWeaknesses()) rememberWeakness(unit);
+    const label = knownWeakness(unit) ? unit.weak : "???";
+    drawRect(anchorX - 31, baseline - 5, 62, 8, "#100d18ed");
+    drawText("Weak: " + label, anchorX - 29, baseline + 1, knownWeakness(unit) ? "#ffe096" : "#b4abbc", 5);
+  }
   drawBattleVitalBar(anchorX, baseline + 4, unit.hp, unit.max, "HP", enemySide ? "#c85645" : "#e8a64b", enemySide ? 46 : 42);
   if (enemySide) {
     drawBattleVitalBar(anchorX, baseline + 11, unit.resonance || 0, 100, "R", "#8a5ac4", 46);
@@ -5275,8 +5407,8 @@ function renderBattle(log) {
   const turn = currentTurn();
   renderTurnOrder();
   el.partyRows.innerHTML = battle.party.map(unit => unitHtml({ ...unit, name: unit.form ? `${unit.name} - ${unit.form === "mech" ? "MECH" : "SHADOWPRIEST"} ${unit.formTurns}` : unit.name }, turn?.side === "party" && turn.id === unit.id ? "is-active" : "")).join("");
-  const revealWeakness = partyCanSeeWeaknesses();
-  el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} Lv ${e.level} - Weak: ${revealWeakness ? e.weak : "???"}`, hp: e.hp, max: e.max, statuses: e.statuses })).join("");
+  if (partyCanSeeWeaknesses()) battle.enemies.forEach(rememberWeakness);
+  el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} Lv ${e.level} - Weak: ${knownWeakness(e) ? e.weak : "???"}`, hp: e.hp, max: e.max, statuses: e.statuses })).join("");
   el.actions.innerHTML = "";
   el.actions.classList.toggle("is-items", battle.itemMode);
   el.actions.classList.toggle("is-targets", battle.targetMode);
@@ -5292,7 +5424,8 @@ function renderBattle(log) {
     b.textContent = sk.name;
     const onceUsed = sk.oncePerBattle && battle.usedOnce[sk.oncePerBattle];
     const noEncore = sk.encore && !battle.lastSupport;
-    b.disabled = Boolean(onceUsed || noEncore || (sk.anim === "ultimate" ? state.resonance < 100 : sk.cost > u.mp));
+    const extraUnavailable = (sk.immediateTurn || (sk.encore && battle.lastSupport?.immediateTurn)) && !canGrantImmediateTurn();
+    b.disabled = Boolean(onceUsed || noEncore || extraUnavailable || (sk.anim === "ultimate" ? state.resonance < 100 : sk.cost > u.mp));
     setBattlePreview(b, sk.name, skillPreview(u, sk));
     b.onclick = () => chooseSkillTarget(u, sk);
     el.actions.appendChild(b);
@@ -5327,27 +5460,33 @@ function highlightBattleAction() {
 function skillPreview(u, sk, target = null) {
   const t = totals(u.id);
   const partyHeal = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0;
-  const heal = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")));
-  if (sk.power < 0) return `Restores ${heal} HP${partyHeal ? " to every living ally" : " to the weakest ally"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
-  if (!skillTargetsEnemies(sk)) return `${sk.transform ? `Transformation for ${TRANSFORMATION_CONFIG[sk.transform]?.duration || 4} actions` : "Support command"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
-  const statName = sk.anim === "magic" || sk.anim === "ultimate" ? "MAG" : "STR";
+  const heal = healingAmount(u.id, sk, u);
+  if (sk.power < 0) return `Restores ${heal} HP${partyHeal ? " to every living ally" : sk.targetSide === "self" ? " to self" : " to the most wounded ally"} / ${skillFormula(sk)} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}`;
+  if (!skillTargetsEnemies(sk)) return `${sk.transform ? `Transformation for ${TRANSFORMATION_CONFIG[sk.transform]?.duration || 4} actions` : "Support command"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`}. ${sk.desc}${sk.immediateTurn ? ` Extra actions used: ${battle?.extraTurns || 0}/2 this battle.` : ""}`;
+  const statName = skillScaling(sk).toUpperCase();
   const statKey = statName === "MAG" ? "mag" : "str";
   const stat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
-  const low = Math.round(sk.coefficient ? stat * sk.coefficient : sk.power + stat);
+  const low = sk.coefficient ? stat * sk.coefficient : sk.power + stat;
   const high = low + 5;
   const weaknessBonus = effectValue(u.id, "weaknessDamage");
   const hitsWeakness = target && target.weak === sk.element;
-  const revealWeakness = partyCanSeeWeaknesses();
+  const revealWeakness = target ? knownWeakness(target) : partyCanSeeWeaknesses();
   const displayWeakness = hitsWeakness && revealWeakness;
-  const targetLow = displayWeakness ? Math.floor(Math.floor(low * 1.55) * (1 + weaknessBonus)) : low;
-  const targetHigh = displayWeakness ? Math.floor(Math.floor(high * 1.55) * (1 + weaknessBonus)) : high;
+  const multiplier = outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", target)
+    * (target && hasNegativeStatus(target) ? 1 + (sk.afflictedBonus || 0) : 1)
+    * (1 + (sk.buffScaling || 0) * ensureStatuses(u).filter(status => STATUS_DEFS[status.type]?.buff).length);
+  const defenseDebuff = statusValue(target, "defenseDown") + (statKey === "mag" ? statusValue(target, "magicDefenseDown") : 0);
+  const defense = Math.max(0, statusValue(target, "defenseUp") - defenseDebuff) * (1 - (sk.pierce || 0));
+  const targetRoll = roll => Math.max(1, Math.round((displayWeakness ? Math.floor(Math.floor(roll * 1.55) * (1 + weaknessBonus)) : roll) * multiplier * (1 - defense)));
+  const targetLow = targetRoll(low);
+  const targetHigh = targetRoll(high);
   const weakText = weaknessBonus ? ` Weakness hits use x1.55 and another +${Math.round(weaknessBonus * 100)}% from gear.` : " Weakness hits use x1.55 damage.";
   const cost = sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`;
-  const targetText = target ? ` Against ${target.name}: ${targetLow}-${targetHigh} damage${hitsWeakness && revealWeakness ? " including weakness" : ""}.` : "";
+  const targetText = ` ${target ? `Against ${target.name}` : "After bonuses"}: ${targetLow}-${targetHigh} damage${displayWeakness ? " including weakness" : ""}, before crit and stagger break.`;
   const areaText = skillHitsAll(u.id, sk) ? " Hits every living enemy." : " Hits one selected enemy.";
   const critChance = heroCritChance(u.id, Boolean(target && hasNegativeStatus(target)));
   const critText = critChance ? ` ${Math.round(critChance * 100)}% critical chance for double damage.` : "";
-  return `${sk.element} ${sk.anim} / ${low}-${high} base damage from ${statName} ${stat} / costs ${cost}.${targetText}${areaText}${critText}${revealWeakness ? weakText : " Weaknesses are hidden until a reveal talent is active."} ${sk.desc}`;
+  return `${sk.element} ${sk.anim} / ${low}-${high} base damage from ${statName} ${stat} / costs ${cost}.${targetText}${areaText}${critText}${revealWeakness ? weakText : " Discover a weakness by hitting it or selecting a reveal talent."} ${sk.desc}`;
 }
 
 function setBattlePreview(button, title, description) {
@@ -5401,8 +5540,8 @@ function chooseSkillTarget(u, sk) {
 
 function renderBattleTargets(u) {
   const sk = battle.pendingSkill;
-  const revealWeakness = partyCanSeeWeaknesses();
   battle.enemies.filter(enemyUnit => enemyUnit.hp > 0).forEach(enemyUnit => {
+    const revealWeakness = knownWeakness(enemyUnit);
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = `${enemyUnit.name} Lv ${enemyUnit.level} | HP ${enemyUnit.hp}/${enemyUnit.max} | Weak: ${revealWeakness ? enemyUnit.weak : "???"}`;
@@ -5492,6 +5631,10 @@ function makeBattleEffect(caster, skillData, target) {
   };
 }
 
+function canGrantImmediateTurn() {
+  return Boolean(battle && battle.extraTurns < 2 && battle.party.some(unit => unit.hp > 0 && !statusOf(unit, "overheated")));
+}
+
 function grantImmediateTurn(caster, sourceSkill) {
   if (battle.extraTurns >= 2) return "Extra-turn limit reached.";
   const candidates = battle.party.filter(unit => unit.hp > 0 && !statusOf(unit, "overheated"));
@@ -5515,6 +5658,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     if (!battle.lastSupport) return renderBattle("Encore needs an earlier support song.");
     sk = { ...battle.lastSupport, name: `Encore: ${battle.lastSupport.name}`, anim: selectedSkill.anim, cost: selectedSkill.cost, encoreResolved: true };
   }
+  if (sk.immediateTurn && !canGrantImmediateTurn()) return renderBattle("No extra action available: maximum 2 per battle, and Overheated allies cannot receive one. No MP spent.");
+  if (selectedSkill.anim === "ultimate" && state.resonance < 100) return renderBattle("An ultimate requires 100 Resonance.");
   const liveAtStart = battle.enemies.filter(e => e.hp > 0);
   const target = skillTargetsEnemies(sk) ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0]) : u;
   const timing = battleActionTiming(sk.anim);
@@ -5553,7 +5698,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     if (sk.power < 0) {
       const living = battle.party.filter(p => p.hp > 0);
       const wounded = living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
-      const healing = Math.round(Math.abs(sk.power) * (1 + talentValue(u.id, "healBoost")) * (1 + statusValue(u, "magicUp")));
+      const healing = healingAmount(u.id, sk, u);
       const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : sk.targetSide === "self" ? [u] : [wounded];
       let totalRestored = 0;
       healTargets.forEach(ally => {
@@ -5564,14 +5709,14 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       });
       if (sk.cleanse || /Oath Unbound/.test(sk.name)) {
         let cleansed = 0;
-        healTargets.forEach(ally => cleansed += cleanseStatuses(ally));
+        healTargets.forEach(ally => cleansed += cleanseWithTalent(u, ally));
         if (cleansed) log += ` PURIFY removed ${cleansed} negative effect${cleansed === 1 ? "" : "s"}.`;
       }
       battle.ward = battle.ward || sk.anim === "block" || sk.grantsWard || /Oath Unbound/.test(sk.name);
       const buffNotes = applySkillBuffs(u, healTargets, sk);
       if (buffNotes.length) log += ` ${buffNotes.join(" ")}.`;
       state.resonance = Math.min(100, state.resonance + 5);
-      log += ` ${healTargets.length > 1 ? "The party recovers" : `${wounded.name} recovers`} ${totalRestored} HP.`;
+      log += ` ${healTargets.length > 1 ? "The party recovers" : `${healTargets[0].name} recovers`} ${totalRestored} HP.`;
     } else if (!skillTargetsEnemies(sk)) {
       if (sk.transform && activateTransformation(u, sk.transform)) {
         log += ` ${sk.transform === "mech" ? "Mech Form" : "Shadowpriest"} engaged for ${u.formTurns} actions.`;
@@ -5579,13 +5724,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       if (sk.cleanse) {
         let cleansed = 0;
         supportTargets.forEach(ally => {
-          const removed = cleanseStatuses(ally);
-          cleansed += removed;
-          if (removed && typedTalentValue(u.id, "cleanseHeal")) {
-            const restored = Math.min(Math.round(ally.max * typedTalentValue(u.id, "cleanseHeal")), ally.max - ally.hp);
-            ally.hp += restored;
-            addBattleFloater(ally, restored, { kind: "heal" });
-          }
+          cleansed += cleanseWithTalent(u, ally);
         });
         log += cleansed ? ` PURIFY removed ${cleansed} negative effect${cleansed === 1 ? "" : "s"}.` : " No negative effects were present.";
       }
@@ -5605,10 +5744,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       hitTargets.forEach(hitTarget => {
         const afflicted = hasNegativeStatus(hitTarget);
         const critChance = heroCritChance(u.id, afflicted);
-        const statKey = sk.anim === "magic" || sk.anim === "ultimate" ? "mag" : "str";
+        const statKey = skillScaling(sk);
         const offensiveStat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
         let dmg = (sk.coefficient ? offensiveStat * sk.coefficient : sk.power + offensiveStat) + Math.floor(Math.random() * 6);
         if (hitTarget.weak === sk.element) {
+          if (rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
           dmg = Math.floor(dmg * 1.55);
           dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
           hitTarget.stagger += (sk.staggerPower || 2) + effectValue(u.id, "stagger");
@@ -5632,7 +5772,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         const defenseDebuff = statusValue(hitTarget, "defenseDown") + (statKey === "mag" ? statusValue(hitTarget, "magicDefenseDown") : 0);
         const defense = Math.max(0, statusValue(hitTarget, "defenseUp") - defenseDebuff) * (1 - (sk.pierce || 0));
-        dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(u, sk.anim, hitTarget) * (1 - defense)));
+        dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", hitTarget) * (1 - defense)));
         const sleepBreak = breakSleepFromDamage(hitTarget);
         if (sleepBreak) log += ` ${hitTarget.name}: ${sleepBreak}`;
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
@@ -5684,10 +5824,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
     }
 
+    if (sk.grantsWard) battle.ward = true;
     if (!selectedSkill.encore && !skillTargetsEnemies(sk) && sk.anim !== "ultimate") battle.lastSupport = { ...sk };
     const echoChance = effectValue(u.id, "echoing");
     const echoKey = `echoing:${u.id}`;
-    if (echoChance && !battle.usedOnce[echoKey] && Math.random() < echoChance) {
+    if (echoChance && !battle.usedOnce[echoKey] && canGrantImmediateTurn() && Math.random() < echoChance) {
       battle.usedOnce[echoKey] = true;
       log += ` ECHOING: ${grantImmediateTurn(u, { appliesOverheated: true })}`;
     }
@@ -6291,7 +6432,7 @@ const characterSpecialties = {
 const statusStatHelp = [
   ["STR", "+1 base damage per point for most physical and melee skills."],
   ["AGI", "Turn order. Every 10 points above 50 grants +1% CRIT, capped at +8% from 130 AGI."],
-  ["MAG", "+1 base damage per point for most magic skills and +3 maximum MP per point."],
+  ["MAG", "+1 base damage per point for most magic skills, +0.3 healing before bonuses, and +3 maximum MP. Skills show their exact coefficient."],
   ["STAM", "+4 maximum HP per point. Every hero also has 30 base HP."],
   ["HP / MP", "HP keeps a hero standing. MP is spent on non-ultimate skills."],
   ["CRIT", "Chance to deal double damage. For example, 25% CRIT adds 25% average damage over many hits."],
@@ -6299,22 +6440,51 @@ const statusStatHelp = [
   ["HEAL / ALLY", "HP restored to one ally by the strongest non-ultimate heal. Group heals restore this to each ally."]
 ];
 
+function skillFormula(sk) {
+  if (sk.power < 0) return `${Math.abs(sk.power)} + ${sk.healScaling ?? .3} x MAG healing`;
+  if (!skillTargetsEnemies(sk)) return "Support / no damage scaling";
+  return sk.coefficient ? `${sk.coefficient} x ${skillScaling(sk).toUpperCase()} + 0-5` : `${sk.power} + ${skillScaling(sk).toUpperCase()} + 0-5`;
+}
+
+function skillExpectedOutput(id, sk, unit = { id, statuses: [] }, afflicted = false) {
+  if (sk.power < 0) return healingAmount(id, sk, unit);
+  if (!skillTargetsEnemies(sk)) return 0;
+  const statKey = skillScaling(sk);
+  const stat = Math.round(totals(id)[statKey] * transformedStatMultiplier(unit, statKey));
+  const base = sk.coefficient ? stat * sk.coefficient : sk.power + stat;
+  const target = { statuses: afflicted ? [{ type: "poison" }] : [] };
+  const multiplier = outgoingDamageMultiplier(unit, statKey === "str" ? "melee" : "magic", target)
+    * (afflicted ? 1 + (sk.afflictedBonus || 0) : 1)
+    * (1 + (sk.buffScaling || 0) * ensureStatuses(unit).filter(status => STATUS_DEFS[status.type]?.buff).length);
+  const crit = heroCritChance(id, afflicted);
+  return Array.from({ length: 6 }, (_, roll) => Math.max(1, Math.round((base + roll) * multiplier)) * (1 - crit)
+    + Math.max(1, Math.round((base + roll) * multiplier * 2)) * crit).reduce((sum, value) => sum + value, 0) / 6;
+}
+
+function skillCatalogueHtml(id) {
+  const normal = battleSkills(id, { id });
+  const form = id === "Glimmer" ? "mech" : id === "Kael" ? "shadowpriest" : null;
+  const sections = [{ title: "Current skills", skills: normal, unit: { id, statuses: [] } }];
+  if (form && normal.some(sk => sk.transform === form)) sections.push({ title: form === "mech" ? "Mech Form skills" : "Shadowpriest skills", skills: TRANSFORMED_SKILLS[form], unit: { id, form, statuses: [] } });
+  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? "100 Resonance" : `${sk.cost} MP`} / ${sk.element} / ${skillFormula(sk)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents and form stats, but no enemy defense, weakness, stagger bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
+}
+
 function estimatedHeroOutput(id) {
   const t = totals(id);
-  const skills = battleSkills(id);
+  const skills = battleSkills(id, { id });
   const critInfo = heroCritBreakdown(id);
   const crit = critInfo.total;
   const afflictedCrit = Math.min(.65, crit + typedTalentValue(id, "afflictedCrit"));
-  const damageOptions = skills.filter(sk => sk.anim !== "ultimate" && sk.power > 0 && skillTargetsEnemies(sk)).map(sk => {
-    const kind = sk.anim === "magic" ? "magic" : "melee";
-    const statKey = kind === "magic" ? "mag" : "str";
+  const damageOptions = skills.filter(sk => sk.anim !== "ultimate" && (sk.power > 0 || sk.coefficient) && skillTargetsEnemies(sk)).map(sk => {
+    const statKey = skillScaling(sk);
     const stat = t[statKey];
     const statContribution = sk.coefficient ? stat * sk.coefficient : stat;
     const base = (sk.coefficient ? statContribution : sk.power + statContribution) + 2.5;
-    const gearDamageBonus = effectValue(id, kind === "magic" ? "magicDamage" : "physicalDamage");
+    const damageType = statKey === "mag" ? "magicDamage" : "physicalDamage";
+    const gearDamageBonus = effectValue(id, damageType) + typedTalentValue(id, damageType);
     const damageBeforeCrit = base * (1 + gearDamageBonus);
     const damageWithoutAgiCrit = damageBeforeCrit * (1 + critInfo.base);
-    const value = damageBeforeCrit * (1 + crit);
+    const value = skillExpectedOutput(id, sk);
     return {
       name: sk.name,
       value,
@@ -6328,7 +6498,7 @@ function estimatedHeroOutput(id) {
     };
   });
   const healingOptions = skills.filter(sk => sk.anim !== "ultimate" && sk.power < 0).map(sk => {
-    const value = Math.abs(sk.power) * (1 + talentValue(id, "healBoost"));
+    const value = healingAmount(id, sk);
     return { name: sk.name, value };
   });
   const bestDamage = damageOptions.sort((a, b) => b.value - a.value)[0] || {
@@ -6374,12 +6544,12 @@ function statusStatImpactHtml(t, output) {
   const agiCapNote = appliedAgiCrit < agiCrit ? ` (${appliedAgiCrit}% applied at the 65% total cap)` : "";
   const gearDamage = Math.round(output.gearDamageBonus * 100);
   const hpBonusText = bonusHp ? ` Equipment HP bonuses add ${bonusHp > 0 ? "+" : ""}${bonusHp}.` : "";
-  return `<div class="status-stat-impact"><span><b>OFFENSE</b><small><strong>${output.damageStatName} ${output.damageStatValue}</strong> contributes ${output.damageStatContribution} base damage to ${output.dpsSkill} (${Math.round(output.damageStatPercent * 100)}% of its pre-crit output). ${gearDamage ? `Damage gear adds +${gearDamage}%. ` : ""}${output.damageBeforeCrit} before crit becomes ${output.dps} average damage.</small></span><span><b>AGI + CRIT</b><small><strong>AGI ${t.agi}</strong> grants +${agiCrit}% CRIT${agiCapNote}. Base gear/talent CRIT is ${baseCrit}%, for ${totalCrit}% total. AGI adds about ${output.agiDamageGain} damage/action (+${Math.round(output.agiDamagePercent * 100)}%).</small></span><span><b>VITALS</b><small><strong>STAM ${t.stam}</strong> supplies ${t.stam * 4} HP plus 30 base HP.${hpBonusText} <strong>MAG ${t.mag}</strong> supplies ${t.mag * 3} MP plus 12 base MP.</small></span></div>`;
+  return `<div class="status-stat-impact"><span><b>OFFENSE</b><small><strong>${output.damageStatName} ${output.damageStatValue}</strong> contributes ${output.damageStatContribution} base damage to ${output.dpsSkill} (${Math.round(output.damageStatPercent * 100)}% of its pre-crit output). ${gearDamage ? `Damage gear and talents add +${gearDamage}%. ` : ""}${output.damageBeforeCrit} before crit becomes ${output.dps} average damage.</small></span><span><b>AGI + CRIT</b><small><strong>AGI ${t.agi}</strong> grants +${agiCrit}% CRIT${agiCapNote}. Base gear/talent CRIT is ${baseCrit}%, for ${totalCrit}% total. AGI adds about ${output.agiDamageGain} damage/action (+${Math.round(output.agiDamagePercent * 100)}%).</small></span><span><b>VITALS</b><small><strong>STAM ${t.stam}</strong> supplies ${t.stam * 4} HP plus 30 base HP.${hpBonusText} <strong>MAG ${t.mag}</strong> supplies ${t.mag * 3} MP plus 12 base MP, and ${(t.mag * .3).toFixed(1)} healing before bonuses.</small></span></div>`;
 }
 
 function equippedProcChances(id) {
-  const applicationBonus = typedTalentValue(id, "statusChance") + effectValue(id, "statusChance");
   return ["poison", "sleep", "stun"].map(type => {
+    const applicationBonus = typedTalentValue(id, "statusChance", type) + effectValue(id, "statusChance");
     const raw = effectValue(id, "statusOnHit", type);
     const normalChance = Math.min(.95, raw * (STATUS_TIER_CHANCES.normal[type] || 1) * (1 + applicationBonus));
     return { type, raw, normalChance };
@@ -6394,7 +6564,7 @@ function statusEquipmentHtml(id) {
       const label = effect.echoUnique ? `ECHO EFFECT: ${effect.label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : effect.label;
       return `<small class="${effect.echoUnique ? "is-echo" : "is-fixed"}">${label}</small>`;
     });
-    const random = gearAffixes(name).map(entry => `<small class="is-affix">${entry.text || formatAffix(entry)}</small>`);
+    const random = gearAffixes(name).map(entry => `<small class="is-affix">${formatAffix(entry)}</small>`);
     const details = [...fixed, ...random];
     return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${gearDisplayName(name)}</strong>${gearRarityHtml(name)}</span><div>${details.length ? details.join("") : `<small>No fixed effect or random affix.</small>`}</div></div>`;
   }).join("");
@@ -6423,7 +6593,7 @@ function toggleTalent(value) {
   const progress = progressFor(id);
   const entry = (talentTrees[id] || []).find(option => option.name === name);
   if (!entry || progress.level < entry.level) return;
-  if (progress.talents.includes(name)) progress.talents = progress.talents.filter(chosen => chosen !== name);
+  if (progress.talents.includes(name)) return;
   else {
     const sameMilestone = (talentTrees[id] || []).filter(option => option.level === entry.level).map(option => option.name);
     progress.talents = progress.talents.filter(chosen => !sameMilestone.includes(chosen));
@@ -6435,11 +6605,47 @@ function toggleTalent(value) {
   renderMenu();
 }
 
+function capsHtml(id) {
+  const crit = heroCritBreakdown(id);
+  return `<div class="combat-caps"><strong>${id} / Combat limits</strong><span>CRIT ${Math.round(crit.total * 100)}% / 65% max</span><span>AGI CRIT ${Math.round(crit.agilityBonus * 100)}% / 8% max at 130 AGI</span><span>Status application: 95% max after resistance</span><span>Extra actions: 2 per battle (shared by party)</span><span>Boss Poison: 1.5% max HP per tick; refreshes, never stacks</span></div>`;
+}
+
+function gearComparisonHtml(id, slot, ref) {
+  const unit = { id, statuses: [] };
+  const commands = battleSkills(id, unit).map(sk => ({ sk, unit }));
+  commands.filter(({ sk }) => sk.transform).forEach(({ sk }) => {
+    TRANSFORMED_SKILLS[sk.transform].forEach(formSkill => commands.push({ sk: formSkill, unit: { ...unit, form: sk.transform } }));
+  });
+  const meaningful = commands.filter(({ sk }) => sk.power < 0 || skillTargetsEnemies(sk));
+  const before = meaningful.map(({ sk, unit: source }) => [skillExpectedOutput(id, sk, source), skillExpectedOutput(id, sk, source, true)]);
+  const original = baseJobs[id].gear[slot];
+  let rows;
+  let nextCrit;
+  try {
+    baseJobs[id].gear[slot] = ref;
+    nextCrit = Math.round(heroCritBreakdown(id).total * 100);
+    rows = meaningful.map(({ sk, unit: source }, index) => {
+      const next = Math.round(skillExpectedOutput(id, sk, source));
+      const old = Math.round(before[index][0]);
+      const afflicted = Math.round(skillExpectedOutput(id, sk, source, true));
+      return `<tr><th>${sk.name}<small>${source.form || skillFormula(sk)}</small></th><td>${old}</td><td>${next}<small>${next - old >= 0 ? "+" : ""}${next - old}</small></td><td>${sk.power < 0 ? "Heal / ally" : `${Math.round(before[index][1])} to ${afflicted}`}</td></tr>`;
+    }).join("");
+  } finally {
+    baseJobs[id].gear[slot] = original;
+  }
+  return `<summary>Compare every skill</summary><p>CRIT: ${Math.round(heroCritBreakdown(id).total * 100)}% to ${nextCrit}% (cap 65%). Average damage per target or healing per ally. Includes gear, talents and form stats; excludes enemy defenses, weaknesses and temporary buffs.</p><div class="comparison-scroll"><table><thead><tr><th>Skill / scaling</th><th>Current</th><th>This item</th><th>Vs afflicted</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function favoriteGearButton(ref) {
+  return `<label class="gear-favorite"><input type="checkbox" data-favorite="${ref}" ${state.favoriteGear[ref] ? "checked" : ""}> Lock favorite</label>`;
+}
+
 function renderMenu() {
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
     const glossary = statusStatHelp.map(([stat, detail]) => `<span><b>${stat}</b><small>${detail}</small></span>`).join("");
     el.menuBody.innerHTML = `<div class="status-glossary">${glossary}</div><p class="status-estimate-note">AGI changes turn order and critical chance, but does not create extra normal turns. Damage/action uses the average random roll and total CRIT, including damage gear; it excludes enemy defense, weakness, temporary buffs, afflicted bonuses and extra area targets. Proc rates show the equipped chance and the expected rate against a normal enemy.</p><div class="status-menu-grid">${state.party.map(statusCardHtml).join("")}</div>`;
+    el.menuBody.insertAdjacentHTML("afterbegin", capsHtml(state.party[0]));
   }
   if (menuTab === "party") {
     const activeSlots = Array.from({ length: 3 }, (_, index) => {
@@ -6476,15 +6682,15 @@ function renderMenu() {
       const ready = current.pendingMilestones.length ? ` / ${current.pendingMilestones.length} POINT${current.pendingMilestones.length === 1 ? "" : "S"} READY` : "";
       return `<button type="button" class="skill-hero ${heroId === id ? "is-selected" : ""}" data-skill-hero="${heroId}"><span class="dot" style="background:${baseJobs[heroId].color}"></span><strong>${heroId}</strong><small>Level ${current.level} / ${current.talents.length} milestones chosen${ready}</small></button>`;
     }).join("");
-    const choices = talentTrees[id].map(entry => {
+    const choices = SKILL_MILESTONE_LEVELS.map(level => `<section class="talent-milestone"><header><strong>Level ${level}</strong><span>${progress.level < level ? "Locked" : talentTrees[id].some(entry => entry.level === level && chosen.has(entry.name)) ? "1 of 2 chosen" : "Choose 1 of 2"}</span></header><div class="talent-pair">${talentTrees[id].filter(entry => entry.level === level).map(entry => {
       const selected = chosen.has(entry.name);
       const locked = progress.level < entry.level;
       const competing = talentTrees[id].some(option => option.level === entry.level && chosen.has(option.name));
       const ready = progress.pendingMilestones.includes(entry.level);
       const stateText = locked ? `UNLOCKS AT LV ${entry.level}` : selected ? "CHOSEN" : ready ? "SKILL POINT READY" : competing ? "REPLACE CHOICE" : "AVAILABLE";
-      return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" ${locked ? "disabled" : ""}><span class="talent-level">LV ${entry.level}</span><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p><small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : competing ? "SWAP" : "+"}</b></button>`;
-    }).join("");
-    el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Milestone Skills</strong><p>Choose one path at each milestone. New choices unlock at levels 25, 30, 35 and 40; earlier learned skills remain available.</p></div><span>${hero.name} / ${chosen.size} chosen</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small></div>${xpProgressHtml(id)}</header><div class="talent-grid">${choices}</div></section>`;
+      return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" aria-pressed="${selected}" ${locked ? "disabled" : ""}><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p>${entry.type === "newSkill" ? `<small>${skillFormula(entry.value)} / ${entry.value.anim === "ultimate" ? "100 Resonance" : `${entry.value.cost} MP`}</small>` : ""}<small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : competing ? "SWAP" : "+"}</b></button>`;
+    }).join("")}</div></section>`).join("");
+    el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Milestone Skills</strong><p>Every 5 levels: choose 1 of 2 talents. One choice per milestone, from level 5 to 40. Choices can be swapped freely outside battle.</p></div><span>${hero.name} / ${chosen.size} chosen</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small></div>${xpProgressHtml(id)}</header><div class="talent-milestones">${choices}</div></section>${skillCatalogueHtml(id)}`;
     el.menuBody.querySelectorAll("[data-skill-hero]").forEach(button => button.onclick = () => {
       selectedSkillHero = button.dataset.skillHero;
       renderMenu();
@@ -6519,7 +6725,7 @@ function renderMenu() {
       const holderText = gearInstance(ref)
         ? (holders.length ? `Separate copy / equipped: ${holders.join(", ")}` : "Separate Echo-Forge copy / unequipped")
         : (holders.length ? `Equipped: ${holders.join(", ")} / owned x${copies}` : `In equipment inventory / owned x${copies}`);
-      return `<button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${ref}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "gear-choice-effects")}${gearAffixHtml(ref)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>`;
+      return `<div class="gear-candidate"><button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${ref}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "gear-choice-effects")}${gearAffixHtml(ref)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>${favoriteGearButton(ref)}${equipped ? "" : `<details class="gear-comparison" data-compare="${ref}"><summary>Compare every skill</summary></details>`}</div>`;
     }).join("")}<button type="button" class="gear-choice gear-unequip" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${pixelIconHtml("gear-empty", choiceIndex, "gear-choice-icon")}<span><strong>Unequip</strong><small>Move this piece back to the Items inventory.</small></span><b>${h.gear[selectedGearSlot] ? "REMOVE" : "EMPTY"}</b></button></div></section>`;
     el.menuBody.innerHTML = `<p class="gear-instruction">Choose a hero, then choose one of their five equipment slots.</p><div class="gear-roster">${roster}</div><div class="gear-layout"><section class="gear-summary"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><section class="menu-card gear-card">${slots}</section></div>${picker}`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
@@ -6532,6 +6738,17 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-equip]").forEach(btn => btn.onclick = () => equipGear(btn.dataset.equip));
+    el.menuBody.querySelectorAll("[data-favorite]").forEach(input => input.onchange = () => {
+      if (input.checked) state.favoriteGear[input.dataset.favorite] = true;
+      else delete state.favoriteGear[input.dataset.favorite];
+      updatePanels();
+    });
+    el.menuBody.querySelectorAll("[data-compare]").forEach(details => details.ontoggle = () => {
+      if (!details.open || details.dataset.loaded) return;
+      details.innerHTML = gearComparisonHtml(id, selectedGearSlot, details.dataset.compare);
+      details.dataset.loaded = "true";
+    });
+    el.menuBody.insertAdjacentHTML("afterbegin", capsHtml(id));
   }
   if (menuTab === "items") {
     const stash = Object.entries(state.stash).filter(([, amount]) => amount > 0);
@@ -6786,6 +7003,7 @@ function openVendor(id) {
   if (!vendor) return;
   activeVendor = id;
   vendorTab = "buy";
+  rerollNotice = "";
   heldDirection = null;
   mode = "shop";
   el.menu.classList.add("is-shop");
@@ -6826,6 +7044,42 @@ function vendorWares(id) {
   return wares;
 }
 
+const AFFIX_REROLL_COST = 250;
+let rerollNotice = "";
+
+function canRerollGear(ref) {
+  return Boolean(ownedGearRefs().includes(ref) && !state.favoriteGear[ref] && gearAffixes(ref).length
+    && (gearInstance(ref) || gearCopyCount(ref) === 1));
+}
+
+function rerollGearAffix(ref, index) {
+  if (activeVendor !== "workshop" || !canRerollGear(ref) || state.gold < AFFIX_REROLL_COST) return false;
+  const entries = gearAffixes(ref);
+  if (!Number.isInteger(index) || !entries[index]) return false;
+  const gear = gearByName(ref);
+  const pool = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
+  const candidates = pool.filter(candidate => !entries.some(entry => entry.key === candidate.key));
+  if (!candidates.length) return false;
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+  const replacement = { ...chosen, value: randomAffixValue(chosen) };
+  replacement.text = formatAffix(replacement);
+  const previous = formatAffix(entries[index]);
+  entries[index] = replacement;
+  state.gold -= AFFIX_REROLL_COST;
+  Object.keys(baseJobs).forEach(id => {
+    const total = totals(id);
+    baseJobs[id].hp = Math.min(baseJobs[id].hp, total.max);
+    baseJobs[id].mp = Math.min(baseJobs[id].mp, total.mp);
+  });
+  rerollNotice = `${gearDisplayName(ref)}: ${previous} replaced by ${replacement.text}. Other affixes and fixed effects unchanged.`;
+  return true;
+}
+
+function rerollPanelHtml() {
+  const refs = ownedGearRefs().filter(ref => gearAffixes(ref).length);
+  return `<section class="forge-reroll"><h3>Reforge one affix</h3><p>${AFFIX_REROLL_COST} G per roll. Select one affix to replace with a random different affix. All other affixes, rarity and fixed Echo effects stay unchanged.</p><p role="status">${rerollNotice}</p>${refs.map((ref, index) => `<div class="reroll-row"><strong>${gearDisplayName(ref)}</strong>${canRerollGear(ref) ? `<label>Replace<select data-reroll-slot="${index}">${gearAffixes(ref).map((entry, slot) => `<option value="${slot}">${formatAffix(entry)}</option>`).join("")}</select></label><button type="button" data-reroll-ref="${ref}" data-reroll-index="${index}" ${state.gold < AFFIX_REROLL_COST ? "disabled" : ""}>Reforge / ${AFFIX_REROLL_COST} G</button>` : `<small>${state.favoriteGear[ref] ? "Favorite locked. Unlock in Gear before reforging." : "Legacy stack shares its affixes. Reforging requires a single item or a separate Echo-Forge copy."}</small>`}</div>`).join("") || "<p>No items with random affixes owned.</p>"}</section>`;
+}
+
 function renderVendor() {
   const vendor = vendors[activeVendor];
   if (!vendor) return closeVendor();
@@ -6854,7 +7108,7 @@ function renderVendor() {
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
   }).join("")}</div>` : ""}`;
   const sellItems = Object.entries(state.inventory).filter(([name, amount]) => amount > 0 && inventorySellPrice(name) > 0);
-  const sellGear = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(({ ref, gear }) => gear && gearSellPrice(gear) > 0 && gearCopyCount(ref) > equippedGearUsers(ref).length);
+  const sellGear = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(({ ref, gear }) => gear && !state.favoriteGear[ref] && gearSellPrice(gear) > 0 && gearCopyCount(ref) > equippedGearUsers(ref).length);
   const sellList = `<div class="shop-list">${sellItems.map(([name, amount]) => {
     const info = inventoryInfo(name);
     const icon = inventoryIcon(name);
@@ -6870,6 +7124,20 @@ function renderVendor() {
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
   el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
+  if (activeVendor === "workshop") {
+    el.menuBody.querySelector(".shop-mode-tabs").insertAdjacentHTML("beforeend", `<button type="button" data-shop-tab="reforge" class="${vendorTab === "reforge" ? "is-active" : ""}">Reforge</button>`);
+    if (vendorTab === "reforge") {
+      el.menuBody.querySelector(".shop-list").outerHTML = rerollPanelHtml();
+      el.menuBody.querySelectorAll("[data-reroll-ref]").forEach(button => button.onclick = () => {
+        const selected = el.menuBody.querySelector(`[data-reroll-slot="${button.dataset.rerollIndex}"]`);
+        if (rerollGearAffix(button.dataset.rerollRef, Number(selected.value))) {
+          playSfx("coin");
+          updatePanels();
+          renderVendor();
+        }
+      });
+    }
+  }
   el.menuBody.querySelectorAll("[data-shop-tab]").forEach(button => button.onclick = () => {
     vendorTab = button.dataset.shopTab;
     renderVendor();
@@ -6926,7 +7194,7 @@ function sellVendorItem(kind, name) {
     const ref = name;
     const gear = gearByName(ref);
     const price = gearSellPrice(gear);
-    if (!price || gearCopyCount(ref) <= equippedGearUsers(ref).length) return;
+    if (!price || state.favoriteGear[ref] || gearCopyCount(ref) <= equippedGearUsers(ref).length) return;
     const instance = gearInstance(ref);
     if (instance) {
       const baseName = instance.name;
@@ -7154,6 +7422,7 @@ function handleFieldTap(x, y) {
 }
 
 window.addEventListener("keydown", e => {
+  if (e.target?.closest?.(".forge-reroll, .gear-favorite, .gear-comparison")) return;
   const key = e.key.toLowerCase();
   const movement = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key);
   if (movement || [" ", "tab", "enter", "escape"].includes(key)) e.preventDefault();
@@ -7380,7 +7649,7 @@ function runQaChecks() {
     check("agility-crit-scale", [[50, 0], [70, .02], [90, .04], [110, .06], [130, .08], [137, .08], [200, .08]].every(([agi, expected]) => Math.abs(agilityCritBonusFromAgi(agi) - expected) < .0001));
     check("status-output-per-action", profileIds.every(id => {
       const output = estimatedHeroOutput(id);
-      return output.dps === Math.round(output.damageBeforeCrit * (1 + output.crit)) && output.agiDamageGain >= 0 && output.agiDamagePercent >= 0;
+      return Math.abs(output.dps - Math.round(output.damageBeforeCrit * (1 + output.crit))) <= 1 && output.agiDamageGain >= 0 && output.agiDamagePercent >= 0;
     }));
     check("status-stat-impact", profileIds.every(id => statusStatImpactHtml(totals(id), estimatedHeroOutput(id)).includes("AGI + CRIT")));
     check("status-equipment-breakdown", ["WEAPON", "ARMOUR", "RING", "HELMET"].every(slot => statusEquipmentHtml("Verseborn").includes(slot)));
