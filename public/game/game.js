@@ -1849,7 +1849,7 @@ const compactTalentTrees = {
     talentNode(1, "Lingering Chorus", "buffDuration", 1, "Verseborn's buffs last 1 additional action."),
     talentNode(1, "Discordant Note", "debuffPotency", .15, "Verseborn's vulnerability and damage-reduction debuffs are 15% stronger."),
     talentNode(2, "Battle Hymn", "newSkill", skill("Battle Hymn", "magic", "Sound", 0, 8, "Raise party physical and magical damage by 10% for 3 actions.", { targetSide: "party", partyWide: true, buffs: [{ type: "damageUp", value: .1, duration: 3 }] })),
-    talentNode(2, "Quick Tempo", "firstSongDiscount", .3, "The first Song used each battle costs 30% less MP."),
+    talentNode(2, "Resonant Field", "aoeSkill", "Resonant Verse", "Resonant Verse becomes an area spell that damages every living enemy."),
     talentNode(2, "Resonance", "weaponSongBoost", .2, "After a weapon Basic Attack effect triggers, the next Song gains 20% potency."),
     talentNode(3, "Echoing Verse", "splashDamage", .35, "Single-target offensive Songs splash 35% damage to other enemies."),
     talentNode(3, "Second Chorus", "secondaryBuff", .08, "Party buffs also grant a smaller 8% secondary offense or defense buff."),
@@ -1867,7 +1867,7 @@ const compactTalentTrees = {
     talentNode(1, "Open Wound", "critBleed", .45, "Critical hits have a 45% chance to inflict Bleed."),
     talentNode(2, "Marked for Death", "newSkill", skill("Marked for Death", "magic", "Shadow", 0, 6, "Light Shadow damage and Mark the target for 4 actions.", { coefficient: .65, status: { type: "marked", chance: 1, duration: 4, value: .12 } })),
     talentNode(2, "Shadowstep", "evasionAfterDodge", .5, "After avoiding an attack, Mira gains +50% CRIT on her next attack."),
-    talentNode(2, "Deep Cut", "bleedDamage", .5, "Bleed inflicted by Mira deals 50% more damage."),
+    talentNode(2, "Voidthorn Rain", "aoeSkill", "Voidthorn Mark", "Voidthorn Mark becomes an area spell that damages every living enemy."),
     talentNode(3, "Executioner", "lowHpDamage", .25, "Deal 25% more damage to enemies below 35% HP."),
     talentNode(3, "Twin Fang", "basicTwinStrike", .45, "Normal Attack has a 45% chance to add a second strike at 45% power."),
     talentNode(3, "Void Weakness", "shadowResistanceDown", .15, "Shadow attacks can reduce magical resistance for 2 actions."),
@@ -1884,7 +1884,7 @@ const compactTalentTrees = {
     talentNode(1, "Protector", "woundedProtection", .15, "Protection effects are 15% stronger on critically wounded allies."),
     talentNode(2, "Guardian's Oath", "newSkill", skill("Guardian's Oath", "block", "Holy Fire", 0, 7, "Reduce incoming party damage by 18% for 3 actions.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp", value: .18, duration: 3 }] })),
     talentNode(2, "Radiant Strike", "newSkill", skill("Radiant Strike", "melee", "Holy Fire", 0, 6, "1.15x STR and apply Holy Vulnerability.", { coefficient: 1.15, status: { type: "holyVulnerability", chance: 1, duration: 2, value: .2 } })),
-    talentNode(2, "Steadfast", "statusResistance", .2, "+20% resistance to Stun and Break effects."),
+    talentNode(2, "Cinder Sanctuary", "partyHeal", "Cinder Guard", "Cinder Guard heals every living ally. Their next damaging action adds 10% Holy damage."),
     talentNode(3, "Intercept", "intercept", .35, "35% chance to intercept attacks aimed at allies below 35% HP."),
     talentNode(3, "Cleansing Flame", "selfCleanse", 1, "Holy abilities remove one negative status from Seerin."),
     talentNode(3, "Shield Bash", "staggerBonus", 2, "Defensive melee attacks deal +2 Break."),
@@ -1901,7 +1901,7 @@ const compactTalentTrees = {
     talentNode(1, "Stone Memory", "earthCostReduction", .15, "Earth abilities cost 15% less MP."),
     talentNode(2, "Earthen Guard", "newSkill", skill("Earthen Guard", "block", "Earth", 0, 6, "Gain a personal stone barrier for 4 actions.", { targetSide: "self", buffs: [{ type: "barrier", value: .3, duration: 4 }] })),
     talentNode(2, "Concussive Blow", "basicBreak", 2, "Normal Attack deals +2 Break."),
-    talentNode(2, "Unmoving", "guardStaggerImmune", 1, "Defend prevents Torren from being Stunned or displaced."),
+    talentNode(2, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break becomes an area attack that damages every living enemy."),
     talentNode(3, "Fault Line", "newSkill", skill("Fault Line", "melee", "Earth", 0, 11, "1.25x STR to all enemies with high Break.", { coefficient: 1.25, allEnemies: true, staggerPower: 3 })),
     talentNode(3, "Rockslide", "brokenDamage", .2, "Deal 20% more physical damage to recently Broken enemies."),
     talentNode(3, "Cover Me", "intercept", .25, "25% chance to absorb an attack intended for a wounded ally."),
@@ -1917,7 +1917,7 @@ const compactTalentTrees = {
     talentNode(1, "Efficient Engineering", "techCostReduction", .12, "Tech skills cost 12% less MP."),
     talentNode(1, "Dirty Wrench", "basicDebuffDuration", 1, "Debuffs from Glimmer's weapon Basic Attack last 1 additional action."),
     talentNode(2, "Combat Drone", "newSkill", skill("Combat Drone", "magic", "Tech", 0, 9, "Deploy a drone that follows Glimmer's attacks for the battle.", { targetSide: "self", buffs: [{ type: "combatDrone", value: .25, duration: 99 }] })),
-    talentNode(2, "Field Repair", "newSkill", skill("Field Repair", "block", "Tech", 0, 6, "Grant one ally a mechanical barrier.", { targetSide: "party", buffs: [{ type: "barrier", value: .22, duration: 3 }] })),
+    talentNode(2, "Patch Network", "partyHeal", "Patch Job", "Patch Job heals every living ally and grants each of them Combat Drone for 2 actions."),
     talentNode(2, "Disruptor Coil", "techDisrupt", .35, "Tech attacks have a 35% chance to reduce enemy damage."),
     talentNode(3, "Dual Drone Protocol", "dronePower", .5, "Combat Drone deals 50% more damage and can strike a second target."),
     talentNode(3, "Arc Reactor", "aoeDamage", .15, "Tech area attacks deal 15% more damage."),
@@ -1933,7 +1933,7 @@ const compactTalentTrees = {
     talentNode(1, "Gentle Hand", "healBoost", .15, "Kael's healing gains 15% potency."),
     talentNode(1, "Sacred Barrier", "barrierBoost", .2, "Kael's barriers are 20% stronger."),
     talentNode(1, "Dark Whisper", "shadowpriestDamage", .1, "Shadowpriest offensive spells deal 10% more damage."),
-    talentNode(2, "Sanctuary", "newSkill", skill("Sanctuary", "block", "Sigil", 0, 8, "Reduce incoming party damage for 3 actions.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp", value: .18, duration: 3 }] })),
+    talentNode(2, "Communal Rite", "partyHeal", "Quiet Rite", "Quiet Rite heals every living ally and grants them 12% Damage Reduction for 2 actions."),
     talentNode(2, "Purification", "newSkill", skill("Purification", "magic", "Sigil", 0, 7, "Remove negative statuses from the party.", { targetSide: "party", partyWide: true, cleanse: true })),
     talentNode(2, "Void Lance", "shadowSkillUnlock", "Void Lance", "Shadowpriest unlocks the strong single-target Void Lance spell."),
     talentNode(3, "Guardian Saint", "buffDuration", 1, "Kael's party defensive buffs last 1 additional action."),
@@ -1951,7 +1951,7 @@ const compactTalentTrees = {
     talentNode(1, "Tiny Terror", "initiativeBoost", .15, "Sparky gains 15% more initiative from AGI."),
     talentNode(1, "Smolder", "burnDamage", .4, "Burn inflicted by Sparky deals 40% more damage."),
     talentNode(2, "Ember Bite", "newSkill", skill("Ember Bite", "melee", "Ancient Fire", 0, 6, "1.25x STR and inflict Burn.", { coefficient: 1.25, status: { type: "burn", chance: .8, duration: 4 } })),
-    talentNode(2, "Wildfire", "burnSpread", .45, "Burn has a 45% chance to spread to another enemy."),
+    talentNode(2, "Memory Wildfire", "aoeSkill", "Memory Flare", "Memory Flare becomes an area spell that damages every living enemy."),
     talentNode(2, "Ancient Spark", "ultimateGain", .25, "Ancient Fire attacks generate 25% more Resonance."),
     talentNode(3, "Dragon Memory", "elderDamage", .18, "Spectral Elder Dragon attacks gain 18% potency."),
     talentNode(3, "Hungry Flame", "burningDamage", .25, "Deal 25% more damage to Burning enemies."),
@@ -1963,6 +1963,12 @@ const compactTalentTrees = {
     talentNode(5, "Living Wildfire", "livingWildfire", .5, "Burn damage and spreading gain 50% potency."),
     talentNode(5, "Tiny Dragon, Huge Problem", "burstCapstone", .2, "Single-target Ember damage +20% and CRIT +8%."),
   ]
+};
+
+const HEAL_CONVERSION_BUFFS = {
+  Seerin: { "Cinder Guard": { type: "holyFollowUp", value: .1, duration: 1, label: "Holy Follow-up", description: "their next damaging action adds 10% Holy damage" } },
+  Glimmer: { "Patch Job": { type: "combatDrone", value: .25, duration: 2, label: "Combat Drone", description: "grants Combat Drone for 2 actions" } },
+  Kael: { "Quiet Rite": { type: "defenseUp", value: .12, duration: 2, label: "12% Damage Reduction", description: "grants 12% Damage Reduction for 2 actions" } }
 };
 
 Object.keys(talentTrees).forEach(id => {
@@ -2010,6 +2016,7 @@ const STATUS_DEFS = {
   echoPower: { label: "ECHO POWER", short: "ECH", buff: true, duration: 3, value: .2 },
   evasion: { label: "EVASION", short: "EVA", buff: true, duration: 2, value: .25 },
   barrier: { label: "BARRIER", short: "BAR", buff: true, duration: 3, value: .22 },
+  holyFollowUp: { label: "HOLY FOLLOW-UP", short: "HLY", buff: true, duration: 1, value: .1 },
   combatDrone: { label: "COMBAT DRONE", short: "DRN", buff: true, duration: 99, value: .25 },
   overheated: { label: "OVERHEATED", short: "HOT", negative: true, duration: 2 }
 };
@@ -3066,6 +3073,20 @@ function rememberWeakness(unit) {
   return true;
 }
 
+function applyTalentSkillConversion(id, skillEntry) {
+  const hitsAll = talentValue(id, "aoeSkill", skillEntry.name) > 0;
+  const healsAll = talentValue(id, "partyHeal", skillEntry.name) > 0;
+  if (!hitsAll && !healsAll) return skillEntry;
+  const addedBuff = healsAll ? HEAL_CONVERSION_BUFFS[id]?.[skillEntry.name] : null;
+  return {
+    ...skillEntry,
+    allEnemies: skillEntry.allEnemies || hitsAll,
+    partyWide: skillEntry.partyWide || healsAll,
+    buffs: addedBuff ? [...(skillEntry.buffs || []), addedBuff] : skillEntry.buffs,
+    desc: `${skillEntry.desc} Talent upgrade: affects every living ${hitsAll ? "enemy" : "ally"}${addedBuff ? ` and ${addedBuff.description}` : ""}.`
+  };
+}
+
 function battleSkills(id, unit = null) {
   const combatUnit = unit || battle?.party?.find(member => member.id === id);
   if (combatUnit?.form && TRANSFORMED_SKILLS[combatUnit.form]) {
@@ -3087,7 +3108,7 @@ function battleSkills(id, unit = null) {
     }));
   const base = baseJobs[id].skills
     .filter(entry => !entry.transform || progressFor(id).level >= 20)
-    .map(entry => entry.anim === "ultimate" ? { ...entry, ultimateIndex: entry.ultimateIndex || 1 } : entry);
+    .map(entry => applyTalentSkillConversion(id, entry.anim === "ultimate" ? { ...entry, ultimateIndex: entry.ultimateIndex || 1 } : { ...entry }));
   if (id === "Kael" && typedTalentValue(id, "twilightCapstone")) base.push({ ...TRANSFORMED_SKILLS.shadowpriest[0], name: "Twilight Lance", coefficient: 1.2, cost: 8 });
   return [...base, ...extra];
 }
@@ -6154,6 +6175,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const t = totals(u.id);
       const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
       let totalDamageDealt = 0;
+      const holyFollowUpPower = statusValue(u, "holyFollowUp");
+      let holyFollowUpTriggered = false;
       hitTargets.forEach(hitTarget => {
         const afflicted = hasNegativeStatus(hitTarget);
         const critChance = Math.min(.65, heroCritChance(u.id, afflicted) + statusValue(u, "critUp") + statusValue(hitTarget, "marked") + statusValue(hitTarget, "critExposed"));
@@ -6206,6 +6229,12 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
+        const holyDamage = holyFollowUpPower ? Math.max(1, Math.round(dmg * holyFollowUpPower)) : 0;
+        if (holyDamage) {
+          hitTarget.hp -= holyDamage;
+          totalDamageDealt += holyDamage;
+          holyFollowUpTriggered = true;
+        }
         hitTarget.resonance = Math.min(100, (hitTarget.resonance || 0) + (critical ? 14 : 8));
         hitTarget.flash = 10;
         if (sk.multiHit > 1) {
@@ -6218,6 +6247,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         } else {
           addBattleFloater(hitTarget, dmg, { damageType: sk.element, crit: critical });
         }
+        if (holyDamage) addBattleFloater(hitTarget, holyDamage, { damageType: "Holy Fire", delayTicks: sk.multiHit > 1 ? sk.multiHit * 4 : 4 });
         const statusNotes = hitTarget.hp > 0 ? applySkillStatuses(u, hitTarget, sk) : [];
         if (critical && hitTarget.hp > 0 && typedTalentValue(u.id, "critBleed") && Math.random() < typedTalentValue(u.id, "critBleed")) {
           const bleed = applyStatus(hitTarget, "bleed", u, { force: true, duration: 3, scaling: "str" });
@@ -6237,8 +6267,9 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           hitTarget.defeatUntil = tick + (enemyAnimationSheetFor(hitTarget) ? 30 : 12);
           if (typedTalentValue(u.id, "killEvasion")) applyStatus(u, "evasion", u, { duration: 2, value: typedTalentValue(u.id, "killEvasion"), force: true });
         }
-        log += ` ${hitTarget.name} takes ${dmg}.`;
+        log += ` ${hitTarget.name} takes ${dmg}${holyDamage ? ` + ${holyDamage} Holy` : ""}.`;
       });
+      if (holyFollowUpTriggered) u.statuses = ensureStatuses(u).filter(status => status.type !== "holyFollowUp");
       if (!sk.allEnemies && sk.element === "Sound" && typedTalentValue(u.id, "splashDamage") && totalDamageDealt > 0) {
         battle.enemies.filter(enemy => enemy.hp > 0 && !hitTargets.includes(enemy)).forEach(enemy => {
           const splash = Math.max(1, Math.round(totalDamageDealt * typedTalentValue(u.id, "splashDamage")));
