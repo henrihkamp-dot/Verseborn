@@ -373,9 +373,79 @@ canvas:focus {
   line-height: 1.35;
 }
 
+.status-roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.status-hero {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 2px 7px;
+  align-items: center;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 7px;
+  border: 1px solid #584536;
+  background: #18121e;
+  color: #ffd27d;
+  text-align: left;
+  cursor: pointer;
+}
+
+.status-hero img {
+  grid-row: 1 / 3;
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  image-rendering: pixelated;
+  border: 1px solid #75572d;
+  background: #0b0910;
+}
+
+.status-hero span,
+.status-hero strong,
+.status-hero small,
+.status-hero > b {
+  display: block;
+  min-width: 0;
+}
+
+.status-hero strong {
+  overflow: hidden;
+  color: #f4dfad;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-hero small {
+  overflow: hidden;
+  color: #bfae8d;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-hero > b {
+  grid-column: 2;
+  color: #7bd4c6;
+  font-size: 8px;
+}
+
+.status-hero.is-selected {
+  border-color: #7bd4c6;
+  background: #182a2b;
+  box-shadow: inset 3px 0 0 #7bd4c6;
+}
+
 .status-menu-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
@@ -415,6 +485,48 @@ canvas:focus {
   color: #cbb891;
   font-size: 10px;
   line-height: 1.35;
+}
+
+.status-biography {
+  margin-top: 8px;
+  padding: 7px 8px;
+  border-left: 2px solid #d8b06b;
+  background: #17111c;
+}
+
+.status-biography h4 {
+  margin: 0 0 3px;
+  color: #d8b06b;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.status-biography p {
+  margin: 0;
+  color: #d9cbb0;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.status-reference {
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid #5b4438;
+  background: #100c14;
+}
+
+.status-reference > summary {
+  color: #ffd27d;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.status-reference .combat-caps {
+  margin-top: 8px;
+}
+
+.status-reference .status-glossary {
+  margin-top: 8px;
 }
 
 .status-core-stats {

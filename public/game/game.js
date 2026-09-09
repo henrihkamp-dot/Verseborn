@@ -71,6 +71,7 @@ const WALK_FRAME_TICKS = 3;
 let tick = 0;
 let mode = "title";
 let menuTab = "status";
+let selectedStatusHero = "Verseborn";
 let selectedGearHero = "Verseborn";
 let selectedGearSlot = "weapon";
 let selectedGearRef = null;
@@ -4471,10 +4472,10 @@ function partyBattlePosition(index, count = battle?.party?.length || 1) {
 
 function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
   const positions = count === 1
-    ? [[198, 105]]
+    ? [[198, 124]]
     : count === 2
-      ? [[181, 79], [214, 126]]
-      : [[178, 61], [215, 101], [181, 141]];
+      ? [[215, 96], [181, 146]]
+      : [[216, 88], [178, 128], [216, 160]];
   return positions[index] || [190, 105];
 }
 
@@ -7071,6 +7072,16 @@ const characterSpecialties = {
   Sparky: ["Magic burst", "Ancient fire", "Area damage"]
 };
 
+const characterBios = {
+  Verseborn: "A young Songweaver who refuses to let the False Dawn erase names, memories or promises. Their living Verse holds the Flameguard together and turns shared conviction into power.",
+  Mira: "The Whispering Arrow of House Veln is a swift shadow operative who marks weaknesses before exploiting them. Her dry precision hides a fierce loyalty to the people she has chosen.",
+  Seerin: "Once shaped to be an obedient shield, Seerin now places people before doctrine. She anchors the front line with sword, shield and Holy Fire, protecting allies while opening paths for their counterattack.",
+  Kael: "A quiet sigil healer bound by the Silent Oath. Kael turns disciplined faith into restoration and wards, while the Shadowpriest within him offers a more dangerous answer to the same promise.",
+  Torren: "The Stoneheart is a veteran guardian who meets every blow head-on. Torren controls the front line through endurance, stagger and retaliation, carrying old losses without allowing them to define the living.",
+  Glimmer: "The Gearmind engineer treats every impossible problem as an unfinished prototype. Her wrenchwork, drones and Mech form combine technical magic with fast battlefield support.",
+  Sparky: "A tiny Emberborn carrying an ancient dragon memory. Sparky looks playful until that remembered flame awakens, turning concentrated magic into burns, bursts and sweeping Ancient Fire.",
+};
+
 const statusStatHelp = [
   ["STR", "+1 base damage per point for most physical and melee skills."],
   ["AGI", "Turn order plus 0.10 percentage point CRIT per point. AGI never creates an extra normal turn."],
@@ -7225,11 +7236,12 @@ function statusCardHtml(id) {
   const activeLabel = state.activeParty.includes(id) ? `ACTIVE SLOT ${state.activeParty.indexOf(id) + 1}` : "RESERVE";
   const portrait = portraitSources[id];
   const specialties = characterSpecialties[id] || [h.title];
+  const biography = characterBios[id] || `${h.name} serves the Flameguard as ${h.title}.`;
   const procHtml = procs.length ? procs.map(entry => `<span><b>${entry.type.toUpperCase()}</b><strong>${Math.round(entry.raw * 100)}%</strong><small>${Math.round(entry.normalChance * 100)}% vs normal foes</small></span>`).join("") : `<p class="status-empty">No Poison, Sleep or Stun proc equipped.</p>`;
   const baseCrit = Math.round(output.critInfo.base * 100);
   const agiCrit = (output.critInfo.agilityBonus * 100).toFixed(1);
   const afflictedText = output.afflictedCrit > output.crit ? ` / ${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "";
-  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div><section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div><section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
 }
 
 function toggleTalent(value) {
@@ -7300,9 +7312,19 @@ function favoriteGearButton(ref) {
 function renderMenu() {
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
+    if (!state.party.includes(selectedStatusHero)) selectedStatusHero = state.party[0];
+    const id = selectedStatusHero;
     const glossary = statusStatHelp.map(([stat, detail]) => `<span><b>${stat}</b><small>${detail}</small></span>`).join("");
-    el.menuBody.innerHTML = `<div class="status-glossary">${glossary}</div><p class="status-estimate-note">AGI changes turn order and critical chance, but does not create extra normal turns. Damage/action uses the average random roll and total CRIT, including damage gear; it excludes enemy defense, weakness, temporary buffs, afflicted bonuses and extra area targets. Proc rates show the equipped chance and the expected rate against a normal enemy.</p><div class="status-menu-grid">${state.party.map(statusCardHtml).join("")}</div>`;
-    el.menuBody.insertAdjacentHTML("afterbegin", capsHtml(state.party[0]));
+    const roster = state.party.map(heroId => {
+      const hero = baseJobs[heroId];
+      const activeIndex = state.activeParty.indexOf(heroId);
+      return `<button type="button" class="status-hero ${heroId === id ? "is-selected" : ""}" data-status-hero="${heroId}"><img src="${portraitSources[heroId]}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / Level ${progressFor(heroId).level}</small></span><b>${activeIndex >= 0 ? `ACTIVE ${activeIndex + 1}` : "RESERVE"}</b></button>`;
+    }).join("");
+    el.menuBody.innerHTML = `<nav class="status-roster" aria-label="Choose character">${roster}</nav><div class="status-menu-grid">${statusCardHtml(id)}</div><details class="status-reference" open><summary>Stat guide and combat limits</summary>${capsHtml(id)}<div class="status-glossary">${glossary}</div><p class="status-estimate-note">AGI changes turn order and critical chance, but does not create extra normal turns. Damage/action uses the average random roll and total CRIT, including damage gear; it excludes enemy defense, weakness, temporary buffs, afflicted bonuses and extra area targets. Proc rates show the equipped chance and the expected rate against a normal enemy.</p></details>`;
+    el.menuBody.querySelectorAll("[data-status-hero]").forEach(button => button.onclick = () => {
+      selectedStatusHero = button.dataset.statusHero;
+      renderMenu();
+    });
   }
   if (menuTab === "party") {
     const activeSlots = Array.from({ length: 3 }, (_, index) => {
