@@ -240,9 +240,9 @@ const battleSpriteHeights = {
 };
 const BATTLE_IDLE_FRAME_TICKS = 36;
 const battleFrameSequences = {
-  Verseborn: { idle: [1, 2, 1, 2] },
+  Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
-    idle: [0, 1, 2, 3],
+    idle: [0, 0, 0, 0],
     melee: [0, 0, 1, 2, 3],
     block: [0, 0, 1, 3, 4],
     magic: [0, 0, 1, 3, 4],
@@ -250,13 +250,14 @@ const battleFrameSequences = {
     ultimate2: [0, 0, 1, 2, 3]
   },
   Sparky: { idle: [1, 2, 1, 2] },
-  Glimmer: { idle: [1, 2, 1, 2], ultimate1: [1, 1, 2, 3, 3], ultimate2: [1, 2, 3, 3, 3] },
+  Glimmer: { idle: [0, 0, 0, 0], ultimate1: [1, 1, 2, 3, 3], ultimate2: [1, 2, 3, 3, 3] },
   GlimmerMech: { idle: [1, 2, 1, 2] },
   KaelShadow: { idle: [1, 2, 1, 2] },
   Torren: { idle: [1, 2, 1, 2] },
-  Seerin: { idle: [1, 2, 1, 2] },
+  Seerin: { idle: [0, 0, 0, 0] },
   Kael: { idle: [1, 2, 1, 2], melee: [0, 1, 4, 1, 0], block: [0, 1, 4, 1, 0], ultimate2: [1, 1, 2, 3, 4] }
 };
+const calmBattleIdleHeroes = new Set(["Verseborn", "Mira", "Glimmer", "Seerin"]);
 const npcBattleSheets = {};
 const animatedNpcFiles = {
   Marla: "marla",
@@ -3650,8 +3651,9 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const activeEffect = effect?.caster === unit.id ? effect : null;
   const duration = Math.max(1, activeEffect?.duration || 24);
   const progress = activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
+  const idlePhase = Math.floor((frame + (unit.id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS) % 6;
   const defaultColumn = animation === "idle"
-    ? [0, 1, 2, 3, 2, 1][Math.floor((frame + (unit.id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS) % 6]
+    ? [0, 1, 2, 3, 2, 1][idlePhase]
     : animation === "death"
       ? sheet.columns - 1
       : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
@@ -3664,8 +3666,9 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const width = Math.round(sheet.cellWidth * scale);
   const height = Math.round(sheet.cellHeight * scale);
   const idleAnchorOffset = animation === "idle" ? Number(sheet.idleAnchorOffsets?.[col] || 0) : 0;
+  const idleBreathOffset = animation === "idle" && calmBattleIdleHeroes.has(visualId) ? [0, 0, -1, -1, 0, 0][idlePhase] : 0;
   const destX = Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
-  const destY = Math.round(baseline - sheet.baseline * scale);
+  const destY = Math.round(baseline - sheet.baseline * scale + idleBreathOffset);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
@@ -4502,9 +4505,13 @@ function battleFloaterPosition(target) {
 function addBattleFloater(target, amount, options = {}) {
   if (!battle || !amount) return;
   const [x, y] = battleFloaterPosition(target);
+  const occupiedLanes = new Set(battleFloaters.filter(floater => floater.target === target && tick - floater.born < BATTLE_FLOATER_LIFETIME).map(floater => floater.lane));
+  const lane = battleFloaterLaneOffsets.findIndex((_, index) => !occupiedLanes.has(index));
   battleFloaters.push({
     x,
     y,
+    target,
+    lane: lane < 0 ? battleFloaters.length % battleFloaterLaneOffsets.length : lane,
     amount: Math.abs(Math.round(amount)),
     kind: options.kind || "damage",
     damageType: options.damageType || (options.kind === "heal" ? "HEAL" : "PHYSICAL"),
@@ -4512,6 +4519,8 @@ function addBattleFloater(target, amount, options = {}) {
     born: tick + (options.delayTicks || 0)
   });
 }
+
+const battleFloaterLaneOffsets = [[0, 0], [0, -15], [-20, -8], [20, -23], [-20, -23], [20, -8]];
 
 function drawBattleFloaters() {
   battleFloaters = battleFloaters.filter(floater => tick - floater.born < BATTLE_FLOATER_LIFETIME);
@@ -4523,7 +4532,9 @@ function drawBattleFloaters() {
     const healing = floater.kind === "heal";
     const main = `${healing ? "+" : ""}${floater.amount}`;
     const mainSize = floater.crit ? 13 : 10;
-    const mainY = floater.y - rise;
+    const [laneX, laneY] = battleFloaterLaneOffsets[floater.lane] || battleFloaterLaneOffsets[0];
+    const mainX = Math.max(18, Math.min(LOGICAL_WIDTH - 18, floater.x + laneX));
+    const mainY = floater.y - rise + laneY;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.textAlign = "center";
@@ -4533,13 +4544,13 @@ function drawBattleFloaters() {
     ctx.lineWidth = floater.crit ? 3 : 2;
     ctx.strokeStyle = "#160d13";
     ctx.fillStyle = healing ? "#65e88a" : "#ff5b55";
-    ctx.strokeText(main, floater.x, mainY);
-    ctx.fillText(main, floater.x, mainY);
+    ctx.strokeText(main, mainX, mainY);
+    ctx.fillText(main, mainX, mainY);
     ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
     ctx.lineWidth = 2;
     const label = `${floater.crit ? "CRIT! " : ""}${healing ? "HEAL" : floater.damageType.toUpperCase()}`;
-    ctx.strokeText(label, floater.x, mainY + 7);
-    ctx.fillText(label, floater.x, mainY + 7);
+    ctx.strokeText(label, mainX, mainY + 7);
+    ctx.fillText(label, mainX, mainY + 7);
     ctx.restore();
   });
 }
