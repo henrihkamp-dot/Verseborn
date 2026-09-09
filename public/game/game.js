@@ -242,7 +242,7 @@ const BATTLE_IDLE_FRAME_TICKS = 36;
 const battleFrameSequences = {
   Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
-    idle: [0, 0, 0, 0],
+    idle: [1, 1, 1, 1],
     melee: [0, 0, 1, 2, 3],
     block: [0, 0, 1, 3, 4],
     magic: [0, 0, 1, 3, 4],
@@ -258,6 +258,10 @@ const battleFrameSequences = {
   Kael: { idle: [1, 2, 1, 2], melee: [0, 1, 4, 1, 0], block: [0, 1, 4, 1, 0], ultimate2: [1, 1, 2, 3, 4] }
 };
 const calmBattleIdleHeroes = new Set(["Verseborn", "Mira", "Glimmer", "Seerin"]);
+const battleIdleSourceCrops = {
+  Glimmer: { x: 380, y: 94, width: 144, height: 178 },
+  Seerin: { x: 248, y: 102, width: 144, height: 160 }
+};
 const npcBattleSheets = {};
 const animatedNpcFiles = {
   Marla: "marla",
@@ -3661,17 +3665,22 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
   const targetHeight = battleSpriteHeights[visualId] || 54;
   const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight);
-  const sourceX = col * sheet.cellWidth;
-  const sourceY = row * sheet.cellHeight;
-  const width = Math.round(sheet.cellWidth * scale);
-  const height = Math.round(sheet.cellHeight * scale);
+  const idleCrop = animation === "idle" ? battleIdleSourceCrops[visualId] : null;
+  const sourceOffsetX = idleCrop?.x || 0;
+  const sourceOffsetY = idleCrop?.y || 0;
+  const sourceWidth = idleCrop?.width || sheet.cellWidth;
+  const sourceHeight = idleCrop?.height || sheet.cellHeight;
+  const sourceX = col * sheet.cellWidth + sourceOffsetX;
+  const sourceY = row * sheet.cellHeight + sourceOffsetY;
+  const width = Math.round(sourceWidth * scale);
+  const height = Math.round(sourceHeight * scale);
   const idleAnchorOffset = animation === "idle" ? Number(sheet.idleAnchorOffsets?.[col] || 0) : 0;
   const idleBreathOffset = animation === "idle" && calmBattleIdleHeroes.has(visualId) ? [0, 0, -1, -1, 0, 0][idlePhase] : 0;
-  const destX = Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
-  const destY = Math.round(baseline - sheet.baseline * scale + idleBreathOffset);
+  const destX = idleCrop ? Math.round(anchorX - width / 2) : Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
+  const destY = Math.round(baseline - (sheet.baseline - sourceOffsetY) * scale + idleBreathOffset);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sheet.image, sourceX, sourceY, sheet.cellWidth, sheet.cellHeight, destX, destY, width, height);
+  ctx.drawImage(sheet.image, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, width, height);
   ctx.restore();
   return true;
 }
