@@ -2507,6 +2507,267 @@ h1 {
 .gear-comparison th, .gear-comparison td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #59454c; }
 .gear-comparison th:first-child { width: 44%; }
 .gear-comparison small { display: block; color: #a8dcd3; }
+.loot-drop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.loot-drop {
+  display: inline-grid;
+  gap: 1px;
+  min-width: 110px;
+  padding: 5px 8px;
+  border-left: 2px solid #6e5647;
+  background: #120d17b8;
+}
+.dialogue .loot-drop strong {
+  color: #f4dfad;
+  font-size: 15px;
+  line-height: 1.15;
+}
+.dialogue .loot-drop small {
+  color: #bfae8d;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.selection-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, .85fr) minmax(360px, 1.5fr);
+  gap: 10px;
+  align-items: start;
+}
+.selection-list-panel,
+.selection-detail {
+  min-width: 0;
+  border: 2px solid #6e5647;
+  background: #120d17e8;
+}
+.selection-list-panel > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid #59454c;
+  color: #ffd27d;
+}
+.selection-list-panel > header small {
+  color: #bfae8d;
+}
+.selection-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 7px;
+  border-bottom: 2px solid #6e5647;
+}
+.gear-slot-tabs {
+  grid-template-columns: 1fr;
+}
+.selection-tab {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 38px;
+  padding: 5px 7px;
+  border: 1px solid #51404a;
+  background: #18121e;
+  color: #e6dcc8;
+  text-align: left;
+  cursor: pointer;
+}
+.selection-tab:hover,
+.selection-tab:focus-visible,
+.selection-tab.is-active {
+  border-color: #d8b06b;
+  background: #342638;
+}
+.selection-tab span,
+.selection-tab strong,
+.selection-tab small {
+  display: block;
+  min-width: 0;
+}
+.selection-tab small {
+  overflow: hidden;
+  color: #a99b82;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selection-tab > b {
+  color: #ffd27d;
+  font-size: 10px;
+}
+.selection-tab-icon {
+  width: 28px;
+  height: 28px;
+}
+.selection-list {
+  max-height: 430px;
+  overflow-y: auto;
+}
+.selection-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 5px 8px;
+  border: 0;
+  border-bottom: 1px solid #44353d;
+  background: #120d17;
+  color: #e6dcc8;
+  text-align: left;
+  cursor: pointer;
+}
+.selection-row:hover,
+.selection-row:focus-visible,
+.selection-row.is-selected {
+  background: #2a1e2a;
+  box-shadow: inset 3px 0 #d8b06b;
+}
+.selection-row.is-equipped {
+  box-shadow: inset 3px 0 #6fcfc1;
+}
+.selection-row span,
+.selection-row strong,
+.selection-row small {
+  display: block;
+  min-width: 0;
+}
+.selection-row strong {
+  overflow-wrap: anywhere;
+  color: #f7d994;
+}
+.selection-row small {
+  margin-top: 2px;
+  color: #a99b82;
+  font-size: 9px;
+}
+.selection-row > b {
+  color: #a8dcd3;
+  font-size: 10px;
+}
+.selection-row-icon,
+.selection-letter-icon {
+  width: 34px;
+  height: 34px;
+}
+.selection-letter-icon {
+  display: grid !important;
+  place-items: center;
+  border: 1px solid #7c5d40;
+  background: #35223b;
+  color: #ffd27d;
+  font-weight: 700;
+}
+.selection-list-empty {
+  margin: 0;
+  padding: 18px 10px;
+  color: #a99b82;
+}
+.selection-detail {
+  position: sticky;
+  top: 0;
+  padding: 12px;
+}
+.selection-detail-head {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #59454c;
+}
+.selection-detail header > strong,
+.selection-detail-head strong,
+.selection-detail-head small,
+.selection-detail-head span {
+  display: block;
+}
+.selection-detail-head strong,
+.selection-detail header > strong {
+  color: #ffd27d;
+  font-size: 17px;
+}
+.selection-detail-head small,
+.selection-detail header > small {
+  color: #bfae8d;
+  text-transform: uppercase;
+}
+.selection-detail-icon {
+  width: 52px;
+  height: 52px;
+}
+.selection-detail > p {
+  margin: 9px 0;
+  color: #e6dcc8;
+  line-height: 1.35;
+}
+.selection-stat-line {
+  margin: 10px 0;
+  padding: 7px 8px;
+  background: #211925;
+  color: #a8dcd3;
+  font-weight: 700;
+}
+.selection-location {
+  color: #c9b27e !important;
+  font-size: 12px;
+}
+.selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #59454c;
+}
+.selection-actions > button {
+  padding: 8px 11px;
+  border: 2px solid #d8b06b;
+  background: #3a2234;
+  color: #ffe5ad;
+  cursor: pointer;
+}
+.selection-actions > button:disabled {
+  opacity: .48;
+  cursor: default;
+}
+.selection-actions .gear-favorite {
+  margin: 0;
+}
+.selection-detail .gear-affixes {
+  margin-top: 8px;
+}
+.selection-detail .gear-comparison {
+  margin-top: 12px;
+  border-top: 1px solid #59454c;
+}
+.gear-summary-strip {
+  position: static;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+}
+.gear-summary-strip > small {
+  margin: 0;
+}
+.gear-summary-strip .gear-stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.gear-summary-strip .gear-stat-grid span {
+  min-width: 74px;
+}
 .skill-catalogue-list article { padding: 10px 0; border-bottom: 1px solid #59454c; }
 .skill-catalogue-list small { display: block; color: #a8dcd3; margin-top: 5px; }
 .skill-catalogue-list p { margin: 5px 0; }
@@ -2522,4 +2783,9 @@ h1 {
   .talent-tier-grid { grid-template-columns: 1fr; }
   .reroll-row { grid-template-columns: minmax(0, 1fr); }
   .combat-caps { flex-direction: column; }
+  .selection-workspace { grid-template-columns: 1fr; }
+  .selection-detail { position: static; }
+  .selection-list { max-height: 280px; }
+  .gear-summary-strip { grid-template-columns: 1fr; }
+  .gear-summary-strip .gear-stat-grid { justify-content: flex-start; }
 }

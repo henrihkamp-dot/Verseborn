@@ -73,6 +73,9 @@ let mode = "title";
 let menuTab = "status";
 let selectedGearHero = "Verseborn";
 let selectedGearSlot = "weapon";
+let selectedGearRef = null;
+let selectedItemCategory = "consumables";
+let selectedItemRef = null;
 let selectedSkillHero = "Verseborn";
 let selectedPartySlot = 0;
 let activePoint = null;
@@ -1567,6 +1570,61 @@ const inventoryDb = {
 
 function inventoryInfo(name) {
   return inventoryDb[name] || { type: "Field Loot", desc: "Battle loot or a quest material." };
+}
+
+const QUEST_INVENTORY_ITEMS = new Set(["Old Registry Key", "Iron Chain Link"]);
+
+function gearSlotLabel(slot) {
+  return { weapon: "Weapon", armour: "Armour", ring: "Ring", necklace: "Necklace", helmet: "Helmet" }[slot] || "Equipment";
+}
+
+function inventoryCategory(name) {
+  const info = inventoryInfo(name);
+  if (info.battle || info.field) return "consumables";
+  if (QUEST_INVENTORY_ITEMS.has(name)) return "quest";
+  return "treasure";
+}
+
+function inventoryTypeLabel(name) {
+  const info = inventoryInfo(name);
+  if (inventoryCategory(name) === "quest") return info.type === "Key Item" ? "Key Item" : "Quest Item";
+  if (inventoryCategory(name) === "treasure") return "Treasure";
+  if (/Food/i.test(info.type)) return "Food";
+  if (/Tonic|Draught|MP/i.test(info.type)) return "Tonic";
+  if (/Ward/i.test(info.type)) return "Ward";
+  return "Consumable";
+}
+
+function lootItemDrop(name, amount = 1, stored = true) {
+  return { kind: "item", name, amount, type: inventoryTypeLabel(name), stored };
+}
+
+function lootDropText(drop) {
+  if (typeof drop === "string") return drop;
+  const amount = drop.amount > 1 ? ` x${drop.amount}` : "";
+  const location = drop.stored === false ? " / Marla's Stash" : "";
+  return `${drop.name}${amount} [${drop.type}${location}]`;
+}
+
+function escapeMarkup(value) {
+  return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character]);
+}
+
+function lootDropHtml(drop) {
+  if (typeof drop === "string") return `<span class="loot-drop"><strong>${escapeMarkup(drop)}</strong></span>`;
+  const amount = drop.amount > 1 ? ` x${drop.amount}` : "";
+  const rarityClass = drop.kind === "gear" ? ` rarity-${drop.rarity.toLowerCase()}` : "";
+  const location = drop.stored === false ? " / STASH" : "";
+  return `<span class="loot-drop"><strong class="${rarityClass.trim()}">${escapeMarkup(drop.name)}${amount}</strong><small>${escapeMarkup(drop.type)}${location}</small></span>`;
+}
+
+function lootSummaryContent(gold, drops) {
+  const entries = [...(gold ? [{ kind: "gold", name: `${gold} G`, type: "Gold", amount: 1, stored: true }] : []), ...drops];
+  if (!entries.length) return "No item drops.";
+  return {
+    text: entries.map(lootDropText).join(", "),
+    html: `<span class="loot-drop-list">${entries.map(lootDropHtml).join("")}</span>`
+  };
 }
 
 function inventoryIcon(name) {
@@ -5285,7 +5343,9 @@ function nextTalk() {
     return;
   }
   el.speaker.textContent = line[0];
-  el.line.textContent = line[1];
+  const content = line[1];
+  if (content && typeof content === "object" && typeof content.html === "string") el.line.innerHTML = content.html;
+  else el.line.textContent = content;
   syncDialoguePortraitForSpeaker(line[0]);
   updateDialogueSpeaker(line[0]);
   el.dialogue.classList.remove("hidden");
@@ -5511,11 +5571,10 @@ function openChest(pointData) {
   const found = [];
   if (reward.gold) {
     state.gold += reward.gold;
-    found.push(`${reward.gold} G`);
   }
   Object.entries(reward.items || {}).forEach(([name, amount]) => {
-    addInventoryItem(name, amount);
-    found.push(`${name} x${amount}`);
+    const stored = addInventoryItem(name, amount);
+    found.push(lootItemDrop(name, amount, stored));
   });
   if (reward.gear) {
     const rarity = reward.rarity || "Epic";
@@ -5523,7 +5582,7 @@ function openChest(pointData) {
   }
   playSfx("item");
   updatePanels();
-  showTalk([["Treasure", found.join(" / ") || "The chest contains only a faded Flameguard ribbon."]]);
+  showTalk([["Treasure", reward.gold || found.length ? lootSummaryContent(reward.gold || 0, found) : "The chest contains only a faded Flameguard ribbon."]]);
 }
 
 function runEvent(event) {
@@ -6739,8 +6798,8 @@ function winBattle(log) {
     const cogs = 1 + Math.floor(state.endgameRank / 3);
     state.gold += echoGold;
     rewards.gold += echoGold;
-    addInventoryItem("False Dawn Cog", cogs);
-    rewards.drops.push(`False Dawn Cog x${cogs}`);
+    const cogsStored = addInventoryItem("False Dawn Cog", cogs);
+    rewards.drops.push(lootItemDrop("False Dawn Cog", cogs, cogsStored));
     guaranteeEchoHuntGearReward(rewards, battle.echoHuntRank || state.endgameRank);
   }
   if (battle.spawnRef) {
@@ -6759,8 +6818,7 @@ function winBattle(log) {
   updateMusic();
   updatePanels();
   playSfx("coin");
-  const dropText = rewards.drops.length ? rewards.drops.join(", ") : "no item drops";
-  showTalk([["Victory", `${log} ${xpSummary}.`], ["Loot", `${rewards.gold} gold. ${dropText}.`]]);
+  showTalk([["Victory", `${log} ${xpSummary}.`], ["Loot", lootSummaryContent(rewards.gold, rewards.drops)]]);
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
@@ -6773,8 +6831,8 @@ function awardGearDrop(name, requestedRarity, drops, options = {}) {
   }
   const rarity = gearRarity(ref);
   topUpGearAffixes(ref, rarity, options.theme || "dragon");
-  const affixes = gearAffixes(ref);
-  drops.push(`${options.label || rarity.toUpperCase()}: ${name}${affixes.length ? ` / ${affixes.map(entry => entry.text).join(", ")}` : ""}`);
+  const gear = gearByName(ref);
+  drops.push({ kind: "gear", name: gearDisplayName(ref), baseName: name, rarity, type: gearSlotLabel(gear?.slot), amount: 1, stored: true });
   return { name, rarity, ref };
 }
 
@@ -6799,7 +6857,7 @@ function rollBattleLoot(enemies, options = {}) {
       table.common.forEach(([name, chance, amount]) => {
         if (Math.random() > chance) return;
         const stored = addInventoryItem(name, amount);
-        drops.push(`${name} x${amount}${stored ? "" : " (Marla stash)"}`);
+        drops.push(lootItemDrop(name, amount, stored));
       });
       table.rare.forEach(([name, chance]) => {
         if (Math.random() > chance || gearCopyCount(name) >= 3) return;
@@ -6828,7 +6886,7 @@ function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = []) {
   for (let roll = 0; roll < rolls; roll++) {
     const [name, amount] = commonPool[Math.floor(Math.random() * commonPool.length)];
     const stored = addInventoryItem(name, amount);
-    drops.push(`NG+ RANDOM: ${name} x${amount}${stored ? "" : " (Marla stash)"}`);
+    drops.push(lootItemDrop(name, amount, stored));
   }
   const randomGear = [
     ...ngPlusChestGear,
@@ -7313,34 +7371,44 @@ function renderMenu() {
       const heroTotals = totals(heroId);
       return `<button type="button" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><span class="dot" style="background:${hero.color}"></span><strong>${hero.name}</strong><small>${hero.title}</small><span>HP ${hero.hp}/${heroTotals.max}</span></button>`;
     }).join("");
-    const slots = Object.entries(h.gear).map(([slot, name]) => {
-      const gear = gearByName(name);
-      const rare = gear ? `${gearRarityHtml(name)}${gearEffectHtml(gear)}${gearAffixHtml(name)}` : "";
-      const choices = ownedGearRefs(slot, id).length;
-      const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
-      const iconSheet = gear ? gearIconSheet(gear, id) : "gear-empty";
-      return `<div class="gear-slot ${selectedGearSlot === slot ? "is-selected" : ""}">${pixelIconHtml(iconSheet, iconIndex, "gear-slot-icon")}<span class="gear-slot-name">${slot}</span><div class="gear-detail"><strong>${name ? gearDisplayName(name) : "Empty slot"}</strong><small>${gear ? statLine(gear.stats) : "No stat bonus"}</small><p>${gear?.desc || "Unequipped gear remains in the Items inventory."}</p>${gear ? `<small class="gear-access">${gearAccessLabel(gear)}</small>${rare}` : ""}</div><button type="button" data-gear-slot="${slot}">Manage ${choices}</button></div>`;
-    }).join("");
     const slotChoices = ownedGearRefs(selectedGearSlot, id).map(ref => ({ ref, gear: gearByName(ref) }));
     const choiceIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
-    const picker = `<section class="gear-picker"><header><strong>Choose ${selectedGearSlot}</strong><small>${h.name} can equip ${slotChoices.length} owned pieces</small></header><div class="gear-choice-list">${slotChoices.map(({ ref, gear }) => {
+    if (selectedGearRef !== "__EMPTY__" && !slotChoices.some(entry => entry.ref === selectedGearRef)) selectedGearRef = null;
+    if (!selectedGearRef) selectedGearRef = h.gear[selectedGearSlot] || slotChoices[0]?.ref || "__EMPTY__";
+    const slotTabs = Object.entries(h.gear).map(([slot, equippedRef]) => {
+      const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
+      const gear = gearByName(equippedRef);
+      return `<button type="button" class="selection-tab ${selectedGearSlot === slot ? "is-active" : ""}" data-gear-slot="${slot}">${pixelIconHtml(gear ? gearIconSheet(gear, id) : "gear-empty", iconIndex, "selection-tab-icon")}<span><strong>${gearSlotLabel(slot)}</strong><small>${equippedRef ? gearDisplayName(equippedRef) : "Empty"}</small></span><b>${ownedGearRefs(slot, id).length}</b></button>`;
+    }).join("");
+    const choiceList = `${slotChoices.map(({ ref, gear }, index) => {
       const equipped = h.gear[selectedGearSlot] === ref;
       const holders = equippedGearUsers(ref);
-      const occupied = holders.filter(heroId => heroId !== id);
       const copies = gearCopyCount(ref);
-      const holderText = gearInstance(ref)
-        ? (holders.length ? `Separate copy / equipped: ${holders.join(", ")}` : "Separate Echo-Forge copy / unequipped")
-        : (holders.length ? `Equipped: ${holders.join(", ")} / owned x${copies}` : `In equipment inventory / owned x${copies}`);
-      return `<div class="gear-candidate"><button type="button" class="gear-choice ${equipped ? "is-equipped" : ""}" data-equip="${id}:${selectedGearSlot}:${ref}" ${equipped ? "disabled" : ""}>${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "gear-choice-icon")}<span><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}<small>${statLine(gear.stats)}</small><small>${holderText}</small><small>${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "gear-choice-effects")}${gearAffixHtml(ref)}</span><b>${equipped ? "EQUIPPED" : occupied.length >= copies ? "SWAP" : "EQUIP"}</b></button>${favoriteGearButton(ref)}${equipped ? "" : `<details class="gear-comparison" data-compare="${ref}"><summary>Compare every skill</summary></details>`}</div>`;
-    }).join("")}<button type="button" class="gear-choice gear-unequip" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${pixelIconHtml("gear-empty", choiceIndex, "gear-choice-icon")}<span><strong>Unequip</strong><small>Move this piece back to the Items inventory.</small></span><b>${h.gear[selectedGearSlot] ? "REMOVE" : "EMPTY"}</b></button></div></section>`;
-    el.menuBody.innerHTML = `<p class="gear-instruction">Choose a hero, then choose one of their five equipment slots.</p><div class="gear-roster">${roster}</div><div class="gear-layout"><section class="gear-summary"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><section class="menu-card gear-card">${slots}</section></div>${picker}`;
+      const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
+      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}">${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} / ${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
+    }).join("")}<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`;
+    const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
+    const equipped = h.gear[selectedGearSlot] === selectedGearRef;
+    const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
+    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(gearIconSheet(selectedGear, id), choiceIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:${selectedGearRef}" ${equipped ? "disabled" : ""}>${equipped ? "Equipped" : "Equip on " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedGearSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearSlotLabel(selectedGearSlot)}</small><strong>Empty slot</strong></header><p>Unequip this slot and keep the current item in the equipment inventory.</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${h.gear[selectedGearSlot] ? "Unequip" : "Already empty"}</button></div></article>`;
+    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearSlotLabel(selectedGearSlot)}</strong><small>${slotChoices.length} available</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
       selectedGearHero = btn.dataset.gearHero;
       selectedGearSlot = "weapon";
+      selectedGearRef = null;
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-slot]").forEach(btn => btn.onclick = () => {
       selectedGearSlot = btn.dataset.gearSlot;
+      selectedGearRef = null;
+      renderMenu();
+    });
+    el.menuBody.querySelectorAll("[data-gear-preview]").forEach(btn => btn.onclick = () => {
+      selectedGearRef = slotChoices[Number(btn.dataset.gearPreview)]?.ref || null;
+      renderMenu();
+    });
+    el.menuBody.querySelectorAll("[data-gear-empty]").forEach(btn => btn.onclick = () => {
+      selectedGearRef = "__EMPTY__";
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-equip]").forEach(btn => btn.onclick = () => equipGear(btn.dataset.equip));
@@ -7349,55 +7417,104 @@ function renderMenu() {
       else delete state.favoriteGear[input.dataset.favorite];
       updatePanels();
     });
-    el.menuBody.querySelectorAll("[data-compare]").forEach(details => details.ontoggle = () => {
-      if (!details.open || details.dataset.loaded) return;
-      details.innerHTML = gearComparisonHtml(id, selectedGearSlot, details.dataset.compare);
-      details.dataset.loaded = "true";
-    });
-    el.menuBody.insertAdjacentHTML("afterbegin", capsHtml(id));
   }
   if (menuTab === "items") {
     const stash = Object.entries(state.stash).filter(([, amount]) => amount > 0);
     const bag = Object.entries(state.inventory).filter(([, amount]) => amount > 0);
-    const itemCard = ([name, amount]) => {
+    const inventoryEntries = bag.map(([name, amount]) => ({ key: `item:${name}`, kind: "item", name, amount }));
+    const equipment = ownedGearRefs().map(ref => ({ key: `gear:${ref}`, kind: "gear", ref, gear: gearByName(ref) })).filter(entry => entry.gear);
+    const fieldSkills = state.party.flatMap(casterId => baseJobs[casterId].skills
+      .filter(sk => sk.anim !== "ultimate" && (sk.power < 0 || sk.anim === "block"))
+      .map(sk => ({ key: `skill:${casterId}:${baseJobs[casterId].skills.indexOf(sk)}`, kind: "skill", casterId, sk, skillIndex: baseJobs[casterId].skills.indexOf(sk) })));
+    const stashEntries = stash.map(([name, amount]) => ({ key: `stash:${name}`, kind: "stash", name, amount }));
+    const categories = {
+      consumables: inventoryEntries.filter(entry => inventoryCategory(entry.name) === "consumables"),
+      gear: equipment,
+      treasure: inventoryEntries.filter(entry => inventoryCategory(entry.name) === "treasure"),
+      quest: inventoryEntries.filter(entry => inventoryCategory(entry.name) === "quest"),
+      skills: fieldSkills,
+      stash: stashEntries
+    };
+    const categoryLabels = { consumables: "Consumables", gear: "Gear", treasure: "Treasure", quest: "Quest Items", skills: "Field Skills", stash: "Stash" };
+    if (!categories[selectedItemCategory]) selectedItemCategory = "consumables";
+    const currentEntries = categories[selectedItemCategory];
+    if (!currentEntries.some(entry => entry.key === selectedItemRef)) selectedItemRef = currentEntries[0]?.key || null;
+    const selectedEntry = currentEntries.find(entry => entry.key === selectedItemRef) || null;
+    const categoryTabs = Object.entries(categories).filter(([key, entries]) => key !== "stash" || entries.length).map(([key, entries]) => `<button type="button" class="selection-tab ${selectedItemCategory === key ? "is-active" : ""}" data-item-category="${key}"><span><strong>${categoryLabels[key]}</strong><small>${entries.length} owned</small></span><b>${entries.length}</b></button>`).join("");
+    const listRows = currentEntries.map((entry, index) => {
+      if (entry.kind === "gear") {
+        const holders = equippedGearUsers(entry.ref);
+        const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[entry.gear.slot];
+        const iconHero = holders[0] || gearOwners[entry.gear.name]?.[0] || state.activeParty[0];
+        return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${pixelIconHtml(gearIconSheet(entry.gear, iconHero), iconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} / ${gearSlotLabel(entry.gear.slot)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
+      }
+      if (entry.kind === "skill") return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}"><span class="selection-letter-icon">S</span><span><strong>${entry.sk.name}</strong><small>${entry.casterId} / ${entry.sk.cost} MP</small></span></button>`;
+      const icon = inventoryIcon(entry.name);
+      return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${pixelIconHtml(icon.sheet, icon.index, "selection-row-icon")}<span><strong>${entry.name}</strong><small>${entry.kind === "stash" ? "Stored" : inventoryTypeLabel(entry.name)}</small></span><b>x${entry.amount}</b></button>`;
+    }).join("") || `<p class="selection-list-empty">Nothing in this list.</p>`;
+    let detail = `<article class="selection-detail selection-empty"><strong>${categoryLabels[selectedItemCategory]}</strong><p>Nothing in this list.</p></article>`;
+    if (selectedEntry?.kind === "item" || selectedEntry?.kind === "stash") {
+      const { name, amount } = selectedEntry;
       const info = inventoryInfo(name);
-      const battleEffect = info.battle ? `<small class="item-effect">Battle / field: ${info.short}</small>` : "";
       const icon = inventoryIcon(name);
-      const targets = info.field ? `<div class="field-targets"><span>Use on</span>${state.party.map(id => {
+      const category = selectedEntry.kind === "stash" ? inventoryTypeLabel(name) : categoryLabels[selectedItemCategory].replace(/s$/, "");
+      const targets = selectedEntry.kind === "item" && info.field ? `<div class="field-targets"><span>Use on</span>${state.party.map(id => {
         const hero = baseJobs[id], total = totals(id);
         const canUse = canUseFieldItem(name, id);
         const value = info.field === "hp" ? `${hero.hp}/${total.max} HP` : info.field === "mp" ? `${hero.mp}/${total.mp} MP` : state.fieldWard ? "Ward ready" : "Prepare ward";
         return `<button type="button" data-field-item="${name}:${id}" ${canUse ? "" : "disabled"}>${hero.name}<small>${value}</small></button>`;
       }).join("")}</div>` : "";
-      return `<div class="menu-card item-card">${pixelIconHtml(icon.sheet, icon.index, "inventory-icon")}<div class="item-copy"><strong>${name}<span>x${amount}</span></strong><small>${info.type}</small><p>${info.desc}</p>${battleEffect}${targets}</div></div>`;
-    };
-    const equipment = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
-    const equipmentCard = ({ ref, gear }) => {
+      const trade = selectedEntry.kind === "stash" ? "Stored safely with Marla." : selectedItemCategory === "treasure" ? `Sell value: ${inventorySellPrice(name)} G each at a vendor.` : selectedItemCategory === "quest" ? "Protected quest item. Cannot be sold." : info.short || "";
+      detail = `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(icon.sheet, icon.index, "selection-detail-icon")}<div><small>${category}</small><strong>${name}</strong><span>x${amount}</span></div></header><p>${info.desc}</p>${trade ? `<p class="selection-location">${trade}</p>` : ""}${targets}</article>`;
+    }
+    if (selectedEntry?.kind === "gear") {
+      const { ref, gear } = selectedEntry;
       const holders = equippedGearUsers(ref);
       const copies = gearCopyCount(ref);
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
       const iconHero = holders[0] || gearOwners[gear.name]?.[0] || state.activeParty[0];
-      const status = holders.length ? `Equipped by ${holders.join(", ")} (${holders.length}/${copies})` : `Unequipped (${copies} owned)`;
-      return `<div class="menu-card item-card gear-inventory-card">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "inventory-icon")}<div class="item-copy"><strong>${gearDisplayName(ref)}<span>${gearInstance(ref) ? "SEPARATE COPY" : `x${copies}`}</span></strong>${gearRarityHtml(ref)}<small>${gear.slot.toUpperCase()} / ${status}</small><p>${statLine(gear.stats)}. ${gear.desc}</p>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(ref)}</div></div>`;
-    };
-    const fieldSkills = state.party.flatMap(casterId => baseJobs[casterId].skills
-      .filter(sk => sk.anim !== "ultimate" && (sk.power < 0 || sk.anim === "block"))
-      .map((sk, skillIndex) => ({ casterId, sk, skillIndex: baseJobs[casterId].skills.indexOf(sk) })));
-    const fieldSkillCards = fieldSkills.map(({ casterId, sk, skillIndex }) => {
+      detail = `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(gear.slot)}</small><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}</div></header><div class="selection-stat-line">${statLine(gear.stats)}</div><p>${gear.desc}</p><small class="gear-access">${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(ref)}<p class="selection-location">${holders.length ? `Equipped by ${holders.join(", ")}` : `Unequipped / ${gearInstance(ref) ? "separate copy" : `${copies} owned`}`}</p><div class="selection-actions"><button type="button" data-open-gear="${ref}">Open in Gear</button>${favoriteGearButton(ref)}</div></article>`;
+    }
+    if (selectedEntry?.kind === "skill") {
+      const { casterId, sk, skillIndex } = selectedEntry;
       const caster = baseJobs[casterId];
       const heal = sk.power < 0 ? Math.round((Math.abs(sk.power) + totals(casterId).mag * .6) * (1 + talentValue(casterId, "healBoost"))) : 0;
       const partyHeal = sk.partyWide || talentValue(casterId, "partyHeal", sk.name) > 0;
       const effectText = [heal ? `Heals about ${heal} HP${partyHeal ? " for all living allies" : ""}` : "", sk.anim === "block" ? "prepares an opening party ward" : ""].filter(Boolean).join(" and ");
-      return `<div class="menu-card field-skill-card"><strong>${caster.name}: ${sk.name}</strong><small>${sk.cost} MP / ${effectText}</small><p>${sk.desc}</p><div class="field-targets"><span>Cast on</span>${(partyHeal && heal ? [state.party[0]] : state.party).map(targetId => {
+      detail = `<article class="selection-detail"><header><small>Field Skill / ${sk.cost} MP</small><strong>${caster.name}: ${sk.name}</strong></header><p>${sk.desc}</p><p class="selection-location">${effectText}</p><div class="field-targets"><span>Cast on</span>${(partyHeal && heal ? [state.party[0]] : state.party).map(targetId => {
         const target = baseJobs[targetId], targetTotal = totals(targetId);
         const anyoneNeedsHealing = state.party.some(heroId => baseJobs[heroId].hp > 0 && baseJobs[heroId].hp < totals(heroId).max);
         const canUse = caster.mp >= sk.cost && (sk.anim === "block" && !state.fieldWard || heal > 0 && (partyHeal ? anyoneNeedsHealing : target.hp < targetTotal.max));
         return `<button type="button" data-field-skill="${casterId}:${skillIndex}:${targetId}" ${canUse ? "" : "disabled"}>${partyHeal && heal ? "All allies" : target.name}<small>${partyHeal && heal ? "Party heal" : `${target.hp}/${targetTotal.max} HP`}</small></button>`;
-      }).join("")}</div></div>`;
-    }).join("");
-    el.menuBody.innerHTML = `<div class="wallet-line"><span>Wallet</span><strong>${state.gold} G</strong><span>Bag ${inventoryUsed()}/${state.inventorySlots}</span><span>${state.fieldWard ? "Opening ward prepared" : "No field ward"}</span></div><h3>Items</h3><div class="menu-grid">${bag.length ? bag.map(itemCard).join("") : `<div class="menu-card"><strong>Bag empty</strong><p>No consumables or materials are being carried.</p></div>`}</div><h3>Field Skills</h3><div class="menu-grid">${fieldSkillCards || `<div class="menu-card"><strong>No field support skill available</strong><p>Recruit a healer or support hero to cast outside combat.</p></div>`}</div><h3>Equipment Inventory</h3><div class="menu-grid">${equipment.map(equipmentCard).join("")}</div>${stash.length ? `<h3>Marla's Stash</h3><div class="menu-grid">${stash.map(itemCard).join("")}</div>` : ""}`;
+      }).join("")}</div></article>`;
+    }
+    el.menuBody.innerHTML = `<div class="wallet-line"><span>Wallet</span><strong>${state.gold} G</strong><span>Bag ${inventoryUsed()}/${state.inventorySlots}</span><span>${state.fieldWard ? "Opening ward prepared" : "No field ward"}</span></div><div class="selection-workspace item-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs">${categoryTabs}</nav><header><strong>${categoryLabels[selectedItemCategory]}</strong><small>${currentEntries.length} entries</small></header><div class="selection-list">${listRows}</div></section>${detail}</div>`;
+    el.menuBody.querySelectorAll("[data-item-category]").forEach(button => button.onclick = () => {
+      selectedItemCategory = button.dataset.itemCategory;
+      selectedItemRef = null;
+      renderMenu();
+    });
+    el.menuBody.querySelectorAll("[data-item-preview]").forEach(button => button.onclick = () => {
+      selectedItemRef = currentEntries[Number(button.dataset.itemPreview)]?.key || null;
+      renderMenu();
+    });
     el.menuBody.querySelectorAll("[data-field-item]").forEach(button => button.onclick = () => useFieldItem(button.dataset.fieldItem));
     el.menuBody.querySelectorAll("[data-field-skill]").forEach(button => button.onclick = () => useFieldSkill(button.dataset.fieldSkill));
+    el.menuBody.querySelectorAll("[data-open-gear]").forEach(button => button.onclick = () => {
+      const ref = button.dataset.openGear;
+      const gear = gearByName(ref);
+      if (!gear) return;
+      menuTab = "gear";
+      selectedGearHero = equippedGearUsers(ref)[0] || state.party.find(id => canEquip(id, gear)) || state.party[0];
+      selectedGearSlot = gear.slot;
+      selectedGearRef = ref;
+      renderMenu();
+    });
+    el.menuBody.querySelectorAll("[data-favorite]").forEach(input => input.onchange = () => {
+      if (input.checked) state.favoriteGear[input.dataset.favorite] = true;
+      else delete state.favoriteGear[input.dataset.favorite];
+      updatePanels();
+    });
   }
   if (menuTab === "quests") {
     const main = currentQuest();
@@ -7719,7 +7836,7 @@ function renderVendor() {
   const sellList = `<div class="shop-list">${sellItems.map(([name, amount]) => {
     const info = inventoryInfo(name);
     const icon = inventoryIcon(name);
-    return `<div class="shop-row">${pixelIconHtml(icon.sheet, icon.index, "shop-icon")}<div><strong>${name} x${amount}</strong><small>${info.type}. ${info.desc}</small></div><span>${inventorySellPrice(name)} G</span><button type="button" data-sell-kind="item" data-sell-name="${name}">Sell 1</button></div>`;
+    return `<div class="shop-row">${pixelIconHtml(icon.sheet, icon.index, "shop-icon")}<div><strong>${name} x${amount}</strong><small>${inventoryTypeLabel(name)}. ${info.desc}</small></div><span>${inventorySellPrice(name)} G</span><button type="button" data-sell-kind="item" data-sell-name="${name}">Sell 1</button></div>`;
   }).join("")}${sellGear.map(({ ref, gear }) => {
     const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
     const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
@@ -7755,8 +7872,7 @@ function renderVendor() {
 }
 
 function inventorySellPrice(name) {
-  const info = inventoryInfo(name);
-  if (["Key Item", "Quest Material", "Miniboss Trophy", "Boss Trophy"].includes(info.type)) return 0;
+  if (inventoryCategory(name) === "quest") return 0;
   const shopWare = Object.values(vendors).flatMap(vendor => vendor.wares).find(ware => ware.kind === "item" && ware.name === name);
   if (shopWare) return Math.max(1, Math.floor(shopWare.price * .4));
   const values = {
@@ -7777,7 +7893,10 @@ function inventorySellPrice(name) {
     "Null Calibration Shard": 38,
     "Loopglass Shard": 28,
     "Stonewake Medal": 46,
-    "Orphan Ember Thread": 34
+    "Orphan Ember Thread": 34,
+    "Foreman's Black Ledger": 42,
+    "Custodian Seal": 48,
+    "Sentinel Core": 64
   };
   return values[name] || 0;
 }
@@ -8328,7 +8447,7 @@ function runQaChecks() {
     check("echo-hunt-four-affixes", guaranteedEchoGear && gearAffixes(guaranteedEchoGear.name).length === RARITY_AFFIX_COUNTS.Legendary);
     const mixedEchoRewards = { drops: ["EPIC: QA DROP"], gearDrops: [{ name: "QA Drop", rarity: "Epic" }] };
     const mixedEchoGuarantee = guaranteeEchoHuntGearReward(mixedEchoRewards, 2);
-    check("echo-hunt-guarantee-survives-other-loot", mixedEchoRewards.gearDrops.length === 2 && mixedEchoGuarantee?.rarity === "Legendary" && mixedEchoRewards.drops.some(drop => drop.startsWith("GUARANTEED ECHO HUNT LEGENDARY:")));
+    check("echo-hunt-guarantee-survives-other-loot", mixedEchoRewards.gearDrops.length === 2 && mixedEchoGuarantee?.rarity === "Legendary" && mixedEchoRewards.drops.some(drop => drop?.kind === "gear" && drop.rarity === "Legendary"));
     state.gearCopies["Stonewake Oathblade"] = 0;
     const forcedEchoLoot = rollBattleLoot([{ name: "Kaeldrin", resistanceTier: "normal", level: 30 }], { forceGearRarity: "Legendary", allowNgPlusLoot: false });
     check("echo-hunt-legendary-only", forcedEchoLoot.gearDrops.length >= 1 && forcedEchoLoot.gearDrops.every(drop => drop.rarity === "Legendary" && gearAffixes(drop.name).length === RARITY_AFFIX_COUNTS.Legendary));
