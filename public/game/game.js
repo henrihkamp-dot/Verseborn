@@ -1158,13 +1158,14 @@ function gearAffixSignature(entries) {
 function createEchoGearInstance(name, options = {}) {
   const baseName = gearBaseName(name);
   const gear = Object.values(gearDb).flat().find(entry => entry.name === baseName);
-  if (!gear || !echoForgeGearNames.has(baseName)) return null;
+  if (!gear || !echoForgeGearNames.has(baseName) && !options.allowAny) return null;
   state.nextGearInstance = Math.max(1, Number(state.nextGearInstance) || 1);
   let serial = state.nextGearInstance++;
-  let id = `echo_${serial}`;
+  const prefix = echoForgeGearNames.has(baseName) ? "echo" : "hall";
+  let id = `${prefix}_${serial}`;
   while (gearInstances[id]) {
     serial = state.nextGearInstance++;
-    id = `echo_${serial}`;
+    id = `${prefix}_${serial}`;
   }
   const siblings = echoGearInstanceRefs(baseName).map(ref => gearInstance(ref));
   const copyNumber = Math.max(0, ...siblings.map(instance => Number(instance?.copyNumber) || 0)) + 1;
@@ -1189,6 +1190,32 @@ function syncEchoForgeCopies(name) {
   if (count > 0 && !state.ownedGear.includes(baseName)) state.ownedGear.push(baseName);
   if (!count) state.ownedGear = state.ownedGear.filter(ownedName => ownedName !== baseName);
   return count;
+}
+
+function migrateGearToSeparateCopies(name) {
+  const baseName = gearBaseName(name);
+  let refs = echoGearInstanceRefs(baseName);
+  if (refs.length) return refs;
+  const legacyCount = Number(state.gearCopies[baseName]) || (state.ownedGear.includes(baseName) ? 1 : 0);
+  if (!legacyCount) return refs;
+  const holders = Object.values(baseJobs).filter(hero => Object.values(hero.gear || {}).includes(baseName));
+  for (let index = 0; index < legacyCount; index++) {
+    const preserveRoll = index === 0 && Array.isArray(state.gearAffixes[baseName]);
+    createEchoGearInstance(baseName, {
+      allowAny: true,
+      rarity: state.gearRarities[baseName] || defaultGearRarity(baseName),
+      affixes: preserveRoll ? state.gearAffixes[baseName] : undefined,
+      rollAffixes: true
+    });
+  }
+  refs = echoGearInstanceRefs(baseName);
+  holders.forEach((hero, index) => {
+    Object.keys(hero.gear).forEach(slot => {
+      if (hero.gear[slot] === baseName) hero.gear[slot] = refs[index] || refs[0];
+    });
+  });
+  syncEchoForgeCopies(baseName);
+  return refs;
 }
 
 function migrateEchoForgeInstances() {
@@ -1231,8 +1258,8 @@ function migrateEchoForgeInstances() {
 
 function ownedGearRefs(slot = null, heroId = null) {
   return state.ownedGear.flatMap(name => {
-    const echoRefs = echoForgeGearNames.has(name) ? echoGearInstanceRefs(name) : [];
-    const refs = echoRefs.length ? echoRefs : [name];
+    const separateRefs = echoGearInstanceRefs(name);
+    const refs = separateRefs.length ? separateRefs : [name];
     return refs.filter(ref => {
       const gear = gearByName(ref);
       return gear && (!slot || gear.slot === slot) && (!heroId || canEquip(heroId, gear));
@@ -1332,6 +1359,7 @@ function gearEffectHtml(gear, className = "rare-effect") {
 
 const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4 };
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
+const HALL_GEAR_RARITIES = RARITY_ORDER.slice(1);
 
 function affix(key, label, type, min, max, options = {}) {
   return { key, label, type, min, max, ...options };
@@ -2786,12 +2814,17 @@ function talentNode(tier, name, type, value, desc) {
 function addOwnedGear(name, amount = 1, options = {}) {
   const baseName = gearBaseName(name);
   if (!baseName || amount < 1) return [];
-  if (!state.ownedGear.includes(baseName)) state.ownedGear.push(baseName);
-  if (echoForgeGearNames.has(baseName)) {
-    const refs = Array.from({ length: amount }, () => createEchoGearInstance(baseName, options)).filter(Boolean);
+  const wasOwned = state.ownedGear.includes(baseName);
+  const existingSeparateCopies = echoGearInstanceRefs(baseName).length > 0;
+  if (echoForgeGearNames.has(baseName) || options.separateCopy || existingSeparateCopies) {
+    if (!echoForgeGearNames.has(baseName) && !existingSeparateCopies && wasOwned) migrateGearToSeparateCopies(baseName);
+    if (!wasOwned) state.ownedGear.push(baseName);
+    const instanceOptions = { ...options, allowAny: true };
+    const refs = Array.from({ length: amount }, () => createEchoGearInstance(baseName, instanceOptions)).filter(Boolean);
     syncEchoForgeCopies(baseName);
     return refs;
   }
+  if (!wasOwned) state.ownedGear.push(baseName);
   state.gearCopies[baseName] = (state.gearCopies[baseName] || 0) + amount;
   ensureGearMetadata(baseName, options);
   return Array.from({ length: amount }, () => baseName);
@@ -2806,7 +2839,8 @@ function equippedGearUsers(name) {
 function gearCopyCount(name) {
   if (gearInstance(name)) return 1;
   const baseName = gearBaseName(name);
-  if (echoForgeGearNames.has(baseName)) return echoGearInstanceRefs(baseName).length;
+  const separateCopies = echoGearInstanceRefs(baseName).length;
+  if (separateCopies) return separateCopies;
   return state.gearCopies[baseName] || (state.ownedGear.includes(baseName) ? 1 : 0);
 }
 
@@ -6015,6 +6049,16 @@ function restoreHallParty() {
   });
 }
 
+function returnToHallAfterBattle() {
+  restoreHallParty();
+  state.map = "emberHallBattles";
+  state.x = 8;
+  state.y = 9;
+  state.renderX = state.x * TILE;
+  state.renderY = state.y * TILE;
+  state.facing = 2;
+}
+
 function recordHallBattleClear(stage) {
   const progress = hallBattleProgress();
   if (progress.clearedStages.includes(stage)) return false;
@@ -6140,6 +6184,7 @@ function finishTurn(log) {
 
 function endBattleDraw(log = "") {
   if (!battle || mode !== "battle") return false;
+  const hallStage = Number(battle.hallStage) || 0;
   battle.resolving = true;
   battle.party.forEach(unit => {
     const hero = baseJobs[unit.id];
@@ -6147,6 +6192,7 @@ function endBattleDraw(log = "") {
     hero.hp = Math.max(1, Math.min(totals(unit.id).max, unit.hp));
     hero.mp = Math.max(0, Math.min(totals(unit.id).mp, unit.mp));
   });
+  if (hallStage) returnToHallAfterBattle();
   state.resonance = Number.isFinite(battle.startingResonance) ? battle.startingResonance : state.resonance;
   if (battle.retryEvent) delete state.flags[battle.retryEvent];
   hideBattlePreview();
@@ -7111,6 +7157,8 @@ function winBattle(log) {
     const hallGold = 12 + hallStage * 4 + (battle.hallBoss ? 40 + hallStage * 2 : 0);
     state.gold += hallGold;
     rewards.gold += hallGold;
+    guaranteeHallBattleGearReward(rewards);
+    returnToHallAfterBattle();
   }
   if (echoHuntBattle) {
     state.endgameRank++;
@@ -7137,14 +7185,6 @@ function winBattle(log) {
   hideBattlePreview();
   el.turnOrder.innerHTML = "";
   el.battle.classList.add("hidden");
-  if (hallStage) {
-    state.map = "emberHallBattles";
-    state.x = 8;
-    state.y = 9;
-    state.renderX = state.x * TILE;
-    state.renderY = state.y * TILE;
-    state.facing = 2;
-  }
   mode = "walk";
   updateMusic();
   updatePanels();
@@ -7155,7 +7195,7 @@ function winBattle(log) {
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
-  const ref = addOwnedGear(name, 1, { rarity: requestedRarity, rollAffixes: true, theme: options.theme || lootThemeForMap() })[0] || name;
+  const ref = addOwnedGear(name, 1, { rarity: requestedRarity, rollAffixes: true, theme: options.theme || lootThemeForMap(), separateCopy: options.separateCopy })[0] || name;
   const currentRarity = gearRarity(ref);
   if (RARITY_ORDER.indexOf(requestedRarity) > RARITY_ORDER.indexOf(currentRarity)) {
     const instance = gearInstance(ref);
@@ -7167,6 +7207,26 @@ function awardGearDrop(name, requestedRarity, drops, options = {}) {
   const gear = gearByName(ref);
   drops.push({ kind: "gear", name: gearDisplayName(ref), baseName: name, rarity, type: gearSlotLabel(gear?.slot), amount: 1, stored: true });
   return { name, rarity, ref };
+}
+
+function rollHallGearRarity() {
+  return HALL_GEAR_RARITIES[Math.floor(Math.random() * HALL_GEAR_RARITIES.length)];
+}
+
+function guaranteeHallBattleGearReward(rewards) {
+  if (!Array.isArray(rewards.gearDrops)) rewards.gearDrops = [];
+  if (!Array.isArray(rewards.drops)) rewards.drops = [];
+  const allCandidates = [...generalDropGear].map(gearByName).filter(Boolean);
+  const unownedCandidates = allCandidates.filter(gear => gearCopyCount(gear.name) === 0);
+  const candidates = unownedCandidates.length ? unownedCandidates : allCandidates;
+  const gear = candidates[Math.floor(Math.random() * candidates.length)];
+  if (!gear) return null;
+  const rarity = rollHallGearRarity();
+  const themes = ["swamp", "ruins", "mountain", "dragon"];
+  const theme = themes[Math.floor(Math.random() * themes.length)];
+  const awarded = awardGearDrop(gear.name, rarity, rewards.drops, { theme, separateCopy: true });
+  rewards.gearDrops.push(awarded);
+  return awarded;
 }
 
 function guaranteeEchoHuntGearReward(rewards, rank = state.endgameRank || 1) {
