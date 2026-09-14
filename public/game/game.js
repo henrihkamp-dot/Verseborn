@@ -101,7 +101,7 @@ let screenSlide = null;
 let titleMenuIndex = 0;
 let saveTimer = null;
 
-const titleMenuEntries = ["New Game", "Continue", "Hall Battles"];
+const titleMenuEntries = ["Story Mode", "Continue", "Ember Hall Battle"];
 const SAVE_KEY = "verseborn-jrpg-save-v2";
 const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
 const titleTwinkles = [
@@ -782,7 +782,7 @@ Promise.all([
   loadMarlaBattleSheet(),
   loadEchoProjectileSheet(),
   ...["ash-quarter", "reverie", "guildspire", "ember-hall", "false-dawn"].map(loadBattleImage),
-  ...["lantern", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
+  ...["lantern", "ember-hall-battle", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
 ]).then(() => {
   runtimeAssetsReady = true;
   el.hint.textContent = "Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party";
@@ -2441,11 +2441,11 @@ function sideQuest(id, title, giver, type, target, reward, desc, options = {}) {
 }
 
 const maps = {
-  emberHallBattles: map("Ember Hall - Trial Room", "Hall Battles", "lantern", [], [
+  emberHallBattles: map("Ember Hall - Trial Room", "Ember Hall Battle", "lantern", [], [
     point(4, 7, "Marla", [["Marla", "Back already? Sit down if you need patching up. The Trial Gate will still be there when the soup is finished."], ["Marla", "I kept the counter stocked. Old victories earn real experience here, so there is no shame in training twice."]], "hallRest", undefined, "marla"),
     point(11, 7, "Glimmer", [["Glimmer", "Forty stable battle records. Stable is relative, but the enemies are definitely real enough to hit back."], ["Glimmer", "Clear the newest record to open the next one. Cleared records stay available for training and XP."]], undefined, undefined, "workshop"),
     point(8, 5, "Stage", [["Trial Gate", "The Hall records forty battles. Every cleared stage remains available to replay for its normal XP." ]], "hallBattleMap")
-  ], ["Trial Gate", "Choose an unlocked battle or replay an old victory for XP."], { background: "lantern", collision: "lantern", grid: [0, 0], gridSize: [1, 1] }),
+  ], ["Trial Gate", "Choose an unlocked battle or replay an old victory for XP."], { background: "ember-hall-battle", collision: "lantern", grid: [0, 0], gridSize: [1, 1] }),
 
   lantern: map("The Drunk Lantern", "Issue 1", "lantern", [{ x: 14, y: 8, to: "ashLane", tx: 2, ty: 8 }], [
     point(4, 7, "Marla", [["Marla", "Soup first. Heroics after. Harl vanished near the old dock ledger room."], ["Verseborn", "A missing man, a tavern tab, and a song waiting to be wrong. Classic start."], ["Marla", "Find Harl. Start at the Ledger Docks, and bring him home."]], "acceptIssue1", undefined, "marla", "marlaCrate"),
@@ -4123,6 +4123,13 @@ function drawTitleMenu(layout) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   titleMenuEntries.forEach((entry, index) => {
+    ctx.font = `bold ${fontSize}px "Courier New", monospace`;
+    const maxLabelWidth = Math.round(246 * layout.scale);
+    const measuredWidth = ctx.measureText(entry).width;
+    if (measuredWidth > maxLabelWidth) {
+      const fittedSize = Math.max(12, Math.floor(fontSize * maxLabelWidth / measuredWidth));
+      ctx.font = `bold ${fittedSize}px "Courier New", monospace`;
+    }
     const top = sy(443 + index * 49);
     const height = Math.round(43 * layout.scale);
     if (index === titleMenuIndex) {
@@ -4135,6 +4142,7 @@ function drawTitleMenu(layout) {
   });
 
   const arrowBob = Math.round(Math.sin(tick / 18) * 2);
+  ctx.font = `bold ${fontSize}px "Courier New", monospace`;
   ctx.fillStyle = "#ffd46f";
   ctx.textAlign = "center";
   ctx.fillText(">", sx(612) + arrowBob, sy(465 + titleMenuIndex * 49));
@@ -4195,7 +4203,7 @@ function startHallBattles() {
   updateMusic();
   updatePanels();
   updateSkillPointNotice();
-  showHudNotice(loaded ? "HALL BATTLES - record restored" : "HALL BATTLES - Stage 1 ready");
+  showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - Stage 1 ready");
 }
 
 function activateTitleSelection() {
@@ -5276,7 +5284,7 @@ function updatePanels() {
   if (state.gameMode === "hallBattles") {
     const progress = hallBattleProgress();
     const activeStage = battle?.hallStage || progress.unlockedStage;
-    el.chapter.textContent = "Hall Battles";
+    el.chapter.textContent = "Ember Hall Battle";
     el.place.textContent = mode === "battle" ? `${map.name} / Stage ${activeStage}` : "Ember Hall - Trial Room";
     el.questTitle.textContent = `Trial Gate ${progress.clearedStages.length}/40`;
     el.questText.textContent = progress.pendingRecruit ? "Choose a new Flameguard recruit." : `Next: ${objective.label}.`;
