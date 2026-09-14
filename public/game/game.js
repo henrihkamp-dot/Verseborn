@@ -34,6 +34,7 @@ const el = {
   resonanceBar: $("resonanceBar"),
   partyPanel: $("partyPanel"),
   dialogue: $("dialogue"),
+  dialogueSkip: $("dialogueSkip"),
   dialoguePortraits: $("dialoguePortraits"),
   portraitLeft: $("portraitLeft"),
   portraitLeftImage: $("portraitLeftImage"),
@@ -83,6 +84,8 @@ let activePoint = null;
 let talkQueue = [];
 let talkPortraits = [];
 let talkAfter = null;
+let talkSkippable = false;
+let activeRecruitScene = null;
 let battle = null;
 let effect = null;
 let battleFloaters = [];
@@ -104,6 +107,7 @@ let saveTimer = null;
 const titleMenuEntries = ["Story Mode", "Continue", "Ember Hall Battle"];
 const SAVE_KEY = "verseborn-jrpg-save-v2";
 const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
+const HALL_SCENE_HISTORY_KEY = "verseborn-hall-scene-history-v1";
 const titleTwinkles = [
   { x: 135, y: 170, phase: 0, color: "#fff2b8" },
   { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
@@ -357,6 +361,7 @@ const animationLayouts = {
 };
 const mapImages = {};
 const battleImages = {};
+const recruitSceneImages = {};
 const STAGE_SELECTOR_ASSET = "assets/ui/stage-selector-sheet.webp";
 const STAGE_SELECTOR_FRAMES = 4;
 const battleImageFiles = {
@@ -375,6 +380,16 @@ const battleImageFiles = {
   "cinder-ruins": "cinder-ruins.webp",
   "cinder-cataclysm": "cinder-cataclysm.webp",
   "lantern-stage": "lantern-stage.webp"
+};
+const recruitSceneImageFiles = {
+  "central-hall": "central-hall.webp",
+  "torren-kitchen": "torren-kitchen.webp",
+  "kael-library": "kael-library.webp",
+  "glimmer-lab": "glimmer-lab.webp",
+  "training-room": "training-room.webp",
+  "music-studio": "music-studio.webp",
+  "sparky-coop": "sparky-coop.webp",
+  "relaxation-lounge": "relaxation-lounge.webp"
 };
 const enemyAnimationSheets = {};
 const chestOpenTicks = {};
@@ -760,6 +775,15 @@ function loadBattleImage(id) {
   });
 }
 
+function loadRecruitSceneImage(id) {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => { recruitSceneImages[id] = image; resolve(); };
+    image.onerror = resolve;
+    image.src = `assets/scenes/${recruitSceneImageFiles[id]}`;
+  });
+}
+
 function loadTitleImage() {
   return new Promise(resolve => {
     const image = new Image();
@@ -812,6 +836,7 @@ Promise.all([
   loadMarlaBattleSheet(),
   loadEchoProjectileSheet(),
   ...Object.keys(battleImageFiles).map(loadBattleImage),
+  ...Object.keys(recruitSceneImageFiles).map(loadRecruitSceneImage),
   ...["lantern", "ember-hall-battle", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
 ]).then(() => {
   runtimeAssetsReady = true;
@@ -2744,6 +2769,241 @@ const HALL_BATTLE_BLUEPRINTS = [
 
 const HALL_RECRUIT_INTERVAL = 3;
 const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
+const RECRUIT_SCENE_ROOM_NAMES = {
+  "central-hall": "Central Ember Hall",
+  "torren-kitchen": "Torren's Kitchen",
+  "kael-library": "Kael's Library",
+  "glimmer-lab": "Glimmer's Lab",
+  "training-room": "Training Room",
+  "music-studio": "Verseborn's Music Studio",
+  "sparky-coop": "Sparky's Coop",
+  "relaxation-lounge": "Relaxation Lounge"
+};
+const RECRUIT_SCENES = [
+  {
+    id: "mira-welcome", recruit: "Mira", variant: "welcome", title: "Spare Blades", room: "training-room", preferred: ["Verseborn"],
+    build: () => [
+      ["Mira", "Show me where you keep the spare blades."],
+      ["Verseborn", "Hello to you too."],
+      ["Mira", "I said spare blades. That was hello."],
+      ["Verseborn", "Then welcome home. Try not to improve my posture."],
+      ["Mira", "No promises.", { actor: "Mira", anim: "walk", emote: "!", facing: 1 }]
+    ]
+  },
+  {
+    id: "mira-humorous", recruit: "Mira", variant: "humorous", title: "Improved Readiness", room: "glimmer-lab", preferred: ["Glimmer"],
+    build: ({ partner }) => partner === "Glimmer" ? [
+      ["Glimmer", "I adjusted your dagger sheath."],
+      ["Mira", "Why is it humming?"],
+      ["Glimmer", "Improved readiness."],
+      ["Mira", "It bit my glove.", { actor: "Mira", anim: "walk", emote: "!", facing: 3 }],
+      ["Glimmer", "Excellent. The safety test worked."],
+      ["Mira", "We define safety very differently."]
+    ] : [
+      [partner, "Mira, your dagger sheath is humming."],
+      ["Mira", "I know."],
+      [partner, "Should it be?"],
+      ["Mira", "It was described as improved readiness."],
+      [partner, "It just bit your glove.", { actor: "Mira", anim: "walk", emote: "!", facing: 3 }],
+      ["Mira", "Apparently I am ready."]
+    ]
+  },
+  {
+    id: "mira-warm", recruit: "Mira", variant: "warm", title: "The Good Cup", room: "relaxation-lounge", preferred: ["Seerin", "Kael", "Verseborn"],
+    build: ({ partner }) => [
+      [partner, "You left the good cup beside my chair."],
+      ["Mira", "The handle on yours was loose."],
+      [partner, "You fixed that too."],
+      ["Mira", "Practical maintenance. Do not make it sentimental."],
+      [partner, "Of course not."],
+      ["Mira", "Good. Drink before it gets cold.", { actor: "Mira", emote: "...", facing: 1 }]
+    ]
+  },
+  {
+    id: "seerin-welcome", recruit: "Seerin", variant: "welcome", title: "Practice Blades", room: "training-room", preferred: ["Mira", "Verseborn"],
+    build: ({ partner }) => partner === "Mira" ? [
+      ["Mira", "Three rounds. Winner gets the comfortable chair."],
+      ["Seerin", "You could simply offer me a seat."],
+      ["Mira", "Where is the hospitality in that?"],
+      ["Seerin", "Practice blades.", { actor: "Seerin", anim: "walk", emote: "!", facing: 1 }],
+      ["Mira", "You are going to fit in."]
+    ] : [
+      ["Verseborn", "There is a comfortable chair waiting for you."],
+      ["Seerin", "Will I have to duel someone for it?"],
+      ["Verseborn", "Only Mira. Possibly the chair."],
+      ["Seerin", "Practice blades, then.", { actor: "Seerin", anim: "walk", emote: "!", facing: 1 }],
+      ["Verseborn", "You are going to fit in."]
+    ]
+  },
+  {
+    id: "seerin-humorous", recruit: "Seerin", variant: "humorous", title: "Load-Bearing", room: "torren-kitchen", preferred: ["Torren", "Verseborn"],
+    build: ({ partner }) => [
+      [partner, "Why is your shield under the soup pot?"],
+      ["Seerin", "The table was uneven."],
+      [partner, "That shield survived three constructs."],
+      ["Seerin", "And now it survives lunch."],
+      [partner, "I cannot decide whether to object."],
+      ["Seerin", "The table has decided for you.", { actor: "Seerin", emote: "!", facing: 3 }]
+    ]
+  },
+  {
+    id: "seerin-warm", recruit: "Seerin", variant: "warm", title: "No Orders", room: "kael-library", preferred: ["Kael", "Mira", "Verseborn"],
+    build: ({ partner, history }) => [
+      ["Seerin", "I still wake expecting orders."],
+      [partner, "And what do you hear instead?"],
+      ["Seerin", history.seen.includes("seerin-welcome") ? "Someone challenging the furniture. Usually." : "The Hall settling around us."],
+      [partner, "Does that help?"],
+      ["Seerin", "More than I expected."],
+      [partner, "Then we can be quiet a little longer.", { actor: partner, emote: "...", facing: 3 }]
+    ]
+  },
+  {
+    id: "kael-welcome", recruit: "Kael", variant: "welcome", title: "A Quiet Shelf", room: "kael-library", preferred: ["Verseborn"],
+    build: () => [
+      ["Verseborn", "I saved you a shelf and a quiet corner."],
+      ["Kael", "Which one is rarer here?"],
+      ["Verseborn", "The shelf. Our quiet is mostly accidental."],
+      ["Kael", "Then I will guard both."],
+      ["Verseborn", "Welcome home, Kael."],
+      ["Kael", "Thank you. Quietly.", { actor: "Kael", emote: "...", facing: 1 }]
+    ]
+  },
+  {
+    id: "kael-humorous", recruit: "Kael", variant: "humorous", title: "Confession", room: "sparky-coop", preferred: ["Sparky", "Verseborn"],
+    build: ({ partner }) => partner === "Sparky" ? [
+      ["Sparky", "Krrt?"],
+      ["Kael", "That sounded like a confession."],
+      ["Sparky", "Prrrp.", { actor: "Sparky", anim: "walk", emote: "!", facing: 3 }],
+      ["Kael", "The missing spoon is forgiven."],
+      ["Sparky", "Chrrp!"],
+      ["Kael", "The second spoon remains under review."]
+    ] : [
+      [partner, "A spoon was left on your book."],
+      ["Kael", "An offering, perhaps."],
+      [partner, "It is Marla's spoon."],
+      ["Kael", "Then it is evidence."],
+      [partner, "Should we return it?"],
+      ["Kael", "Before the sermon becomes practical."]
+    ]
+  },
+  {
+    id: "kael-warm", recruit: "Kael", variant: "warm", title: "No Repair Required", room: "relaxation-lounge", preferred: ["Seerin", "Mira", "Verseborn"],
+    build: ({ partner }) => [
+      [partner, "You keep asking whether everyone else is all right."],
+      ["Kael", "It is a useful question."],
+      [partner, "It applies to you too."],
+      ["Kael", "I suspected there was a trap."],
+      [partner, "Sit. No fixing anything for five minutes."],
+      ["Kael", "A demanding treatment. I will try.", { actor: "Kael", emote: "...", facing: 1 }]
+    ]
+  },
+  {
+    id: "torren-welcome", recruit: "Torren", variant: "welcome", title: "Sit Down", room: "torren-kitchen", preferred: ["Verseborn"],
+    build: () => [
+      ["Torren", "When did you last eat?"],
+      ["Verseborn", "Before our most recent brush with death."],
+      ["Torren", "Which one?"],
+      ["Verseborn", "..."],
+      ["Torren", "Sit down.", { actor: "Torren", anim: "walk", emote: "!", facing: 1 }],
+      ["Verseborn", "That might be the nicest threat I have heard all day."]
+    ]
+  },
+  {
+    id: "torren-humorous", recruit: "Torren", variant: "humorous", title: "Self-Propelled Shelf", room: "glimmer-lab", preferred: ["Glimmer", "Verseborn"],
+    build: ({ partner }) => partner === "Glimmer" ? [
+      ["Glimmer", "The new shelf moves supplies where they are needed."],
+      ["Torren", "It is walking toward the stairs."],
+      ["Glimmer", "Initiative!"],
+      ["Torren", "It is carrying acid."],
+      ["Glimmer", "Urgency!"],
+      ["Torren", "I am nailing it to the floor.", { actor: "Torren", anim: "walk", emote: "!", facing: 3 }]
+    ] : [
+      [partner, "A self-propelled shelf just walked past me."],
+      ["Torren", "A shelf should know where it stands."],
+      [partner, "It was carrying acid."],
+      ["Torren", "Then it should know quickly."],
+      [partner, "Can you stop it?"],
+      ["Torren", "I brought nails.", { actor: "Torren", anim: "walk", emote: "!", facing: 3 }]
+    ]
+  },
+  {
+    id: "torren-warm", recruit: "Torren", variant: "warm", title: "A Chair That Holds", room: "relaxation-lounge", preferred: ["Mira", "Kael", "Verseborn"],
+    build: ({ partner, history }) => [
+      [partner, "You reinforced every chair in this room."],
+      ["Torren", "People come back tired."],
+      [partner, "You could simply say you care."],
+      ["Torren", history.seen.includes("torren-welcome") ? "I already threatened Verseborn with dinner." : "I built the chairs. That is clearer."],
+      [partner, "It is, actually."],
+      ["Torren", "Good. Sit. It will hold.", { actor: "Torren", emote: "...", facing: 1 }]
+    ]
+  },
+  {
+    id: "sparky-welcome", recruit: "Sparky", variant: "welcome", title: "A Shiny Welcome", room: "sparky-coop", preferred: ["Verseborn"],
+    build: () => [
+      ["Sparky", "Prrrp?"],
+      ["Verseborn", "For me?"],
+      ["Sparky", "Chrrp!", { actor: "Sparky", anim: "walk", emote: "*", facing: 1 }],
+      ["Verseborn", "A button, slightly singed and extremely shiny."],
+      ["Sparky", "Krrr."],
+      ["Verseborn", "I accept. Welcome home, tiny curator."]
+    ]
+  },
+  {
+    id: "sparky-humorous", recruit: "Sparky", variant: "humorous", title: "Perfect Pitch", room: "music-studio", preferred: ["Verseborn"],
+    build: () => [
+      ["Verseborn", "That tuning fork is not a snack."],
+      ["Sparky", "Krrt?"],
+      ["Verseborn", "It is for finding the correct note."],
+      ["Sparky", "CHIRRRP!", { actor: "Sparky", anim: "walk", emote: "!", facing: 3 }],
+      ["Verseborn", "Correct note found. Several windows lost."],
+      ["Sparky", "Prrrp."]
+    ]
+  },
+  {
+    id: "sparky-warm", recruit: "Sparky", variant: "warm", title: "Keeping Watch", room: "central-hall", preferred: ["Kael", "Mira", "Verseborn"],
+    build: ({ partner }) => [
+      [partner, "You do not have to keep watch alone."],
+      ["Sparky", "Krrr..."],
+      [partner, "We are all here."],
+      ["Sparky", "Prrrp.", { actor: "Sparky", emote: "...", facing: 1 }],
+      [partner, "Stay as long as you like."],
+      ["Sparky", "Chrrp."]
+    ]
+  },
+  {
+    id: "glimmer-welcome", recruit: "Glimmer", variant: "welcome", title: "Bench Rights", room: "glimmer-lab", preferred: ["Verseborn"],
+    build: () => [
+      ["Verseborn", "The lab bench is yours."],
+      ["Glimmer", "All of it?"],
+      ["Verseborn", "Everything between the scorch marks."],
+      ["Glimmer", "Those are future scorch marks."],
+      ["Verseborn", "I admire the confidence."],
+      ["Glimmer", "You will admire the ventilation more.", { actor: "Glimmer", anim: "walk", emote: "!", facing: 1 }]
+    ]
+  },
+  {
+    id: "glimmer-humorous", recruit: "Glimmer", variant: "humorous", title: "Responsive Target", room: "training-room", preferred: ["Mira", "Seerin", "Verseborn"],
+    build: ({ partner }) => [
+      ["Glimmer", "I made the training dummy more responsive."],
+      [partner, "It threw my practice blade back."],
+      ["Glimmer", "Immediate feedback."],
+      [partner, "It bowed first."],
+      ["Glimmer", "Manners cost nothing."],
+      [partner, "The bruise disagrees.", { actor: partner, anim: "walk", emote: "!", facing: 3 }]
+    ]
+  },
+  {
+    id: "glimmer-warm", recruit: "Glimmer", variant: "warm", title: "The Lab Light", room: "relaxation-lounge", preferred: ["Kael", "Torren", "Verseborn"],
+    build: ({ partner }) => [
+      [partner, "You left the lab light on again."],
+      ["Glimmer", "Empty workshops are too quiet."],
+      [partner, "You could work in here with us."],
+      ["Glimmer", "My tools take up space."],
+      [partner, "So do the rest of us."],
+      ["Glimmer", "That is a surprisingly sound design principle.", { actor: "Glimmer", emote: "...", facing: 1 }]
+    ]
+  }
+];
 
 function map(name, chapter, set, exits, points, beat, options = {}) {
   return { name, chapter, set, exits, points, beat, spawns: [], ...options };
@@ -4324,6 +4584,39 @@ function titleMenuPointerIndex(event) {
   return Math.max(0, Math.min(2, Math.floor((sourceY - 438) / 49)));
 }
 
+function drawRecruitScene() {
+  const scene = activeRecruitScene;
+  const image = recruitSceneImages[scene.room];
+  if (image) {
+    const targetRatio = LOGICAL_WIDTH / LOGICAL_HEIGHT;
+    const sourceWidth = Math.min(image.naturalWidth || image.width, (image.naturalHeight || image.height) * targetRatio);
+    const sourceHeight = sourceWidth / targetRatio;
+    const sourceX = ((image.naturalWidth || image.width) - sourceWidth) / 2;
+    const sourceY = ((image.naturalHeight || image.height) - sourceHeight) / 2;
+    ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  } else {
+    drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, "#171018");
+  }
+  const shade = ctx.createLinearGradient(0, 112, 0, LOGICAL_HEIGHT);
+  shade.addColorStop(0, "#09070a00");
+  shade.addColorStop(1, "#09070a66");
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 112, LOGICAL_WIDTH, LOGICAL_HEIGHT - 112);
+  scene.actors.forEach((actor, index) => {
+    const isActing = actor.actionUntil > tick;
+    const anim = isActing ? actor.anim : "idle";
+    const idleBob = anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
+    drawFieldShadow(actor.x, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
+    drawSprite(actor.id, actor.x - 8, actor.baseline - 32 + idleBob, actor.facing, anim, tick);
+    if (actor.emote && actor.actionUntil > tick) {
+      drawText(actor.emote, actor.x, actor.baseline - 40, "#fff0a8", 10, "center");
+    }
+  });
+  const roomName = RECRUIT_SCENE_ROOM_NAMES[scene.room] || "Ember Hall";
+  drawText(roomName, 9, 13, "#0b090d", 8);
+  drawText(roomName, 8, 12, "#ffe0a1", 8);
+}
+
 function drawTileMap() {
   if (new URLSearchParams(location.search).has("qa")) {
     canvas.dataset.qaMap = state.map;
@@ -4333,6 +4626,10 @@ function drawTileMap() {
   }
   if (screenSlide) {
     drawScreenSlide();
+    return;
+  }
+  if (activeRecruitScene) {
+    drawRecruitScene();
     return;
   }
   const map = currentMap();
@@ -5658,37 +5955,59 @@ function showTalk(lines, options = {}) {
   talkQueue = lines.slice();
   talkPortraits = (options.portraits || []).slice(0, 2);
   talkAfter = typeof options.after === "function" ? options.after : null;
+  talkSkippable = Boolean(options.skippable);
+  el.dialogueSkip.classList.toggle("hidden", !talkSkippable);
   renderDialoguePortraits();
   nextTalk();
 }
 
+function finishTalk() {
+  el.dialogue.classList.add("hidden");
+  el.dialogue.classList.remove("has-portraits");
+  el.dialoguePortraits.classList.add("hidden");
+  el.dialogueSkip.classList.add("hidden");
+  mode = "walk";
+  const completedPoint = activePoint;
+  const after = talkAfter;
+  activePoint = null;
+  talkAfter = null;
+  talkPortraits = [];
+  talkSkippable = false;
+  if (completedPoint && completedPoint.event) runEvent(completedPoint.event);
+  if (completedPoint && completedPoint.quest) processQuestGiver(completedPoint.quest);
+  if (completedPoint?.id === "Marla" && questById("harlEscort")?.status === "ready") completeSideQuest("harlEscort");
+  if (completedPoint?.chest) openChest(completedPoint);
+  if (completedPoint && completedPoint.vendor && mode === "walk") openVendor(completedPoint.vendor);
+  if (after && mode === "walk") after();
+  updateSkillPointNotice();
+}
+
+function skipTalk() {
+  if (mode !== "talk" || !talkSkippable) return;
+  talkQueue = [];
+  finishTalk();
+}
+
+function applyRecruitSceneAction(action) {
+  if (!activeRecruitScene || !action) return;
+  const actor = activeRecruitScene.actors.find(entry => entry.id === action.actor);
+  if (!actor) return;
+  if (Number.isFinite(action.facing)) actor.facing = action.facing;
+  actor.anim = action.anim || "idle";
+  actor.emote = action.emote || "";
+  actor.actionUntil = tick + (action.anim === "walk" ? 36 : 54);
+}
+
 function nextTalk() {
   const line = talkQueue.shift();
-  if (!line) {
-    el.dialogue.classList.add("hidden");
-    el.dialogue.classList.remove("has-portraits");
-    el.dialoguePortraits.classList.add("hidden");
-    mode = "walk";
-    const completedPoint = activePoint;
-    const after = talkAfter;
-    activePoint = null;
-    talkAfter = null;
-    talkPortraits = [];
-    if (completedPoint && completedPoint.event) runEvent(completedPoint.event);
-    if (completedPoint && completedPoint.quest) processQuestGiver(completedPoint.quest);
-    if (completedPoint?.id === "Marla" && questById("harlEscort")?.status === "ready") completeSideQuest("harlEscort");
-    if (completedPoint?.chest) openChest(completedPoint);
-    if (completedPoint && completedPoint.vendor && mode === "walk") openVendor(completedPoint.vendor);
-    if (after && mode === "walk") after();
-    updateSkillPointNotice();
-    return;
-  }
+  if (!line) return finishTalk();
   el.speaker.textContent = line[0];
   const content = line[1];
   if (content && typeof content === "object" && typeof content.html === "string") el.line.innerHTML = content.html;
   else el.line.textContent = content;
   syncDialoguePortraitForSpeaker(line[0]);
   updateDialogueSpeaker(line[0]);
+  applyRecruitSceneAction(line[2]);
   el.dialogue.classList.remove("hidden");
 }
 
@@ -6174,6 +6493,108 @@ function openHallRecruitment() {
   el.menuBody.querySelectorAll("[data-hall-recruit]").forEach(button => button.addEventListener("click", () => chooseHallRecruit(button.dataset.hallRecruit)));
 }
 
+function emptyRecruitSceneHistory() {
+  return { seen: [], lastByRecruit: {} };
+}
+
+function loadRecruitSceneHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HALL_SCENE_HISTORY_KEY) || "null");
+    return {
+      seen: Array.isArray(saved?.seen) ? [...new Set(saved.seen.filter(id => RECRUIT_SCENES.some(scene => scene.id === id)))] : [],
+      lastByRecruit: saved?.lastByRecruit && typeof saved.lastByRecruit === "object" ? { ...saved.lastByRecruit } : {}
+    };
+  } catch {
+    return emptyRecruitSceneHistory();
+  }
+}
+
+function saveRecruitSceneHistory(history) {
+  try { localStorage.setItem(HALL_SCENE_HISTORY_KEY, JSON.stringify(history)); } catch {}
+}
+
+function selectRecruitScene(recruit, history = loadRecruitSceneHistory()) {
+  const scenes = RECRUIT_SCENES.filter(scene => scene.recruit === recruit);
+  if (!scenes.length) return null;
+  const hasMet = scenes.some(scene => history.seen.includes(scene.id));
+  if (!hasMet) return scenes.find(scene => scene.variant === "welcome") || scenes[0];
+  const laterScenes = scenes.filter(scene => scene.variant !== "welcome");
+  const unseen = laterScenes.find(scene => !history.seen.includes(scene.id));
+  if (unseen) return unseen;
+  return laterScenes.find(scene => scene.id !== history.lastByRecruit[recruit]) || laterScenes[0];
+}
+
+function recruitScenePartner(scene) {
+  const available = state.party.filter(id => id !== scene.recruit && baseJobs[id]);
+  return scene.preferred.find(id => available.includes(id)) || available.find(id => id === "Verseborn") || available[0] || null;
+}
+
+function recruitSceneActors(scene, partner) {
+  const ids = [partner, scene.recruit].filter((id, index, all) => id && all.indexOf(id) === index && state.party.includes(id));
+  const positions = ids.length === 1 ? [128] : [82, 174];
+  return ids.map((id, index) => ({
+    id,
+    x: positions[index],
+    baseline: index % 2 ? 174 : 178,
+    facing: index === 0 && ids.length > 1 ? 3 : 1,
+    anim: "idle",
+    emote: "",
+    actionUntil: 0
+  }));
+}
+
+function completeRecruitScene() {
+  activeRecruitScene = null;
+  returnToHallAfterBattle();
+  mode = "walk";
+  updateMusic();
+  updatePanels();
+  queueSave();
+}
+
+function playRecruitScene(scene, options = {}) {
+  if (!scene || !state.party.includes(scene.recruit)) return false;
+  const history = loadRecruitSceneHistory();
+  const partner = recruitScenePartner(scene);
+  if (!partner) return false;
+  const actors = recruitSceneActors(scene, partner);
+  if (!actors.every(actor => state.party.includes(actor.id))) return false;
+  if (!options.replay) {
+    if (!history.seen.includes(scene.id)) history.seen.push(scene.id);
+    history.lastByRecruit[scene.recruit] = scene.id;
+    saveRecruitSceneHistory(history);
+  }
+  activePoint = null;
+  fieldDestination = null;
+  returnToHallAfterBattle();
+  activeRecruitScene = { ...scene, actors, replay: Boolean(options.replay) };
+  el.menu.classList.add("hidden");
+  document.querySelector(".menu-tabs").classList.remove("hidden");
+  const lines = scene.build({ recruit: scene.recruit, partner, history });
+  showTalk(lines, { portraits: actors.map(actor => actor.id), skippable: true, after: completeRecruitScene });
+  return true;
+}
+
+function replayRecruitScene(id) {
+  const history = loadRecruitSceneHistory();
+  const scene = RECRUIT_SCENES.find(entry => entry.id === id);
+  if (!scene || !history.seen.includes(id) || !state.party.includes(scene.recruit)) return false;
+  return playRecruitScene(scene, { replay: true });
+}
+
+function sceneMemoriesHtml() {
+  if (state.gameMode !== "hallBattles") return "";
+  const history = loadRecruitSceneHistory();
+  const groups = HALL_RECRUITS.map(recruit => {
+    if (!state.party.includes(recruit)) return "";
+    const scenes = RECRUIT_SCENES.filter(scene => scene.recruit === recruit && history.seen.includes(scene.id));
+    if (!scenes.length) return "";
+    const buttons = scenes.map(scene => `<button type="button" data-replay-scene="${scene.id}">${scene.title} / ${scene.variant}</button>`).join("");
+    return `<section class="scene-memory-group"><strong>${recruit}</strong><div>${buttons}</div></section>`;
+  }).join("");
+  return `<section class="scene-memory-panel"><header><strong>Scene Memories</strong><p>Replay recruitment moments seen in this Hall run history.</p></header>${groups ? `<div class="scene-memory-grid">${groups}</div>` : `<div class="menu-card"><p>No recruitment scenes have been seen yet.</p></div>`}</section>`;
+}
+
 function chooseHallRecruit(id) {
   const progress = hallBattleProgress();
   if (!HALL_RECRUITS.includes(id) || state.party.includes(id)) return;
@@ -6184,7 +6605,9 @@ function chooseHallRecruit(id) {
   restoreHallParty();
   playSfx("item");
   updatePanels();
-  openHallBattleMap();
+  queueSave();
+  const scene = selectRecruitScene(id);
+  if (!playRecruitScene(scene)) openHallBattleMap();
 }
 
 function restoreHallParty() {
@@ -8101,7 +8524,8 @@ function renderMenu() {
   }
   if (menuTab === "system") {
     const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear and guarantee at least one Legendary gear drop with four affixes. New Game Plus carries levels, talent builds, companions, equipment, items and gold into zones that scale toward level 40, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
-    el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>Normal Attack triggers the equipped weapon's unique setup effect and restores 6% Max MP. Skills use fixed MP costs; AGI controls initiative and contributes CRIT.</p></div><div class="menu-card"><strong>Levels & Talents</strong><p>The level cap is 40. Gain 10 talent points from level 4 through 40, unlock five tiers, and choose one capstone. Respec is free outside combat.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Each weapon changes Normal Attack as well as stats. Dropped equipment can also gain readable rarity-based affixes.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${postgame}`;
+    el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>Normal Attack triggers the equipped weapon's unique setup effect and restores 6% Max MP. Skills use fixed MP costs; AGI controls initiative and contributes CRIT.</p></div><div class="menu-card"><strong>Levels & Talents</strong><p>The level cap is 40. Gain 10 talent points from level 4 through 40, unlock five tiers, and choose one capstone. Respec is free outside combat.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Each weapon changes Normal Attack as well as stats. Dropped equipment can also gain readable rarity-based affixes.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${sceneMemoriesHtml()}${postgame}`;
+    el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
   }
@@ -8811,6 +9235,11 @@ document.querySelectorAll(".menu-tabs button").forEach(btn => {
 });
 
 el.skillPointNotice.addEventListener("click", openSkillPointMenu);
+el.dialogueSkip.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  skipTalk();
+});
 
 el.codexPrev.onclick = () => { codexIndex = (codexIndex + codex.length - 1) % codex.length; updateCodex(); };
 el.codexNext.onclick = () => { codexIndex = (codexIndex + 1) % codex.length; updateCodex(); };

@@ -2700,6 +2700,84 @@ h1 {
   letter-spacing: 0;
 }
 
+.dialogue-skip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  min-width: 52px;
+  padding: 5px 8px;
+  border: 1px solid #d8b06b;
+  background: #2b1a2b;
+  color: #fff0ca;
+  font: 700 11px/1 "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+
+.dialogue-skip:hover,
+.dialogue-skip:focus-visible {
+  background: #513044;
+  outline: 2px solid #ffe0a1;
+  outline-offset: 1px;
+}
+
+.scene-memory-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid #6e5647;
+}
+
+.scene-memory-panel > header {
+  margin-bottom: 8px;
+}
+
+.scene-memory-panel > header strong,
+.scene-memory-group > strong {
+  display: block;
+  color: #ffd27d;
+}
+
+.scene-memory-panel > header p {
+  margin: 4px 0 0;
+  color: #cbb891;
+  font-size: 13px;
+}
+
+.scene-memory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.scene-memory-group {
+  padding: 9px;
+  border: 2px solid #6e5647;
+  background: #120d17cc;
+}
+
+.scene-memory-group div {
+  display: grid;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.scene-memory-group button {
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid #a87c4f;
+  background: #2d1d2c;
+  color: #f7e0a6;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scene-memory-group button:hover,
+.scene-memory-group button:focus-visible {
+  border-color: #f0c56f;
+  background: #463047;
+  outline: none;
+}
+
 .dialogue-portraits {
   position: absolute;
   left: 8px;
