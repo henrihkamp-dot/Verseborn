@@ -6582,9 +6582,22 @@ function replayRecruitScene(id) {
   return playRecruitScene(scene, { replay: true });
 }
 
+function playUnseenArrival(id) {
+  const history = loadRecruitSceneHistory();
+  const scene = RECRUIT_SCENES.find(entry => entry.id === id && entry.variant === "welcome");
+  if (!scene || history.seen.includes(id) || !state.party.includes(scene.recruit)) return false;
+  return playRecruitScene(scene);
+}
+
 function sceneMemoriesHtml() {
   if (state.gameMode !== "hallBattles") return "";
   const history = loadRecruitSceneHistory();
+  const unseenArrivals = HALL_RECRUITS.map(recruit => {
+    if (!state.party.includes(recruit)) return "";
+    const welcome = RECRUIT_SCENES.find(scene => scene.recruit === recruit && scene.variant === "welcome");
+    if (!welcome || history.seen.includes(welcome.id)) return "";
+    return `<button type="button" data-play-arrival-scene="${welcome.id}">${recruit}: ${welcome.title}</button>`;
+  }).filter(Boolean);
   const groups = HALL_RECRUITS.map(recruit => {
     if (!state.party.includes(recruit)) return "";
     const scenes = RECRUIT_SCENES.filter(scene => scene.recruit === recruit && history.seen.includes(scene.id));
@@ -6592,7 +6605,9 @@ function sceneMemoriesHtml() {
     const buttons = scenes.map(scene => `<button type="button" data-replay-scene="${scene.id}">${scene.title} / ${scene.variant}</button>`).join("");
     return `<section class="scene-memory-group"><strong>${recruit}</strong><div>${buttons}</div></section>`;
   }).join("");
-  return `<section class="scene-memory-panel"><header><strong>Scene Memories</strong><p>Replay recruitment moments seen in this Hall run history.</p></header>${groups ? `<div class="scene-memory-grid">${groups}</div>` : `<div class="menu-card"><p>No recruitment scenes have been seen yet.</p></div>`}</section>`;
+  const arrivals = unseenArrivals.length ? `<section class="scene-memory-group"><strong>Unseen Arrivals</strong><p>These recruits joined before scenes were added. Play their first welcome whenever you are ready.</p><div>${unseenArrivals.join("")}</div></section>` : "";
+  const memories = groups ? `<div class="scene-memory-grid">${groups}</div>` : `<div class="menu-card"><p>No recruitment scenes have been seen yet.</p></div>`;
+  return `<section class="scene-memory-panel"><header><strong>Scene Memories</strong><p>Play missed arrivals or revisit recruitment moments from this Hall history.</p></header>${arrivals}${memories}</section>`;
 }
 
 function chooseHallRecruit(id) {
@@ -8525,6 +8540,7 @@ function renderMenu() {
   if (menuTab === "system") {
     const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear and guarantee at least one Legendary gear drop with four affixes. New Game Plus carries levels, talent builds, companions, equipment, items and gold into zones that scale toward level 40, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
     el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>Normal Attack triggers the equipped weapon's unique setup effect and restores 6% Max MP. Skills use fixed MP costs; AGI controls initiative and contributes CRIT.</p></div><div class="menu-card"><strong>Levels & Talents</strong><p>The level cap is 40. Gain 10 talent points from level 4 through 40, unlock five tiers, and choose one capstone. Respec is free outside combat.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Each weapon changes Normal Attack as well as stats. Dropped equipment can also gain readable rarity-based affixes.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${sceneMemoriesHtml()}${postgame}`;
+    el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
     el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
