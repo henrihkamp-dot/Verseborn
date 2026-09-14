@@ -1273,10 +1273,64 @@ function ownsGearRef(ref) {
 }
 
 function gearIconSheet(gear, heroId) {
+  if (["weapon", "armour", "ring", "necklace", "helmet"].includes(gear?.slot)) return `gear-${gear.slot}-catalog`;
   if (gear?.name === "Echo-Thread Lute") return "gear-verseborn";
   if (ngPlusSignatureNames.has(gear?.name)) return `gear-${gearOwners[gear.name][0].toLowerCase()}`;
   if (generalDropGear.has(gear?.name) || echoForgeGearNames.has(gear?.name)) return "gear-drop";
   return `gear-${heroId.toLowerCase()}`;
+}
+
+const gearIconMatchers = {
+  weapon: [
+    /rapier|saber|sabre|blade|edge|pike|crownless|oathblade|repeater/i,
+    /staff|sigil|rod|refrain|hexrod|calibration/i,
+    /cleaver|maul|shield|aegis|wrench|claw|earth/i,
+    /dagger|knife|voidthorn|eclipse/i,
+    /lute|verse|song|echo-thread/i
+  ],
+  armour: [
+    /ash|soot|nightneedle|leather|harness|jerkin/i,
+    /seal|reverie|dream|vestment/i,
+    /workshop|registry|clockwork|utility|orphanheart|coat/i,
+    /stone|mail|carapace|roadwarden|second-road|mantle/i,
+    /flameguard|dawnforged|plate|cinderproof|aegis|bulwark/i
+  ],
+  ring: [
+    /promise|songbound|nightglass|nullscript|echo collector/i,
+    /red ember|cinder|emberloop|fault echo/i,
+    /hollow|signet|seal|second-loop|faultline/i,
+    /root|stonefather|guard ring/i,
+    /clock|recursion|circuit|loopbreaker/i
+  ],
+  necklace: [
+    /cinder star|cinderstar|ash memory|star/i,
+    /hearthspark|wyrmheart|orphanfire|emberwell/i,
+    /hollow|reliquary|silent|vow/i,
+    /guardian|crest|bastion|routekeeper/i,
+    /elder|memory|venom|nyx|veln|gearheart|cogheart|charm|chain|pendant/i
+  ],
+  helmet: [
+    /hood|cowl|pathseer|silent execution/i,
+    /firstlight|waking|flameguard|sallet/i,
+    /stone|greathelm|brow guard|\bhelm\b/i,
+    /circlet|crown|emberhorn/i,
+    /top hat|goggle|lens|visor/i
+  ]
+};
+
+function gearIconIndex(gear, fallbackIndex = 0) {
+  const matchers = gearIconMatchers[gear?.slot];
+  if (!matchers) return fallbackIndex;
+  const identity = `${gear.name} ${gear.echoBase || ""}`;
+  const matchedIndex = matchers.findIndex(pattern => pattern.test(identity));
+  if (matchedIndex >= 0) return matchedIndex;
+  let hash = 0;
+  for (const character of identity) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return hash % 5;
+}
+
+function gearIconHtml(gear, heroId, fallbackIndex, className = "") {
+  return pixelIconHtml(gearIconSheet(gear, heroId), gearIconIndex(gear, fallbackIndex), className);
 }
 
 function gearAccessLabel(gear) {
@@ -7801,19 +7855,19 @@ function renderMenu() {
     const slotTabs = Object.entries(h.gear).map(([slot, equippedRef]) => {
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
       const gear = gearByName(equippedRef);
-      return `<button type="button" class="selection-tab ${selectedGearSlot === slot ? "is-active" : ""}" data-gear-slot="${slot}">${pixelIconHtml(gear ? gearIconSheet(gear, id) : "gear-empty", iconIndex, "selection-tab-icon")}<span><strong>${gearSlotLabel(slot)}</strong><small>${equippedRef ? gearDisplayName(equippedRef) : "Empty"}</small></span><b>${ownedGearRefs(slot, id).length}</b></button>`;
+      return `<button type="button" class="selection-tab ${selectedGearSlot === slot ? "is-active" : ""}" data-gear-slot="${slot}">${gear ? gearIconHtml(gear, id, iconIndex, "selection-tab-icon") : pixelIconHtml("gear-empty", iconIndex, "selection-tab-icon")}<span><strong>${gearSlotLabel(slot)}</strong><small>${equippedRef ? gearDisplayName(equippedRef) : "Empty"}</small></span><b>${ownedGearRefs(slot, id).length}</b></button>`;
     }).join("");
     const choiceList = `${slotChoices.map(({ ref, gear }, index) => {
       const equipped = h.gear[selectedGearSlot] === ref;
       const holders = equippedGearUsers(ref);
       const copies = gearCopyCount(ref);
       const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
-      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}">${pixelIconHtml(gearIconSheet(gear, id), choiceIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} / ${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
+      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}">${gearIconHtml(gear, id, choiceIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} / ${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
     }).join("")}<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`;
     const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
     const equipped = h.gear[selectedGearSlot] === selectedGearRef;
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
-    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(gearIconSheet(selectedGear, id), choiceIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:${selectedGearRef}" ${equipped ? "disabled" : ""}>${equipped ? "Equipped" : "Equip on " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedGearSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearSlotLabel(selectedGearSlot)}</small><strong>Empty slot</strong></header><p>Unequip this slot and keep the current item in the equipment inventory.</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${h.gear[selectedGearSlot] ? "Unequip" : "Already empty"}</button></div></article>`;
+    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, choiceIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:${selectedGearRef}" ${equipped ? "disabled" : ""}>${equipped ? "Equipped" : "Equip on " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedGearSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearSlotLabel(selectedGearSlot)}</small><strong>Empty slot</strong></header><p>Unequip this slot and keep the current item in the equipment inventory.</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${h.gear[selectedGearSlot] ? "Unequip" : "Already empty"}</button></div></article>`;
     el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearSlotLabel(selectedGearSlot)}</strong><small>${slotChoices.length} available</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
       selectedGearHero = btn.dataset.gearHero;
@@ -7869,7 +7923,7 @@ function renderMenu() {
         const holders = equippedGearUsers(entry.ref);
         const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[entry.gear.slot];
         const iconHero = holders[0] || gearOwners[entry.gear.name]?.[0] || state.activeParty[0];
-        return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${pixelIconHtml(gearIconSheet(entry.gear, iconHero), iconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} / ${gearSlotLabel(entry.gear.slot)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
+        return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${gearIconHtml(entry.gear, iconHero, iconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} / ${gearSlotLabel(entry.gear.slot)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
       }
       if (entry.kind === "skill") return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}"><span class="selection-letter-icon">S</span><span><strong>${entry.sk.name}</strong><small>${entry.casterId} / ${entry.sk.cost} MP</small></span></button>`;
       const icon = inventoryIcon(entry.name);
@@ -7896,7 +7950,7 @@ function renderMenu() {
       const copies = gearCopyCount(ref);
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
       const iconHero = holders[0] || gearOwners[gear.name]?.[0] || state.activeParty[0];
-      detail = `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(gearIconSheet(gear, iconHero), iconIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(gear.slot)}</small><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}</div></header><div class="selection-stat-line">${statLine(gear.stats)}</div><p>${gear.desc}</p><small class="gear-access">${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(ref)}<p class="selection-location">${holders.length ? `Equipped by ${holders.join(", ")}` : `Unequipped / ${gearInstance(ref) ? "separate copy" : `${copies} owned`}`}</p><div class="selection-actions"><button type="button" data-open-gear="${ref}">Open in Gear</button>${favoriteGearButton(ref)}</div></article>`;
+      detail = `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(gear, iconHero, iconIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(gear.slot)}</small><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}</div></header><div class="selection-stat-line">${statLine(gear.stats)}</div><p>${gear.desc}</p><small class="gear-access">${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(ref)}<p class="selection-location">${holders.length ? `Equipped by ${holders.join(", ")}` : `Unequipped / ${gearInstance(ref) ? "separate copy" : `${copies} owned`}`}</p><div class="selection-actions"><button type="button" data-open-gear="${ref}">Open in Gear</button>${favoriteGearButton(ref)}</div></article>`;
     }
     if (selectedEntry?.kind === "skill") {
       const { casterId, sk, skillIndex } = selectedEntry;
@@ -8246,7 +8300,7 @@ function renderVendor() {
       : gear && zoneStarterGear.includes(gear) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
     const details = gear ? `${displayedRarity}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
     const icon = gear
-      ? pixelIconHtml(gearIconSheet(gear, gearOwners[gear.name]?.[0] || state.party[0]), { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
+      ? gearIconHtml(gear, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
       : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
     const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
     return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong><small>${details}</small></div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
@@ -8263,7 +8317,7 @@ function renderVendor() {
   }).join("")}${sellGear.map(({ ref, gear }) => {
     const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
     const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
-    return `<div class="shop-row">${pixelIconHtml(gearIconSheet(gear, state.party[0]), iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(ref)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
+    return `<div class="shop-row">${gearIconHtml(gear, state.party[0], iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(ref)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop"
