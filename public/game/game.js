@@ -101,8 +101,9 @@ let screenSlide = null;
 let titleMenuIndex = 0;
 let saveTimer = null;
 
-const titleMenuEntries = ["New Game", "Continue", "Options"];
+const titleMenuEntries = ["New Game", "Continue", "Hall Battles"];
 const SAVE_KEY = "verseborn-jrpg-save-v2";
+const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
 const titleTwinkles = [
   { x: 135, y: 170, phase: 0, color: "#fff2b8" },
   { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
@@ -1058,12 +1059,12 @@ function nextGearRarity(rarity) {
   return order[Math.min(order.length - 1, Math.max(0, order.indexOf(rarity)) + 1)];
 }
 
-const echoForgeGear = Array.from({ length: 40 }, (_, index) => {
+const echoForgeGear = Array.from({ length: 80 }, (_, index) => {
   const rank = Math.floor(index / 2) + 1;
   const variant = index % 2;
   const slot = echoForgeSlots[(rank - 1) % echoForgeSlots.length];
   const tier = Math.floor((rank - 1) / echoForgeSlots.length);
-  const blueprint = echoForgeBlueprints[slot][tier * 2 + variant];
+  const blueprint = echoForgeBlueprints[slot][(tier * 2 + variant) % echoForgeBlueprints[slot].length];
   const baseGear = gearByName(blueprint.base);
   const boost = 2 + tier + Math.floor(rank / 10);
   const stats = Object.fromEntries(Object.entries(baseGear.stats).map(([stat, value]) => [stat, value + boost]));
@@ -1072,7 +1073,7 @@ const echoForgeGear = Array.from({ length: 40 }, (_, index) => {
   const inheritedEffects = gearEffects(baseGear).map(({ echoUnique, ...effect }) => ({ ...effect, label: `Inherited: ${effect.label}` }));
   const echoEffect = { ...blueprint.effect, echoUnique: true, label: `ECHO: ${blueprint.effect.label}` };
   const echoRarity = "Legendary";
-  const name = variant === 0 ? `Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}` : `Echo-Forged ${blueprint.base}`;
+  const name = variant === 0 ? `Echo-Forged ${slot[0].toUpperCase()}${slot.slice(1)} Mk ${rank}` : `Echo-Forged ${blueprint.base}${rank > 20 ? ` Mk ${rank}` : ""}`;
   return Object.assign(
     item(name, slot, stats, `A Legendary Echo upgrade of ${blueprint.base}, preserving its identity while opening a new build path at Echo Hunt rank ${rank}.`, [...inheritedEffects, echoEffect]),
     { echoRank: rank, echoBase: blueprint.base, echoRarity, echoVariant: variant, price: 420 + rank * 135 + variant * 70 + tier * 220 }
@@ -2140,6 +2141,7 @@ function talent(level, name, type, value, desc = null, unlockDesc = null) {
 }
 
 const state = {
+  gameMode: "story",
   knownWeaknesses: {},
   favoriteGear: {},
   map: "lantern",
@@ -2174,6 +2176,7 @@ const state = {
   discoveredMaps: ["lantern"],
   escort: null,
   fieldWard: false,
+  hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 },
   flags: {}
 };
 
@@ -2185,7 +2188,11 @@ function savedGameExists() {
   }
 }
 
-function saveGame() {
+function activeSaveKey() {
+  return state.gameMode === "hallBattles" ? HALL_SAVE_KEY : SAVE_KEY;
+}
+
+function saveGame(saveKey = activeSaveKey()) {
   if (mode === "title" || mode === "battle" || mode === "transition") return false;
   try {
     const heroes = Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, {
@@ -2201,7 +2208,7 @@ function saveGame() {
       returnAt: spawnPoint.returnAt,
       retryAt: spawnPoint.retryAt
     }]))]));
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ version: 3, state, heroes, questState, spawnState }));
+    localStorage.setItem(saveKey, JSON.stringify({ version: 4, state, heroes, questState, spawnState }));
     return true;
   } catch {
     return false;
@@ -2214,15 +2221,16 @@ function queueSave() {
   saveTimer = setTimeout(saveGame, 500);
 }
 
-function loadGame() {
+function loadGame(saveKey = SAVE_KEY) {
   let data;
   try {
-    data = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+    data = JSON.parse(localStorage.getItem(saveKey) || "null");
   } catch {
     return false;
   }
   if (!data?.state) return false;
   Object.assign(state, data.state);
+  state.gameMode = data.state.gameMode === "hallBattles" ? "hallBattles" : "story";
   state.knownWeaknesses = data.state.knownWeaknesses || {};
   state.favoriteGear = data.state.favoriteGear || {};
   state.gearInstances ||= {};
@@ -2237,6 +2245,11 @@ function loadGame() {
   state.gearCopies ||= {};
   state.discoveredMaps = Array.isArray(state.discoveredMaps) ? state.discoveredMaps.filter(id => maps[id]) : ["lantern"];
   state.flags ||= {};
+  state.hallBattles ||= { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
+  state.hallBattles.unlockedStage = Math.max(1, Math.min(40, Number(state.hallBattles.unlockedStage) || 1));
+  state.hallBattles.clearedStages = Array.isArray(state.hallBattles.clearedStages) ? [...new Set(state.hallBattles.clearedStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))] : [];
+  state.hallBattles.recruitStages = Array.isArray(state.hallBattles.recruitStages) ? [...new Set(state.hallBattles.recruitStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))] : [];
+  state.hallBattles.pendingRecruit = Number(state.hallBattles.pendingRecruit) || 0;
   if (!maps[state.map]) state.map = "lantern";
   Object.entries(data.heroes || {}).forEach(([id, saved]) => {
     if (!baseJobs[id]) return;
@@ -2400,6 +2413,12 @@ function sideQuest(id, title, giver, type, target, reward, desc, options = {}) {
 }
 
 const maps = {
+  emberHallBattles: map("Ember Hall - Trial Room", "Hall Battles", "lantern", [], [
+    point(4, 7, "Marla", [["Marla", "Back already? Sit down if you need patching up. The Trial Gate will still be there when the soup is finished."], ["Marla", "I kept the counter stocked. Old victories earn real experience here, so there is no shame in training twice."]], "hallRest", undefined, "marla"),
+    point(11, 7, "Glimmer", [["Glimmer", "Forty stable battle records. Stable is relative, but the enemies are definitely real enough to hit back."], ["Glimmer", "Clear the newest record to open the next one. Cleared records stay available for training and XP."]], undefined, undefined, "workshop"),
+    point(8, 5, "Stage", [["Trial Gate", "The Hall records forty battles. Every cleared stage remains available to replay for its normal XP." ]], "hallBattleMap")
+  ], ["Trial Gate", "Choose an unlocked battle or replay an old victory for XP."], { background: "lantern", collision: "lantern", grid: [0, 0], gridSize: [1, 1] }),
+
   lantern: map("The Drunk Lantern", "Issue 1", "lantern", [{ x: 14, y: 8, to: "ashLane", tx: 2, ty: 8 }], [
     point(4, 7, "Marla", [["Marla", "Soup first. Heroics after. Harl vanished near the old dock ledger room."], ["Verseborn", "A missing man, a tavern tab, and a song waiting to be wrong. Classic start."], ["Marla", "Find Harl. Start at the Ledger Docks, and bring him home."]], "acceptIssue1", undefined, "marla", "marlaCrate"),
     point(7, 7, "Harl", [["Harl", "I am staying close to the Lantern until my name stops moving without me."], ["Marla", "He carries mugs. I keep an eye on the door."]], undefined, "quest:harlEscort", undefined, "harlEscort"),
@@ -2539,6 +2558,80 @@ const maps = {
     chest(12, 8, "dawn-fleetglass", { gear: "Fleetglass Circlet", gold: 90 }, "dawnWon")
   ], ["E4 - Alarm Core", "Story boss and ending; its bosses never join the respawn pool."], { background: "alarm", collision: "alarm", grid: [2, 2], gridSize: [3, 3] })
 };
+
+const HALL_ENEMY_LIBRARY = {
+  ledger: { name: "Ledger Cutter", hp: 42, atk: 6, weak: "Sound", color: "#71513e", node: 1 },
+  chain: { name: "Chain Warden", hp: 54, atk: 8, weak: "Shadow", color: "#4a4542", node: 1 },
+  scribe: { name: "Ash Scribe", hp: 48, atk: 7, weak: "Sound", color: "#6d5948", node: 2 },
+  auditor: { name: "Inkbound Auditor", hp: 76, atk: 10, weak: "Holy Fire", color: "#40304f", node: 3 },
+  foreman: { name: "Dock Foreman", hp: 108, atk: 12, weak: "Tech", color: "#403b39", node: 3 },
+  seal: { name: "Seal Bearer", hp: 62, atk: 9, weak: "Shadow", color: "#9d5436", node: 2 },
+  sigil: { name: "Orphaned Sigil", hp: 82, atk: 11, weak: "Tech", color: "#b9a274", node: 2, sprite: "Seal Bearer" },
+  custodian: { name: "Archive Custodian", hp: 118, atk: 13, weak: "Earth", color: "#6d5948", node: 3 },
+  construct: { name: "Buried Construct", hp: 68, atk: 9, weak: "Earth", color: "#6f5540", node: 1 },
+  pillar: { name: "Cracked Pillar", hp: 72, atk: 9, weak: "Tech", color: "#55473c", node: 2 },
+  memory: { name: "First Ember Memory", hp: 104, atk: 13, weak: "Sigil", color: "#5a2f52", node: 3, sprite: "Ash Wyrm" },
+  wyrm: { name: "Ash Wyrm", hp: 132, atk: 15, weak: "Sigil", color: "#5a2f52", node: 3 },
+  bell: { name: "Wrong Bell", hp: 70, atk: 10, weak: "Tech", color: "#a66a35", node: 2 },
+  lock: { name: "Gate Lock", hp: 76, atk: 11, weak: "Earth", color: "#58616b", node: 2 },
+  null: { name: "Dawn Null", hp: 104, atk: 14, weak: "Sound", color: "#26353e", node: 3, sprite: "Wrong Bell" },
+  sentinel: { name: "Dawn Gate Sentinel", hp: 146, atk: 16, weak: "Ancient Fire", color: "#58616b", node: 3 },
+  shade: { name: "Shade", hp: 112, atk: 16, weak: "Holy Fire", color: "#30283f", node: 3 },
+  grumm: { name: "Grumm", hp: 154, atk: 17, weak: "Sound", color: "#594331", node: 3 },
+  lyrsa: { name: "Lyrsa", hp: 126, atk: 16, weak: "Shadow", color: "#77619a", node: 3 },
+  kaeldrin: { name: "Kaeldrin", hp: 166, atk: 18, weak: "Tech", color: "#d7c68f", node: 3 },
+  nyx: { name: "Nyx", hp: 118, atk: 17, weak: "Holy Fire", color: "#49375d", node: 3 },
+  rava: { name: "Rava", hp: 136, atk: 18, weak: "Earth", color: "#75442d", node: 3 },
+  jory: { name: "Jory", hp: 116, atk: 16, weak: "Shadow", color: "#8d6337", node: 3 },
+  tja: { name: "Tja", hp: 138, atk: 18, weak: "Ancient Fire", color: "#416d79", node: 3 },
+  king: { name: "King Maeric", hp: 194, atk: 20, weak: "Shadow", color: "#aa7b35", node: 3 }
+};
+
+const HALL_BATTLE_BLUEPRINTS = [
+  ["Sootline Opening", "ashLane", ["ledger"]],
+  ["Chain Runners", "sootMarket", ["ledger", "chain"]],
+  ["Dock Ledger Patrol", "ashDock", ["chain", "ledger"]],
+  ["Ink in the Rain", "ashLane", ["auditor", "scribe"]],
+  ["The Dock Foreman", "ashDock", ["foreman"], true],
+  ["Courtyard Seal", "reverieCourt", ["seal"]],
+  ["Dormitory Scribes", "reverieDorm", ["scribe", "seal"]],
+  ["The Orphaned Sigil", "reverieSeal", ["sigil", "scribe"]],
+  ["Clergy Lockdown", "reverieDorm", ["seal", "scribe", "seal"]],
+  ["The Archive Custodian", "reverieArchive", ["custodian"], true],
+  ["Crown Step Construct", "guildSteps", ["construct"]],
+  ["Registry Faultline", "guildRegistry", ["pillar", "construct"]],
+  ["The Unbreakable", "guildHall", ["grumm"]],
+  ["Spellbinder Trial", "guildCouncil", ["lyrsa", "seal"]],
+  ["The Ex-Rank", "guildCouncil", ["kaeldrin", "grumm"], true],
+  ["Buried Hall Memory", "emberYard", ["construct", "pillar"]],
+  ["Armory Collapse", "emberArmory", ["pillar", "construct", "pillar"]],
+  ["First Ember Memory", "emberRoof", ["memory"]],
+  ["Resonance Breach", "emberCellar", ["wyrm", "pillar"]],
+  ["The Ash Wyrm", "emberRoof", ["wyrm"], true],
+  ["Wrong Bell Patrol", "dawnCauseway", ["bell"]],
+  ["Calibration Locks", "dawnStation", ["lock", "bell"]],
+  ["The Dawn Null", "dawnStation", ["null", "bell"]],
+  ["Seal at the Gate", "dawnGate", ["sentinel", "lock"]],
+  ["Last Gate Protocol", "dawnGate", ["sentinel"], true],
+  ["The Shadow's Edge", "reverieArchive", ["shade"]],
+  ["Stone and Shadow", "guildHall", ["grumm", "shade"]],
+  ["Quiet Refrain", "reverieDorm", ["nyx", "jory"]],
+  ["Cinderhorn Convergence", "emberYard", ["rava", "lyrsa"]],
+  ["Full-Rank Company", "guildCouncil", ["kaeldrin", "shade", "grumm"], true],
+  ["Audit of the Forbidden", "reverieArchive", ["auditor", "custodian"]],
+  ["Cinderhorn Hunt", "emberRoof", ["rava", "wyrm"]],
+  ["The Quiet Archive", "reverieArchive", ["nyx", "custodian"]],
+  ["Winter Spellbinders", "guildHall", ["tja", "lyrsa"]],
+  ["Crown of Cindervale", "guildCouncil", ["king"], true],
+  ["Three Unwritten Names", "reverieSeal", ["shade", "nyx", "jory"]],
+  ["Stonewake Rebellion", "emberYard", ["grumm", "rava", "kaeldrin"]],
+  ["Royal Winter", "dawnCauseway", ["tja", "king"]],
+  ["The Final Archive", "alarm", ["custodian", "sentinel", "wyrm"]],
+  ["Hall of Forty Echoes", "alarm", ["king", "kaeldrin", "sentinel"], true]
+].map(([name, mapId, enemies, boss], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss) }));
+
+const HALL_RECRUIT_INTERVAL = 3;
+const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
 
 function map(name, chapter, set, exits, points, beat, options = {}) {
   return { name, chapter, set, exits, points, beat, spawns: [], ...options };
@@ -3388,6 +3481,7 @@ function visiblePoints() {
 }
 
 function objectiveTarget() {
+  if (state.gameMode === "hallBattles") return { map: "emberHallBattles", id: "Stage", label: "Open the Trial Gate" };
   if (state.quest < 0) return { map: "lantern", id: "Marla", label: "Speak with Marla" };
   if (state.quest === 0) {
     if (!state.flags.harborWon) return { map: "ashDock", id: "Mira", label: "Meet Mira at the Ledger Docks" };
@@ -4026,6 +4120,7 @@ function startTitleGame(continueGame = false) {
   if (!continueGame) {
     try { localStorage.removeItem(SAVE_KEY); } catch {}
   }
+  state.gameMode = "story";
   mode = "walk";
   updateMusic();
   updatePanels();
@@ -4034,12 +4129,46 @@ function startTitleGame(continueGame = false) {
   else showTalk([["Narrator", "Issue 1: The Man With the Enormous Voice"], ["Verseborn", "A warm room, a quiet stage, and Marla looking like she has work for me."]]);
 }
 
+function startHallBattles() {
+  if (!runtimeAssetsReady) return;
+  const loaded = loadGame(HALL_SAVE_KEY);
+  if (!loaded) {
+    state.gameMode = "hallBattles";
+    state.map = "emberHallBattles";
+    state.x = 8;
+    state.y = 9;
+    state.renderX = state.x * TILE;
+    state.renderY = state.y * TILE;
+    state.facing = 2;
+    state.quest = -1;
+    state.resonance = 15;
+    state.party = ["Verseborn"];
+    state.activeParty = ["Verseborn"];
+    state.discoveredMaps = ["emberHallBattles"];
+    state.escort = null;
+    state.fieldWard = false;
+    state.flags = {};
+    state.hallBattles = { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
+  }
+  state.gameMode = "hallBattles";
+  state.map = "emberHallBattles";
+  state.x = Number.isFinite(state.x) ? state.x : 8;
+  state.y = Number.isFinite(state.y) ? state.y : 9;
+  state.renderX = state.x * TILE;
+  state.renderY = state.y * TILE;
+  mode = "walk";
+  refreshHeroVitals();
+  updateMusic();
+  updatePanels();
+  updateSkillPointNotice();
+  showHudNotice(loaded ? "HALL BATTLES - record restored" : "HALL BATTLES - Stage 1 ready");
+}
+
 function activateTitleSelection() {
   if (!runtimeAssetsReady) return;
   if (titleMenuIndex === 2) {
-    toggleMusic();
     playSfx("menu");
-    return;
+    return startHallBattles();
   }
   startTitleGame(titleMenuIndex === 1);
 }
@@ -5110,12 +5239,23 @@ function updatePanels() {
   const q = currentQuest();
   const objective = objectiveTarget();
   const map = currentMap();
-  el.chapter.textContent = map.chapter;
-  el.place.textContent = `${map.name} / ${zoneLevelText(state.map)}`;
-  el.questTitle.textContent = q ? q[0] : "No active quest";
-  el.questText.textContent = q ? `Next: ${objective.label}.` : "Speak with Marla at the counter.";
-  el.beatTitle.textContent = map.beat[0];
-  el.beatText.textContent = map.beat[1];
+  if (state.gameMode === "hallBattles") {
+    const progress = hallBattleProgress();
+    const activeStage = battle?.hallStage || progress.unlockedStage;
+    el.chapter.textContent = "Hall Battles";
+    el.place.textContent = mode === "battle" ? `${map.name} / Stage ${activeStage}` : "Ember Hall - Trial Room";
+    el.questTitle.textContent = `Trial Gate ${progress.clearedStages.length}/40`;
+    el.questText.textContent = progress.pendingRecruit ? "Choose a new Flameguard recruit." : `Next: ${objective.label}.`;
+    el.beatTitle.textContent = `Stage ${progress.unlockedStage} Available`;
+    el.beatText.textContent = "Cleared battle records remain open for normal XP.";
+  } else {
+    el.chapter.textContent = map.chapter;
+    el.place.textContent = `${map.name} / ${zoneLevelText(state.map)}`;
+    el.questTitle.textContent = q ? q[0] : "No active quest";
+    el.questText.textContent = q ? `Next: ${objective.label}.` : "Speak with Marla at the counter.";
+    el.beatTitle.textContent = map.beat[0];
+    el.beatText.textContent = map.beat[1];
+  }
   el.resonanceBar.style.width = `${Math.min(100, state.resonance)}%`;
   el.gold.textContent = `${state.gold} G`;
   el.partyPanel.innerHTML = state.activeParty.map(id => {
@@ -5607,6 +5747,13 @@ function openChest(pointData) {
 }
 
 function runEvent(event) {
+  if (event === "hallBattleMap") return openHallBattleMap();
+  if (event === "hallRest") {
+    restoreHallParty();
+    showHudNotice("MARLA'S REST - party HP and MP restored");
+    updatePanels();
+    return;
+  }
   if (state.flags[event]) return;
   state.flags[event] = true;
   if (event === "acceptIssue1") { state.quest = 0; showTalk([["Quest", "Ash Boy's First Verse accepted."], ["Marla", "Follow the marked route east. Mira is watching the Ledger Docks."]]); }
@@ -5699,7 +5846,8 @@ function enemy(name, hp, atk, weak, color, node, sprite = null) {
 
 function prepareEnemyForBattle(source, mapId = state.map) {
   const [low, high] = zoneBandForMap(mapId);
-  const level = Math.max(low, Math.min(MAX_LEVEL, source.levelHint || low + Math.min(high - low, Math.max(0, (source.node || 1) - 1))));
+  const hintedLevel = Math.max(1, Math.min(MAX_LEVEL, Number(source.levelHint) || 1));
+  const level = source.fixedLevel ? hintedLevel : Math.max(low, Math.min(MAX_LEVEL, source.levelHint || low + Math.min(high - low, Math.max(0, (source.node || 1) - 1))));
   const ngScale = 1 + state.ngPlus * .32;
   const levelScale = 1 + Math.max(0, level - 1) * .012;
   const baseMax = source.baseMax || source.max;
@@ -5733,6 +5881,150 @@ function prepareEnemyForBattle(source, mapId = state.map) {
 function battleUnit(id) {
   const h = baseJobs[id], t = totals(id);
   return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: "idle" };
+}
+
+function hallBattleProgress() {
+  state.hallBattles ||= { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
+  return state.hallBattles;
+}
+
+function hallBattleInfo(stage) {
+  return HALL_BATTLE_BLUEPRINTS[Number(stage) - 1] || null;
+}
+
+function hallEnemiesForStage(stage) {
+  const info = hallBattleInfo(stage);
+  if (!info) return [];
+  const healthScale = 1 + Math.max(0, stage - 1) * .052;
+  const attackScale = 1 + Math.max(0, stage - 1) * .024;
+  return info.enemies.map(key => {
+    const profile = HALL_ENEMY_LIBRARY[key];
+    const unit = enemy(profile.name, Math.round(profile.hp * healthScale), Math.round(profile.atk * attackScale), profile.weak, profile.color, profile.node, profile.sprite || null);
+    unit.levelHint = stage;
+    unit.fixedLevel = true;
+    if (info.boss || enemyAbilityProfiles[unit.name]) {
+      unit.npcBoss = true;
+      unit.resistanceTier = info.boss ? "boss" : "elite";
+    }
+    return unit;
+  });
+}
+
+function openHallBattleMap() {
+  if (state.gameMode !== "hallBattles") return;
+  if (hallBattleProgress().pendingRecruit) return openHallRecruitment();
+  mode = "hallMap";
+  heldDirection = null;
+  fieldDestination = null;
+  el.menu.classList.remove("is-shop");
+  document.querySelector(".menu-tabs").classList.add("hidden");
+  el.menu.classList.remove("hidden");
+  renderHallBattleMap();
+  updateSkillPointNotice();
+}
+
+function hallEncounterDetails(info) {
+  const profiles = info.enemies.map(key => HALL_ENEMY_LIBRARY[key]);
+  const counts = profiles.reduce((all, profile) => ({ ...all, [profile.name]: (all[profile.name] || 0) + 1 }), {});
+  const enemies = Object.entries(counts).map(([name, amount]) => amount > 1 ? `${name} x${amount}` : name).join(" + ");
+  const weaknesses = [...new Set(profiles.map(profile => profile.weak))].join(" / ");
+  const traits = [];
+  if (info.boss) traits.push("Boss pattern and high status resistance");
+  else if (profiles.some(profile => enemyAbilityProfiles[profile.name])) traits.push("Elite attack pattern");
+  if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.heal)) traits.push("Enemy healing");
+  if (profiles.some(profile => profile.name === "Nyx")) traits.push("Sleep pressure");
+  else if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.element === "Shadow")) traits.push("Poison pressure");
+  if (profiles.some(profile => ["Earth", "Tech"].includes(enemyAbilityProfiles[profile.name]?.element))) traits.push("Stun pressure");
+  if (profiles.length >= 3) traits.push("Three-enemy formation");
+  else if (profiles.length === 2) traits.push("Dual formation");
+  return { enemies, weaknesses, traits: traits.join(" / ") || "Straight combat" };
+}
+
+function renderHallBattleMap() {
+  const progress = hallBattleProgress();
+  const cleared = new Set(progress.clearedStages);
+  const stages = HALL_BATTLE_BLUEPRINTS.map(info => {
+    const details = hallEncounterDetails(info);
+    const isCleared = cleared.has(info.stage);
+    const unlocked = info.stage <= progress.unlockedStage || isCleared;
+    const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
+    return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${info.stage} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
+  }).join("");
+  el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/40 cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
+  el.menuBody.querySelector("[data-close-hall]")?.addEventListener("click", closeHallOverlay);
+  el.menuBody.querySelectorAll("[data-hall-stage]").forEach(button => button.addEventListener("click", () => startHallBattleStage(Number(button.dataset.hallStage))));
+}
+
+function closeHallOverlay() {
+  if (mode !== "hallMap") return;
+  mode = "walk";
+  el.menu.classList.add("hidden");
+  document.querySelector(".menu-tabs").classList.remove("hidden");
+  updateSkillPointNotice();
+}
+
+function startHallBattleStage(stage) {
+  const info = hallBattleInfo(stage);
+  const progress = hallBattleProgress();
+  if (!info || (stage > progress.unlockedStage && !progress.clearedStages.includes(stage))) return;
+  el.menu.classList.add("hidden");
+  document.querySelector(".menu-tabs").classList.remove("hidden");
+  state.map = info.mapId;
+  startBattle(`Hall ${String(stage).padStart(2, "0")}/40 - ${info.name}`, hallEnemiesForStage(stage));
+  battle.hallStage = stage;
+  battle.hallBoss = info.boss;
+}
+
+function openHallRecruitment() {
+  const progress = hallBattleProgress();
+  const candidates = HALL_RECRUITS.filter(id => !state.party.includes(id));
+  if (!candidates.length) {
+    progress.pendingRecruit = 0;
+    return openHallBattleMap();
+  }
+  mode = "hallMap";
+  el.menu.classList.remove("is-shop");
+  document.querySelector(".menu-tabs").classList.add("hidden");
+  el.menu.classList.remove("hidden");
+  const cards = candidates.map(id => {
+    const hero = baseJobs[id];
+    return `<button type="button" class="hall-recruit" data-hall-recruit="${id}"><img src="${portraitSources[id]}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><em>${(characterSpecialties[id] || []).join(" / ")}</em></span></button>`;
+  }).join("");
+  el.menuBody.innerHTML = `<section class="hall-recruitment"><header><div><strong>Choose a Flameguard Recruit</strong><p>Stage ${progress.pendingRecruit} cleared / the chosen hero joins at the roster's current level.</p></div></header><div class="hall-recruit-grid">${cards}</div></section>`;
+  el.menuBody.querySelectorAll("[data-hall-recruit]").forEach(button => button.addEventListener("click", () => chooseHallRecruit(button.dataset.hallRecruit)));
+}
+
+function chooseHallRecruit(id) {
+  const progress = hallBattleProgress();
+  if (!HALL_RECRUITS.includes(id) || state.party.includes(id)) return;
+  addParty(id);
+  if (progress.pendingRecruit) progress.recruitStages.push(progress.pendingRecruit);
+  progress.recruitStages = [...new Set(progress.recruitStages)];
+  progress.pendingRecruit = 0;
+  restoreHallParty();
+  playSfx("item");
+  updatePanels();
+  openHallBattleMap();
+}
+
+function restoreHallParty() {
+  state.party.forEach(id => {
+    const total = totals(id);
+    baseJobs[id].hp = total.max;
+    baseJobs[id].mp = total.mp;
+  });
+}
+
+function recordHallBattleClear(stage) {
+  const progress = hallBattleProgress();
+  if (progress.clearedStages.includes(stage)) return false;
+  progress.clearedStages.push(stage);
+  progress.clearedStages.sort((a, b) => a - b);
+  progress.unlockedStage = Math.min(40, Math.max(progress.unlockedStage, stage + 1));
+  state.echoForgeRank = Math.max(state.echoForgeRank || 0, stage);
+  const remainingRecruit = HALL_RECRUITS.some(id => !state.party.includes(id));
+  if (remainingRecruit && stage % HALL_RECRUIT_INTERVAL === 0 && !progress.recruitStages.includes(stage)) progress.pendingRecruit = stage;
+  return true;
 }
 
 function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
@@ -6800,6 +7092,9 @@ function winBattle(log) {
     runCurrentTurn(`${log} The next wave enters.`);
     return;
   }
+  const hallStage = Number(battle.hallStage) || 0;
+  const hallProgress = hallStage ? hallBattleProgress() : null;
+  const firstHallClear = Boolean(hallStage && recordHallBattleClear(hallStage));
   if (battle.winFlag) state.flags[battle.winFlag] = true;
   state.resonance = Math.min(100, state.resonance + 15);
   battle.party.forEach(u => {
@@ -6809,9 +7104,14 @@ function winBattle(log) {
   });
   const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
   const rewards = rollBattleLoot(battle.defeated, { forceGearRarity: echoHuntBattle ? "Legendary" : null });
-  const bossBattle = Boolean(battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
+  const bossBattle = Boolean(battle.hallBoss || battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
   const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
   const xpSummary = awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
+  if (hallStage) {
+    const hallGold = 12 + hallStage * 4 + (battle.hallBoss ? 40 + hallStage * 2 : 0);
+    state.gold += hallGold;
+    rewards.gold += hallGold;
+  }
   if (echoHuntBattle) {
     state.endgameRank++;
     state.echoForgeRank = Math.max(state.echoForgeRank || 0, state.endgameRank);
@@ -6828,18 +7128,30 @@ function winBattle(log) {
     if (battle.spawnRef.boss) state.flags[`spawn:${battle.spawnRef.id}`] = true;
     else battle.spawnRef.returnAt = Date.now() + battle.spawnRef.respawn * 1000;
   }
-  updateSideQuestKills(battle.defeated, battle.spawnRef);
-  if (battle.winFlag === "ravaWaveWon") completeSideQuest("ravaWave");
-  if (battle.winFlag === "ngStonewakeWon") completeSideQuest("stonewakeTrial");
-  if (battle.winFlag === "ngOrphanTrialWon") completeSideQuest("orphanTrial");
+  if (!hallStage) {
+    updateSideQuestKills(battle.defeated, battle.spawnRef);
+    if (battle.winFlag === "ravaWaveWon") completeSideQuest("ravaWave");
+    if (battle.winFlag === "ngStonewakeWon") completeSideQuest("stonewakeTrial");
+    if (battle.winFlag === "ngOrphanTrialWon") completeSideQuest("orphanTrial");
+  }
   hideBattlePreview();
   el.turnOrder.innerHTML = "";
   el.battle.classList.add("hidden");
+  if (hallStage) {
+    state.map = "emberHallBattles";
+    state.x = 8;
+    state.y = 9;
+    state.renderX = state.x * TILE;
+    state.renderY = state.y * TILE;
+    state.facing = 2;
+  }
   mode = "walk";
   updateMusic();
   updatePanels();
   playSfx("coin");
-  showTalk([["Victory", `${log} ${xpSummary}.`], ["Loot", lootSummaryContent(rewards.gold, rewards.drops)]]);
+  const victoryLines = [["Victory", `${log} ${xpSummary}.`], ["Loot", lootSummaryContent(rewards.gold, rewards.drops)]];
+  if (hallStage && firstHallClear) victoryLines.push(["Hall Record", hallStage >= 40 ? "All forty battle records are cleared. Every stage remains available for replay." : `Stage ${hallStage + 1} is now available.`]);
+  showTalk(victoryLines, hallStage && hallProgress.pendingRecruit ? { after: openHallRecruitment } : {});
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
@@ -7040,6 +7352,7 @@ function sideQuestProgress(quest) {
 }
 
 function toggleMenu() {
+  if (mode === "hallMap") return closeHallOverlay();
   if (mode === "shop") return closeVendor();
   if (mode === "menu") {
     mode = "walk";
@@ -7803,7 +8116,7 @@ function vendorWares(id) {
       { kind: "item", name: "Grand Resonance Draught", price: 154, desc: inventoryDb["Grand Resonance Draught"].desc }
     );
   }
-  const unlockedRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
+  const unlockedRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   echoForgeGear.filter(gear => gear.echoRank <= unlockedRank).forEach(gear => {
     wares.push({ kind: "gear", name: gear.name, price: gear.price });
   });
@@ -7884,9 +8197,9 @@ function renderVendor() {
     const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
     return `<div class="shop-row">${pixelIconHtml(gearIconSheet(gear, state.party[0]), iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(ref)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
-  const forgeRank = Math.min(20, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
+  const forgeRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop"
-    ? `Echo Forge rank ${forgeRank}/20. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
+    ? `Echo Forge rank ${forgeRank}/40. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
   el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
@@ -8040,6 +8353,10 @@ function handleControl(control) {
     else if (control === "down" || control === "right") moveTitleSelection(1);
     return;
   }
+  if (mode === "hallMap") {
+    if (control === "menu" || control === "party") closeHallOverlay();
+    return;
+  }
   fieldDestination = null;
   if (control === "confirm") return mode === "battle" ? confirmBattleAction() : interact();
   if (control === "menu") return toggleMenu();
@@ -8057,6 +8374,7 @@ function handleControl(control) {
 
 function startHeldDirection(control) {
   if (mode === "battle") return handleControl(control);
+  if (mode === "hallMap") return;
   fieldDestination = null;
   heldDirection = control;
   handleControl(control);
@@ -8207,7 +8525,7 @@ window.addEventListener("keydown", e => {
   else if (key === "x" || key === "escape") {
     if (mode === "battle" && battle?.targetMode) closeTargetSelection();
     else if (mode === "battle" && battle?.itemMode) closeBattleItems();
-    else if (mode === "menu" || mode === "shop") toggleMenu();
+    else if (mode === "menu" || mode === "shop" || mode === "hallMap") toggleMenu();
     else if (mode === "atlas") toggleAtlas();
   }
 }, { capture: true });
@@ -8430,13 +8748,13 @@ function runQaChecks() {
     const echoIdentity = echoForgeGear.every(gear => {
       const base = gearByName(gear.echoBase);
       const tier = Math.floor((gear.echoRank - 1) / echoForgeSlots.length);
-      const blueprint = echoForgeBlueprints[gear.slot][tier * 2 + gear.echoVariant];
+      const blueprint = echoForgeBlueprints[gear.slot][(tier * 2 + gear.echoVariant) % echoForgeBlueprints[gear.slot].length];
       const unique = gearEffects(gear).filter(effect => effect.echoUnique);
       const inherited = gearEffects(gear).filter(effect => effect.label?.startsWith("Inherited:"));
       return base && gear.echoRarity === "Legendary" && blueprint?.base === gear.echoBase && unique.length === 1 && inherited.length === gearEffects(base).length && Object.entries(base.stats).every(([stat, value]) => gear.stats[stat] > value);
     });
     check("echo-upgrade-identity", echoIdentity);
-    check("echo-forge-two-per-rank", echoForgeGear.length === 40 && new Set(echoForgeGear.map(gear => gear.name)).size === 40 && Array.from({ length: 20 }, (_, index) => echoForgeGear.filter(gear => gear.echoRank === index + 1).length === 2).every(Boolean));
+    check("echo-forge-two-per-rank", echoForgeGear.length === 80 && new Set(echoForgeGear.map(gear => gear.name)).size === 80 && Array.from({ length: 40 }, (_, index) => echoForgeGear.filter(gear => gear.echoRank === index + 1).length === 2).every(Boolean));
     check("echo-forge-all-legendary", echoForgeGear.every(gear => defaultGearRarity(gear.name) === "Legendary"));
     const echoInstanceBackup = {
       ownedGear: [...state.ownedGear],
