@@ -357,6 +357,25 @@ const animationLayouts = {
 };
 const mapImages = {};
 const battleImages = {};
+const STAGE_SELECTOR_ASSET = "assets/ui/stage-selector-sheet.webp";
+const STAGE_SELECTOR_FRAMES = 4;
+const battleImageFiles = {
+  "ash-quarter": "ash-quarter.png",
+  reverie: "reverie.png",
+  guildspire: "guildspire.png",
+  "ember-hall": "ember-hall.png",
+  "false-dawn": "false-dawn.png",
+  "cinder-terrace": "cinder-terrace.webp",
+  "lantern-tavern": "lantern-tavern.webp",
+  "reverie-garden": "reverie-garden.webp",
+  "reverie-library": "reverie-library.webp",
+  "guildspire-marble": "guildspire-marble.webp",
+  "cinder-sunset": "cinder-sunset.webp",
+  "fallen-dawn": "fallen-dawn.webp",
+  "cinder-ruins": "cinder-ruins.webp",
+  "cinder-cataclysm": "cinder-cataclysm.webp",
+  "lantern-stage": "lantern-stage.webp"
+};
 const enemyAnimationSheets = {};
 const chestOpenTicks = {};
 let enemySheet = null;
@@ -364,6 +383,7 @@ let enemyAttackSheet = null;
 let worldEnemySheet = null;
 let npcSheet = null;
 let titleImage = null;
+let stageSelectorImage = null;
 let chestSheet = null;
 let echoProjectileSheet = null;
 let spriteLoadProgress = 0;
@@ -736,7 +756,7 @@ function loadBattleImage(id) {
     const image = new Image();
     image.onload = () => { battleImages[id] = image; resolve(); };
     image.onerror = resolve;
-    image.src = `assets/battles/${id}.png`;
+    image.src = `assets/battles/${battleImageFiles[id]}`;
   });
 }
 
@@ -746,6 +766,15 @@ function loadTitleImage() {
     image.onload = () => { titleImage = image; resolve(); };
     image.onerror = resolve;
     image.src = "assets/maps/runtime/title-screen.png";
+  });
+}
+
+function loadStageSelectorImage() {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => { stageSelectorImage = image; resolve(); };
+    image.onerror = resolve;
+    image.src = STAGE_SELECTOR_ASSET;
   });
 }
 
@@ -779,9 +808,10 @@ Promise.all([
   loadWorldEnemySheet(),
   loadNpcSheet(),
   loadTitleImage(),
+  loadStageSelectorImage(),
   loadMarlaBattleSheet(),
   loadEchoProjectileSheet(),
-  ...["ash-quarter", "reverie", "guildspire", "ember-hall", "false-dawn"].map(loadBattleImage),
+  ...Object.keys(battleImageFiles).map(loadBattleImage),
   ...["lantern", "ember-hall-battle", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
 ]).then(() => {
   runtimeAssetsReady = true;
@@ -4006,10 +4036,23 @@ function battleIdleMotion(id, frame) {
 function drawNpc(id, px, py, dir, anim, frame) {
   if (id === "Stage") {
     const baseline = py + 32;
+    if (stageSelectorImage) {
+      const sourceWidth = stageSelectorImage.width / STAGE_SELECTOR_FRAMES;
+      const sourceFrame = Math.floor(frame / 10) % STAGE_SELECTOR_FRAMES;
+      const width = 43;
+      const height = 43;
+      drawFieldShadow(px + 8, baseline + 1, 11);
+      ctx.drawImage(
+        stageSelectorImage,
+        sourceFrame * sourceWidth, 0, sourceWidth, stageSelectorImage.height,
+        Math.round(px + 8 - width / 2), baseline - height, width, height
+      );
+      return;
+    }
     drawRect(px - 2, baseline - 5, 20, 5, "#4b2f26");
     drawRect(px, baseline - 7, 16, 3, "#835739");
     drawRect(px + 2, baseline - 8, 12, 1, "#c28a50");
-    drawText("♪", px + 8, baseline - 12 + (Math.floor(frame / 12) % 2), "#ffd27d", 9, "center");
+    drawText("T", px + 8, baseline - 12, "#ffd27d", 9, "center");
     return;
   }
   if (id === "Workshop Bench") {
@@ -4947,6 +4990,37 @@ function drawBattleScene() {
 }
 
 function battleArenaFor(map) {
+  const hallArena = {
+    28: "lantern-stage",
+    40: "cinder-cataclysm"
+  }[battle?.hallStage];
+  if (hallArena) return hallArena;
+  const locationArena = {
+    lantern: "lantern-stage",
+    ashLane: "cinder-terrace",
+    sootMarket: "ash-quarter",
+    ashDock: "cinder-sunset",
+    ledgerHouse: "reverie-library",
+    reverieCourt: "reverie-garden",
+    reverieDorm: "reverie",
+    reverieSeal: "guildspire-marble",
+    reverieArchive: "reverie-library",
+    guildSteps: "cinder-terrace",
+    guildRegistry: "reverie-library",
+    guildHall: "guildspire-marble",
+    guildCouncil: "guildspire",
+    emberYard: "cinder-sunset",
+    emberHearth: "lantern-tavern",
+    emberWorkshop: "ember-hall",
+    emberArmory: "cinder-ruins",
+    emberRoof: "cinder-sunset",
+    emberCellar: "ember-hall",
+    dawnCauseway: "fallen-dawn",
+    dawnStation: "false-dawn",
+    dawnGate: "cinder-ruins",
+    alarm: "fallen-dawn"
+  }[state.map];
+  if (locationArena) return locationArena;
   return {
     lantern: "ash-quarter",
     ash: "ash-quarter",
@@ -4970,10 +5044,20 @@ function drawBattleAmbient(arenaId) {
   const frame = Math.floor(tick / 8) % 3;
   const glows = {
     "ash-quarter": [[223, 55, "#f0a14b"], [31, 73, "#c86435"]],
+    "cinder-terrace": [[224, 52, "#f0a14b"], [34, 69, "#d27742"]],
+    "lantern-tavern": [[211, 49, "#ef983c"], [44, 54, "#f0b34e"]],
+    "lantern-stage": [[214, 47, "#ef983c"], [45, 59, "#f3bd62"]],
+    "cinder-sunset": [[214, 43, "#f09b4a"], [123, 52, "#f2c176"]],
+    "cinder-ruins": [[218, 49, "#df6734"], [48, 65, "#f09a45"]],
+    "cinder-cataclysm": [[215, 45, "#f06b35"], [43, 61, "#ffc064"]],
     "reverie": [[205, 47, "#c382f2"], [51, 63, "#704fc3"]],
+    "reverie-garden": [[207, 51, "#d0a3e9"], [48, 63, "#f1c079"]],
+    "reverie-library": [[207, 49, "#8fcbe0"], [49, 61, "#e7c475"]],
     "guildspire": [[33, 45, "#f4cf73"]],
+    "guildspire-marble": [[214, 47, "#d8edff"], [35, 56, "#f4cf73"]],
     "ember-hall": [[202, 48, "#ef8b38"], [46, 56, "#f0b34e"]],
-    "false-dawn": [[213, 45, "#d9a04d"], [122, 67, "#7cd0d8"]]
+    "false-dawn": [[213, 45, "#d9a04d"], [122, 67, "#7cd0d8"]],
+    "fallen-dawn": [[214, 47, "#d9a04d"], [121, 61, "#cdd9e3"]]
   }[arenaId] || [];
   if (!glows.length) return;
   const active = glows[(Math.floor(tick / 24) + frame) % glows.length];
