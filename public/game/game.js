@@ -1172,6 +1172,20 @@ const ngPlusSignatureNames = new Set([
   "Worldroot Shield", "Klik-Wrench Infinite", "Elderflame Claws"
 ]);
 
+const HALL_LEGENDARY_STAGE = 21;
+const HALL_ULTIMATE_REWARD_STAGES = new Set([21, 24, 27, 30, 33, 36, 39]);
+const HALL_STANDARD_GEAR_POOL = [
+  ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
+  ...questGear,
+  ...chestGear
+];
+const HALL_ULTIMATE_WEAPONS = ngPlusGear.filter(gear => ngPlusSignatureNames.has(gear.name));
+const HALL_LEGENDARY_GEAR_POOL = [
+  ...postgameGear,
+  ...ngPlusChestGear,
+  ...ngPlusGear
+];
+
 const generalDropGear = new Set([
   ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
   ...questGear,
@@ -1390,7 +1404,7 @@ function gearIconHtml(gear, heroId, fallbackIndex, className = "") {
 
 function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
-  if (ngPlusSignatureNames.has(gear?.name)) return `NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
+  if (ngPlusSignatureNames.has(gear?.name)) return `HALL 21+ / NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
   if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / ${gear.echoRarity.toUpperCase()} UPGRADE OF ${gear.echoBase.toUpperCase()} / ALL HEROES`;
   if (ngPlusChestGearNames.has(gear?.name)) return "NG+ RANDOM CHEST GEAR / ALL HEROES";
   if (ngPlusGearNames.has(gear?.name)) return "NG+ LEGENDARY DROP / ALL HEROES";
@@ -1807,12 +1821,14 @@ const baseJobs = {
     skill("Attack", "melee", "Neutral", 13, 0, "Sword and shield hit."),
     skill("Cinder Guard", "block", "Holy Fire", -26, 7, "Blocks and heals weakest ally."),
     skill("Starflame Cut", "magic", "Holy Fire", 34, 7, "Holy fire arc."),
+    skill("Oathbreak", "magic", "Holy Fire", 22, 8, "Clears all enemy Resonance.", { enemyResonanceClear: true }),
     skill("ULT: The Woman in the Door", "ultimate", "Holy Fire", 70, 100, "Party-wide shield and counterfire.")
   ]),
   Kael: character("Kael", "Silent Oath", "Sigil", "#ece0c6", "#d6c4ab", "#9a7a50", { str: 6, agi: 8, mag: 17, stam: 11, echo: 13 }, ["Staff & Sigil", "Ashcloak", "Promise Ring", "Cinder Star", "Stone Brow Guard"], [
     skill("Attack", "melee", "Neutral", 9, 0, "Staff strike."),
     skill("Quiet Rite", "magic", "Sigil", -36, 8, "Strong heal."),
     skill("Firebreak Sigil", "block", "Sigil", 0, 6, "Halves incoming damage."),
+    skill("Quiet Tithe", "magic", "Sigil", 24, 9, "Removes half of the enemy's current Resonance and prevents gains for one action.", { enemyResonanceDrainRatio: .5, enemyResonanceLock: 1 }),
     skill("ULT: Oath Unbound", "ultimate", "Sigil", -90, 100, "Full heal and cleanse.")
   ]),
   Torren: character("Torren", "Stoneheart", "Earth", "#70472c", "#8a4d25", "#d87536", { str: 17, agi: 5, mag: 5, stam: 21, echo: 8 }, ["Earth Shield", "Stonewake Mantle", "Red Ember Band", "Cinder Star", "Stone Brow Guard"], [
@@ -1837,6 +1853,8 @@ const baseJobs = {
 
 const MAX_LEVEL = 40;
 const MAX_BATTLE_ROUNDS = 20;
+const XP_MULTIPLIER = 2;
+const TRANSFORMATION_UNLOCK_LEVEL = 10;
 const TALENT_POINT_LEVELS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40];
 const SKILL_MILESTONE_LEVELS = TALENT_POINT_LEVELS;
 const BATTLE_RETRY_EVENTS = {
@@ -2221,6 +2239,7 @@ const STATUS_DEFS = {
   barrier: { label: "BARRIER", short: "BAR", buff: true, duration: 3, value: .22 },
   holyFollowUp: { label: "HOLY FOLLOW-UP", short: "HLY", buff: true, duration: 1, value: .1 },
   combatDrone: { label: "COMBAT DRONE", short: "DRN", buff: true, duration: 99, value: .25 },
+  resonanceLocked: { label: "RESONANCE LOCK", short: "R-L", negative: true, duration: 2 },
   overheated: { label: "OVERHEATED", short: "HOT", negative: true, duration: 2 }
 };
 
@@ -3643,7 +3662,7 @@ function battleSkills(id, unit = null) {
       allEnemies: entry.value.allEnemies ?? (entry.level <= 20 && entry.value.anim === "ultimate" && entry.value.power > 0)
     }));
   const base = baseJobs[id].skills
-    .filter(entry => !entry.transform || progressFor(id).level >= 20)
+    .filter(entry => !entry.transform || progressFor(id).level >= TRANSFORMATION_UNLOCK_LEVEL)
     .map(entry => applyTalentSkillConversion(id, entry.anim === "ultimate" ? { ...entry, ultimateIndex: entry.ultimateIndex || 1 } : { ...entry }));
   if (id === "Kael" && typedTalentValue(id, "twilightCapstone")) base.push({ ...TRANSFORMED_SKILLS.shadowpriest[0], name: "Twilight Lance", coefficient: 1.2, cost: 8 });
   return [...base, ...extra];
@@ -3705,15 +3724,16 @@ function awardHeroXp(id, amount) {
 }
 
 function awardPartyXp(amount, reason = "Progress", reserveRate = .65) {
+  const earnedXp = Math.max(0, Math.round(amount * XP_MULTIPLIER));
   const levelUps = [];
   state.party.forEach(id => {
-    const share = state.activeParty.includes(id) ? amount : Math.max(1, Math.round(amount * reserveRate));
+    const share = state.activeParty.includes(id) ? earnedXp : Math.max(1, Math.round(earnedXp * reserveRate));
     const levels = awardHeroXp(id, share);
     if (levels.length) levelUps.push(`${id} Lv ${levels.at(-1)}`);
   });
   updateSkillPointNotice();
   if (levelUps.length) showHudNotice(`LEVEL UP - ${levelUps.join(" / ")}`);
-  return `${amount} XP${reason ? ` (${reason})` : ""}${levelUps.length ? ` / LEVEL UP: ${levelUps.join(", ")}` : ""}`;
+  return `${earnedXp} XP${reason ? ` (${reason})` : ""}${levelUps.length ? ` / LEVEL UP: ${levelUps.join(", ")}` : ""}`;
 }
 
 function zoneBandForMap(mapId = state.map) {
@@ -6447,7 +6467,10 @@ function renderHallBattleMap() {
     const isCleared = cleared.has(info.stage);
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
-    return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${info.stage} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
+    const lootLabel = HALL_ULTIMATE_REWARD_STAGES.has(info.stage)
+      ? "Legendary / ultimate weapon"
+      : info.stage >= HALL_LEGENDARY_STAGE ? "Legendary gear" : "Uncommon-Legendary gear";
+    return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${info.stage} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
   el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/40 cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
   el.menuBody.querySelector("[data-close-hall]")?.addEventListener("click", closeHallOverlay);
@@ -7067,6 +7090,39 @@ function applyWeaponBasicAttackEffect(source, target) {
   return basic.label;
 }
 
+function gainEnemyResonance(unit, amount) {
+  if (!unit || amount <= 0 || statusOf(unit, "resonanceLocked")) return 0;
+  const before = unit.resonance || 0;
+  unit.resonance = Math.min(100, before + amount);
+  return unit.resonance - before;
+}
+
+function applyEnemyResonanceControl(source, target, sk) {
+  if (!target || target.hp <= 0) return "";
+  const before = target.resonance || 0;
+  let removed = 0;
+  if (sk.enemyResonanceClear) {
+    removed = before;
+    target.resonance = 0;
+  } else if (sk.enemyResonanceDrainRatio) {
+    removed = Math.round(before * sk.enemyResonanceDrainRatio);
+    target.resonance = Math.max(0, before - removed);
+  } else if (sk.enemyResonanceDrain) {
+    removed = Math.min(before, sk.enemyResonanceDrain);
+    target.resonance = Math.max(0, before - removed);
+  }
+  if (sk.enemyResonanceLock) {
+    applyStatus(target, "resonanceLocked", source, { duration: sk.enemyResonanceLock, force: true });
+  }
+  const transferred = Math.round(removed * (sk.resonanceTransfer || 0));
+  if (transferred) {
+    state.resonance = Math.min(100, state.resonance + transferred);
+  }
+  if (!removed && !sk.enemyResonanceLock) return "";
+  const lockText = sk.enemyResonanceLock ? ` and seals new gains for ${sk.enemyResonanceLock} action${sk.enemyResonanceLock === 1 ? "" : "s"}` : "";
+  return `${sk.name} removes ${removed} Resonance${transferred ? ` and grants the party ${transferred}` : ""}${lockText}.`;
+}
+
 function skillDamageTalentMultiplier(source, sk, target) {
   if (!source?.id) return 1;
   let bonus = 0;
@@ -7238,7 +7294,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           totalDamageDealt += holyDamage;
           holyFollowUpTriggered = true;
         }
-        hitTarget.resonance = Math.min(100, (hitTarget.resonance || 0) + (critical ? 14 : 8));
+        gainEnemyResonance(hitTarget, critical ? 14 : 8);
         hitTarget.flash = 10;
         if (sk.multiHit > 1) {
           const baseHit = Math.floor(dmg / sk.multiHit);
@@ -7252,6 +7308,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         if (holyDamage) addBattleFloater(hitTarget, holyDamage, { damageType: "Holy Fire", delayTicks: sk.multiHit > 1 ? sk.multiHit * 4 : 4 });
         const statusNotes = hitTarget.hp > 0 ? applySkillStatuses(u, hitTarget, sk) : [];
+        const resonanceControl = applyEnemyResonanceControl(u, hitTarget, sk);
+        if (resonanceControl) statusNotes.push(resonanceControl);
         if (critical && hitTarget.hp > 0 && typedTalentValue(u.id, "critBleed") && Math.random() < typedTalentValue(u.id, "critBleed")) {
           const bleed = applyStatus(hitTarget, "bleed", u, { force: true, duration: 3, scaling: "str" });
           if (bleed.message) statusNotes.push(bleed.message);
@@ -7623,7 +7681,8 @@ function resolveEnemyTurn(turn, prev) {
         addBattleFloater(ally, restored, { kind: "heal" });
         if (enemyCanHeal(e)) applyStatus(ally, "defenseUp", e, { duration: 2, chance: 1 });
       });
-      e.resonance = action.kind === "ultimate" ? 0 : Math.min(100, (e.resonance || 0) + 32);
+      if (action.kind === "ultimate") e.resonance = 0;
+      else gainEnemyResonance(e, 32);
       actionLog += ` ${healTargets.length > 1 ? "The enemy formation restores" : `${target.name} restores`} ${total} HP.`;
       if (enemyCanHeal(e)) actionLog += " DEFENSE UP.";
       playSfx("item");
@@ -7685,7 +7744,8 @@ function resolveEnemyTurn(turn, prev) {
         actionLog += ` ${defender.name} takes ${dmg}.${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
       });
       battle.ward = false;
-      e.resonance = action.kind === "ultimate" ? 0 : Math.min(100, (e.resonance || 0) + (action.kind === "magic" ? 34 : 27));
+      if (action.kind === "ultimate") e.resonance = 0;
+      else gainEnemyResonance(e, action.kind === "magic" ? 34 : 27);
       playSfx(action.kind === "ultimate" ? "boss" : "hit");
     }
     if (e.hp <= 0) {
@@ -7733,7 +7793,11 @@ function winBattle(log) {
     h.mp = u.mp;
   });
   const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
-  const rewards = rollBattleLoot(battle.defeated, { forceGearRarity: echoHuntBattle ? "Legendary" : null });
+  const deepHallBattle = hallStage >= HALL_LEGENDARY_STAGE;
+  const rewards = rollBattleLoot(battle.defeated, {
+    forceGearRarity: echoHuntBattle ? "Legendary" : null,
+    allowGearLoot: !deepHallBattle
+  });
   const bossBattle = Boolean(battle.hallBoss || battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
   const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
   const xpSummary = awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
@@ -7741,7 +7805,7 @@ function winBattle(log) {
     const hallGold = 12 + hallStage * 4 + (battle.hallBoss ? 40 + hallStage * 2 : 0);
     state.gold += hallGold;
     rewards.gold += hallGold;
-    guaranteeHallBattleGearReward(rewards);
+    guaranteeHallBattleGearReward(rewards, hallStage);
     returnToHallAfterBattle();
   }
   if (echoHuntBattle) {
@@ -7797,15 +7861,24 @@ function rollHallGearRarity() {
   return HALL_GEAR_RARITIES[Math.floor(Math.random() * HALL_GEAR_RARITIES.length)];
 }
 
-function guaranteeHallBattleGearReward(rewards) {
+function hallGearRewardCandidates(stage) {
+  const deepHall = stage >= HALL_LEGENDARY_STAGE;
+  const pool = deepHall ? HALL_LEGENDARY_GEAR_POOL : HALL_STANDARD_GEAR_POOL;
+  if (deepHall && HALL_ULTIMATE_REWARD_STAGES.has(stage)) {
+    const missingUltimateWeapons = HALL_ULTIMATE_WEAPONS.filter(gear => gearCopyCount(gear.name) === 0);
+    if (missingUltimateWeapons.length) return missingUltimateWeapons;
+  }
+  const unownedCandidates = pool.filter(gear => gearCopyCount(gear.name) === 0);
+  return unownedCandidates.length ? unownedCandidates : leastOwnedGearCandidates(pool);
+}
+
+function guaranteeHallBattleGearReward(rewards, stage = 1) {
   if (!Array.isArray(rewards.gearDrops)) rewards.gearDrops = [];
   if (!Array.isArray(rewards.drops)) rewards.drops = [];
-  const allCandidates = [...generalDropGear].map(gearByName).filter(Boolean);
-  const unownedCandidates = allCandidates.filter(gear => gearCopyCount(gear.name) === 0);
-  const candidates = unownedCandidates.length ? unownedCandidates : allCandidates;
+  const candidates = hallGearRewardCandidates(stage);
   const gear = candidates[Math.floor(Math.random() * candidates.length)];
   if (!gear) return null;
-  const rarity = rollHallGearRarity();
+  const rarity = stage >= HALL_LEGENDARY_STAGE ? "Legendary" : rollHallGearRarity();
   const themes = ["swamp", "ruins", "mountain", "dragon"];
   const theme = themes[Math.floor(Math.random() * themes.length)];
   const awarded = awardGearDrop(gear.name, rarity, rewards.drops, { theme, separateCopy: true });
@@ -7836,19 +7909,23 @@ function rollBattleLoot(enemies, options = {}) {
         const stored = addInventoryItem(name, amount);
         drops.push(lootItemDrop(name, amount, stored));
       });
-      table.rare.forEach(([name, chance]) => {
-        if (Math.random() > chance || gearCopyCount(name) >= 3) return;
-        const rarity = options.forceGearRarity || rollEquipmentRarity(enemyUnit);
-        gearDrops.push(awardGearDrop(name, rarity, drops, { theme: options.forceGearRarity ? "dragon" : lootThemeForMap() }));
-      });
+      if (options.allowGearLoot !== false) {
+        table.rare.forEach(([name, chance]) => {
+          if (Math.random() > chance || gearCopyCount(name) >= 3) return;
+          const rarity = options.forceGearRarity || rollEquipmentRarity(enemyUnit);
+          gearDrops.push(awardGearDrop(name, rarity, drops, { theme: options.forceGearRarity ? "dragon" : lootThemeForMap() }));
+        });
+      }
     });
-    if (state.ngPlus > 0 && options.allowNgPlusLoot !== false) gold += rollNgPlusRandomLoot(enemyUnit, drops, gearDrops);
+    if (state.ngPlus > 0 && options.allowNgPlusLoot !== false) {
+      gold += rollNgPlusRandomLoot(enemyUnit, drops, gearDrops, { allowGearLoot: options.allowGearLoot });
+    }
   });
   state.gold += gold;
   return { gold, drops, gearDrops };
 }
 
-function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = []) {
+function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = [], options = {}) {
   const loop = Math.max(1, state.ngPlus);
   const commonPool = [
     ["Loopglass Shard", 1 + Math.floor(loop / 2)],
@@ -7871,7 +7948,7 @@ function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = []) {
     ...postgameGear
   ];
   const gearChance = Math.min(.68, .18 + loop * .07 + (state.endgameRank || 0) * .012);
-  if (randomGear.length && Math.random() < gearChance) {
+  if (options.allowGearLoot !== false && randomGear.length && Math.random() < gearChance) {
     const candidates = leastOwnedGearCandidates(randomGear);
     const gear = candidates[Math.floor(Math.random() * candidates.length)];
     gearDrops.push(awardGearDrop(gear.name, "Legendary", drops, { theme: "dragon", label: "NG+ RANDOM LEGENDARY" }));
