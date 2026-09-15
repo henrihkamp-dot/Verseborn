@@ -76,6 +76,19 @@ let selectedStatusHero = "Verseborn";
 let selectedGearHero = "Verseborn";
 let selectedGearSlot = "weapon";
 let selectedGearRef = null;
+const gearBrowser = {
+  search: "",
+  affixes: [],
+  affixMatch: "any",
+  slot: "all",
+  rarity: "all",
+  usability: "all",
+  equipped: "all",
+  sort: "newest",
+  direction: "desc",
+  filterOpen: false,
+  sortOpen: false
+};
 let selectedItemCategory = "consumables";
 let selectedItemRef = null;
 let selectedSkillHero = "Verseborn";
@@ -1706,6 +1719,253 @@ function gearRarityHtml(name) {
   return `<small class="gear-rarity rarity-${rarity.toLowerCase()}">${rarity.toUpperCase()}</small>`;
 }
 
+const GEAR_SORT_FIELDS = [
+  ["newest", "Newest"],
+  ["name", "Name"],
+  ["itemPower", "Item Power"],
+  ["rarity", "Rarity"],
+  ["affixCount", "Affix Count"],
+  ["str", "STR"],
+  ["agi", "AGI"],
+  ["mag", "MAG"],
+  ["def", "DEF"],
+  ["hp", "HP"],
+  ["mp", "MP"],
+  ["crit", "Crit"],
+  ["speed", "Speed"]
+];
+
+function gearAffixFacet(entry) {
+  if (entry.type === "statPct") return { key: `stat:${entry.stat}`, label: entry.stat.toUpperCase() };
+  if (entry.type === "hpPct") return { key: "stat:hp", label: "HP" };
+  if (entry.type === "statusOnHit") return { key: `status:${entry.status}`, label: entry.status[0].toUpperCase() + entry.status.slice(1) };
+  if (entry.type === "statusResistance") return { key: `resist:${entry.status}`, label: `${entry.status[0].toUpperCase() + entry.status.slice(1)} Resistance` };
+  const labels = {
+    critChance: "Crit",
+    afflictedDamage: "Afflicted Damage",
+    physicalDamage: "Physical Damage",
+    magicDamage: "Magic Damage",
+    poisonReduction: "Poison Reduction",
+    statusChance: "Status Chance",
+    allStatusResistance: "All Status Resistance",
+    echoing: "Echoing",
+    openingTurnProgress: "Opening Speed",
+    buffDuration: "Buff Duration",
+    statusDuration: "Status Duration"
+  };
+  return { key: `type:${entry.type}`, label: labels[entry.type] || entry.label };
+}
+
+function gearAffixOptions() {
+  const options = new Map();
+  ownedGearRefs().forEach(ref => gearAffixes(ref).forEach(entry => {
+    const facet = gearAffixFacet(entry);
+    options.set(facet.key, facet.label);
+  }));
+  return [...options].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function gearHasAffixFacet(ref, key) {
+  return gearAffixes(ref).some(entry => gearAffixFacet(entry).key === key);
+}
+
+function gearAffixFacetValue(ref, key) {
+  const values = gearAffixes(ref)
+    .filter(entry => gearAffixFacet(entry).key === key)
+    .map(entry => Number(entry.value) || 0);
+  return values.length ? Math.max(...values) : 0;
+}
+
+function gearSearchText(ref) {
+  const gear = gearByName(ref);
+  if (!gear) return "";
+  const fixed = [
+    ...gearEffects(gear),
+    ...(weaponBasicAttackEffect(gear) ? [weaponBasicAttackEffect(gear)] : [])
+  ];
+  const searchable = [
+    gearDisplayName(ref),
+    gear.name,
+    gear.slot,
+    gearSlotLabel(gear.slot),
+    gearRarity(ref),
+    gear.desc,
+    gearAccessLabel(gear),
+    ...Object.keys(gear.stats || {}),
+    ...fixed.flatMap(entry => [entry.label, entry.type, entry.status, entry.element]),
+    ...gearAffixes(ref).flatMap(entry => {
+      const facet = gearAffixFacet(entry);
+      return [entry.label, entry.key, entry.type, entry.status, entry.stat, facet.label, formatAffix(entry)];
+    })
+  ];
+  return searchable.filter(Boolean).join(" ").toLowerCase();
+}
+
+function gearItemPower(ref) {
+  const gear = gearByName(ref);
+  const baseStats = Object.values(gear?.stats || {}).reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+  const fixedPower = gearEffects(gear).reduce((sum, effect) => sum + (Math.abs(Number(effect.value) || 0) <= 1 ? Math.abs(Number(effect.value) || 0) * 100 : Math.abs(Number(effect.value) || 0)), 0);
+  const affixPower = gearAffixes(ref).reduce((sum, entry) => sum + (Math.abs(Number(entry.value) || 0) <= 1 ? Math.abs(Number(entry.value) || 0) * 100 : Math.abs(Number(entry.value) || 0)), 0);
+  return baseStats + fixedPower + affixPower + RARITY_ORDER.indexOf(gearRarity(ref)) * 10;
+}
+
+function gearSortValue(ref, field) {
+  const gear = gearByName(ref);
+  const stats = gear?.stats || {};
+  if (field.startsWith("affix:")) return gearAffixFacetValue(ref, field.slice(6));
+  if (field === "itemPower") return gearItemPower(ref);
+  if (field === "rarity") return RARITY_ORDER.indexOf(gearRarity(ref));
+  if (field === "affixCount") return gearAffixes(ref).length;
+  if (field === "newest") return gearInstance(ref)?.serial || state.ownedGear.indexOf(gearBaseName(ref)) + 1;
+  if (field === "crit") {
+    return [...gearEffects(gear), ...gearAffixes(ref)].filter(entry => entry.type === "critChance").reduce((sum, entry) => sum + (Number(entry.value) || 0), 0);
+  }
+  if (field === "def") return Number(stats.def ?? stats.stam) || 0;
+  if (field === "hp") return (Number(stats.hp) || 0) + (Number(stats.stam) || 0) * 4 + gearAffixes(ref).filter(entry => entry.type === "hpPct").reduce((sum, entry) => sum + entry.value * 100, 0);
+  if (field === "mp") return (Number(stats.mp) || 0) + (Number(stats.mag) || 0) / 2;
+  if (field === "speed") return Number(stats.speed ?? stats.agi) || 0;
+  return Number(stats[field]) || 0;
+}
+
+function filteredSortedGear(entries) {
+  const query = gearBrowser.search.trim().toLowerCase();
+  const usabilityId = gearBrowser.usability === "selected" ? selectedGearHero : gearBrowser.usability;
+  const filtered = entries.filter(({ ref, gear }) => {
+    if (query && !gearSearchText(ref).includes(query)) return false;
+    if (gearBrowser.slot !== "all" && gear.slot !== gearBrowser.slot) return false;
+    if (gearBrowser.rarity !== "all" && gearRarity(ref) !== gearBrowser.rarity) return false;
+    if (usabilityId !== "all" && !canEquip(usabilityId, gear)) return false;
+    const isEquipped = equippedGearUsers(ref).length > 0;
+    if (gearBrowser.equipped === "equipped" && !isEquipped) return false;
+    if (gearBrowser.equipped === "unequipped" && isEquipped) return false;
+    if (gearBrowser.affixes.length) {
+      const matches = gearBrowser.affixes.map(key => gearHasAffixFacet(ref, key));
+      if (gearBrowser.affixMatch === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) return false;
+    }
+    return true;
+  });
+  return filtered.sort((a, b) => {
+    if (gearBrowser.sort === "name") {
+      const value = gearDisplayName(a.ref).localeCompare(gearDisplayName(b.ref));
+      return gearBrowser.direction === "asc" ? value : -value;
+    }
+    if (gearBrowser.sort.startsWith("affix:")) {
+      const key = gearBrowser.sort.slice(6);
+      const aHas = gearHasAffixFacet(a.ref, key);
+      const bHas = gearHasAffixFacet(b.ref, key);
+      if (aHas !== bHas) return aHas ? -1 : 1;
+    }
+    const value = gearSortValue(a.ref, gearBrowser.sort) - gearSortValue(b.ref, gearBrowser.sort);
+    return (gearBrowser.direction === "asc" ? value : -value) || gearDisplayName(a.ref).localeCompare(gearDisplayName(b.ref));
+  });
+}
+
+function resetGearBrowser() {
+  Object.assign(gearBrowser, {
+    search: "",
+    affixes: [],
+    affixMatch: "any",
+    slot: "all",
+    rarity: "all",
+    usability: "all",
+    equipped: "all",
+    sort: "newest",
+    direction: "desc",
+    filterOpen: false,
+    sortOpen: false
+  });
+  selectedGearRef = null;
+}
+
+function gearBrowserToolbarHtml(visibleCount, totalCount) {
+  const affixOptions = gearAffixOptions();
+  if (gearBrowser.sort.startsWith("affix:") && !gearBrowser.affixes.includes(gearBrowser.sort.slice(6))) {
+    gearBrowser.sort = "newest";
+  }
+  const selectedAffixSorts = affixOptions.filter(option => gearBrowser.affixes.includes(option.key));
+  const heroOptions = state.party.map(id => `<option value="${id}" ${gearBrowser.usability === id ? "selected" : ""}>Usable by ${id}</option>`).join("");
+  const affixChecks = affixOptions.length
+    ? affixOptions.map(option => `<label><input type="checkbox" data-gear-affix="${option.key}" ${gearBrowser.affixes.includes(option.key) ? "checked" : ""}> ${escapeMarkup(option.label)}</label>`).join("")
+    : "<small>No rolled affixes owned yet.</small>";
+  const sortOptions = [
+    ...GEAR_SORT_FIELDS.map(([key, label]) => `<option value="${key}" ${gearBrowser.sort === key ? "selected" : ""}>${label}</option>`),
+    ...selectedAffixSorts.map(option => `<option value="affix:${option.key}" ${gearBrowser.sort === `affix:${option.key}` ? "selected" : ""}>${escapeMarkup(option.label)} strength</option>`)
+  ].join("");
+  const filterCount = [gearBrowser.search, gearBrowser.affixes.length, gearBrowser.slot !== "all", gearBrowser.rarity !== "all", gearBrowser.usability !== "all", gearBrowser.equipped !== "all"].filter(Boolean).length;
+  const directionHigh = gearBrowser.sort === "name" ? "Z-A" : "Highest first";
+  const directionLow = gearBrowser.sort === "name" ? "A-Z" : "Lowest first";
+  return `<section class="gear-browser" aria-label="Gear search, filters and sorting">
+    <div class="gear-browser-bar">
+      <input type="search" data-gear-search value="${escapeMarkup(gearBrowser.search)}" placeholder="Search gear..." aria-label="Search gear">
+      <details data-gear-filter-panel ${gearBrowser.filterOpen ? "open" : ""}><summary>Filter${filterCount ? ` (${filterCount})` : ""}</summary>
+        <div class="gear-browser-panel gear-filter-grid">
+          <label>Type<select data-gear-filter="slot"><option value="all">All slots</option>${["weapon", "armour", "ring", "necklace", "helmet"].map(slot => `<option value="${slot}" ${gearBrowser.slot === slot ? "selected" : ""}>${gearSlotLabel(slot)}</option>`).join("")}</select></label>
+          <label>Rarity<select data-gear-filter="rarity"><option value="all">All rarities</option>${RARITY_ORDER.map(rarity => `<option value="${rarity}" ${gearBrowser.rarity === rarity ? "selected" : ""}>${rarity}</option>`).join("")}</select></label>
+          <label>Usability<select data-gear-filter="usability"><option value="all">All characters</option><option value="selected" ${gearBrowser.usability === "selected" ? "selected" : ""}>Selected hero</option>${heroOptions}</select></label>
+          <label>Equipment<select data-gear-filter="equipped"><option value="all">Equipped + unequipped</option><option value="equipped" ${gearBrowser.equipped === "equipped" ? "selected" : ""}>Equipped only</option><option value="unequipped" ${gearBrowser.equipped === "unequipped" ? "selected" : ""}>Unequipped only</option></select></label>
+          <fieldset><legend>Affixes</legend><div class="gear-match-mode"><button type="button" data-gear-match="any" class="${gearBrowser.affixMatch === "any" ? "is-active" : ""}">ANY</button><button type="button" data-gear-match="all" class="${gearBrowser.affixMatch === "all" ? "is-active" : ""}">ALL</button></div><div class="gear-affix-options">${affixChecks}</div></fieldset>
+        </div>
+      </details>
+      <details data-gear-sort-panel ${gearBrowser.sortOpen ? "open" : ""}><summary>Sort</summary>
+        <div class="gear-browser-panel gear-sort-grid"><label>Sort by<select data-gear-sort>${sortOptions}</select></label><label>Order<select data-gear-direction><option value="desc" ${gearBrowser.direction === "desc" ? "selected" : ""}>${directionHigh}</option><option value="asc" ${gearBrowser.direction === "asc" ? "selected" : ""}>${directionLow}</option></select></label></div>
+      </details>
+      <button type="button" class="gear-clear" data-gear-clear>Clear Filters</button>
+      <small class="gear-result-count">${visibleCount} / ${totalCount}</small>
+    </div>
+  </section>`;
+}
+
+function bindGearBrowserControls() {
+  const search = el.menuBody.querySelector("[data-gear-search]");
+  if (search) search.oninput = () => {
+    gearBrowser.search = search.value;
+    selectedGearRef = null;
+    renderMenu();
+    const next = el.menuBody.querySelector("[data-gear-search]");
+    next?.focus();
+    next?.setSelectionRange(gearBrowser.search.length, gearBrowser.search.length);
+  };
+  el.menuBody.querySelectorAll("[data-gear-filter]").forEach(control => control.onchange = () => {
+    gearBrowser[control.dataset.gearFilter] = control.value;
+    if (control.dataset.gearFilter === "slot" && control.value !== "all") selectedGearSlot = control.value;
+    selectedGearRef = null;
+    renderMenu();
+  });
+  el.menuBody.querySelectorAll("[data-gear-affix]").forEach(control => control.onchange = () => {
+    gearBrowser.affixes = control.checked
+      ? [...new Set([...gearBrowser.affixes, control.dataset.gearAffix])]
+      : gearBrowser.affixes.filter(key => key !== control.dataset.gearAffix);
+    selectedGearRef = null;
+    renderMenu();
+  });
+  el.menuBody.querySelectorAll("[data-gear-match]").forEach(button => button.onclick = () => {
+    gearBrowser.affixMatch = button.dataset.gearMatch;
+    selectedGearRef = null;
+    renderMenu();
+  });
+  const sort = el.menuBody.querySelector("[data-gear-sort]");
+  if (sort) sort.onchange = () => { gearBrowser.sort = sort.value; selectedGearRef = null; renderMenu(); };
+  const direction = el.menuBody.querySelector("[data-gear-direction]");
+  if (direction) direction.onchange = () => { gearBrowser.direction = direction.value; selectedGearRef = null; renderMenu(); };
+  el.menuBody.querySelector("[data-gear-clear]")?.addEventListener("click", () => { resetGearBrowser(); renderMenu(); });
+  const filterPanel = el.menuBody.querySelector("[data-gear-filter-panel]");
+  const sortPanel = el.menuBody.querySelector("[data-gear-sort-panel]");
+  if (filterPanel) filterPanel.ontoggle = () => {
+    gearBrowser.filterOpen = filterPanel.open;
+    if (filterPanel.open && sortPanel) {
+      gearBrowser.sortOpen = false;
+      sortPanel.open = false;
+    }
+  };
+  if (sortPanel) sortPanel.ontoggle = () => {
+    gearBrowser.sortOpen = sortPanel.open;
+    if (sortPanel.open && filterPanel) {
+      gearBrowser.filterOpen = false;
+      filterPanel.open = false;
+    }
+  };
+}
+
 function lootThemeForMap(mapId = state.map) {
   const region = mapRegion(mapId);
   if (/Reverie|False Dawn/.test(region)) return "ruins";
@@ -1839,12 +2099,14 @@ const baseJobs = {
     skill("Attack", "melee", "Neutral", 12, 0, "A clean lute strike."),
     skill("Resonant Verse", "magic", "Sound", 25, 6, "Sound magic; adds Resonance."),
     skill("Shared Warning", "block", "Sound", -28, 8, "Party heal and guard."),
+    skill("Hushed Refrain", "magic", "Sound", 18, 7, "Low Sound damage and Silence for 2 turns.", { status: { type: "silence", duration: 2, force: true } }),
     skill("ULT: The Name I Chose", "ultimate", "Sound", 78, 100, "Full-party songburst.")
   ]),
   Mira: character("Mira", "Whispering Arrow", "Shadow", "#12151d", "#050508", "#7e62a8", { str: 12, agi: 17, mag: 9, stam: 7, echo: 8 }, ["Twin Voidthorns", "Ashcloak", "Quiet Circuit", "Veln Crest Token", "Mira Top Hat"], [
     skill("Attack", "melee", "Neutral", 14, 0, "Twin dagger slash."),
     skill("Voidthorn Mark", "magic", "Shadow", 32, 5, "Marks and exploits weakness."),
     skill("Silent Step", "melee", "Shadow", 20, 4, "Pushes one node back."),
+    skill("Cut the Tongue", "melee", "Shadow", 28, 7, "A precise dirty strike that deals moderate damage and Silences for 2 turns.", { status: { type: "silence", duration: 2, force: true } }),
     skill("ULT: Whispering Arrow", "ultimate", "Shadow", 92, 100, "Screen-darkening precision strike.")
   ]),
   Seerin: character("Seerin", "Flame's Shield", "Holy Fire", "#8d382e", "#9e3d20", "#f0d39a", { str: 13, agi: 7, mag: 11, stam: 18, echo: 10 }, ["Earth Shield", "Flameguard Plate", "Red Ember Band", "Cinder Star", "Stone Brow Guard"], [
@@ -1865,6 +2127,7 @@ const baseJobs = {
     skill("Attack", "melee", "Neutral", 18, 0, "Shield bash."),
     skill("Foundation Break", "melee", "Earth", 40, 6, "Huge stagger damage."),
     skill("Hold the Door", "block", "Earth", -18, 5, "Self heal and guard."),
+    skill("Hearty Red Stew", "magic", "Heart", 0, 9, "Grant the whole party 20% Vampiric for 3 turns.", { targetSide: "party", partyWide: true, buffs: [{ type: "vampiric", duration: 3, value: .2 }] }),
     skill("ULT: Stone Does Not Stand Alone", "ultimate", "Earth", 85, 100, "Earthquake wall-breaker.")
   ]),
   Glimmer: character("Glimmer", "Gearmind", "Tech", "#e2768c", "#ee7e91", "#b9823e", { str: 7, agi: 14, mag: 18, stam: 6, echo: 12 }, ["Klik-Wrench 7", "Workshop Coat", "Quiet Circuit", "Gearheart Charm", "Glimmer Goggles"], [
@@ -1877,6 +2140,7 @@ const baseJobs = {
     skill("Ember Nip", "melee", "Ancient Fire", 14, 0, "Tiny bite. Old flame."),
     skill("Memory Flare", "magic", "Ancient Fire", 36, 7, "Burns false commands."),
     skill("Prrrp", "block", "Heart", -20, 5, "Morale heal."),
+    skill("Emberblood", "magic", "Ancient Fire", 0, 8, "Grant one ally 25% Vampiric for 3 turns.", { targetSide: "ally", buffs: [{ type: "vampiric", duration: 3, value: .25 }] }),
     skill("ULT: Eternal Flame", "ultimate", "Ancient Fire", 88, 100, "Dragon memory erupts.")
   ])
 };
@@ -2254,6 +2518,7 @@ const STATUS_DEFS = {
   disrupted: { label: "DISRUPTED", short: "DSP", negative: true, duration: 3, value: .15 },
   sleep: { label: "SLEEP", short: "SLP", negative: true, duration: 5 },
   stun: { label: "STUN", short: "STN", negative: true, duration: 1 },
+  silence: { label: "SILENCE", short: "SIL", icon: "S", negative: true, duration: 2 },
   strengthUp: { label: "STRENGTH UP", short: "STR", buff: true, duration: 3, value: .25 },
   magicUp: { label: "MAGIC UP", short: "MAG", buff: true, duration: 3, value: .25 },
   defenseUp: { label: "DEFENSE UP", short: "DEF", buff: true, duration: 3, value: .25 },
@@ -2269,6 +2534,7 @@ const STATUS_DEFS = {
   barrier: { label: "BARRIER", short: "BAR", buff: true, duration: 3, value: .22 },
   holyFollowUp: { label: "HOLY FOLLOW-UP", short: "HLY", buff: true, duration: 1, value: .1 },
   combatDrone: { label: "COMBAT DRONE", short: "DRN", buff: true, duration: 99, value: .25 },
+  vampiric: { label: "VAMPIRIC", short: "VMP", icon: "V", buff: true, duration: 3, value: .2 },
   resonanceLocked: { label: "RESONANCE LOCK", short: "R-L", negative: true, duration: 2 },
   overheated: { label: "OVERHEATED", short: "HOT", negative: true, duration: 2 }
 };
@@ -3626,7 +3892,8 @@ function statusBadgesHtml(unit) {
   if (!entries.length) return "";
   return `<div class="status-chips">${entries.slice(0, 6).map(status => {
     const def = STATUS_DEFS[status.type];
-    return `<span class="${def?.negative ? "is-negative" : "is-buff"}" title="${def?.label || status.type}: ${status.remaining} turn(s)">${def?.short || status.type.toUpperCase()} ${status.remaining}</span>`;
+    const icon = def?.icon ? `<i aria-hidden="true">${def.icon}</i>` : "";
+    return `<span class="${def?.negative ? "is-negative" : "is-buff"}" title="${def?.label || status.type}: ${status.remaining} turn(s)">${icon}${def?.short || status.type.toUpperCase()} ${status.remaining}</span>`;
   }).join("")}</div>`;
 }
 
@@ -7212,7 +7479,10 @@ function skillPreview(u, sk, target = null) {
   const heal = healingAmount(u.id, sk, u);
   const mpCost = skillMpCost(u.id, sk, u);
   if (sk.power < 0) return `Restores ${heal} HP${partyHeal ? " to every living ally" : sk.targetSide === "self" ? " to self" : " to the most wounded ally"} / ${skillFormula(sk)} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${mpCost} fixed MP`}. ${sk.desc}`;
-  if (!skillTargetsEnemies(sk)) return `${sk.transform ? `Transformation for ${(TRANSFORMATION_CONFIG[sk.transform]?.duration || 4) + typedTalentValue(u.id, "transformDuration")} actions` : "Support command"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${mpCost} fixed MP`}. ${sk.desc}${sk.immediateTurn ? ` Extra actions used: ${battle?.extraTurns || 0}/2 this battle.` : ""}`;
+  if (!skillTargetsEnemies(sk)) {
+    const targetText = sk.targetSide === "ally" ? ` Targets one living ally${target ? `: ${target.name}` : ""}.` : sk.partyWide ? " Targets every living ally." : "";
+    return `${sk.transform ? `Transformation for ${(TRANSFORMATION_CONFIG[sk.transform]?.duration || 4) + typedTalentValue(u.id, "transformDuration")} actions` : "Support command"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${mpCost} fixed MP`}.${targetText} ${sk.desc}${sk.immediateTurn ? ` Extra actions used: ${battle?.extraTurns || 0}/2 this battle.` : ""}`;
+  }
   const statName = skillScaling(sk).toUpperCase();
   const statKey = statName === "MAG" ? "mag" : "str";
   const stat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
@@ -7281,18 +7551,34 @@ function unitHtml(u, className = "") {
 
 function chooseSkillTarget(u, sk) {
   const live = battle.enemies.filter(enemyUnit => enemyUnit.hp > 0);
+  const allies = battle.party.filter(ally => ally.hp > 0);
+  if (sk.targetSide === "ally" && allies.length > 1) {
+    battle.targetMode = true;
+    battle.pendingSkill = sk;
+    battleActionIndex = 0;
+    return renderBattle(`${u.name}: choose an ally for ${sk.name}.`);
+  }
   if (skillTargetsEnemies(sk) && live.length > 1 && !skillHitsAll(u.id, sk)) {
     battle.targetMode = true;
     battle.pendingSkill = sk;
     battleActionIndex = 0;
     return renderBattle(`${u.name}: choose a target for ${sk.name}.`);
   }
-  useSkill(u, sk, skillTargetsEnemies(sk) ? live[0] : u);
+  useSkill(u, sk, sk.targetSide === "ally" ? allies[0] : skillTargetsEnemies(sk) ? live[0] : u);
 }
 
 function renderBattleTargets(u) {
   const sk = battle.pendingSkill;
-  battle.enemies.filter(enemyUnit => enemyUnit.hp > 0).forEach(enemyUnit => {
+  if (sk.targetSide === "ally") {
+    battle.party.filter(ally => ally.hp > 0).forEach(ally => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = `${ally.name} | HP ${ally.hp}/${ally.max} | MP ${ally.mp}/${ally.maxmp}`;
+      setBattlePreview(button, `${sk.name} -> ${ally.name}`, skillPreview(u, sk, ally));
+      button.onclick = () => useSkill(u, sk, ally);
+      el.actions.appendChild(button);
+    });
+  } else battle.enemies.filter(enemyUnit => enemyUnit.hp > 0).forEach(enemyUnit => {
     const revealWeakness = knownWeakness(enemyUnit);
     const button = document.createElement("button");
     button.type = "button";
@@ -7483,7 +7769,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   if (sk.immediateTurn && !canGrantImmediateTurn()) return renderBattle("No extra action available: maximum 2 per battle, and Overheated allies cannot receive one. No MP spent.");
   if (selectedSkill.anim === "ultimate" && state.resonance < 100) return renderBattle("An ultimate requires 100 Resonance.");
   const liveAtStart = battle.enemies.filter(e => e.hp > 0);
-  const target = skillTargetsEnemies(sk) ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0]) : u;
+  const target = sk.targetSide === "ally"
+    ? (chosenTarget?.hp > 0 ? chosenTarget : battle.party.find(ally => ally.hp > 0) || u)
+    : skillTargetsEnemies(sk)
+      ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0])
+      : u;
   const timing = battleActionTiming(sk.anim);
   battle.targetMode = false;
   battle.pendingSkill = null;
@@ -7500,7 +7790,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   updatePanels();
   const livingAtStart = battle.party.filter(p => p.hp > 0);
   const woundedAtStart = livingAtStart.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
-  effect = makeBattleEffect(u, sk, sk.power < 0 ? woundedAtStart : skillTargetsEnemies(sk) ? target || u : u);
+  effect = makeBattleEffect(u, sk, sk.power < 0 ? woundedAtStart : sk.targetSide === "ally" ? target : skillTargetsEnemies(sk) ? target || u : u);
   renderBattle(`${u.name} prepares ${sk.name}...`);
   setTimeout(() => { if (u) u.anim = "idle"; }, timing.totalMs - 100);
 
@@ -7509,6 +7799,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     let log = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${u.name} uses ${sk.name}.`;
     const supportTargets = sk.targetSide === "self"
       ? [u]
+      : sk.targetSide === "ally"
+        ? [target]
       : sk.partyWide || sk.targetSide === "party"
         ? battle.party.filter(ally => ally.hp > 0)
         : [u];
@@ -7567,6 +7859,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const t = totals(u.id);
       const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
       let totalDamageDealt = 0;
+      let directDamageDealt = 0;
       const holyFollowUpPower = statusValue(u, "holyFollowUp");
       let holyFollowUpTriggered = false;
       hitTargets.forEach(hitTarget => {
@@ -7621,6 +7914,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
+        directDamageDealt += dmg;
         const holyDamage = holyFollowUpPower ? Math.max(1, Math.round(dmg * holyFollowUpPower)) : 0;
         if (holyDamage) {
           hitTarget.hp -= holyDamage;
@@ -7679,6 +7973,15 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           addBattleFloater(enemy, shock, { damageType: "Earth" });
           log += ` Aftershock hits ${enemy.name} for ${shock}.`;
         });
+      }
+      const vampiric = statusValue(u, "vampiric");
+      if (vampiric && directDamageDealt > 0) {
+        const restored = Math.min(Math.max(1, Math.round(directDamageDealt * vampiric)), u.max - u.hp);
+        u.hp += restored;
+        if (restored) {
+          addBattleFloater(u, restored, { kind: "heal" });
+          log += ` VAMPIRIC restores ${restored} HP to ${u.name}.`;
+        }
       }
       if (sk.selfGuard) {
         u.guarding = true;
@@ -7912,6 +8215,7 @@ function enemyActionForKind(unit, kind, target = null) {
 
 function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
+  if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
   const wounded = battle.enemies
     .filter(ally => ally.hp > 0 && ally.hp / ally.max < .58)
     .sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
@@ -8780,7 +9084,8 @@ function renderMenu() {
       const heroTotals = totals(heroId);
       return `<button type="button" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><span class="dot" style="background:${hero.color}"></span><strong>${hero.name}</strong><small>${hero.title}</small><span>HP ${hero.hp}/${heroTotals.max}</span></button>`;
     }).join("");
-    const slotChoices = ownedGearRefs(selectedGearSlot, id).map(ref => ({ ref, gear: gearByName(ref) }));
+    const allGearChoices = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
+    const slotChoices = filteredSortedGear(allGearChoices);
     const choiceIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
     if (selectedGearRef !== "__EMPTY__" && !slotChoices.some(entry => entry.ref === selectedGearRef)) selectedGearRef = null;
     if (!selectedGearRef) selectedGearRef = h.gear[selectedGearSlot] || slotChoices[0]?.ref || "__EMPTY__";
@@ -8794,26 +9099,32 @@ function renderMenu() {
       const holders = equippedGearUsers(ref);
       const copies = gearCopyCount(ref);
       const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
-      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}">${gearIconHtml(gear, id, choiceIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} / ${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
-    }).join("")}<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`;
+      const rowIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
+      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}">${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} / ${gearSlotLabel(gear.slot)} / ${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
+    }).join("") || `<p class="selection-list-empty">No gear matches these filters.</p>`}${gearBrowser.slot === "all" ? "" : `<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`}`;
     const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
-    const equipped = h.gear[selectedGearSlot] === selectedGearRef;
+    const selectedSlot = selectedGear?.slot || selectedGearSlot;
+    const equipped = h.gear[selectedSlot] === selectedGearRef;
+    const usable = selectedGear ? canEquip(id, selectedGear) : true;
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
-    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, choiceIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:${selectedGearRef}" ${equipped ? "disabled" : ""}>${equipped ? "Equipped" : "Equip on " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedGearSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearSlotLabel(selectedGearSlot)}</small><strong>Empty slot</strong></header><p>Unequip this slot and keep the current item in the equipment inventory.</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedGearSlot}:__EMPTY__" ${h.gear[selectedGearSlot] ? "" : "disabled"}>${h.gear[selectedGearSlot] ? "Unequip" : "Already empty"}</button></div></article>`;
-    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section><div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearSlotLabel(selectedGearSlot)}</strong><small>${slotChoices.length} available</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
+    const detailIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedSlot];
+    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearBrowser.slot === "all" ? "Gear results" : gearSlotLabel(selectedGearSlot)}</small><strong>${slotChoices.length ? "Select gear" : "No matching gear"}</strong></header><p>${slotChoices.length ? "Choose an item to inspect its stats, effects and affixes." : "Adjust the search or clear the active filters."}</p></article>`;
+    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section>${gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length)}<div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearBrowser.slot === "all" ? "All Gear" : gearSlotLabel(gearBrowser.slot)}</strong><small>${slotChoices.length} matching</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
       selectedGearHero = btn.dataset.gearHero;
-      selectedGearSlot = "weapon";
       selectedGearRef = null;
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-slot]").forEach(btn => btn.onclick = () => {
       selectedGearSlot = btn.dataset.gearSlot;
+      gearBrowser.slot = selectedGearSlot;
       selectedGearRef = null;
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-preview]").forEach(btn => btn.onclick = () => {
-      selectedGearRef = slotChoices[Number(btn.dataset.gearPreview)]?.ref || null;
+      const selected = slotChoices[Number(btn.dataset.gearPreview)];
+      selectedGearRef = selected?.ref || null;
+      if (selected?.gear?.slot) selectedGearSlot = selected.gear.slot;
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-empty]").forEach(btn => btn.onclick = () => {
@@ -8826,12 +9137,14 @@ function renderMenu() {
       else delete state.favoriteGear[input.dataset.favorite];
       updatePanels();
     });
+    bindGearBrowserControls();
   }
   if (menuTab === "items") {
     const stash = Object.entries(state.stash).filter(([, amount]) => amount > 0);
     const bag = Object.entries(state.inventory).filter(([, amount]) => amount > 0);
     const inventoryEntries = bag.map(([name, amount]) => ({ key: `item:${name}`, kind: "item", name, amount }));
-    const equipment = ownedGearRefs().map(ref => ({ key: `gear:${ref}`, kind: "gear", ref, gear: gearByName(ref) })).filter(entry => entry.gear);
+    const allEquipment = ownedGearRefs().map(ref => ({ key: `gear:${ref}`, kind: "gear", ref, gear: gearByName(ref) })).filter(entry => entry.gear);
+    const equipment = selectedItemCategory === "gear" ? filteredSortedGear(allEquipment) : allEquipment;
     const fieldSkills = state.party.flatMap(casterId => baseJobs[casterId].skills
       .filter(sk => sk.anim !== "ultimate" && (sk.power < 0 || sk.anim === "block"))
       .map(sk => ({ key: `skill:${casterId}:${baseJobs[casterId].skills.indexOf(sk)}`, kind: "skill", casterId, sk, skillIndex: baseJobs[casterId].skills.indexOf(sk) })));
@@ -8849,7 +9162,10 @@ function renderMenu() {
     const currentEntries = categories[selectedItemCategory];
     if (!currentEntries.some(entry => entry.key === selectedItemRef)) selectedItemRef = currentEntries[0]?.key || null;
     const selectedEntry = currentEntries.find(entry => entry.key === selectedItemRef) || null;
-    const categoryTabs = Object.entries(categories).filter(([key, entries]) => key !== "stash" || entries.length).map(([key, entries]) => `<button type="button" class="selection-tab ${selectedItemCategory === key ? "is-active" : ""}" data-item-category="${key}"><span><strong>${categoryLabels[key]}</strong><small>${entries.length} owned</small></span><b>${entries.length}</b></button>`).join("");
+    const categoryTabs = Object.entries(categories).filter(([key, entries]) => key !== "stash" || entries.length).map(([key, entries]) => {
+      const count = key === "gear" ? allEquipment.length : entries.length;
+      return `<button type="button" class="selection-tab ${selectedItemCategory === key ? "is-active" : ""}" data-item-category="${key}"><span><strong>${categoryLabels[key]}</strong><small>${count} owned</small></span><b>${count}</b></button>`;
+    }).join("");
     const listRows = currentEntries.map((entry, index) => {
       if (entry.kind === "gear") {
         const holders = equippedGearUsers(entry.ref);
@@ -8897,7 +9213,8 @@ function renderMenu() {
         return `<button type="button" data-field-skill="${casterId}:${skillIndex}:${targetId}" ${canUse ? "" : "disabled"}>${partyHeal && heal ? "All allies" : target.name}<small>${partyHeal && heal ? "Party heal" : `${target.hp}/${targetTotal.max} HP`}</small></button>`;
       }).join("")}</div></article>`;
     }
-    el.menuBody.innerHTML = `<div class="wallet-line"><span>Wallet</span><strong>${state.gold} G</strong><span>Bag ${inventoryUsed()}/${state.inventorySlots}</span><span>${state.fieldWard ? "Opening ward prepared" : "No field ward"}</span></div><div class="selection-workspace item-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs">${categoryTabs}</nav><header><strong>${categoryLabels[selectedItemCategory]}</strong><small>${currentEntries.length} entries</small></header><div class="selection-list">${listRows}</div></section>${detail}</div>`;
+    const gearTools = selectedItemCategory === "gear" ? gearBrowserToolbarHtml(equipment.length, allEquipment.length) : "";
+    el.menuBody.innerHTML = `<div class="wallet-line"><span>Wallet</span><strong>${state.gold} G</strong><span>Bag ${inventoryUsed()}/${state.inventorySlots}</span><span>${state.fieldWard ? "Opening ward prepared" : "No field ward"}</span></div>${gearTools}<div class="selection-workspace item-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs">${categoryTabs}</nav><header><strong>${categoryLabels[selectedItemCategory]}</strong><small>${currentEntries.length} entries</small></header><div class="selection-list">${listRows}</div></section>${detail}</div>`;
     el.menuBody.querySelectorAll("[data-item-category]").forEach(button => button.onclick = () => {
       selectedItemCategory = button.dataset.itemCategory;
       selectedItemRef = null;
@@ -8924,6 +9241,7 @@ function renderMenu() {
       else delete state.favoriteGear[input.dataset.favorite];
       updatePanels();
     });
+    bindGearBrowserControls();
   }
   if (menuTab === "quests") {
     const main = currentQuest();
