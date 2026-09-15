@@ -6122,7 +6122,7 @@ function applyRecruitSceneAction(action) {
   if (!actor) return;
   if (Number.isFinite(action.facing)) actor.facing = action.facing;
   if (Number.isFinite(action.dx)) actor.x = Math.max(24, Math.min(LOGICAL_WIDTH - 24, actor.x + action.dx));
-  if (Number.isFinite(action.dy)) actor.baseline = Math.max(142, Math.min(LOGICAL_HEIGHT - 32, actor.baseline + action.dy));
+  if (Number.isFinite(action.dy)) actor.baseline = Math.max(96, Math.min(166, actor.baseline + action.dy));
   actor.anim = action.anim || "idle";
   actor.emote = action.emote || "";
   actor.motion = action.motion || "";
@@ -6676,7 +6676,7 @@ function recruitSceneActors(scene, partner) {
   return ids.map((id, index) => ({
     id,
     x: positions[index],
-    baseline: index % 2 ? 174 : 178,
+    baseline: index % 2 ? 136 : 132,
     facing: index === 0 && ids.length > 1 ? 3 : 1,
     anim: "idle",
     emote: "",
