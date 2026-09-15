@@ -119,8 +119,7 @@ const titleTwinkles = [
   { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
   { x: 1115, y: 344, phase: 220, color: "#c7e8ff" }
 ];
-const TITLE_IDLE_FRAME_SEQUENCE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const TITLE_IDLE_FRAME_DURATIONS = TITLE_IDLE_FRAME_SEQUENCE.map(() => 700);
+const TITLE_BACKGROUND_FRAME = 1;
 
 const portraitSources = {
   Verseborn: "assets/portraits/verseborn.png",
@@ -815,7 +814,7 @@ function loadTitleImage() {
 }
 
 function loadTitleIdleFrames() {
-  return Promise.all(Array.from({ length: 10 }, (_, index) => index + 1).map(frame => new Promise(resolve => {
+  return Promise.all([TITLE_BACKGROUND_FRAME].map(frame => new Promise(resolve => {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = () => resolve(null);
@@ -4519,16 +4518,6 @@ function drawSpark(x, y, color, frame) {
   ctx.strokeRect(x - r / 2, y - r / 2, r, r);
 }
 
-function titleIdleFrameIndex(now) {
-  const total = TITLE_IDLE_FRAME_DURATIONS.reduce((sum, duration) => sum + duration, 0);
-  let elapsed = ((now % total) + total) % total;
-  for (let index = 0; index < TITLE_IDLE_FRAME_SEQUENCE.length; index++) {
-    if (elapsed < TITLE_IDLE_FRAME_DURATIONS[index]) return TITLE_IDLE_FRAME_SEQUENCE[index];
-    elapsed -= TITLE_IDLE_FRAME_DURATIONS[index];
-  }
-  return 0;
-}
-
 function drawTitle(now = performance.now()) {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4545,9 +4534,8 @@ function drawTitle(now = performance.now()) {
   }
 
   const layout = titleImageLayout();
-  const animatedBackground = titleIdleFrames[titleIdleFrameIndex(now)] || titleImage;
-  ctx.drawImage(animatedBackground, layout.x, layout.y, layout.width, layout.height);
-  if (titleIdleFrames.length < 10 || titleIdleFrames.some(image => !image)) drawTitleTwinkles(layout);
+  const fixedBackground = titleIdleFrames[0] || titleImage;
+  ctx.drawImage(fixedBackground, layout.x, layout.y, layout.width, layout.height);
   drawTitleMenu(layout);
   ctx.restore();
 }
