@@ -2791,6 +2791,7 @@ const HALL_BATTLE_BLUEPRINTS = [
 const HALL_RECRUIT_INTERVAL = 3;
 const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
 const RECRUIT_SCENE_ROOM_NAMES = {
+  "trial-room": "Ember Hall Trial Room",
   "central-hall": "Central Ember Hall",
   "torren-kitchen": "Torren's Kitchen",
   "kael-library": "Kael's Library",
@@ -2800,15 +2801,36 @@ const RECRUIT_SCENE_ROOM_NAMES = {
   "sparky-coop": "Sparky's Coop",
   "relaxation-lounge": "Relaxation Lounge"
 };
+const EMBER_HALL_INTRO_ID = "ember-hall-welcome";
 const RECRUIT_SCENES = [
   {
-    id: "mira-welcome", recruit: "Mira", variant: "welcome", title: "Spare Blades", room: "training-room", preferred: ["Verseborn"],
+    id: EMBER_HALL_INTRO_ID, recruit: "Verseborn", variant: "welcome", title: "Welcome to Ember Hall", room: "trial-room", preferred: [],
+    cast: ["Verseborn", "Marla", "Glimmer"], guests: ["Marla", "Glimmer"], allowWithoutPartner: true,
     build: () => [
-      ["Mira", "Show me where you keep the spare blades."],
-      ["Verseborn", "Hello to you too."],
+      ["Marla", "So. This is Ember Hall.", { actor: "Marla", anim: "walk", facing: 3 }],
+      ["Verseborn", "I expected more banners. Possibly a choir.", { actor: "Verseborn", anim: "walk", dx: 32, facing: 3 }],
+      ["Glimmer", "Give me twenty minutes.", { actor: "Glimmer", anim: "melee", emote: "*", facing: 1 }],
+      ["Marla", "You fight the trials. You come back here. You get stronger."],
+      ["Verseborn", "And ideally remain mostly alive."],
+      ["Marla", "That too."],
+      ["Marla", "When you're ready, step into the trial."]
+    ]
+  },
+  {
+    id: "mira-welcome", recruit: "Mira", variant: "welcome", title: "Spare Blades", room: "training-room", preferred: ["Seerin", "Verseborn"],
+    cast: ["Verseborn", "Seerin", "Mira"],
+    build: ({ actors = [] }) => actors.includes("Seerin") ? [
+      ["Seerin", "You carry too many knives.", { actor: "Seerin", anim: "melee", facing: 3 }],
+      ["Mira", "And still not enough.", { actor: "Mira", anim: "melee", facing: 1 }],
+      ["Verseborn", "At last, a woman of refined priorities.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Seerin", "If you're staying, you train properly."],
+      ["Mira", "Then try to keep up."]
+    ] : [
+      ["Mira", "Show me where you keep the spare blades.", { actor: "Mira", anim: "melee", facing: 1 }],
+      ["Verseborn", "Hello to you too.", { actor: "Verseborn", anim: "magic", facing: 3 }],
       ["Mira", "I said spare blades. That was hello."],
       ["Verseborn", "Then welcome home. Try not to improve my posture."],
-      ["Mira", "No promises.", { actor: "Mira", anim: "walk", emote: "!", facing: 1 }]
+      ["Mira", "No promises."]
     ]
   },
   {
@@ -2842,18 +2864,19 @@ const RECRUIT_SCENES = [
   },
   {
     id: "seerin-welcome", recruit: "Seerin", variant: "welcome", title: "Practice Blades", room: "training-room", preferred: ["Mira", "Verseborn"],
-    build: ({ partner }) => partner === "Mira" ? [
-      ["Mira", "Three rounds. Winner gets the comfortable chair."],
-      ["Seerin", "You could simply offer me a seat."],
-      ["Mira", "Where is the hospitality in that?"],
-      ["Seerin", "Practice blades.", { actor: "Seerin", anim: "walk", emote: "!", facing: 1 }],
-      ["Mira", "You are going to fit in."]
+    cast: ["Verseborn", "Mira", "Seerin"],
+    build: ({ actors = [] }) => actors.includes("Mira") ? [
+      ["Verseborn", "You entered like a knight from a story.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Seerin", "I prefer prepared.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Mira", "That still sounds dramatic.", { actor: "Mira", anim: "walk", dx: -6, facing: 3 }],
+      ["Seerin", "Good. Then let's test your footing."],
+      ["Mira", "Now this feels like home."]
     ] : [
-      ["Verseborn", "There is a comfortable chair waiting for you."],
-      ["Seerin", "Will I have to duel someone for it?"],
-      ["Verseborn", "Only Mira. Possibly the chair."],
-      ["Seerin", "Practice blades, then.", { actor: "Seerin", anim: "walk", emote: "!", facing: 1 }],
-      ["Verseborn", "You are going to fit in."]
+      ["Verseborn", "You entered like a knight from a story.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Seerin", "I prefer prepared.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Verseborn", "Prepared can still be dramatic."],
+      ["Seerin", "Good. Then let's test your footing."],
+      ["Verseborn", "Practice blades. Understood."]
     ]
   },
   {
@@ -2879,14 +2902,20 @@ const RECRUIT_SCENES = [
     ]
   },
   {
-    id: "kael-welcome", recruit: "Kael", variant: "welcome", title: "A Quiet Shelf", room: "kael-library", preferred: ["Verseborn"],
-    build: () => [
-      ["Verseborn", "I saved you a shelf and a quiet corner."],
-      ["Kael", "Which one is rarer here?"],
-      ["Verseborn", "The shelf. Our quiet is mostly accidental."],
-      ["Kael", "Then I will guard both."],
-      ["Verseborn", "Welcome home, Kael."],
-      ["Kael", "Thank you. Quietly.", { actor: "Kael", emote: "...", facing: 1 }]
+    id: "kael-welcome", recruit: "Kael", variant: "welcome", title: "A Quiet Shelf", room: "kael-library", preferred: ["Glimmer", "Verseborn"],
+    cast: ["Verseborn", "Glimmer", "Kael"],
+    build: ({ actors = [] }) => actors.includes("Glimmer") ? [
+      ["Kael", "Before anything else, there are hall rules.", { actor: "Kael", anim: "block", facing: 1 }],
+      ["Verseborn", "A thrilling opening.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Glimmer", "Do unstable devices have a shelf?", { actor: "Glimmer", anim: "melee", facing: 3 }],
+      ["Kael", "No."],
+      ["Verseborn", "He truly is the spine of this place."]
+    ] : [
+      ["Kael", "Before anything else, there are hall rules.", { actor: "Kael", anim: "block", facing: 1 }],
+      ["Verseborn", "A thrilling opening.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Kael", "Books return to their shelves. Cups do not join them."],
+      ["Verseborn", "He truly is the spine of this place."],
+      ["Kael", "Someone has to be."]
     ]
   },
   {
@@ -2919,14 +2948,20 @@ const RECRUIT_SCENES = [
     ]
   },
   {
-    id: "torren-welcome", recruit: "Torren", variant: "welcome", title: "Sit Down", room: "torren-kitchen", preferred: ["Verseborn"],
-    build: () => [
-      ["Torren", "When did you last eat?"],
-      ["Verseborn", "Before our most recent brush with death."],
-      ["Torren", "Which one?"],
-      ["Verseborn", "..."],
-      ["Torren", "Sit down.", { actor: "Torren", anim: "walk", emote: "!", facing: 1 }],
-      ["Verseborn", "That might be the nicest threat I have heard all day."]
+    id: "torren-welcome", recruit: "Torren", variant: "welcome", title: "Sit Down", room: "torren-kitchen", preferred: ["Sparky", "Verseborn"],
+    cast: ["Verseborn", "Torren", "Sparky"],
+    build: ({ actors = [] }) => actors.includes("Sparky") ? [
+      ["Torren", "Good. Sit down.", { actor: "Torren", anim: "melee", facing: 1 }],
+      ["Verseborn", "An excellent first command.", { actor: "Verseborn", anim: "block", facing: 3 }],
+      ["Torren", "Stew first. Questions later."],
+      ["Sparky", "Prrrp!", { actor: "Sparky", anim: "walk", motion: "hop", facing: 1 }],
+      ["Torren", "No, you can't have the whole pot."]
+    ] : [
+      ["Torren", "Good. Sit down.", { actor: "Torren", anim: "melee", facing: 1 }],
+      ["Verseborn", "An excellent first command.", { actor: "Verseborn", anim: "block", facing: 3 }],
+      ["Torren", "Stew first. Questions later."],
+      ["Verseborn", "I may already trust you completely."],
+      ["Torren", "Taste it first."]
     ]
   },
   {
@@ -2959,14 +2994,32 @@ const RECRUIT_SCENES = [
     ]
   },
   {
-    id: "sparky-welcome", recruit: "Sparky", variant: "welcome", title: "A Shiny Welcome", room: "sparky-coop", preferred: ["Verseborn"],
-    build: () => [
-      ["Sparky", "Prrrp?"],
-      ["Verseborn", "For me?"],
-      ["Sparky", "Chrrp!", { actor: "Sparky", anim: "walk", emote: "*", facing: 1 }],
-      ["Verseborn", "A button, slightly singed and extremely shiny."],
-      ["Sparky", "Krrr."],
-      ["Verseborn", "I accept. Welcome home, tiny curator."]
+    id: "sparky-welcome", recruit: "Sparky", variant: "welcome", title: "A Shiny Welcome", room: "sparky-coop", preferred: ["Mira", "Seerin", "Verseborn"],
+    cast: ["Verseborn", "Mira", "Sparky", "Seerin"],
+    build: ({ actors = [] }) => actors.includes("Mira") && actors.includes("Seerin") ? [
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
+      ["Mira", "...That is unfairly cute.", { actor: "Mira", anim: "block", facing: 3 }],
+      ["Seerin", "He's adorable.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Verseborn", "Excellent. He has defeated you both."]
+    ] : actors.includes("Mira") ? [
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
+      ["Mira", "...That is unfairly cute.", { actor: "Mira", anim: "block", facing: 3 }],
+      ["Verseborn", "Excellent. He has defeated you."],
+      ["Sparky", "Chrrp!"]
+    ] : actors.includes("Seerin") ? [
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
+      ["Seerin", "He's adorable.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Verseborn", "Excellent. He has defeated you."],
+      ["Sparky", "Chrrp!"]
+    ] : [
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
+      ["Verseborn", "A flawless entrance."],
+      ["Sparky", "Chrrp!"],
+      ["Verseborn", "Yes. You may keep the title."]
     ]
   },
   {
@@ -2992,14 +3045,20 @@ const RECRUIT_SCENES = [
     ]
   },
   {
-    id: "glimmer-welcome", recruit: "Glimmer", variant: "welcome", title: "Bench Rights", room: "glimmer-lab", preferred: ["Verseborn"],
-    build: () => [
-      ["Verseborn", "The lab bench is yours."],
-      ["Glimmer", "All of it?"],
-      ["Verseborn", "Everything between the scorch marks."],
-      ["Glimmer", "Those are future scorch marks."],
-      ["Verseborn", "I admire the confidence."],
-      ["Glimmer", "You will admire the ventilation more.", { actor: "Glimmer", anim: "walk", emote: "!", facing: 1 }]
+    id: "glimmer-welcome", recruit: "Glimmer", variant: "welcome", title: "Bench Rights", room: "glimmer-lab", preferred: ["Kael", "Verseborn"],
+    cast: ["Verseborn", "Glimmer", "Kael"],
+    build: ({ actors = [] }) => actors.includes("Kael") ? [
+      ["Glimmer", "Good news. I improved it.", { actor: "Glimmer", anim: "melee", emote: "*", facing: 1 }],
+      ["Kael", "Why is it smoking?", { actor: "Kael", anim: "walk", dx: -6, facing: 3 }],
+      ["Glimmer", "Because progress is happening."],
+      ["Verseborn", "I admire the confidence. I fear the result.", { actor: "Verseborn", anim: "block", facing: 3 }],
+      ["Glimmer", "Both are correct."]
+    ] : [
+      ["Glimmer", "Good news. I improved it.", { actor: "Glimmer", anim: "melee", emote: "*", facing: 1 }],
+      ["Verseborn", "Why is it smoking?", { actor: "Verseborn", anim: "walk", dx: -6, facing: 3 }],
+      ["Glimmer", "Because progress is happening."],
+      ["Verseborn", "I admire the confidence. I fear the result."],
+      ["Glimmer", "Both are correct."]
     ]
   },
   {
@@ -4620,6 +4679,7 @@ function startHallBattles(continueGame = false) {
   updateSkillPointNotice();
   if (!loaded) saveGame(HALL_SAVE_KEY);
   showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - Stage 1 ready");
+  if (!loaded) playRecruitScene(RECRUIT_SCENES.find(scene => scene.id === EMBER_HALL_INTRO_ID));
 }
 
 function activateTitleSelection() {
@@ -4651,7 +4711,7 @@ function titleMenuPointerIndex(event) {
 
 function drawRecruitScene() {
   const scene = activeRecruitScene;
-  const image = recruitSceneImages[scene.room];
+  const image = scene.room === "trial-room" ? mapImages["ember-hall-battle"] : recruitSceneImages[scene.room];
   if (image) {
     const targetRatio = LOGICAL_WIDTH / LOGICAL_HEIGHT;
     const sourceWidth = Math.min(image.naturalWidth || image.width, (image.naturalHeight || image.height) * targetRatio);
@@ -4671,8 +4731,11 @@ function drawRecruitScene() {
     const isActing = actor.actionUntil > tick;
     const anim = isActing ? actor.anim : "idle";
     const idleBob = anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
-    drawFieldShadow(actor.x, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
-    drawSprite(actor.id, actor.x - 8, actor.baseline - 32 + idleBob, actor.facing, anim, tick);
+    const progress = isActing ? Math.min(1, Math.max(0, (tick - actor.actionStarted) / Math.max(1, actor.actionUntil - actor.actionStarted))) : 0;
+    const motionX = actor.motion === "circle" && isActing ? Math.sin(progress * Math.PI * 2) * 8 : 0;
+    const motionY = actor.motion === "circle" && isActing ? -5 + Math.cos(progress * Math.PI * 2) * 4 : actor.motion === "hop" && isActing ? -Math.sin(progress * Math.PI) * 8 : 0;
+    drawFieldShadow(actor.x + motionX, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
+    drawSprite(actor.id, actor.x + motionX - 8, actor.baseline + motionY - 32 + idleBob, actor.facing, anim, tick);
     if (actor.emote && actor.actionUntil > tick) {
       drawText(actor.emote, actor.x, actor.baseline - 40, "#fff0a8", 10, "center");
     }
@@ -6058,9 +6121,13 @@ function applyRecruitSceneAction(action) {
   const actor = activeRecruitScene.actors.find(entry => entry.id === action.actor);
   if (!actor) return;
   if (Number.isFinite(action.facing)) actor.facing = action.facing;
+  if (Number.isFinite(action.dx)) actor.x = Math.max(24, Math.min(LOGICAL_WIDTH - 24, actor.x + action.dx));
+  if (Number.isFinite(action.dy)) actor.baseline = Math.max(142, Math.min(LOGICAL_HEIGHT - 32, actor.baseline + action.dy));
   actor.anim = action.anim || "idle";
   actor.emote = action.emote || "";
-  actor.actionUntil = tick + (action.anim === "walk" ? 36 : 54);
+  actor.motion = action.motion || "";
+  actor.actionStarted = tick;
+  actor.actionUntil = tick + (Number.isFinite(action.duration) ? action.duration : action.anim === "walk" ? 36 : 54);
 }
 
 function nextTalk() {
@@ -6597,9 +6664,15 @@ function recruitScenePartner(scene) {
   return scene.preferred.find(id => available.includes(id)) || available.find(id => id === "Verseborn") || available[0] || null;
 }
 
+function recruitSceneActorAllowed(scene, id) {
+  return state.party.includes(id) || (scene.guests || []).includes(id);
+}
+
 function recruitSceneActors(scene, partner) {
-  const ids = [partner, scene.recruit].filter((id, index, all) => id && all.indexOf(id) === index && state.party.includes(id));
-  const positions = ids.length === 1 ? [128] : [82, 174];
+  const requested = scene.cast?.length ? scene.cast : [partner, scene.recruit];
+  const ids = requested.filter((id, index, all) => id && all.indexOf(id) === index && recruitSceneActorAllowed(scene, id));
+  const positionSets = { 1: [128], 2: [82, 174], 3: [50, 128, 206], 4: [32, 96, 160, 224] };
+  const positions = positionSets[ids.length] || ids.map((_, index) => 32 + index * 48);
   return ids.map((id, index) => ({
     id,
     x: positions[index],
@@ -6607,6 +6680,8 @@ function recruitSceneActors(scene, partner) {
     facing: index === 0 && ids.length > 1 ? 3 : 1,
     anim: "idle",
     emote: "",
+    motion: "",
+    actionStarted: 0,
     actionUntil: 0
   }));
 }
@@ -6624,9 +6699,9 @@ function playRecruitScene(scene, options = {}) {
   if (!scene || !state.party.includes(scene.recruit)) return false;
   const history = loadRecruitSceneHistory();
   const partner = recruitScenePartner(scene);
-  if (!partner) return false;
+  if (!partner && !scene.allowWithoutPartner) return false;
   const actors = recruitSceneActors(scene, partner);
-  if (!actors.every(actor => state.party.includes(actor.id))) return false;
+  if (!actors.length || !actors.every(actor => recruitSceneActorAllowed(scene, actor.id))) return false;
   if (!options.replay) {
     if (!history.seen.includes(scene.id)) history.seen.push(scene.id);
     history.lastByRecruit[scene.recruit] = scene.id;
@@ -6638,7 +6713,7 @@ function playRecruitScene(scene, options = {}) {
   activeRecruitScene = { ...scene, actors, replay: Boolean(options.replay) };
   el.menu.classList.add("hidden");
   document.querySelector(".menu-tabs").classList.remove("hidden");
-  const lines = scene.build({ recruit: scene.recruit, partner, history });
+  const lines = scene.build({ recruit: scene.recruit, partner, history, actors: actors.map(actor => actor.id) });
   showTalk(lines, { portraits: actors.map(actor => actor.id), skippable: true, after: completeRecruitScene });
   return true;
 }
@@ -6660,13 +6735,20 @@ function playUnseenArrival(id) {
 function sceneMemoriesHtml() {
   if (state.gameMode !== "hallBattles") return "";
   const history = loadRecruitSceneHistory();
-  const unseenArrivals = HALL_RECRUITS.map(recruit => {
+  const intro = RECRUIT_SCENES.find(scene => scene.id === EMBER_HALL_INTRO_ID);
+  const unseenIntro = intro && !history.seen.includes(intro.id)
+    ? `<button type="button" data-play-arrival-scene="${intro.id}">${intro.title}</button>`
+    : "";
+  const unseenArrivals = [unseenIntro, ...HALL_RECRUITS.map(recruit => {
     if (!state.party.includes(recruit)) return "";
     const welcome = RECRUIT_SCENES.find(scene => scene.recruit === recruit && scene.variant === "welcome");
     if (!welcome || history.seen.includes(welcome.id)) return "";
     return `<button type="button" data-play-arrival-scene="${welcome.id}">${recruit}: ${welcome.title}</button>`;
-  }).filter(Boolean);
-  const groups = HALL_RECRUITS.map(recruit => {
+  })].filter(Boolean);
+  const introGroup = intro && history.seen.includes(intro.id)
+    ? `<section class="scene-memory-group"><strong>Ember Hall</strong><div><button type="button" data-replay-scene="${intro.id}">${intro.title}</button></div></section>`
+    : "";
+  const groups = introGroup + HALL_RECRUITS.map(recruit => {
     if (!state.party.includes(recruit)) return "";
     const scenes = RECRUIT_SCENES.filter(scene => scene.recruit === recruit && history.seen.includes(scene.id));
     if (!scenes.length) return "";
