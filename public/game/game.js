@@ -120,7 +120,7 @@ const titleTwinkles = [
   { x: 1115, y: 344, phase: 220, color: "#c7e8ff" }
 ];
 const TITLE_IDLE_FRAME_SEQUENCE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const TITLE_IDLE_FRAME_DURATIONS = TITLE_IDLE_FRAME_SEQUENCE.map(() => 400);
+const TITLE_IDLE_FRAME_DURATIONS = TITLE_IDLE_FRAME_SEQUENCE.map(() => 700);
 
 const portraitSources = {
   Verseborn: "assets/portraits/verseborn.png",
