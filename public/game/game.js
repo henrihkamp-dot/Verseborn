@@ -119,10 +119,8 @@ const titleTwinkles = [
   { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
   { x: 1115, y: 344, phase: 220, color: "#c7e8ff" }
 ];
-const TITLE_IDLE_FRAME_SEQUENCE = [0, 1, 2, 3, 2, 1];
-const TITLE_IDLE_FRAME_DURATIONS = [900, 700, 700, 900, 700, 700];
-const TITLE_PRESS_START_PATCH = { x: 288, y: 336, width: 192, height: 23 };
-const TITLE_PRESS_START_BLINK_MS = 5200;
+const TITLE_IDLE_FRAME_SEQUENCE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const TITLE_IDLE_FRAME_DURATIONS = TITLE_IDLE_FRAME_SEQUENCE.map(() => 400);
 
 const portraitSources = {
   Verseborn: "assets/portraits/verseborn.png",
@@ -817,7 +815,7 @@ function loadTitleImage() {
 }
 
 function loadTitleIdleFrames() {
-  return Promise.all([1, 2, 3, 4].map(frame => new Promise(resolve => {
+  return Promise.all(Array.from({ length: 10 }, (_, index) => index + 1).map(frame => new Promise(resolve => {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = () => resolve(null);
@@ -4531,21 +4529,6 @@ function titleIdleFrameIndex(now) {
   return 0;
 }
 
-function drawTitlePressStartBlink(layout, now) {
-  if (titleIdleFrames.length < 4 || titleIdleFrames.some(image => !image)) return;
-  const blinkTime = ((now % TITLE_PRESS_START_BLINK_MS) + TITLE_PRESS_START_BLINK_MS) % TITLE_PRESS_START_BLINK_MS;
-  const source = blinkTime >= 3850 && blinkTime < 4450 ? titleIdleFrames[2] : titleIdleFrames[0];
-  const patch = TITLE_PRESS_START_PATCH;
-  ctx.drawImage(
-    source,
-    patch.x, patch.y, patch.width, patch.height,
-    Math.round(layout.x + patch.x / source.naturalWidth * layout.width),
-    Math.round(layout.y + patch.y / source.naturalHeight * layout.height),
-    Math.round(patch.width / source.naturalWidth * layout.width),
-    Math.round(patch.height / source.naturalHeight * layout.height)
-  );
-}
-
 function drawTitle(now = performance.now()) {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4564,8 +4547,7 @@ function drawTitle(now = performance.now()) {
   const layout = titleImageLayout();
   const animatedBackground = titleIdleFrames[titleIdleFrameIndex(now)] || titleImage;
   ctx.drawImage(animatedBackground, layout.x, layout.y, layout.width, layout.height);
-  drawTitlePressStartBlink(layout, now);
-  if (titleIdleFrames.length < 4 || titleIdleFrames.some(image => !image)) drawTitleTwinkles(layout);
+  if (titleIdleFrames.length < 10 || titleIdleFrames.some(image => !image)) drawTitleTwinkles(layout);
   drawTitleMenu(layout);
   ctx.restore();
 }
