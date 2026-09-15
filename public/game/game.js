@@ -119,6 +119,10 @@ const titleTwinkles = [
   { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
   { x: 1115, y: 344, phase: 220, color: "#c7e8ff" }
 ];
+const TITLE_IDLE_FRAME_SEQUENCE = [0, 1, 2, 3, 2, 1];
+const TITLE_IDLE_FRAME_DURATIONS = [150, 120, 120, 150, 120, 120];
+const TITLE_PRESS_START_PATCH = { x: 288, y: 336, width: 192, height: 23 };
+const TITLE_PRESS_START_BLINK_MS = 2200;
 
 const portraitSources = {
   Verseborn: "assets/portraits/verseborn.png",
@@ -416,6 +420,7 @@ let enemyAttackSheet = null;
 let worldEnemySheet = null;
 let npcSheet = null;
 let titleImage = null;
+let titleIdleFrames = [];
 let stageSelectorImage = null;
 let chestSheet = null;
 let echoProjectileSheet = null;
@@ -811,6 +816,15 @@ function loadTitleImage() {
   });
 }
 
+function loadTitleIdleFrames() {
+  return Promise.all([1, 2, 3, 4].map(frame => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = `assets/maps/title-idle-${frame}.png`;
+  }))).then(images => { titleIdleFrames = images; });
+}
+
 function loadStageSelectorImage() {
   return new Promise(resolve => {
     const image = new Image();
@@ -850,6 +864,7 @@ Promise.all([
   loadWorldEnemySheet(),
   loadNpcSheet(),
   loadTitleImage(),
+  loadTitleIdleFrames(),
   loadStageSelectorImage(),
   loadMarlaBattleSheet(),
   loadEchoProjectileSheet(),
@@ -4506,7 +4521,32 @@ function drawSpark(x, y, color, frame) {
   ctx.strokeRect(x - r / 2, y - r / 2, r, r);
 }
 
-function drawTitle() {
+function titleIdleFrameIndex(now) {
+  const total = TITLE_IDLE_FRAME_DURATIONS.reduce((sum, duration) => sum + duration, 0);
+  let elapsed = ((now % total) + total) % total;
+  for (let index = 0; index < TITLE_IDLE_FRAME_SEQUENCE.length; index++) {
+    if (elapsed < TITLE_IDLE_FRAME_DURATIONS[index]) return TITLE_IDLE_FRAME_SEQUENCE[index];
+    elapsed -= TITLE_IDLE_FRAME_DURATIONS[index];
+  }
+  return 0;
+}
+
+function drawTitlePressStartBlink(layout, now) {
+  if (titleIdleFrames.length < 4 || titleIdleFrames.some(image => !image)) return;
+  const blinkTime = ((now % TITLE_PRESS_START_BLINK_MS) + TITLE_PRESS_START_BLINK_MS) % TITLE_PRESS_START_BLINK_MS;
+  const source = blinkTime >= 1600 && blinkTime < 2050 ? titleIdleFrames[2] : titleIdleFrames[0];
+  const patch = TITLE_PRESS_START_PATCH;
+  ctx.drawImage(
+    source,
+    patch.x, patch.y, patch.width, patch.height,
+    Math.round(layout.x + patch.x / source.naturalWidth * layout.width),
+    Math.round(layout.y + patch.y / source.naturalHeight * layout.height),
+    Math.round(patch.width / source.naturalWidth * layout.width),
+    Math.round(patch.height / source.naturalHeight * layout.height)
+  );
+}
+
+function drawTitle(now = performance.now()) {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = true;
@@ -4522,7 +4562,9 @@ function drawTitle() {
   }
 
   const layout = titleImageLayout();
-  ctx.drawImage(titleImage, layout.x, layout.y, layout.width, layout.height);
+  const animatedBackground = titleIdleFrames[titleIdleFrameIndex(now)] || titleImage;
+  ctx.drawImage(animatedBackground, layout.x, layout.y, layout.width, layout.height);
+  drawTitlePressStartBlink(layout, now);
   drawTitleTwinkles(layout);
   drawTitleMenu(layout);
   ctx.restore();
@@ -6001,7 +6043,7 @@ function drawMenuBack() {
   });
 }
 
-function draw() {
+function draw(now = performance.now()) {
   tick++;
   ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
   ctx.imageSmoothingEnabled = false;
@@ -6013,7 +6055,7 @@ function draw() {
   }
   if (mode === "walk" && !heldDirection && fieldDestination && tick >= nextFieldMove) advanceFieldDestination();
   if (mode === "walk") updateFieldEnemies();
-  if (mode === "title") drawTitle();
+  if (mode === "title") drawTitle(now);
   else if (mode === "atlas") drawAtlas();
   else if (mode === "battle") drawBattleScene();
   else if (mode === "menu") drawMenuBack();
