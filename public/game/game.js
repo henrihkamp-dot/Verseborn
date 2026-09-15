@@ -102,9 +102,14 @@ let gearInstances = {};
 let audioContext = null;
 let screenSlide = null;
 let titleMenuIndex = 0;
+let titleSubmenuIndex = 0;
 let saveTimer = null;
 
-const titleMenuEntries = ["Story Mode", "Continue Story Mode", "Ember Hall Battles", "Continue Ember Hall Battles"];
+const titleMenuEntries = ["Story Mode", "Ember Hall Battles"];
+const titleSubmenuEntries = [
+  ["New Story", "Continue Story"],
+  ["New Run", "Continue Run"]
+];
 const SAVE_KEY = "verseborn-jrpg-save-v2";
 const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
 const HALL_SCENE_HISTORY_KEY = "verseborn-hall-scene-history-v1";
@@ -4546,51 +4551,93 @@ function drawTitleTwinkles(layout) {
 function drawTitleMenu(layout) {
   const sx = value => Math.round(layout.x + value * layout.scale);
   const sy = value => Math.round(layout.y + value * layout.scale);
-  const panelX = sx(570);
-  const panelY = sy(438);
-  const panelWidth = Math.round(310 * layout.scale);
-  const panelHeight = Math.round((titleMenuEntries.length * 49 + 4) * layout.scale);
+  const panelX = sx(524);
+  const panelY = sy(412);
+  const panelWidth = Math.round(400 * layout.scale);
+  const panelHeight = Math.round(286 * layout.scale);
   ctx.fillStyle = "rgba(5, 11, 39, 0.97)";
   ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
   ctx.strokeStyle = "#9c6fd2";
   ctx.lineWidth = Math.max(1, Math.round(2 * layout.scale));
   ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
 
-  const fontSize = Math.max(14, Math.round(30 * layout.scale));
-  ctx.font = `bold ${fontSize}px "Courier New", monospace`;
+  const mainFontSize = Math.max(14, Math.round(30 * layout.scale));
+  const subFontSize = Math.max(12, Math.round(23 * layout.scale));
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   titleMenuEntries.forEach((entry, index) => {
-    ctx.font = `bold ${fontSize}px "Courier New", monospace`;
-    const maxLabelWidth = Math.round(246 * layout.scale);
+    ctx.font = `bold ${mainFontSize}px "Courier New", monospace`;
+    const maxLabelWidth = Math.round(310 * layout.scale);
     const measuredWidth = ctx.measureText(entry).width;
     if (measuredWidth > maxLabelWidth) {
-      const fittedSize = Math.max(12, Math.floor(fontSize * maxLabelWidth / measuredWidth));
+      const fittedSize = Math.max(12, Math.floor(mainFontSize * maxLabelWidth / measuredWidth));
       ctx.font = `bold ${fittedSize}px "Courier New", monospace`;
     }
-    const top = sy(443 + index * 49);
-    const height = Math.round(43 * layout.scale);
+    const top = sy(430 + index * 52);
+    const height = Math.round(44 * layout.scale);
     if (index === titleMenuIndex) {
       ctx.fillStyle = "rgba(77, 35, 126, 0.78)";
-      ctx.fillRect(sx(576), top, Math.round(296 * layout.scale), height);
+      ctx.fillRect(sx(540), top, Math.round(368 * layout.scale), height);
     }
-    const unavailableContinue = (index === 1 && !savedGameExists()) || (index === 3 && !savedGameExists(HALL_SAVE_KEY));
-    ctx.fillStyle = unavailableContinue ? "#746d77" : index === titleMenuIndex ? "#fff0bd" : "#f0e4c6";
-    ctx.fillText(entry, sx(732), sy(465 + index * 49));
+    ctx.fillStyle = index === titleMenuIndex ? "#fff0bd" : "#c8bdd0";
+    ctx.fillText(entry, sx(724), sy(452 + index * 52));
   });
 
   const arrowBob = Math.round(Math.sin(tick / 18) * 2);
-  ctx.font = `bold ${fontSize}px "Courier New", monospace`;
+  ctx.font = `bold ${mainFontSize}px "Courier New", monospace`;
   ctx.fillStyle = "#ffd46f";
   ctx.textAlign = "center";
-  ctx.fillText(">", sx(612) + arrowBob, sy(465 + titleMenuIndex * 49));
+  ctx.fillText(">", sx(568) + arrowBob, sy(452 + titleMenuIndex * 52));
+
+  ctx.strokeStyle = "rgba(156, 111, 210, 0.58)";
+  ctx.lineWidth = Math.max(1, Math.round(layout.scale));
+  ctx.beginPath();
+  ctx.moveTo(sx(560), sy(543));
+  ctx.lineTo(sx(888), sy(543));
+  ctx.stroke();
+
+  const submenu = titleSubmenuEntries[titleMenuIndex];
+  submenu.forEach((entry, index) => {
+    const unavailable = index === 1 && !savedGameExists(titleMenuIndex === 0 ? SAVE_KEY : HALL_SAVE_KEY);
+    const selected = index === titleSubmenuIndex;
+    const top = sy(552 + index * 38);
+    if (selected) {
+      ctx.fillStyle = "rgba(49, 28, 82, 0.82)";
+      ctx.fillRect(sx(584), top, Math.round(304 * layout.scale), Math.round(32 * layout.scale));
+    }
+    ctx.font = `${selected ? "bold " : ""}${subFontSize}px "Courier New", monospace`;
+    ctx.fillStyle = unavailable ? "#746d77" : selected ? "#ffe09a" : "#bfb2c8";
+    ctx.textAlign = "left";
+    ctx.fillText(entry, sx(636), sy(568 + index * 38));
+    if (selected) {
+      ctx.fillStyle = unavailable ? "#746d77" : "#ffd46f";
+      ctx.textAlign = "center";
+      ctx.fillText(">", sx(610) + arrowBob, sy(568 + index * 38));
+    }
+  });
+
+  const promptAlpha = .72 + Math.sin(tick / 28) * .18;
+  ctx.globalAlpha = promptAlpha;
+  ctx.font = `bold ${Math.max(12, Math.round(22 * layout.scale))}px "Courier New", monospace`;
+  ctx.fillStyle = "#f6cf75";
+  ctx.textAlign = "center";
+  ctx.fillText("PRESS START", sx(724), sy(674));
+  ctx.globalAlpha = 1;
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
 }
 
-function moveTitleSelection(direction) {
+function moveTitleMode(direction) {
   if (!runtimeAssetsReady) return;
   titleMenuIndex = (titleMenuIndex + direction + titleMenuEntries.length) % titleMenuEntries.length;
+  titleSubmenuIndex = 0;
+  playSfx("menu");
+}
+
+function moveTitleSubmenu(direction) {
+  if (!runtimeAssetsReady) return;
+  const submenu = titleSubmenuEntries[titleMenuIndex];
+  titleSubmenuIndex = (titleSubmenuIndex + direction + submenu.length) % submenu.length;
   playSfx("menu");
 }
 
@@ -4684,20 +4731,21 @@ function startHallBattles(continueGame = false) {
 
 function activateTitleSelection() {
   if (!runtimeAssetsReady) return;
-  if ((titleMenuIndex === 1 && !savedGameExists()) || (titleMenuIndex === 3 && !savedGameExists(HALL_SAVE_KEY))) {
+  const saveKey = titleMenuIndex === 0 ? SAVE_KEY : HALL_SAVE_KEY;
+  if (titleSubmenuIndex === 1 && !savedGameExists(saveKey)) {
     playSfx("menu");
     return;
   }
-  if (titleMenuIndex === 2) {
+  if (titleMenuIndex === 1 && titleSubmenuIndex === 0) {
     if (savedGameExists(HALL_SAVE_KEY) && !window.confirm("Start a new Ember Hall run? Your current Hall progress and Scene Memories will be erased.")) return;
     playSfx("menu");
     return startHallBattles(false);
   }
-  if (titleMenuIndex === 3) return startHallBattles(true);
-  startTitleGame(titleMenuIndex === 1);
+  if (titleMenuIndex === 1) return startHallBattles(true);
+  startTitleGame(titleSubmenuIndex === 1);
 }
 
-function titleMenuPointerIndex(event) {
+function titleMenuPointerTarget(event) {
   if (!titleImage) return null;
   const rect = canvas.getBoundingClientRect();
   const canvasX = (event.clientX - rect.left) * canvas.width / rect.width;
@@ -4705,8 +4753,16 @@ function titleMenuPointerIndex(event) {
   const layout = titleImageLayout();
   const sourceX = (canvasX - layout.x) / layout.scale;
   const sourceY = (canvasY - layout.y) / layout.scale;
-  if (sourceX < 570 || sourceX > 880 || sourceY < 438 || sourceY > 438 + titleMenuEntries.length * 49 + 4) return null;
-  return Math.max(0, Math.min(titleMenuEntries.length - 1, Math.floor((sourceY - 438) / 49)));
+  if (sourceX >= 540 && sourceX <= 908) {
+    if (sourceY >= 430 && sourceY <= 474) return { kind: "mode", index: 0 };
+    if (sourceY >= 482 && sourceY <= 526) return { kind: "mode", index: 1 };
+  }
+  if (sourceX >= 584 && sourceX <= 888) {
+    if (sourceY >= 552 && sourceY <= 584) return { kind: "action", index: 0 };
+    if (sourceY >= 590 && sourceY <= 622) return { kind: "action", index: 1 };
+    if (sourceY >= 650 && sourceY <= 690) return { kind: "confirm", index: titleSubmenuIndex };
+  }
+  return null;
 }
 
 function drawRecruitScene() {
@@ -9339,8 +9395,10 @@ function handleControl(control) {
   unlockMusic();
   if (mode === "title") {
     if (control === "confirm") activateTitleSelection();
-    else if (control === "up" || control === "left") moveTitleSelection(-1);
-    else if (control === "down" || control === "right") moveTitleSelection(1);
+    else if (control === "up") moveTitleMode(-1);
+    else if (control === "down") moveTitleMode(1);
+    else if (control === "left") moveTitleSubmenu(-1);
+    else if (control === "right") moveTitleSubmenu(1);
     return;
   }
   if (mode === "hallMap") {
@@ -9534,9 +9592,15 @@ canvas.addEventListener("pointerdown", event => {
 
 canvas.addEventListener("click", event => {
   if (mode === "title") {
-    const index = titleMenuPointerIndex(event);
-    if (index !== null) {
-      titleMenuIndex = index;
+    const target = titleMenuPointerTarget(event);
+    if (target?.kind === "mode") {
+      titleMenuIndex = target.index;
+      titleSubmenuIndex = 0;
+      playSfx("menu");
+    } else if (target?.kind === "action") {
+      titleSubmenuIndex = target.index;
+      activateTitleSelection();
+    } else if (target?.kind === "confirm") {
       activateTitleSelection();
     }
     return;
