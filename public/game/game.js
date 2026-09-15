@@ -78,6 +78,8 @@ let selectedGearSlot = "weapon";
 let selectedGearRef = null;
 const gearBrowser = {
   search: "",
+  stats: [],
+  statMatch: "any",
   affixes: [],
   affixMatch: "any",
   slot: "all",
@@ -1735,9 +1737,17 @@ const GEAR_SORT_FIELDS = [
   ["speed", "Speed"]
 ];
 
+const GEAR_STAT_FIELDS = [
+  ["str", "STR"],
+  ["agi", "AGI"],
+  ["mag", "MAG"],
+  ["stam", "STAM"],
+  ["echo", "ECHO"]
+];
+
 function gearAffixFacet(entry) {
-  if (entry.type === "statPct") return { key: `stat:${entry.stat}`, label: entry.stat.toUpperCase() };
-  if (entry.type === "hpPct") return { key: "stat:hp", label: "HP" };
+  if (entry.type === "statPct") return { key: `statPct:${entry.stat}`, label: `${entry.stat.toUpperCase()} %` };
+  if (entry.type === "hpPct") return { key: "statPct:hp", label: "HP %" };
   if (entry.type === "statusOnHit") return { key: `status:${entry.status}`, label: entry.status[0].toUpperCase() + entry.status.slice(1) };
   if (entry.type === "statusResistance") return { key: `resist:${entry.status}`, label: `${entry.status[0].toUpperCase() + entry.status.slice(1)} Resistance` };
   const labels = {
@@ -1763,6 +1773,20 @@ function gearAffixOptions() {
     options.set(facet.key, facet.label);
   }));
   return [...options].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function gearStatOptions() {
+  return GEAR_STAT_FIELDS
+    .filter(([key]) => ownedGearRefs().some(ref => (Number(gearByName(ref)?.stats?.[key]) || 0) > 0))
+    .map(([key, label]) => ({ key, label }));
+}
+
+function gearHasStat(ref, key) {
+  return (Number(gearByName(ref)?.stats?.[key]) || 0) > 0;
+}
+
+function gearSortForStat(key) {
+  return key === "stam" ? "def" : key;
 }
 
 function gearHasAffixFacet(ref, key) {
@@ -1838,6 +1862,10 @@ function filteredSortedGear(entries) {
     const isEquipped = equippedGearUsers(ref).length > 0;
     if (gearBrowser.equipped === "equipped" && !isEquipped) return false;
     if (gearBrowser.equipped === "unequipped" && isEquipped) return false;
+    if (gearBrowser.stats.length) {
+      const matches = gearBrowser.stats.map(key => gearHasStat(ref, key));
+      if (gearBrowser.statMatch === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) return false;
+    }
     if (gearBrowser.affixes.length) {
       const matches = gearBrowser.affixes.map(key => gearHasAffixFacet(ref, key));
       if (gearBrowser.affixMatch === "all" ? !matches.every(Boolean) : !matches.some(Boolean)) return false;
@@ -1863,6 +1891,8 @@ function filteredSortedGear(entries) {
 function resetGearBrowser() {
   Object.assign(gearBrowser, {
     search: "",
+    stats: [],
+    statMatch: "any",
     affixes: [],
     affixMatch: "any",
     slot: "all",
@@ -1878,12 +1908,16 @@ function resetGearBrowser() {
 }
 
 function gearBrowserToolbarHtml(visibleCount, totalCount) {
+  const statOptions = gearStatOptions();
   const affixOptions = gearAffixOptions();
   if (gearBrowser.sort.startsWith("affix:") && !gearBrowser.affixes.includes(gearBrowser.sort.slice(6))) {
     gearBrowser.sort = "newest";
   }
   const selectedAffixSorts = affixOptions.filter(option => gearBrowser.affixes.includes(option.key));
   const heroOptions = state.party.map(id => `<option value="${id}" ${gearBrowser.usability === id ? "selected" : ""}>Usable by ${id}</option>`).join("");
+  const statChecks = statOptions.length
+    ? statOptions.map(option => `<label><input type="checkbox" data-gear-stat="${option.key}" ${gearBrowser.stats.includes(option.key) ? "checked" : ""}> ${escapeMarkup(option.label)}</label>`).join("")
+    : "<small>No fixed equipment stats found.</small>";
   const affixChecks = affixOptions.length
     ? affixOptions.map(option => `<label><input type="checkbox" data-gear-affix="${option.key}" ${gearBrowser.affixes.includes(option.key) ? "checked" : ""}> ${escapeMarkup(option.label)}</label>`).join("")
     : "<small>No rolled affixes owned yet.</small>";
@@ -1891,7 +1925,7 @@ function gearBrowserToolbarHtml(visibleCount, totalCount) {
     ...GEAR_SORT_FIELDS.map(([key, label]) => `<option value="${key}" ${gearBrowser.sort === key ? "selected" : ""}>${label}</option>`),
     ...selectedAffixSorts.map(option => `<option value="affix:${option.key}" ${gearBrowser.sort === `affix:${option.key}` ? "selected" : ""}>${escapeMarkup(option.label)} strength</option>`)
   ].join("");
-  const filterCount = [gearBrowser.search, gearBrowser.affixes.length, gearBrowser.slot !== "all", gearBrowser.rarity !== "all", gearBrowser.usability !== "all", gearBrowser.equipped !== "all"].filter(Boolean).length;
+  const filterCount = [gearBrowser.search, gearBrowser.stats.length, gearBrowser.affixes.length, gearBrowser.slot !== "all", gearBrowser.rarity !== "all", gearBrowser.usability !== "all", gearBrowser.equipped !== "all"].filter(Boolean).length;
   const directionHigh = gearBrowser.sort === "name" ? "Z-A" : "Highest first";
   const directionLow = gearBrowser.sort === "name" ? "A-Z" : "Lowest first";
   return `<section class="gear-browser" aria-label="Gear search, filters and sorting">
@@ -1903,6 +1937,7 @@ function gearBrowserToolbarHtml(visibleCount, totalCount) {
           <label>Rarity<select data-gear-filter="rarity"><option value="all">All rarities</option>${RARITY_ORDER.map(rarity => `<option value="${rarity}" ${gearBrowser.rarity === rarity ? "selected" : ""}>${rarity}</option>`).join("")}</select></label>
           <label>Usability<select data-gear-filter="usability"><option value="all">All characters</option><option value="selected" ${gearBrowser.usability === "selected" ? "selected" : ""}>Selected hero</option>${heroOptions}</select></label>
           <label>Equipment<select data-gear-filter="equipped"><option value="all">Equipped + unequipped</option><option value="equipped" ${gearBrowser.equipped === "equipped" ? "selected" : ""}>Equipped only</option><option value="unequipped" ${gearBrowser.equipped === "unequipped" ? "selected" : ""}>Unequipped only</option></select></label>
+          <fieldset><legend>Fixed stats</legend><div class="gear-match-mode"><button type="button" data-gear-stat-match="any" class="${gearBrowser.statMatch === "any" ? "is-active" : ""}">ANY</button><button type="button" data-gear-stat-match="all" class="${gearBrowser.statMatch === "all" ? "is-active" : ""}">ALL</button></div><div class="gear-affix-options">${statChecks}</div></fieldset>
           <fieldset><legend>Affixes</legend><div class="gear-match-mode"><button type="button" data-gear-match="any" class="${gearBrowser.affixMatch === "any" ? "is-active" : ""}">ANY</button><button type="button" data-gear-match="all" class="${gearBrowser.affixMatch === "all" ? "is-active" : ""}">ALL</button></div><div class="gear-affix-options">${affixChecks}</div></fieldset>
         </div>
       </details>
@@ -1931,10 +1966,30 @@ function bindGearBrowserControls() {
     selectedGearRef = null;
     renderMenu();
   });
+  el.menuBody.querySelectorAll("[data-gear-stat]").forEach(control => control.onchange = () => {
+    gearBrowser.stats = control.checked
+      ? [...new Set([...gearBrowser.stats, control.dataset.gearStat])]
+      : gearBrowser.stats.filter(key => key !== control.dataset.gearStat);
+    if (control.checked) {
+      gearBrowser.sort = gearSortForStat(control.dataset.gearStat);
+      gearBrowser.direction = "desc";
+    }
+    selectedGearRef = null;
+    renderMenu();
+  });
+  el.menuBody.querySelectorAll("[data-gear-stat-match]").forEach(button => button.onclick = () => {
+    gearBrowser.statMatch = button.dataset.gearStatMatch;
+    selectedGearRef = null;
+    renderMenu();
+  });
   el.menuBody.querySelectorAll("[data-gear-affix]").forEach(control => control.onchange = () => {
     gearBrowser.affixes = control.checked
       ? [...new Set([...gearBrowser.affixes, control.dataset.gearAffix])]
       : gearBrowser.affixes.filter(key => key !== control.dataset.gearAffix);
+    if (control.checked) {
+      gearBrowser.sort = `affix:${control.dataset.gearAffix}`;
+      gearBrowser.direction = "desc";
+    }
     selectedGearRef = null;
     renderMenu();
   });
