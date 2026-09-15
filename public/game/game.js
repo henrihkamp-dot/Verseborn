@@ -2807,9 +2807,9 @@ const RECRUIT_SCENES = [
     id: EMBER_HALL_INTRO_ID, recruit: "Verseborn", variant: "welcome", title: "Welcome to Ember Hall", room: "trial-room", preferred: [],
     cast: ["Verseborn", "Marla", "Glimmer"], guests: ["Marla", "Glimmer"], allowWithoutPartner: true,
     build: () => [
-      ["Marla", "So. This is Ember Hall.", { actor: "Marla", anim: "walk", facing: 3 }],
-      ["Verseborn", "I expected more banners. Possibly a choir.", { actor: "Verseborn", anim: "walk", dx: 32, facing: 3 }],
-      ["Glimmer", "Give me twenty minutes.", { actor: "Glimmer", anim: "melee", emote: "*", facing: 1 }],
+      ["Marla", "So. This is Ember Hall.", { actor: "Marla", anim: "melee", motion: "welcome-step", dx: 5, facing: 3, duration: 72 }],
+      ["Verseborn", "I expected more banners. Possibly a choir.", { actor: "Verseborn", anim: "walk", motion: "entrance", dx: 32, facing: 3, duration: 90 }],
+      ["Glimmer", "Give me twenty minutes.", { actor: "Glimmer", anim: "melee", motion: "tool-tap", effect: "spark", facing: 1, duration: 84 }],
       ["Marla", "You fight the trials. You come back here. You get stronger."],
       ["Verseborn", "And ideally remain mostly alive."],
       ["Marla", "That too."],
@@ -2820,14 +2820,14 @@ const RECRUIT_SCENES = [
     id: "mira-welcome", recruit: "Mira", variant: "welcome", title: "Spare Blades", room: "training-room", preferred: ["Seerin", "Verseborn"],
     cast: ["Verseborn", "Seerin", "Mira"],
     build: ({ actors = [] }) => actors.includes("Seerin") ? [
-      ["Seerin", "You carry too many knives.", { actor: "Seerin", anim: "melee", facing: 3 }],
-      ["Mira", "And still not enough.", { actor: "Mira", anim: "melee", facing: 1 }],
-      ["Verseborn", "At last, a woman of refined priorities.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Seerin", "You carry too many knives.", { actor: "Seerin", anim: "melee", motion: "practice-strike", facing: 3, duration: 108, with: [{ actor: "Mira", anim: "melee", motion: "spar-dodge", facing: 1, duration: 108 }] }],
+      ["Mira", "And still not enough."],
+      ["Verseborn", "At last, a woman of refined priorities.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
       ["Seerin", "If you're staying, you train properly."],
       ["Mira", "Then try to keep up."]
     ] : [
-      ["Mira", "Show me where you keep the spare blades.", { actor: "Mira", anim: "melee", facing: 1 }],
-      ["Verseborn", "Hello to you too.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Mira", "Show me where you keep the spare blades.", { actor: "Mira", anim: "melee", motion: "dagger-flip", facing: 1, duration: 78 }],
+      ["Verseborn", "Hello to you too.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
       ["Mira", "I said spare blades. That was hello."],
       ["Verseborn", "Then welcome home. Try not to improve my posture."],
       ["Mira", "No promises."]
@@ -2866,14 +2866,14 @@ const RECRUIT_SCENES = [
     id: "seerin-welcome", recruit: "Seerin", variant: "welcome", title: "Practice Blades", room: "training-room", preferred: ["Mira", "Verseborn"],
     cast: ["Verseborn", "Mira", "Seerin"],
     build: ({ actors = [] }) => actors.includes("Mira") ? [
-      ["Verseborn", "You entered like a knight from a story.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Seerin", "I prefer prepared.", { actor: "Seerin", anim: "block", facing: 1 }],
-      ["Mira", "That still sounds dramatic.", { actor: "Mira", anim: "walk", dx: -6, facing: 3 }],
+      ["Verseborn", "You entered like a knight from a story.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Seerin", "I prefer prepared.", { actor: "Seerin", anim: "melee", motion: "practice-strike", facing: 1, duration: 108, with: [{ actor: "Mira", anim: "melee", motion: "spar-dodge", facing: 3, duration: 108 }] }],
+      ["Mira", "That still sounds dramatic."],
       ["Seerin", "Good. Then let's test your footing."],
       ["Mira", "Now this feels like home."]
     ] : [
-      ["Verseborn", "You entered like a knight from a story.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Seerin", "I prefer prepared.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Verseborn", "You entered like a knight from a story.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Seerin", "I prefer prepared.", { actor: "Seerin", anim: "melee", motion: "practice-strike", facing: 1, duration: 72 }],
       ["Verseborn", "Prepared can still be dramatic."],
       ["Seerin", "Good. Then let's test your footing."],
       ["Verseborn", "Practice blades. Understood."]
@@ -2905,14 +2905,14 @@ const RECRUIT_SCENES = [
     id: "kael-welcome", recruit: "Kael", variant: "welcome", title: "A Quiet Shelf", room: "kael-library", preferred: ["Glimmer", "Verseborn"],
     cast: ["Verseborn", "Glimmer", "Kael"],
     build: ({ actors = [] }) => actors.includes("Glimmer") ? [
-      ["Kael", "Before anything else, there are hall rules.", { actor: "Kael", anim: "block", facing: 1 }],
-      ["Verseborn", "A thrilling opening.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Glimmer", "Do unstable devices have a shelf?", { actor: "Glimmer", anim: "melee", facing: 3 }],
+      ["Kael", "Before anything else, there are hall rules."],
+      ["Verseborn", "A thrilling opening.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Glimmer", "Do unstable devices have a shelf?", { actor: "Glimmer", anim: "melee", motion: "shelf-place", facing: 3, duration: 132, with: [{ actor: "Kael", anim: "melee", motion: "shelf-straighten", facing: 1, duration: 132 }] }],
       ["Kael", "No."],
       ["Verseborn", "He truly is the spine of this place."]
     ] : [
-      ["Kael", "Before anything else, there are hall rules.", { actor: "Kael", anim: "block", facing: 1 }],
-      ["Verseborn", "A thrilling opening.", { actor: "Verseborn", anim: "magic", facing: 3 }],
+      ["Kael", "Before anything else, there are hall rules.", { actor: "Kael", anim: "melee", motion: "shelf-straighten", facing: 1, duration: 96 }],
+      ["Verseborn", "A thrilling opening.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
       ["Kael", "Books return to their shelves. Cups do not join them."],
       ["Verseborn", "He truly is the spine of this place."],
       ["Kael", "Someone has to be."]
@@ -2951,14 +2951,14 @@ const RECRUIT_SCENES = [
     id: "torren-welcome", recruit: "Torren", variant: "welcome", title: "Sit Down", room: "torren-kitchen", preferred: ["Sparky", "Verseborn"],
     cast: ["Verseborn", "Torren", "Sparky"],
     build: ({ actors = [] }) => actors.includes("Sparky") ? [
-      ["Torren", "Good. Sit down.", { actor: "Torren", anim: "melee", facing: 1 }],
-      ["Verseborn", "An excellent first command.", { actor: "Verseborn", anim: "block", facing: 3 }],
+      ["Torren", "Good. Sit down.", { actor: "Torren", anim: "melee", motion: "stir", effect: "steam", facing: 1, duration: 120 }],
+      ["Verseborn", "An excellent first command.", { actor: "Verseborn", anim: "block", motion: "small-step", facing: 3, duration: 66 }],
       ["Torren", "Stew first. Questions later."],
-      ["Sparky", "Prrrp!", { actor: "Sparky", anim: "walk", motion: "hop", facing: 1 }],
+      ["Sparky", "Prrrp!", { actor: "Sparky", anim: "walk", motion: "hop-to-pot", dx: -18, facing: 1, duration: 72 }],
       ["Torren", "No, you can't have the whole pot."]
     ] : [
-      ["Torren", "Good. Sit down.", { actor: "Torren", anim: "melee", facing: 1 }],
-      ["Verseborn", "An excellent first command.", { actor: "Verseborn", anim: "block", facing: 3 }],
+      ["Torren", "Good. Sit down.", { actor: "Torren", anim: "melee", motion: "stir", effect: "steam", facing: 1, duration: 120 }],
+      ["Verseborn", "An excellent first command.", { actor: "Verseborn", anim: "block", motion: "small-step", facing: 3, duration: 66 }],
       ["Torren", "Stew first. Questions later."],
       ["Verseborn", "I may already trust you completely."],
       ["Torren", "Taste it first."]
@@ -2997,26 +2997,26 @@ const RECRUIT_SCENES = [
     id: "sparky-welcome", recruit: "Sparky", variant: "welcome", title: "A Shiny Welcome", room: "sparky-coop", preferred: ["Mira", "Seerin", "Verseborn"],
     cast: ["Verseborn", "Mira", "Sparky", "Seerin"],
     build: ({ actors = [] }) => actors.includes("Mira") && actors.includes("Seerin") ? [
-      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
-      ["Mira", "...That is unfairly cute.", { actor: "Mira", anim: "block", facing: 3 }],
-      ["Seerin", "He's adorable.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "fly-oval", facing: 1, duration: 120 }],
+      ["Mira", "...That is unfairly cute.", { actor: "Mira", anim: "walk", motion: "approach-lean", dx: 6, facing: 3, duration: 78 }],
+      ["Seerin", "He's adorable.", { actor: "Seerin", anim: "melee", motion: "reach", dx: -5, facing: 1, duration: 78 }],
       ["Verseborn", "Excellent. He has defeated you both."]
     ] : actors.includes("Mira") ? [
-      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
-      ["Mira", "...That is unfairly cute.", { actor: "Mira", anim: "block", facing: 3 }],
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "fly-oval", facing: 1, duration: 120 }],
+      ["Mira", "...That is unfairly cute.", { actor: "Mira", anim: "walk", motion: "approach-lean", dx: 6, facing: 3, duration: 78 }],
       ["Verseborn", "Excellent. He has defeated you."],
       ["Sparky", "Chrrp!"]
     ] : actors.includes("Seerin") ? [
-      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
-      ["Seerin", "He's adorable.", { actor: "Seerin", anim: "block", facing: 1 }],
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "fly-oval", facing: 1, duration: 120 }],
+      ["Seerin", "He's adorable.", { actor: "Seerin", anim: "melee", motion: "reach", dx: -5, facing: 1, duration: 78 }],
       ["Verseborn", "Excellent. He has defeated you."],
       ["Sparky", "Chrrp!"]
     ] : [
-      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", facing: 3 }],
-      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "circle", facing: 1 }],
+      ["Verseborn", "Behold: the smallest legend in the hall.", { actor: "Verseborn", anim: "magic", motion: "flourish", facing: 3, duration: 66 }],
+      ["Sparky", "Prrr!", { actor: "Sparky", anim: "walk", motion: "fly-oval", facing: 1, duration: 120 }],
       ["Verseborn", "A flawless entrance."],
       ["Sparky", "Chrrp!"],
       ["Verseborn", "Yes. You may keep the title."]
@@ -3048,14 +3048,14 @@ const RECRUIT_SCENES = [
     id: "glimmer-welcome", recruit: "Glimmer", variant: "welcome", title: "Bench Rights", room: "glimmer-lab", preferred: ["Kael", "Verseborn"],
     cast: ["Verseborn", "Glimmer", "Kael"],
     build: ({ actors = [] }) => actors.includes("Kael") ? [
-      ["Glimmer", "Good news. I improved it.", { actor: "Glimmer", anim: "melee", emote: "*", facing: 1 }],
-      ["Kael", "Why is it smoking?", { actor: "Kael", anim: "walk", dx: -6, facing: 3 }],
+      ["Glimmer", "Good news. I improved it.", { actor: "Glimmer", anim: "melee", motion: "tinker-recoil", effect: "spark-smoke", facing: 1, duration: 132 }],
+      ["Kael", "Why is it smoking?", { actor: "Kael", anim: "walk", motion: "recoil", facing: 1, duration: 72 }],
       ["Glimmer", "Because progress is happening."],
-      ["Verseborn", "I admire the confidence. I fear the result.", { actor: "Verseborn", anim: "block", facing: 3 }],
+      ["Verseborn", "I admire the confidence. I fear the result.", { actor: "Verseborn", anim: "block", motion: "recoil", facing: 3, duration: 72 }],
       ["Glimmer", "Both are correct."]
     ] : [
-      ["Glimmer", "Good news. I improved it.", { actor: "Glimmer", anim: "melee", emote: "*", facing: 1 }],
-      ["Verseborn", "Why is it smoking?", { actor: "Verseborn", anim: "walk", dx: -6, facing: 3 }],
+      ["Glimmer", "Good news. I improved it.", { actor: "Glimmer", anim: "melee", motion: "tinker-recoil", effect: "spark-smoke", facing: 1, duration: 132 }],
+      ["Verseborn", "Why is it smoking?", { actor: "Verseborn", anim: "block", motion: "recoil", facing: 3, duration: 72 }],
       ["Glimmer", "Because progress is happening."],
       ["Verseborn", "I admire the confidence. I fear the result."],
       ["Glimmer", "Both are correct."]
@@ -4729,13 +4729,14 @@ function drawRecruitScene() {
   ctx.fillRect(0, 112, LOGICAL_WIDTH, LOGICAL_HEIGHT - 112);
   scene.actors.forEach((actor, index) => {
     const isActing = actor.actionUntil > tick;
-    const anim = isActing ? actor.anim : "idle";
-    const idleBob = anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
     const progress = isActing ? Math.min(1, Math.max(0, (tick - actor.actionStarted) / Math.max(1, actor.actionUntil - actor.actionStarted))) : 0;
-    const motionX = actor.motion === "circle" && isActing ? Math.sin(progress * Math.PI * 2) * 8 : 0;
-    const motionY = actor.motion === "circle" && isActing ? -5 + Math.cos(progress * Math.PI * 2) * 4 : actor.motion === "hop" && isActing ? -Math.sin(progress * Math.PI) * 8 : 0;
-    drawFieldShadow(actor.x + motionX, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
-    drawSprite(actor.id, actor.x + motionX - 8, actor.baseline + motionY - 32 + idleBob, actor.facing, anim, tick);
+    const pose = recruitScenePoseAt(actor, progress, isActing);
+    const idleBob = pose.anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
+    const drawX = actor.x + pose.x;
+    const drawY = actor.baseline + pose.y;
+    drawFieldShadow(drawX, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
+    drawSprite(actor.id, drawX - 8, drawY - 32 + idleBob, pose.facing, pose.anim, tick);
+    drawRecruitSceneEffect(actor, drawX, drawY, progress, isActing);
     if (actor.emote && actor.actionUntil > tick) {
       drawText(actor.emote, actor.x, actor.baseline - 40, "#fff0a8", 10, "center");
     }
@@ -4743,6 +4744,137 @@ function drawRecruitScene() {
   const roomName = RECRUIT_SCENE_ROOM_NAMES[scene.room] || "Ember Hall";
   drawText(roomName, 9, 13, "#0b090d", 8);
   drawText(roomName, 8, 12, "#ffe0a1", 8);
+}
+
+function recruitScenePoseAt(actor, progress, isActing = true) {
+  if (!isActing) return { x: 0, y: 0, anim: "idle", facing: actor.facing };
+  const p = Math.min(1, Math.max(0, progress));
+  const facingDirection = actor.facing === 1 ? -1 : actor.facing === 3 ? 1 : 0;
+  const smooth = value => {
+    const clamped = Math.min(1, Math.max(0, value));
+    return clamped * clamped * (3 - 2 * clamped);
+  };
+  let x = 0;
+  let y = 0;
+  let anim = actor.anim || "idle";
+  switch (actor.motion) {
+    case "entrance":
+    case "welcome-step": {
+      const arrival = smooth(p / .55);
+      x = -(actor.actionDx || 0) * (1 - arrival);
+      anim = p < .55 ? "walk" : actor.motion === "welcome-step" && p < .72 ? "melee" : "idle";
+      break;
+    }
+    case "dagger-flip":
+      x = facingDirection * (p < .22 ? smooth(p / .22) * 3 : 3 * (1 - smooth((p - .22) / .68)));
+      y = p > .18 && p < .62 ? -Math.sin((p - .18) / .44 * Math.PI) * 4 : 0;
+      anim = p > .16 && p < .6 ? "melee" : "idle";
+      break;
+    case "practice-strike": {
+      const strike = p < .28 ? smooth(p / .28) : p < .62 ? 1 : 1 - smooth((p - .62) / .38);
+      x = facingDirection * strike * 7;
+      anim = p < .18 ? "walk" : p < .62 ? "melee" : p < .86 ? "walk" : "block";
+      break;
+    }
+    case "spar-dodge": {
+      const dodge = p < .26 ? smooth(p / .26) : p < .58 ? 1 : 1 - smooth((p - .58) / .42);
+      x = -facingDirection * dodge * 5;
+      y = p > .35 && p < .68 ? -Math.sin((p - .35) / .33 * Math.PI) * 3 : 0;
+      anim = p < .34 ? "walk" : p < .68 ? "melee" : "idle";
+      break;
+    }
+    case "flourish":
+      x = facingDirection * Math.sin(p * Math.PI) * 2;
+      anim = p > .2 && p < .68 ? actor.anim || "magic" : "idle";
+      break;
+    case "stir":
+      x = Math.round(Math.sin(p * Math.PI * 6) * 2);
+      anim = p < .78 && Math.floor(p * 12) % 2 ? "melee" : "idle";
+      break;
+    case "small-step":
+      x = facingDirection * Math.sin(p * Math.PI) * 3;
+      anim = p < .32 ? "walk" : p < .68 ? actor.anim || "block" : "idle";
+      break;
+    case "hop-to-pot": {
+      const arrival = smooth(p / .72);
+      x = -(actor.actionDx || 0) * (1 - arrival);
+      y = p < .72 ? -Math.sin(p / .72 * Math.PI) * 8 : -1;
+      anim = p < .72 ? "walk" : "idle";
+      break;
+    }
+    case "fly-oval":
+      x = 8 * (1 - Math.cos(p * Math.PI * 2));
+      y = -8 - Math.sin(p * Math.PI * 2) * 7 + Math.sin(p * Math.PI * 8);
+      anim = "walk";
+      break;
+    case "approach-lean": {
+      const arrival = smooth(p / .5);
+      x = -(actor.actionDx || 0) * (1 - arrival);
+      y = p > .48 ? 2 : 0;
+      anim = p < .5 ? "walk" : "idle";
+      break;
+    }
+    case "reach": {
+      const arrival = smooth(p / .45);
+      x = -(actor.actionDx || 0) * (1 - arrival);
+      anim = p < .45 ? "walk" : p < .72 ? "melee" : "idle";
+      break;
+    }
+    case "shelf-place": {
+      const step = p < .25 ? smooth(p / .25) : p < .48 ? 1 : p < .66 ? 1 - smooth((p - .48) / .18) : 0;
+      x = facingDirection * step * 5;
+      anim = p < .25 ? "walk" : p < .5 ? "melee" : "idle";
+      break;
+    }
+    case "shelf-straighten": {
+      const step = p < .48 ? 0 : p < .66 ? smooth((p - .48) / .18) : p < .82 ? 1 : 1 - smooth((p - .82) / .18);
+      x = facingDirection * step * 4;
+      anim = p < .48 ? "idle" : p < .66 ? "walk" : p < .86 ? "melee" : "idle";
+      break;
+    }
+    case "tool-tap":
+      x = p < .68 ? Math.round(Math.sin(p * Math.PI * 8)) : 0;
+      anim = p < .68 && Math.floor(p * 10) % 2 ? "melee" : "idle";
+      break;
+    case "tinker-recoil":
+      if (p < .64) {
+        x = Math.round(Math.sin(p * Math.PI * 10));
+        anim = Math.floor(p * 12) % 2 ? "melee" : "idle";
+      } else if (p < .82) {
+        x = -facingDirection * Math.sin((p - .64) / .18 * Math.PI) * 5;
+        y = -Math.sin((p - .64) / .18 * Math.PI) * 3;
+        anim = "walk";
+      } else {
+        anim = "idle";
+      }
+      break;
+    case "recoil":
+      x = -facingDirection * Math.sin(p * Math.PI) * 6;
+      y = -Math.sin(p * Math.PI) * 3;
+      anim = p < .72 ? "walk" : "idle";
+      break;
+  }
+  return { x, y, anim, facing: actor.facing };
+}
+
+function drawRecruitSceneEffect(actor, x, baseline, progress, isActing) {
+  if (!isActing || !actor.effect) return;
+  const direction = actor.facing === 1 ? -1 : 1;
+  const effectX = x + direction * 11;
+  if ((actor.effect === "spark" && progress > .46 && progress < .68) || (actor.effect === "spark-smoke" && progress > .48 && progress < .63)) {
+    drawSpark(effectX, baseline - 22, "#ffe079", Math.floor(progress * 100));
+  }
+  if (actor.effect === "steam" && progress > .28 && progress < .9) {
+    const rise = Math.floor((progress - .28) * 14);
+    drawRect(effectX - 2, baseline - 14 - rise, 3, 3, "#ddd4cc");
+    drawRect(effectX + 2, baseline - 10 - rise, 2, 2, "#9f9794");
+  }
+  if (actor.effect === "spark-smoke" && progress >= .6 && progress < .9) {
+    const puff = Math.floor((progress - .6) * 18);
+    drawRect(effectX - 4, baseline - 23 - puff, 5, 4, "#756f75");
+    drawRect(effectX + 1, baseline - 20 - puff, 4, 4, "#aaa0a2");
+    drawRect(effectX - 1, baseline - 27 - puff, 3, 3, "#d7c8bb");
+  }
 }
 
 function drawTileMap() {
@@ -6118,16 +6250,21 @@ function skipTalk() {
 
 function applyRecruitSceneAction(action) {
   if (!activeRecruitScene || !action) return;
-  const actor = activeRecruitScene.actors.find(entry => entry.id === action.actor);
-  if (!actor) return;
-  if (Number.isFinite(action.facing)) actor.facing = action.facing;
-  if (Number.isFinite(action.dx)) actor.x = Math.max(24, Math.min(LOGICAL_WIDTH - 24, actor.x + action.dx));
-  if (Number.isFinite(action.dy)) actor.baseline = Math.max(96, Math.min(166, actor.baseline + action.dy));
-  actor.anim = action.anim || "idle";
-  actor.emote = action.emote || "";
-  actor.motion = action.motion || "";
-  actor.actionStarted = tick;
-  actor.actionUntil = tick + (Number.isFinite(action.duration) ? action.duration : action.anim === "walk" ? 36 : 54);
+  [action, ...(Array.isArray(action.with) ? action.with : [])].forEach(actorAction => {
+    const actor = activeRecruitScene.actors.find(entry => entry.id === actorAction.actor);
+    if (!actor) return;
+    if (Number.isFinite(actorAction.facing)) actor.facing = actorAction.facing;
+    actor.actionDx = Number.isFinite(actorAction.dx) ? actorAction.dx : 0;
+    actor.actionDy = Number.isFinite(actorAction.dy) ? actorAction.dy : 0;
+    if (actor.actionDx) actor.x = Math.max(24, Math.min(LOGICAL_WIDTH - 24, actor.x + actor.actionDx));
+    if (actor.actionDy) actor.baseline = Math.max(96, Math.min(166, actor.baseline + actor.actionDy));
+    actor.anim = actorAction.anim || "idle";
+    actor.emote = actorAction.emote || "";
+    actor.motion = actorAction.motion || "";
+    actor.effect = actorAction.effect || "";
+    actor.actionStarted = tick;
+    actor.actionUntil = tick + (Number.isFinite(actorAction.duration) ? actorAction.duration : actorAction.anim === "walk" ? 36 : 54);
+  });
 }
 
 function nextTalk() {
@@ -6681,6 +6818,9 @@ function recruitSceneActors(scene, partner) {
     anim: "idle",
     emote: "",
     motion: "",
+    effect: "",
+    actionDx: 0,
+    actionDy: 0,
     actionStarted: 0,
     actionUntil: 0
   }));
