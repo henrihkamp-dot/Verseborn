@@ -105,10 +105,10 @@ let titleMenuIndex = 0;
 let titleSubmenuIndex = 0;
 let saveTimer = null;
 
-const titleMenuEntries = ["Story Mode", "Ember Hall Battles"];
+const titleMenuEntries = ["Story Mode", "Ember Hall"];
 const titleSubmenuEntries = [
-  ["New Story", "Continue Story"],
-  ["New Run", "Continue Run"]
+  ["New Story Mode", "Continue Story Mode"],
+  ["New Ember Hall", "Continue Ember Hall"]
 ];
 const SAVE_KEY = "verseborn-jrpg-save-v2";
 const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
