@@ -819,7 +819,7 @@ function loadTitleIdleFrames() {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = () => resolve(null);
-    image.src = `assets/maps/title-idle-${frame}.png`;
+    image.src = `assets/maps/title-idle-${frame}.webp`;
   }))).then(images => { titleIdleFrames = images; });
 }
 
