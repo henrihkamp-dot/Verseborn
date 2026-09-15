@@ -147,7 +147,9 @@ const music = {
   title: new Audio("assets/audio/verseborn-title.mp3"),
   inhouse: new Audio("assets/audio/inhouse-jrpg.mp3"),
   overworld: new Audio("assets/audio/overworld-jrpg.mp3"),
-  battle: new Audio("assets/audio/battle-jrpg.mp3")
+  battle: new Audio("assets/audio/battle-jrpg.mp3"),
+  cutscene: new Audio("assets/audio/cutscenes.mp3"),
+  hallBoss: new Audio("assets/audio/ember-hall-boss-battle.mp3")
 };
 Object.values(music).forEach(track => {
   track.loop = true;
@@ -160,7 +162,8 @@ let musicMuted = false;
 
 function trackForScene() {
   if (mode === "title") return "title";
-  if (mode === "battle") return "battle";
+  if (mode === "battle") return battle?.hallBoss ? "hallBoss" : "battle";
+  if (mode === "talk" && activeRecruitScene) return "cutscene";
   return currentMap()?.music === "overworld" ? "overworld" : "inhouse";
 }
 
@@ -6782,6 +6785,7 @@ function startHallBattleStage(stage) {
   startBattle(`Hall ${String(stage).padStart(2, "0")}/40 - ${info.name}`, hallEnemiesForStage(stage));
   battle.hallStage = stage;
   battle.hallBoss = info.boss;
+  updateMusic();
 }
 
 function openHallRecruitment() {
@@ -6893,6 +6897,7 @@ function playRecruitScene(scene, options = {}) {
   document.querySelector(".menu-tabs").classList.remove("hidden");
   const lines = scene.build({ recruit: scene.recruit, partner, history, actors: actors.map(actor => actor.id) });
   showTalk(lines, { portraits: actors.map(actor => actor.id), skippable: true, after: completeRecruitScene });
+  updateMusic();
   return true;
 }
 
