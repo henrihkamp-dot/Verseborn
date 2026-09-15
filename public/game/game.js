@@ -104,7 +104,7 @@ let screenSlide = null;
 let titleMenuIndex = 0;
 let saveTimer = null;
 
-const titleMenuEntries = ["Story Mode", "Continue", "Ember Hall Battle"];
+const titleMenuEntries = ["Story Mode", "Continue Story Mode", "Ember Hall Battles", "Continue Ember Hall Battles"];
 const SAVE_KEY = "verseborn-jrpg-save-v2";
 const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
 const HALL_SCENE_HISTORY_KEY = "verseborn-hall-scene-history-v1";
@@ -2296,6 +2296,8 @@ function talent(level, name, type, value, desc = null, unlockDesc = null) {
   return { level, name, type, value, desc: text, unlockDesc: unlockDesc || text };
 }
 
+const STARTING_HERO_GEAR = Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, { ...hero.gear }]));
+
 const state = {
   gameMode: "story",
   knownWeaknesses: {},
@@ -2336,9 +2338,9 @@ const state = {
   flags: {}
 };
 
-function savedGameExists() {
+function savedGameExists(saveKey = SAVE_KEY) {
   try {
-    return Boolean(localStorage.getItem(SAVE_KEY));
+    return Boolean(localStorage.getItem(saveKey));
   } catch {
     return false;
   }
@@ -4488,7 +4490,7 @@ function drawTitleMenu(layout) {
   const panelX = sx(570);
   const panelY = sy(438);
   const panelWidth = Math.round(310 * layout.scale);
-  const panelHeight = Math.round(151 * layout.scale);
+  const panelHeight = Math.round((titleMenuEntries.length * 49 + 4) * layout.scale);
   ctx.fillStyle = "rgba(5, 11, 39, 0.97)";
   ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
   ctx.strokeStyle = "#9c6fd2";
@@ -4513,7 +4515,7 @@ function drawTitleMenu(layout) {
       ctx.fillStyle = "rgba(77, 35, 126, 0.78)";
       ctx.fillRect(sx(576), top, Math.round(296 * layout.scale), height);
     }
-    const unavailableContinue = index === 1 && !savedGameExists();
+    const unavailableContinue = (index === 1 && !savedGameExists()) || (index === 3 && !savedGameExists(HALL_SAVE_KEY));
     ctx.fillStyle = unavailableContinue ? "#746d77" : index === titleMenuIndex ? "#fff0bd" : "#f0e4c6";
     ctx.fillText(entry, sx(732), sy(465 + index * 49));
   });
@@ -4548,27 +4550,63 @@ function startTitleGame(continueGame = false) {
   else showTalk([["Narrator", "Issue 1: The Man With the Enormous Voice"], ["Verseborn", "A warm room, a quiet stage, and Marla looking like she has work for me."]]);
 }
 
-function startHallBattles() {
+function resetHallBattleRun() {
+  clearTimeout(saveTimer);
+  try {
+    localStorage.removeItem(HALL_SAVE_KEY);
+    localStorage.removeItem(HALL_SCENE_HISTORY_KEY);
+  } catch {}
+  gearInstances = {};
+  Object.entries(baseJobs).forEach(([id, hero]) => {
+    hero.gear = { ...STARTING_HERO_GEAR[id] };
+    hero.hp = 1;
+    hero.mp = 1;
+  });
+  Object.assign(state, {
+    gameMode: "hallBattles",
+    knownWeaknesses: {},
+    favoriteGear: {},
+    map: "emberHallBattles",
+    x: 8,
+    y: 9,
+    renderX: 8 * TILE,
+    renderY: 9 * TILE,
+    facing: 2,
+    quest: -1,
+    resonance: 15,
+    walkUntil: 0,
+    party: ["Verseborn"],
+    activeParty: ["Verseborn"],
+    gold: 180,
+    inventory: { "Marla's Soup": 4, "Clockwork Tonic": 2, "Ash Ward": 1, "Old Registry Key": 1 },
+    inventorySlots: 30,
+    bagUpgrades: 0,
+    stash: {},
+    ownedGear: [...new Set(Object.values(STARTING_HERO_GEAR.Verseborn))],
+    gearCopies: Object.values(STARTING_HERO_GEAR.Verseborn).reduce((copies, name) => {
+      copies[name] = (copies[name] || 0) + 1;
+      return copies;
+    }, {}),
+    gearAffixes: {},
+    gearRarities: {},
+    gearInstances,
+    nextGearInstance: 1,
+    endgameRank: 0,
+    echoForgeRank: 0,
+    ngPlus: 0,
+    heroProgress: Object.fromEntries(Object.keys(baseJobs).map(id => [id, { level: 1, xp: 0, talents: [], pendingMilestones: [] }])),
+    discoveredMaps: ["emberHallBattles"],
+    escort: null,
+    fieldWard: false,
+    flags: {},
+    hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 }
+  });
+}
+
+function startHallBattles(continueGame = false) {
   if (!runtimeAssetsReady) return;
-  const loaded = loadGame(HALL_SAVE_KEY);
-  if (!loaded) {
-    state.gameMode = "hallBattles";
-    state.map = "emberHallBattles";
-    state.x = 8;
-    state.y = 9;
-    state.renderX = state.x * TILE;
-    state.renderY = state.y * TILE;
-    state.facing = 2;
-    state.quest = -1;
-    state.resonance = 15;
-    state.party = ["Verseborn"];
-    state.activeParty = ["Verseborn"];
-    state.discoveredMaps = ["emberHallBattles"];
-    state.escort = null;
-    state.fieldWard = false;
-    state.flags = {};
-    state.hallBattles = { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
-  }
+  const loaded = continueGame && loadGame(HALL_SAVE_KEY);
+  if (!loaded) resetHallBattleRun();
   state.gameMode = "hallBattles";
   state.map = "emberHallBattles";
   state.x = Number.isFinite(state.x) ? state.x : 8;
@@ -4580,15 +4618,22 @@ function startHallBattles() {
   updateMusic();
   updatePanels();
   updateSkillPointNotice();
+  if (!loaded) saveGame(HALL_SAVE_KEY);
   showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - Stage 1 ready");
 }
 
 function activateTitleSelection() {
   if (!runtimeAssetsReady) return;
-  if (titleMenuIndex === 2) {
+  if ((titleMenuIndex === 1 && !savedGameExists()) || (titleMenuIndex === 3 && !savedGameExists(HALL_SAVE_KEY))) {
     playSfx("menu");
-    return startHallBattles();
+    return;
   }
+  if (titleMenuIndex === 2) {
+    if (savedGameExists(HALL_SAVE_KEY) && !window.confirm("Start a new Ember Hall run? Your current Hall progress and Scene Memories will be erased.")) return;
+    playSfx("menu");
+    return startHallBattles(false);
+  }
+  if (titleMenuIndex === 3) return startHallBattles(true);
   startTitleGame(titleMenuIndex === 1);
 }
 
@@ -4600,8 +4645,8 @@ function titleMenuPointerIndex(event) {
   const layout = titleImageLayout();
   const sourceX = (canvasX - layout.x) / layout.scale;
   const sourceY = (canvasY - layout.y) / layout.scale;
-  if (sourceX < 570 || sourceX > 880 || sourceY < 438 || sourceY > 589) return null;
-  return Math.max(0, Math.min(2, Math.floor((sourceY - 438) / 49)));
+  if (sourceX < 570 || sourceX > 880 || sourceY < 438 || sourceY > 438 + titleMenuEntries.length * 49 + 4) return null;
+  return Math.max(0, Math.min(titleMenuEntries.length - 1, Math.floor((sourceY - 438) / 49)));
 }
 
 function drawRecruitScene() {
