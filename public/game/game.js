@@ -148,6 +148,7 @@ const music = {
   inhouse: new Audio("assets/audio/inhouse-jrpg.mp3"),
   overworld: new Audio("assets/audio/overworld-jrpg.mp3"),
   battle: new Audio("assets/audio/battle-jrpg.mp3"),
+  battleAlt: new Audio("assets/audio/battle-jrpg-2.mp3"),
   cutscene: new Audio("assets/audio/cutscenes.mp3"),
   hallBoss: new Audio("assets/audio/ember-hall-boss-battle.mp3")
 };
@@ -159,10 +160,18 @@ Object.values(music).forEach(track => {
 let musicUnlocked = false;
 let activeMusic = null;
 let musicMuted = false;
+let normalBattleTrackIndex = 0;
+
+function battleMusicForEncounter(hallBoss = false) {
+  if (hallBoss) return "hallBoss";
+  const track = normalBattleTrackIndex % 2 === 0 ? "battle" : "battleAlt";
+  normalBattleTrackIndex++;
+  return track;
+}
 
 function trackForScene() {
   if (mode === "title") return "title";
-  if (mode === "battle") return battle?.hallBoss ? "hallBoss" : "battle";
+  if (mode === "battle") return battle?.musicTrack || (battle?.hallBoss ? "hallBoss" : "battle");
   if (mode === "talk" && activeRecruitScene) return "cutscene";
   return currentMap()?.music === "overworld" ? "overworld" : "inhouse";
 }
@@ -6782,7 +6791,7 @@ function startHallBattleStage(stage) {
   el.menu.classList.add("hidden");
   document.querySelector(".menu-tabs").classList.remove("hidden");
   state.map = info.mapId;
-  startBattle(`Hall ${String(stage).padStart(2, "0")}/40 - ${info.name}`, hallEnemiesForStage(stage));
+  startBattle(`Hall ${String(stage).padStart(2, "0")}/40 - ${info.name}`, hallEnemiesForStage(stage), undefined, null, [], { hallBoss: info.boss });
   battle.hallStage = stage;
   battle.hallBoss = info.boss;
   updateMusic();
@@ -6988,7 +6997,7 @@ function recordHallBattleClear(stage) {
   return true;
 }
 
-function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
+function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], options = {}) {
   mode = "battle";
   updateSkillPointNotice();
   battleFloaters = [];
@@ -7003,13 +7012,15 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = []) {
     return prepared;
   });
   const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
-  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, startingResonance, usedOnce: {}, lastSupport: null, extraTurns: 0 };
+  const hallBoss = Boolean(options.hallBoss);
+  const musicTrack = battleMusicForEncounter(hallBoss);
+  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, startingResonance, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
   el.battle.classList.remove("hidden");
   el.battleName.textContent = name;
-  updateMusic("battle");
+  updateMusic(musicTrack);
   buildTurnOrder();
   const openingNotes = [
     opening ? `Rare gear sings: +${opening} Resonance.` : "Turn order begins.",
