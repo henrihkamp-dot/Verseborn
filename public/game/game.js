@@ -69,6 +69,7 @@ const el = {
 const TILE = 16;
 const PLAYER_STEP_TICKS = 17;
 const WALK_FRAME_TICKS = 3;
+const defaultViewportContent = document.querySelector('meta[name="viewport"]')?.content || "width=device-width, initial-scale=1";
 let tick = 0;
 let mode = "title";
 let menuTab = "status";
@@ -101,6 +102,28 @@ let talkPortraits = [];
 let talkAfter = null;
 let talkSkippable = false;
 let activeRecruitScene = null;
+
+function syncResponsiveDevice() {
+  const root = document.documentElement;
+  if (!root) return;
+  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches === true;
+  const noHover = window.matchMedia?.("(hover: none)")?.matches === true;
+  const touchLayout = (navigator.maxTouchPoints || 0) > 0 && coarse && noHover;
+  const phone = touchLayout && Math.min(window.innerWidth, window.innerHeight) <= 600;
+  const portrait = window.innerHeight >= window.innerWidth;
+  root.classList.toggle("touch-layout", touchLayout);
+  root.classList.toggle("touch-phone", phone);
+  root.classList.toggle("touch-portrait", touchLayout && portrait);
+  root.classList.toggle("touch-landscape", touchLayout && !portrait);
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) viewport.content = touchLayout
+    ? "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    : defaultViewportContent;
+}
+
+function syncResponsiveMode() {
+  if (document.body?.dataset.playMode !== mode) document.body.dataset.playMode = mode;
+}
 let battle = null;
 let effect = null;
 let battleFloaters = [];
@@ -6337,6 +6360,7 @@ function drawMenuBack() {
 
 function draw(now = performance.now()) {
   tick++;
+  syncResponsiveMode();
   ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -9778,6 +9802,7 @@ function handleControl(control) {
   unlockMusic();
   if (mode === "title") {
     if (control === "confirm") activateTitleSelection();
+    else if (control === "cancel") closeTitleSubmenu();
     else if (control === "up" || control === "left" && titleMenuState === "main") moveTitleSelection(-1);
     else if (control === "down") moveTitleSelection(1);
     else if (control === "left") closeTitleSubmenu();
@@ -9785,10 +9810,17 @@ function handleControl(control) {
     return;
   }
   if (mode === "hallMap") {
-    if (control === "menu" || control === "party") closeHallOverlay();
+    if (control === "menu" || control === "party" || control === "cancel") closeHallOverlay();
     return;
   }
   fieldDestination = null;
+  if (control === "cancel") {
+    if (mode === "battle" && battle?.targetMode) closeTargetSelection();
+    else if (mode === "battle" && battle?.itemMode) closeBattleItems();
+    else if (mode === "menu" || mode === "shop") toggleMenu();
+    else if (mode === "atlas") toggleAtlas();
+    return;
+  }
   if (control === "confirm") return mode === "battle" ? confirmBattleAction() : interact();
   if (control === "menu") return toggleMenu();
   if (control === "party") return toggleAtlas();
@@ -10046,6 +10078,10 @@ el.dialogueSkip.addEventListener("click", event => {
   event.preventDefault();
   event.stopPropagation();
   skipTalk();
+});
+el.dialogue.addEventListener("click", event => {
+  if (event.target.closest?.("#dialogueSkip")) return;
+  if (mode === "talk") interact();
 });
 
 el.codexPrev.onclick = () => { codexIndex = (codexIndex + codex.length - 1) % codex.length; updateCodex(); };
@@ -10695,6 +10731,10 @@ function runQaChecks() {
 
 
 sanitizeWorldSpawns();
+syncResponsiveDevice();
+syncResponsiveMode();
+window.addEventListener("resize", syncResponsiveDevice);
+window.addEventListener("orientationchange", syncResponsiveDevice);
 refreshHeroVitals();
 updateCodex();
 updatePanels();

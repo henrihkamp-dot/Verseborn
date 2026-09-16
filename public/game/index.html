@@ -2,11 +2,15 @@
 <html lang="nl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
   <title>Verseborn getting started</title>
-  <link rel="stylesheet" href="styles.css?v=gear-utility-62">
+  <link rel="stylesheet" href="styles.css?v=mobile-touch-64">
 </head>
 <body>
+  <div class="rotate-device" role="status" aria-live="polite">
+    <strong>VERSEBORN</strong>
+    <span>Rotate your device to play</span>
+  </div>
   <main class="shell">
     <section class="game">
       <canvas id="screen" width="768" height="672" tabindex="0" aria-label="Verseborn getting started game screen"></canvas>
@@ -29,9 +33,9 @@
           <button type="button" data-control="right" aria-label="Rechts">&gt;</button>
         </div>
         <div class="command-pad">
-          <button type="button" data-control="party" aria-label="Party">P</button>
-          <button type="button" data-control="menu" aria-label="Menu">C</button>
-          <button type="button" data-control="confirm" aria-label="Bevestigen">Z</button>
+          <button class="touch-menu-control" type="button" data-control="menu" aria-label="Open menu">Menu</button>
+          <button class="touch-back-control" type="button" data-control="cancel" aria-label="Back or cancel">Back</button>
+          <button class="touch-confirm-control" type="button" data-control="confirm" aria-label="Confirm or interact">Confirm</button>
           <button id="musicToggle" type="button" data-control="music" aria-label="Muziek pauzeren" title="Muziek aan/uit">&#9835;</button>
         </div>
       </div>
@@ -50,7 +54,8 @@
           <button id="dialogueSkip" class="dialogue-skip hidden" type="button">Skip</button>
           <div id="speaker"></div>
           <p id="line"></p>
-          <span class="dialogue-continue">Z / Enter</span>
+          <span class="dialogue-continue desktop-dialogue-continue">Z / Enter</span>
+          <span class="dialogue-continue mobile-dialogue-continue">Tap to continue</span>
         </div>
       </div>
       <div id="battle" class="battle hidden">
@@ -122,6 +127,6 @@
     </aside>
   </main>
 
-  <script src="game.js?v=gear-utility-62"></script>
+  <script src="game.js?v=mobile-touch-64"></script>
 </body>
 </html>
