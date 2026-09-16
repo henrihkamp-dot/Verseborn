@@ -4,13 +4,9 @@
   <meta charset="utf-8">
   <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
   <title>Verseborn getting started</title>
-  <link rel="stylesheet" href="styles.css?v=mobile-touch-64">
+  <link rel="stylesheet" href="styles.css?v=mobile-focus-65">
 </head>
 <body>
-  <div class="rotate-device" role="status" aria-live="polite">
-    <strong>VERSEBORN</strong>
-    <span>Rotate your device to play</span>
-  </div>
   <main class="shell">
     <section class="game">
       <canvas id="screen" width="768" height="672" tabindex="0" aria-label="Verseborn getting started game screen"></canvas>
@@ -24,20 +20,6 @@
           <span id="place">The Drunk Lantern</span>
         </div>
         <div id="hint">Klik in het spel. Beweeg met WASD of de pijlen.</div>
-      </div>
-      <div class="gamepad" aria-label="Spelbesturing">
-        <div class="dpad">
-          <button type="button" data-control="up" aria-label="Omhoog">^</button>
-          <button type="button" data-control="left" aria-label="Links">&lt;</button>
-          <button type="button" data-control="down" aria-label="Omlaag">v</button>
-          <button type="button" data-control="right" aria-label="Rechts">&gt;</button>
-        </div>
-        <div class="command-pad">
-          <button class="touch-menu-control" type="button" data-control="menu" aria-label="Open menu">Menu</button>
-          <button class="touch-back-control" type="button" data-control="cancel" aria-label="Back or cancel">Back</button>
-          <button class="touch-confirm-control" type="button" data-control="confirm" aria-label="Confirm or interact">Confirm</button>
-          <button id="musicToggle" type="button" data-control="music" aria-label="Muziek pauzeren" title="Muziek aan/uit">&#9835;</button>
-        </div>
       </div>
       <div id="dialogue" class="dialogue hidden">
         <div id="dialoguePortraits" class="dialogue-portraits hidden" aria-hidden="true">
@@ -89,6 +71,22 @@
       </div>
     </section>
 
+    <div class="gamepad" aria-label="Spelbesturing">
+      <div class="dpad">
+        <button type="button" data-control="up" aria-label="Omhoog">^</button>
+        <button type="button" data-control="left" aria-label="Links">&lt;</button>
+        <button type="button" data-control="down" aria-label="Omlaag">v</button>
+        <button type="button" data-control="right" aria-label="Rechts">&gt;</button>
+      </div>
+      <div class="command-pad">
+        <button class="touch-menu-control" type="button" data-control="menu" aria-label="Open menu">Menu</button>
+        <button class="touch-back-control" type="button" data-control="cancel" aria-label="Back or cancel">Back</button>
+        <button class="touch-confirm-control" type="button" data-control="confirm" aria-label="Confirm or interact">Confirm</button>
+        <button id="musicToggle" type="button" data-control="music" aria-label="Muziek pauzeren" title="Muziek aan/uit">&#9835;</button>
+      </div>
+    </div>
+    <button id="fullscreenToggle" class="mobile-fullscreen-control" type="button" data-control="fullscreen" aria-label="Toggle fullscreen" title="Fullscreen">&#x26F6;</button>
+
     <aside class="panel" aria-label="Spelstatus">
       <div class="status-brand">
         <h1>Verseborn</h1>
@@ -127,6 +125,6 @@
     </aside>
   </main>
 
-  <script src="game.js?v=mobile-touch-64"></script>
+  <script src="game.js?v=mobile-focus-65"></script>
 </body>
 </html>

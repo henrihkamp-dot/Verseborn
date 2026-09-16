@@ -117,8 +117,9 @@ function syncResponsiveDevice() {
   root.classList.toggle("touch-landscape", touchLayout && !portrait);
   const viewport = document.querySelector('meta[name="viewport"]');
   if (viewport) viewport.content = touchLayout
-    ? "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    ? "width=device-width, initial-scale=1, viewport-fit=cover"
     : defaultViewportContent;
+  root.classList.toggle("fullscreen-ready", touchLayout && Boolean(document.fullscreenEnabled && document.documentElement.requestFullscreen));
 }
 
 function syncResponsiveMode() {
@@ -4919,6 +4920,10 @@ function drawTitleTwinkles(layout) {
 }
 
 function drawTitleMenu(layout) {
+  const portraitTouchMain = titleMenuState === "main"
+    && document.documentElement?.classList.contains("touch-phone")
+    && document.documentElement?.classList.contains("touch-portrait");
+  if (portraitTouchMain) return;
   const sx = value => Math.round(layout.x + value * layout.scale);
   const sy = value => Math.round(layout.y + value * layout.scale);
   const panelX = sx(570);
@@ -9797,8 +9802,16 @@ function cycleLeader(direction) {
   updatePanels();
 }
 
+async function toggleMobileFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen?.();
+    else await document.documentElement.requestFullscreen?.({ navigationUI: "hide" });
+  } catch {}
+}
+
 function handleControl(control) {
   if (control === "music") return toggleMusic();
+  if (control === "fullscreen") return toggleMobileFullscreen();
   unlockMusic();
   if (mode === "title") {
     if (control === "confirm") activateTitleSelection();
