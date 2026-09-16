@@ -3746,10 +3746,95 @@ html.touch-phone.touch-landscape body[data-play-mode="title"] .game {
 }
 
 html.touch-phone.touch-landscape body[data-play-mode="walk"] .game,
-html.touch-phone.touch-landscape body[data-play-mode="talk"] .game,
-html.touch-phone.touch-landscape body[data-play-mode="battle"] .game {
+html.touch-phone.touch-landscape body[data-play-mode="talk"] .game {
   transform: scale(1.45);
   transform-origin: center bottom;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .shell {
+  padding:
+    max(2px, env(safe-area-inset-top))
+    max(4px, env(safe-area-inset-right))
+    max(2px, env(safe-area-inset-bottom))
+    max(4px, env(safe-area-inset-left));
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .game {
+  width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 8px);
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4px);
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  overflow: hidden;
+  transform: none;
+  transition: none;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] canvas {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 52%;
+  height: auto;
+  max-height: none;
+  transform: translateY(-50%);
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .hud {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) {
+  top: 5px;
+  right: 5px;
+  bottom: 27px;
+  left: 50%;
+  width: auto;
+  height: auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 42px minmax(92px, 1fr) minmax(72px, .65fr);
+  grid-template-areas:
+    "top"
+    "actions"
+    "preview";
+  gap: 4px;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) .battle-top {
+  grid-template-columns: minmax(0, 1fr) 92px;
+  grid-template-rows: 18px 18px;
+  gap: 2px 6px;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) #battleName {
+  max-width: none;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) #battleLog {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) .battle-resonance {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) .actions button,
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) .actions.is-targets button,
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle:not(.hidden) .actions.is-items button {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+html.touch-phone.touch-landscape body[data-play-mode="battle"] .battle-preview {
+  font-size: 11px;
 }
 
 html.touch-phone.touch-landscape body[data-play-mode="menu"] .game,

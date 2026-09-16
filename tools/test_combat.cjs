@@ -164,6 +164,7 @@ assert.ok(cssSource.includes('html:not(.touch-layout) .gamepad'), 'Small desktop
 assert.ok(cssSource.includes('html.touch-layout.touch-portrait:not(.touch-phone) .game'), 'Tablet portrait sizing remains touch-scoped');
 assert.ok(gameSource.includes('requestFullscreen') && htmlSource.includes('data-control="fullscreen"'), 'Touch layout exposes fullscreen where the browser supports it');
 assert.ok(gameSource.includes('width=device-width, initial-scale=1, viewport-fit=cover') && !gameSource.includes('user-scalable=no'), 'Native pinch zoom remains available');
+assert.ok(cssSource.includes('body[data-play-mode="battle"] .game') && cssSource.includes('height: calc(100dvh') && cssSource.includes('body[data-play-mode="battle"] .hud'), 'Landscape phone battles stay contained inside the usable viewport');
 check('Touch layout requires touch points plus coarse non-hover input', `syncResponsiveDevice.toString().includes('navigator.maxTouchPoints')&&syncResponsiveDevice.toString().includes('(pointer: coarse)')&&syncResponsiveDevice.toString().includes('(hover: none)')`);
 assert.ok(gameSource.includes('el.dialogue.addEventListener("click"') && gameSource.includes('if (mode === "talk") interact();'), 'Dialogue box taps advance only active dialogue');
 console.log(`New combat/gear checks: ${passed}/${passed}`);
