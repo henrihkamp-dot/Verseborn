@@ -53,6 +53,11 @@ const el = {
   partyRows: $("partyRows"),
   enemyRows: $("enemyRows"),
   actions: $("actions"),
+  battleResult: $("battleResult"),
+  battleResultCard: $("battleResultCard"),
+  battleResultArt: $("battleResultArt"),
+  battleResultRewards: $("battleResultRewards"),
+  battleResultContinue: $("battleResultContinue"),
   menu: $("menu"),
   menuBody: $("menuBody"),
   codexImage: $("codexImage"),
@@ -145,6 +150,7 @@ function syncResponsiveMode() {
 let battle = null;
 let effect = null;
 let battleFloaters = [];
+let battleResultState = null;
 const BATTLE_FLOATER_LIFETIME = 78;
 let codexIndex = 0;
 let battleActionIndex = 0;
@@ -228,7 +234,7 @@ function battleMusicForEncounter(hallBoss = false) {
 
 function trackForScene() {
   if (mode === "title") return "title";
-  if (mode === "battle") return battle?.musicTrack || (battle?.hallBoss ? "hallBoss" : "battle");
+  if (mode === "battle" || mode === "battleResult") return battle?.musicTrack || (battle?.hallBoss ? "hallBoss" : "battle");
   if (mode === "talk" && activeRecruitScene) return "cutscene";
   return currentMap()?.music === "overworld" ? "overworld" : "inhouse";
 }
@@ -6088,7 +6094,14 @@ function drawBattleVitalBar(anchorX, y, value, max, label, colour, width = 42) {
 }
 
 function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
-  if (unit.hp <= 0) return;
+  if (unit.hp <= 0) {
+    if (!enemySide) {
+      drawRect(anchorX - 18, baseline + 5, 36, 8, "#160d16e8");
+      drawRect(anchorX - 17, baseline + 6, 34, 6, "#542735");
+      drawText("DOWN", anchorX, baseline + 11, "#e6a6a1", 5, "center");
+    }
+    return;
+  }
   if (enemySide) {
     if (partyCanSeeWeaknesses()) rememberWeakness(unit);
     const label = knownWeakness(unit) ? unit.weak : "???";
@@ -6156,12 +6169,20 @@ function drawBattleScene() {
 
   battle.party.forEach((unit, index) => {
     const [anchorX, baseline] = partyBattlePosition(index, battle.party.length);
-    const hasTurn = turn?.side === "party" && turn.id === unit.id;
+    const down = unit.hp <= 0 || unit.down;
+    if (down) markBattleUnitDown(unit);
+    const hasTurn = !down && turn?.side === "party" && turn.id === unit.id;
     if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
     drawFieldShadow(anchorX, baseline + 1, unit.id === "Torren" ? 14 : 10);
     const drawUnit = () => {
+      ctx.save();
+      if (down) {
+        ctx.globalAlpha = .48;
+        ctx.filter = "grayscale(1) brightness(.58)";
+      }
       const x = anchorX + battleOffset(unit);
       if (!drawBattlePartySprite(unit, x, baseline, tick)) drawSprite(unit.id, x - 24, baseline - 52, 0, unit.anim || "idle", tick);
+      ctx.restore();
     };
     if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
     else drawUnit();
@@ -6613,7 +6634,7 @@ function draw(now = performance.now()) {
   if (mode === "walk") updateFieldEnemies();
   if (mode === "title") drawTitle(now);
   else if (mode === "atlas") drawAtlas();
-  else if (mode === "battle") drawBattleScene();
+  else if (mode === "battle" || mode === "battleResult") drawBattleScene();
   else if (mode === "menu") drawMenuBack();
   else drawTileMap();
   requestAnimationFrame(draw);
@@ -6646,7 +6667,10 @@ function updatePanels() {
   el.partyPanel.innerHTML = state.activeParty.map(id => {
     const h = baseJobs[id], t = totals(id);
     const progress = progressFor(id);
-    return `<div class="hero-row"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>LV ${progress.level} / ${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${h.hp}/${t.max}</span></div>`;
+    const combatUnit = battle?.party?.find(unit => unit.id === id);
+    const hp = combatUnit ? combatUnit.hp : h.hp;
+    const down = hp <= 0;
+    return `<div class="hero-row ${down ? "is-down" : ""}"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>LV ${progress.level} / ${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${down ? "DOWN" : `${hp}/${t.max}`}</span></div>`;
   }).join("");
   updateSkillPointNotice();
   queueSave();
@@ -7296,7 +7320,7 @@ function prepareEnemyForBattle(source, mapId = state.map) {
 
 function battleUnit(id) {
   const h = baseJobs[id], t = totals(id);
-  return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: "idle" };
+  return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], down: h.hp <= 0, row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: h.hp <= 0 ? "death" : "idle" };
 }
 
 function hallBattleProgress() {
@@ -7583,6 +7607,103 @@ function returnToHallAfterBattle() {
   state.facing = 2;
 }
 
+function returnAfterDefeat() {
+  restoreHallParty();
+  if (state.gameMode === "hallBattles") {
+    returnToHallAfterBattle();
+    return;
+  }
+  if (state.flags.registered) {
+    state.map = "emberYard";
+    state.x = 8;
+    state.y = 9;
+  }
+  state.renderX = state.x * TILE;
+  state.renderY = state.y * TILE;
+  state.facing = 2;
+}
+
+function markBattleUnitDown(unit) {
+  if (!unit || unit.hp > 0) return false;
+  const newlyDown = !unit.down;
+  unit.hp = 0;
+  unit.down = true;
+  unit.guarding = false;
+  unit.anim = "death";
+  return newlyDown;
+}
+
+function reviveBattleUnit(unit, ratio) {
+  if (!unit || unit.hp > 0) return 0;
+  unit.hp = Math.max(1, Math.round(unit.max * ratio));
+  unit.down = false;
+  unit.anim = "idle";
+  return unit.hp;
+}
+
+function partyIsDefeated() {
+  return Boolean(battle?.party?.length && battle.party.every(unit => unit.hp <= 0));
+}
+
+function battleResultRowsHtml(entries) {
+  return entries.map(entry => {
+    const rarity = entry.rarity ? ` rarity-${entry.rarity.toLowerCase()}` : "";
+    return `<div class="battle-result-row"><span class="battle-result-icon ${entry.kind || "item"}">${entry.icon || "*"}</span><span><strong class="${rarity.trim()}">${escapeMarkup(entry.label)}</strong>${entry.detail ? `<small>${escapeMarkup(entry.detail)}</small>` : ""}</span><b>${escapeMarkup(entry.value || "")}</b></div>`;
+  }).join("");
+}
+
+function showBattleResult(kind, entries = [], after = null) {
+  battleResultState = { kind, after };
+  mode = "battleResult";
+  hideBattlePreview();
+  el.turnOrder.innerHTML = "";
+  el.battle.classList.add("hidden");
+  el.battleResult.classList.remove("hidden", "is-victory", "is-defeat");
+  el.battleResult.classList.add(kind === "victory" ? "is-victory" : "is-defeat");
+  el.battleResultArt.src = kind === "victory" ? "assets/ui/battle-victory.png" : "assets/ui/battle-defeat.png";
+  el.battleResultArt.alt = kind === "victory" ? "Victory. The trial is cleared." : "The Flameguard fell. You awaken again in Ember Hall.";
+  el.battleResultRewards.classList.toggle("hidden", kind !== "victory");
+  el.battleResultRewards.innerHTML = kind === "victory" ? battleResultRowsHtml(entries) : "";
+  el.battleResultContinue.setAttribute("aria-label", kind === "victory" ? "Continue" : "Return to Ember Hall");
+}
+
+function completeBattleResult() {
+  if (mode !== "battleResult" || !battleResultState) return;
+  const { after } = battleResultState;
+  battleResultState = null;
+  el.battleResult.classList.add("is-leaving");
+  setTimeout(() => {
+    el.battleResult.classList.add("hidden");
+    el.battleResult.classList.remove("is-victory", "is-defeat", "is-leaving");
+    document.querySelector(".game")?.classList.remove("battle-final-fall");
+    effect = null;
+    battleFloaters = [];
+    battle = null;
+    mode = "walk";
+    if (typeof after === "function") after();
+    updateMusic();
+    updatePanels();
+    queueSave();
+  }, 220);
+}
+
+function triggerPartyDefeat(log = "") {
+  if (!battle || battle.defeatPending || battleResultState) return false;
+  battle.defeatPending = true;
+  battle.resolving = true;
+  battle.party.forEach(markBattleUnitDown);
+  state.resonance = Number.isFinite(battle.startingResonance) ? battle.startingResonance : state.resonance;
+  if (battle.retryEvent) delete state.flags[battle.retryEvent];
+  renderBattle(`${log} The Flameguard is down.`);
+  document.querySelector(".game")?.classList.add("battle-final-fall");
+  playSfx("block");
+  setTimeout(() => {
+    if (!battle?.defeatPending || battleResultState) return;
+    showBattleResult("defeat", [], returnAfterDefeat);
+  }, 360);
+  return true;
+}
+
 function recordHallBattleClear(stage) {
   const progress = hallBattleProgress();
   if (progress.clearedStages.includes(stage)) return false;
@@ -7597,6 +7718,10 @@ function recordHallBattleClear(stage) {
 
 function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], options = {}) {
   mode = "battle";
+  battleResultState = null;
+  el.battleResult.classList.add("hidden");
+  el.battleResult.classList.remove("is-victory", "is-defeat", "is-leaving");
+  document.querySelector(".game")?.classList.remove("battle-final-fall");
   updateSkillPointNotice();
   battleFloaters = [];
   const preparedWard = Boolean(state.fieldWard);
@@ -7673,8 +7798,10 @@ function runCurrentTurn(log) {
     ? battle.party.find(member => member.id === turn.id)
     : battle.enemies[turn.index];
   const start = processTurnStart(unit);
+  if (turn.side === "party" && unit.hp <= 0) markBattleUnitDown(unit);
   battle.turnStartMessage = start.notes.length ? `${unit.name}: ${start.notes.join(" ")}` : "";
   if (start.notes.length) log = `${log} ${unit.name}: ${start.notes.join(" ")}`;
+  if (partyIsDefeated()) return triggerPartyDefeat(log);
   if (unit.hp <= 0 && turn.side === "enemy" && battle.enemies.every(enemyUnit => enemyUnit.hp <= 0)) {
     renderBattle(log);
     return setTimeout(() => winBattle(log), 520);
@@ -7871,7 +7998,8 @@ function confirmBattleAction() {
 function unitHtml(u, className = "") {
   const pct = Math.max(0, Math.round((u.hp / u.max) * 100));
   const mp = Number.isFinite(u.maxmp) ? `<small>MP ${u.mp}/${u.maxmp}</small>` : "";
-  return `<div class="unit ${className}"><strong>${u.name}</strong><span>${Math.max(0, u.hp)}/${u.max}</span>${mp}<div class="bar"><span style="width:${pct}%"></span></div>${statusBadgesHtml(u)}</div>`;
+  const down = u.hp <= 0 || u.down;
+  return `<div class="unit ${className} ${down ? "is-down" : ""}"><strong>${u.name}</strong><span>${down ? "DOWN" : `${Math.max(0, u.hp)}/${u.max}`}</span>${mp}<div class="bar"><span style="width:${pct}%"></span></div>${statusBadgesHtml(u)}</div>`;
 }
 
 function chooseSkillTarget(u, sk) {
@@ -8132,9 +8260,9 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
 
     if (sk.revive) {
       battle.party.filter(ally => ally.hp <= 0).forEach(ally => {
-        ally.hp = Math.max(1, Math.round(ally.max * sk.revive));
-        addBattleFloater(ally, ally.hp, { kind: "heal" });
-        log += ` ${ally.name} returns with ${ally.hp} HP.`;
+        const revivedHp = reviveBattleUnit(ally, sk.revive);
+        addBattleFloater(ally, revivedHp, { kind: "heal" });
+        log += ` ${ally.name} returns with ${revivedHp} HP.`;
       });
     }
 
@@ -8603,12 +8731,7 @@ function makeEnemyBattleEffect(unit, target, action) {
 
 function resolveEnemyTurn(turn, prev) {
   const liveParty = battle.party.filter(p => p.hp > 0);
-  if (!liveParty.length) {
-    battle.party.forEach(p => p.hp = Math.ceil(p.max / 2));
-    battle.resolving = false;
-    buildTurnOrder();
-    return runCurrentTurn("Marla refuses a game over. Everyone gets back up.");
-  }
+  if (!liveParty.length) return triggerPartyDefeat(prev);
   const e = battle.enemies[turn.index];
   if (!e || e.hp <= 0) {
     battle.resolving = false;
@@ -8699,11 +8822,12 @@ function resolveEnemyTurn(turn, prev) {
           defenseText += ` ${lastBastion.name}'s Last Bastion leaves ${defender.name} at 1 HP.`;
         }
         defender.hp = Math.max(0, defender.hp - dmg);
+        const fell = markBattleUnitDown(defender);
         if (defender.hp > 0 && typedTalentValue(defender.id, "damageResonance")) state.resonance = Math.min(100, state.resonance + Math.max(1, Math.round(4 * (1 + typedTalentValue(defender.id, "damageResonance")))));
         defender.flash = 12;
         addBattleFloater(defender, dmg, { damageType: action.kind === "melee" ? "Physical" : action.element, crit: action.kind === "ultimate" });
         const statusResult = defender.hp > 0 && action.status ? applyStatus(defender, action.status.type, e, action.status) : null;
-        actionLog += ` ${defender.name} takes ${dmg}.${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
+        actionLog += ` ${defender.name} takes ${dmg}.${fell ? ` ${defender.name} is DOWN.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
       });
       battle.ward = false;
       if (action.kind === "ultimate") e.resonance = 0;
@@ -8717,6 +8841,7 @@ function resolveEnemyTurn(turn, prev) {
     }
     updatePanels();
     renderBattle(actionLog);
+    if (partyIsDefeated()) return triggerPartyDefeat(actionLog);
     if (battle.enemies.every(enemyUnit => enemyUnit.hp <= 0)) {
       return setTimeout(() => winBattle(actionLog), 620);
     }
@@ -8730,6 +8855,7 @@ function resolveEnemyTurn(turn, prev) {
 }
 
 function winBattle(log) {
+  if (!battle || battle.ended || battle.defeatPending) return;
   battle.defeated.push(...battle.enemies);
   if (battle.waves.length) {
     if (battleRoundLimitReached()) return endBattleDraw(log);
@@ -8748,7 +8874,9 @@ function winBattle(log) {
   const hallProgress = hallStage ? hallBattleProgress() : null;
   const firstHallClear = Boolean(hallStage && recordHallBattleClear(hallStage));
   if (battle.winFlag) state.flags[battle.winFlag] = true;
+  const resonanceBeforeVictory = state.resonance;
   state.resonance = Math.min(100, state.resonance + 15);
+  const resonanceEarned = state.resonance - resonanceBeforeVictory;
   battle.party.forEach(u => {
     const h = baseJobs[u.id];
     h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + effectValue(u.id, "battleRegen") + talentValue(u.id, "battleRegenTalent")));
@@ -8762,13 +8890,13 @@ function winBattle(log) {
   });
   const bossBattle = Boolean(battle.hallBoss || battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
   const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
-  const xpSummary = awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
+  const earnedXp = Math.max(0, Math.round(battleXp * XP_MULTIPLIER));
+  awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
   if (hallStage) {
     const hallGold = 12 + hallStage * 4 + (battle.hallBoss ? 40 + hallStage * 2 : 0);
     state.gold += hallGold;
     rewards.gold += hallGold;
     guaranteeHallBattleGearReward(rewards, hallStage);
-    returnToHallAfterBattle();
   }
   if (echoHuntBattle) {
     state.endgameRank++;
@@ -8792,16 +8920,29 @@ function winBattle(log) {
     if (battle.winFlag === "ngStonewakeWon") completeSideQuest("stonewakeTrial");
     if (battle.winFlag === "ngOrphanTrialWon") completeSideQuest("orphanTrial");
   }
-  hideBattlePreview();
-  el.turnOrder.innerHTML = "";
-  el.battle.classList.add("hidden");
-  mode = "walk";
-  updateMusic();
+  battle.ended = true;
   updatePanels();
   playSfx("coin");
-  const victoryLines = [["Victory", `${log} ${xpSummary}.`], ["Loot", lootSummaryContent(rewards.gold, rewards.drops)]];
-  if (hallStage && firstHallClear) victoryLines.push(["Hall Record", hallStage >= 40 ? "All forty battle records are cleared. Every stage remains available for replay." : `Stage ${hallStage + 1} is now available.`]);
-  showTalk(victoryLines, hallStage && hallProgress.pendingRecruit ? { after: openHallRecruitment } : {});
+  const resultEntries = [];
+  if (rewards.gold) resultEntries.push({ kind: "gold", icon: "G", label: "Gold", value: `+${rewards.gold}` });
+  rewards.drops.forEach(drop => {
+    if (typeof drop === "string") resultEntries.push({ kind: "item", icon: "*", label: drop, value: "x1" });
+    else resultEntries.push({
+      kind: drop.kind || "item",
+      icon: drop.kind === "gear" ? "E" : "*",
+      label: drop.name,
+      detail: `${drop.type}${drop.stored === false ? " / Marla's Stash" : ""}`,
+      value: `x${drop.amount || 1}`,
+      rarity: drop.rarity
+    });
+  });
+  if (resonanceEarned) resultEntries.push({ kind: "resonance", icon: "R", label: "Resonance", value: `+${resonanceEarned}` });
+  resultEntries.push({ kind: "xp", icon: "EXP", label: "EXP", value: `+${earnedXp}` });
+  if (hallStage && firstHallClear) resultEntries.push({ kind: "record", icon: "#", label: "Hall Record", detail: hallStage >= 40 ? "All battle records cleared" : `Stage ${hallStage + 1} unlocked`, value: `${hallStage}/40` });
+  showBattleResult("victory", resultEntries, () => {
+    if (hallStage) returnToHallAfterBattle();
+    if (hallStage && hallProgress.pendingRecruit) openHallRecruitment();
+  });
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
@@ -10126,6 +10267,10 @@ function handleControl(control) {
   if (control === "music") return toggleMusic();
   if (control === "fullscreen") return toggleMobileFullscreen();
   unlockMusic();
+  if (mode === "battleResult") {
+    if (control === "confirm" || control === "cancel") completeBattleResult();
+    return;
+  }
   if (mode === "title") {
     if (control === "confirm") activateTitleSelection();
     else if (control === "cancel") closeTitleSubmenu();
@@ -10400,6 +10545,7 @@ document.querySelectorAll(".menu-tabs button").forEach(btn => {
 });
 
 el.skillPointNotice.addEventListener("click", openSkillPointMenu);
+el.battleResultContinue.addEventListener("click", completeBattleResult);
 el.dialogueSkip.addEventListener("click", event => {
   event.preventDefault();
   event.stopPropagation();
@@ -10461,6 +10607,18 @@ if (new URLSearchParams(location.search).has("qa")) {
       target.hp = Math.max(0, target.hp - amount);
       return wake;
     },
+    showBattleResult: kind => showBattleResult(kind, [
+      { kind: "gold", icon: "G", label: "Gold", value: "+145" },
+      { kind: "gear", icon: "E", label: "QA Legendary Cloak", detail: "Armour", value: "x1", rarity: "Legendary" },
+      { kind: "item", icon: "*", label: "Ember Dust", detail: "Treasure", value: "x3" },
+      { kind: "resonance", icon: "R", label: "Resonance", value: "+15" },
+      { kind: "xp", icon: "EXP", label: "EXP", value: "+220" }
+    ], returnAfterDefeat),
+    defeatParty: () => {
+      battle.party.forEach(unit => { unit.hp = 0; markBattleUnitDown(unit); });
+      return triggerPartyDefeat("QA final hit.");
+    },
+    completeBattleResult,
     applyBuff: (side, index, type, duration = 3) => {
       const target = side === "party" ? battle.party[index] : battle.enemies[index];
       return applyStatus(target, type, target, { duration, force: true });
@@ -11036,6 +11194,31 @@ function runQaChecks() {
     addOwnedGear("Ashrunner Knife", 1, { rarity: "Epic", rollAffixes: true, theme: "mountain" });
     el.menu.classList.remove("hidden");
     renderMenu();
+  } else if (qaMode === "result-victory") {
+    mode = "walk";
+    startBattle("QA Victory Result", [enemy("Training Construct", 1, 1, "Shadow", "#655", 1)], null);
+    showBattleResult("victory", [
+      { kind: "gold", icon: "G", label: "Gold", value: "+145" },
+      { kind: "gear", icon: "E", label: "QA Legendary Cloak", detail: "Armour", value: "x1", rarity: "Legendary" },
+      { kind: "item", icon: "*", label: "Ember Dust", detail: "Treasure", value: "x3" },
+      { kind: "resonance", icon: "R", label: "Resonance", value: "+15" },
+      { kind: "xp", icon: "EXP", label: "EXP", value: "+220" }
+    ], returnAfterDefeat);
+  } else if (qaMode === "result-defeat") {
+    mode = "walk";
+    state.gameMode = "hallBattles";
+    state.map = "emberHallBattles";
+    startBattle("QA Defeat Result", [enemy("Training Construct", 999, 1, "Shadow", "#655", 1)], null);
+    battle.party.forEach(unit => { unit.hp = 0; markBattleUnitDown(unit); });
+    triggerPartyDefeat("QA final hit.");
+  } else if (qaMode === "result-down") {
+    mode = "walk";
+    addParty("Mira");
+    state.activeParty = ["Verseborn", "Mira"];
+    startBattle("QA Down State", [enemy("Training Construct", 999, 1, "Shadow", "#655", 1)], null);
+    battle.party[0].hp = 0;
+    markBattleUnitDown(battle.party[0]);
+    renderBattle("Verseborn is DOWN. Mira continues the fight.");
   } else if (qaMode === "map") {
     const mapId = qaParams.get("qaMap");
     if (maps[mapId]) {

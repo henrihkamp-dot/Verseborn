@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
   <title>Verseborn getting started</title>
-  <link rel="stylesheet" href="styles.css?v=auto-equip-69">
+  <link rel="stylesheet" href="styles.css?v=battle-results-70b">
 </head>
 <body>
   <main class="shell">
@@ -54,6 +54,13 @@
         <div id="partyRows" class="party-rows"></div>
         <div id="enemyRows" class="enemy-rows"></div>
         <div id="actions" class="actions"></div>
+      </div>
+      <div id="battleResult" class="battle-result hidden" role="dialog" aria-modal="true" aria-live="assertive">
+        <div id="battleResultCard" class="battle-result-card">
+          <img id="battleResultArt" alt="">
+          <div id="battleResultRewards" class="battle-result-rewards hidden"></div>
+          <button id="battleResultContinue" type="button" aria-label="Continue"></button>
+        </div>
       </div>
       <div id="menu" class="menu hidden">
         <div class="menu-tabs">
@@ -125,6 +132,6 @@
     </aside>
   </main>
 
-  <script src="game.js?v=auto-equip-69"></script>
+  <script src="game.js?v=battle-results-70b"></script>
 </body>
 </html>
