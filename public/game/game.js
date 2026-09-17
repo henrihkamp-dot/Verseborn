@@ -325,7 +325,7 @@ const battleSpriteHeights = {
   Kael: 58, KaelShadow: 62, Torren: 57, Seerin: 56
 };
 const BATTLE_IDLE_FRAME_TICKS = 36;
-const BATTLE_DEATH_FRAME_TICKS = 5;
+const BATTLE_DEATH_FRAME_TICKS = 8;
 const battleFrameSequences = {
   Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
@@ -6097,6 +6097,8 @@ function drawBattleVitalBar(anchorX, y, value, max, label, colour, width = 42) {
 function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
   if (unit.hp <= 0) {
     if (!enemySide) {
+      const deathAge = Number.isFinite(unit.deathTick) ? tick - unit.deathTick : BATTLE_DEATH_FRAME_TICKS * 4;
+      if (deathAge < BATTLE_DEATH_FRAME_TICKS * 4) return;
       drawRect(anchorX - 18, baseline + 5, 36, 8, "#160d16e8");
       drawRect(anchorX - 17, baseline + 6, 34, 6, "#542735");
       drawText("DOWN", anchorX, baseline + 11, "#e6a6a1", 5, "center");
@@ -6179,8 +6181,8 @@ function drawBattleScene() {
       ctx.save();
       if (down) {
         const deathFade = Math.min(1, Math.max(0, (tick - (Number.isFinite(unit.deathTick) ? unit.deathTick : tick)) / (BATTLE_DEATH_FRAME_TICKS * 4)));
-        ctx.globalAlpha = 1 - deathFade * .52;
-        ctx.filter = `grayscale(${deathFade}) brightness(${1 - deathFade * .42})`;
+        ctx.globalAlpha = 1 - deathFade * .22;
+        ctx.filter = `grayscale(${deathFade * .7}) brightness(${1 - deathFade * .2})`;
       }
       const x = anchorX + battleOffset(unit);
       if (!drawBattlePartySprite(unit, x, baseline, tick)) drawSprite(unit.id, x - 24, baseline - 52, 0, unit.anim || "idle", tick);
