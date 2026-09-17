@@ -7,8 +7,8 @@ ctx.imageSmoothingEnabled = false;
 
 function syncCanvasResolution() {
   const rect = canvas.getBoundingClientRect();
-  const measuredScale = rect.width ? Math.round(rect.width / LOGICAL_WIDTH) : 3;
-  const nextScale = Math.max(1, Math.min(4, measuredScale));
+  const measuredScale = rect.width ? Math.ceil(rect.width / LOGICAL_WIDTH) : 3;
+  const nextScale = Math.max(1, Math.min(5, measuredScale));
   const width = LOGICAL_WIDTH * nextScale;
   const height = LOGICAL_HEIGHT * nextScale;
   if (canvas.width !== width || canvas.height !== height) {
@@ -115,6 +115,22 @@ function syncResponsiveDevice() {
   root.classList.toggle("touch-phone", phone);
   root.classList.toggle("touch-portrait", touchLayout && portrait);
   root.classList.toggle("touch-landscape", touchLayout && !portrait);
+  if (touchLayout || window.innerWidth < 794) {
+    root.classList.remove("desktop-scaled");
+    root.style.removeProperty("--desktop-game-scale");
+    root.style.removeProperty("--desktop-shell-width");
+  } else {
+    const baseGameWidth = 774;
+    const baseGameHeight = 708;
+    const shellGutter = 20;
+    const widthScale = (window.innerWidth - shellGutter) / baseGameWidth;
+    const heightScale = (window.innerHeight - shellGutter) / baseGameHeight;
+    const desktopScale = Math.max(1, Math.min(5 / 3, widthScale, heightScale));
+    root.classList.toggle("desktop-scaled", desktopScale > 1.001);
+    root.style.setProperty("--desktop-game-scale", desktopScale.toFixed(4));
+    root.style.setProperty("--desktop-shell-width", `${Math.ceil(baseGameWidth * desktopScale + shellGutter)}px`);
+    requestAnimationFrame(syncCanvasResolution);
+  }
   const viewport = document.querySelector('meta[name="viewport"]');
   if (viewport) viewport.content = touchLayout
     ? "width=device-width, initial-scale=1, viewport-fit=cover"
@@ -7534,7 +7550,7 @@ function renderBattle(log) {
   defendBtn.type = "button";
   defendBtn.textContent = "Defend / Skip";
   defendBtn.title = "Use the block animation, gain 6 Resonance and reduce the next hit against this hero.";
-  setBattlePreview(defendBtn, "Defend / Skip", `0 damage / 0 MP. ${u.name} blocks ${defendReduction(u)}% of the next direct hit and gains 6 Resonance.`);
+  setBattlePreview(defendBtn, "Defend / Skip", `Block ${defendReduction(u)}% of the next hit | +6 Resonance | 0 MP.`);
   defendBtn.onclick = () => useDefend(u);
   el.actions.appendChild(defendBtn);
   const itemBtn = document.createElement("button");
@@ -7559,13 +7575,15 @@ function highlightBattleAction() {
 
 function skillPreview(u, sk, target = null) {
   const t = totals(u.id);
-  const partyHeal = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0;
   const heal = healingAmount(u.id, sk, u);
   const mpCost = skillMpCost(u.id, sk, u);
-  if (sk.power < 0) return `Restores ${heal} HP${partyHeal ? " to every living ally" : sk.targetSide === "self" ? " to self" : " to the most wounded ally"} / ${skillFormula(sk)} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${mpCost} fixed MP`}. ${sk.desc}`;
+  const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% Max MP" : `${mpCost} MP`;
+  const targetLabel = battleSkillTargetLabel(u.id, sk);
+  if (sk.power < 0) return `Heal ${heal} HP | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (!skillTargetsEnemies(sk)) {
-    const targetText = sk.targetSide === "ally" ? ` Targets one living ally${target ? `: ${target.name}` : ""}.` : sk.partyWide ? " Targets every living ally." : "";
-    return `${sk.transform ? `Transformation for ${(TRANSFORMATION_CONFIG[sk.transform]?.duration || 4) + typedTalentValue(u.id, "transformDuration")} actions` : "Support command"} / costs ${sk.anim === "ultimate" ? "100 Resonance" : `${mpCost} fixed MP`}.${targetText} ${sk.desc}${sk.immediateTurn ? ` Extra actions used: ${battle?.extraTurns || 0}/2 this battle.` : ""}`;
+    const kind = sk.transform ? `Transform ${(TRANSFORMATION_CONFIG[sk.transform]?.duration || 4) + typedTalentValue(u.id, "transformDuration")} turns` : "Support";
+    const extra = sk.immediateTurn ? ` Extra actions: ${battle?.extraTurns || 0}/2 used.` : "";
+    return `${kind} | ${targetLabel}${target ? `: ${target.name}` : ""} | ${cost}. ${sk.desc}${extra}`;
   }
   const statName = skillScaling(sk).toUpperCase();
   const statKey = statName === "MAG" ? "mag" : "str";
@@ -7585,14 +7603,18 @@ function skillPreview(u, sk, target = null) {
   const targetRoll = roll => Math.max(1, Math.round((displayWeakness ? Math.floor(Math.floor(roll * 1.55) * (1 + weaknessBonus)) : roll) * multiplier * (1 - defense)));
   const targetLow = targetRoll(low);
   const targetHigh = targetRoll(high);
-  const weakText = weaknessBonus ? ` Weakness hits use x1.55 and another +${Math.round(weaknessBonus * 100)}% from gear.` : " Weakness hits use x1.55 damage.";
-  const cost = sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(u.id)}` : sk.basicAttack ? "0 MP; restores 6% Max MP" : `${mpCost} fixed MP`;
-  const targetText = ` ${target ? `Against ${target.name}` : "After bonuses"}: ${targetLow}-${targetHigh} damage${displayWeakness ? " including weakness" : ""}, before crit and stagger break.`;
-  const areaText = skillHitsAll(u.id, sk) ? " Hits every living enemy." : " Hits one selected enemy.";
-  const critChance = Math.min(.65, heroCritChance(u.id, Boolean(target && hasNegativeStatus(target))) + statusValue(u, "critUp") + statusValue(target, "marked") + statusValue(target, "critExposed"));
-  const critText = critChance ? ` ${Math.round(critChance * 100)}% critical chance for double damage.` : "";
-  const basicEffect = sk.basicAttack ? ` ${weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon))?.label || ""}.` : "";
-  return `${sk.element} ${sk.anim} / ${Math.round(low)}-${Math.round(high)} base damage from ${statName} ${stat} / costs ${cost}.${targetText}${areaText}${critText}${revealWeakness ? weakText : " Discover a weakness by hitting it or selecting a reveal talent."}${basicEffect} ${sk.desc}`;
+  const weaknessText = displayWeakness ? " | Weakness included" : "";
+  const basicEffect = sk.basicAttack ? weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon))?.label : "";
+  return `${sk.element} ${statName} | ${targetLow}-${targetHigh} damage${weaknessText} | ${targetLabel} | ${cost}. ${basicEffect ? `${basicEffect}. ` : ""}${sk.desc}`;
+}
+
+function battleSkillTargetLabel(id, sk) {
+  if (skillTargetsEnemies(sk)) return skillHitsAll(id, sk) ? "All enemies" : "One enemy";
+  if (sk.partyWide || sk.targetSide === "party") return "Whole party";
+  if (sk.targetSide === "ally") return "One ally";
+  if (sk.targetSide === "self") return "Self";
+  if (sk.power < 0) return "Lowest-HP ally";
+  return "Self";
 }
 
 function setBattlePreview(button, title, description) {
@@ -8206,7 +8228,7 @@ function renderBattleItems(u) {
     button.innerHTML = `${pixelIconHtml(icon.sheet, icon.index, "battle-item-icon")}<span>${name} x${state.inventory[name]} | ${battleItemState(u, info)}</span>`;
     button.classList.add("battle-item-button");
     button.title = info.desc;
-    setBattlePreview(button, name, `${info.desc} Exact effect: ${battleItemState(u, info)}. Uses one carried item and ends ${u.name}'s turn.`);
+    setBattlePreview(button, name, `${battleItemState(u, info)} | Uses 1 item | Ends turn.`);
     button.disabled = !canUseBattleItem(u, info);
     button.onclick = () => useBattleItem(u, name);
     el.actions.appendChild(button);
@@ -9002,6 +9024,34 @@ function statusEquipmentHtml(id) {
   }).join("");
 }
 
+function abilityUnlockLabel(id, sk) {
+  const base = baseJobs[id].skills.find(entry => entry.name === sk.name);
+  if (base) return base.transform ? `Level ${TRANSFORMATION_UNLOCK_LEVEL}` : "Level 1";
+  const talentEntry = activeTalents(id).find(entry => entry.type === "newSkill" && entry.value?.name === sk.name);
+  if (talentEntry) {
+    const earliestLevel = TALENT_POINT_LEVELS[Math.min(TALENT_POINT_LEVELS.length - 1, (talentEntry.tier - 1) * 2)];
+    return `Talent T${talentEntry.tier} / Lv ${earliestLevel}+`;
+  }
+  return "Talent upgrade";
+}
+
+function statusAbilityRowsHtml(id, skills, unit = { id, statuses: [] }, originLabel = "") {
+  return skills.map(sk => {
+    const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% MP" : `${skillMpCost(id, sk, unit)} MP`;
+    const target = battleSkillTargetLabel(id, sk);
+    return `<div class="status-ability-row"><span><strong>${sk.name}</strong><small>${sk.element} / ${target} / ${cost}</small></span><p>${sk.desc}</p><b>${originLabel || abilityUnlockLabel(id, sk)}</b></div>`;
+  }).join("");
+}
+
+function statusAbilitiesHtml(id) {
+  const normalUnit = { id, statuses: [] };
+  const normal = battleSkills(id, normalUnit);
+  const transform = normal.find(sk => sk.transform)?.transform;
+  const form = transform ? battleSkills(id, { id, form: transform, statuses: [] }) : [];
+  const formTitle = transform === "mech" ? "Mech Form kit" : transform === "shadowpriest" ? "Shadowpriest kit" : "";
+  return `<section class="status-detail-section status-abilities"><h4>Available abilities (${normal.length})</h4><div class="status-ability-list">${statusAbilityRowsHtml(id, normal, normalUnit)}</div>${form.length ? `<details><summary>${formTitle} (${form.length})</summary><div class="status-ability-list">${statusAbilityRowsHtml(id, form, { id, form: transform, statuses: [] }, "Form kit")}</div></details>` : ""}</section>`;
+}
+
 function statusCardHtml(id) {
   const h = baseJobs[id];
   const t = totals(id);
@@ -9016,7 +9066,7 @@ function statusCardHtml(id) {
   const baseCrit = Math.round(output.critInfo.base * 100);
   const agiCrit = (output.critInfo.agilityBonus * 100).toFixed(1);
   const afflictedText = output.afflictedCrit > output.crit ? ` / ${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "";
-  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div><section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
 }
 
 function toggleTalent(value) {

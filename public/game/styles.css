@@ -972,6 +972,64 @@ canvas:focus {
   color: #f4dfad;
 }
 
+.status-ability-list {
+  display: grid;
+  gap: 3px;
+}
+
+.status-ability-row {
+  display: grid;
+  grid-template-columns: minmax(145px, .8fr) minmax(0, 1.35fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 5px 6px;
+  border-left: 2px solid #7b5a8f;
+  background: #0d0a11;
+}
+
+.status-ability-row span,
+.status-ability-row strong,
+.status-ability-row small {
+  display: block;
+  min-width: 0;
+}
+
+.status-ability-row strong {
+  color: #f4dfad;
+  font-size: 10px;
+}
+
+.status-ability-row small {
+  margin-top: 2px;
+  color: #a8dcd3;
+  font-size: 8px;
+}
+
+.status-ability-row p {
+  margin: 0;
+  color: #bfae8d;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.status-ability-row > b {
+  color: #ffd27d;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.status-abilities details {
+  margin-top: 5px;
+}
+
+.status-abilities summary {
+  padding: 5px 6px;
+  color: #d8b06b;
+  font-size: 9px;
+  cursor: pointer;
+}
+
 .xp-progress {
   display: grid;
   grid-template-columns: minmax(105px, auto) minmax(90px, 1fr);
@@ -2672,6 +2730,14 @@ h1 {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .status-ability-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .status-ability-row p {
+    grid-column: 1 / -1;
+  }
+
   .shell {
     padding: 4px;
   }
@@ -3395,6 +3461,19 @@ h1 {
 
 html:not(.touch-layout) .gamepad {
   display: none;
+}
+
+/* Scale the complete desktop game as one unit while preserving its 8:7 frame. */
+@media (hover: hover) and (pointer: fine) and (min-width: 794px) {
+  html:not(.touch-layout).desktop-scaled .shell {
+    width: min(var(--desktop-shell-width, 794px), 100vw);
+  }
+
+  html:not(.touch-layout).desktop-scaled .game {
+    width: 774px;
+    max-width: none;
+    zoom: var(--desktop-game-scale, 1);
+  }
 }
 
 html.touch-layout,

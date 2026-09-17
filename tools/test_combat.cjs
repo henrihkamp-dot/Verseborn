@@ -162,6 +162,10 @@ assert.ok(cssSource.includes('html.touch-layout .battle:not(.hidden) .actions bu
 assert.ok(cssSource.includes('html.touch-phone.touch-portrait .game') && cssSource.includes('env(safe-area-inset-left)'), 'Phone portrait gameplay and safe areas are mobile-scoped');
 assert.ok(cssSource.includes('html:not(.touch-layout) .gamepad'), 'Small desktop windows do not receive touch controls');
 assert.ok(cssSource.includes('html.touch-layout.touch-portrait:not(.touch-phone) .game'), 'Tablet portrait sizing remains touch-scoped');
+assert.ok(cssSource.includes('html:not(.touch-layout).desktop-scaled .game'), 'Desktop game scaling remains isolated from touch layouts');
+assert.ok(gameSource.includes('Math.ceil(rect.width / LOGICAL_WIDTH)'), 'Canvas resolution rounds up to preserve desktop image quality');
+assert.ok(gameSource.includes('Available abilities (') && gameSource.includes('abilityUnlockLabel'), 'Status menu lists currently available abilities with level or talent origins');
+assert.ok(gameSource.includes('Weakness included') && !gameSource.includes('Discover a weakness by hitting it or selecting a reveal talent.'), 'Battle command previews keep only compact decision information');
 assert.ok(gameSource.includes('requestFullscreen') && htmlSource.includes('data-control="fullscreen"'), 'Touch layout exposes fullscreen where the browser supports it');
 assert.ok(gameSource.includes('width=device-width, initial-scale=1, viewport-fit=cover') && !gameSource.includes('user-scalable=no'), 'Native pinch zoom remains available');
 assert.ok(cssSource.includes('body[data-play-mode="battle"] .game') && cssSource.includes('height: calc(100dvh') && cssSource.includes('body[data-play-mode="battle"] .hud'), 'Landscape phone battles stay contained inside the usable viewport');
