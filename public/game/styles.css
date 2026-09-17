@@ -1019,6 +1019,30 @@ canvas:focus {
   white-space: nowrap;
 }
 
+.status-ability-metrics {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #2d2530;
+}
+
+.status-ability-metrics span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 5px;
+  background: #19131d;
+  color: #f4dfad;
+  font-size: 8px;
+}
+
+.status-ability-metrics b {
+  color: #a8dcd3;
+  font-size: 7px;
+}
+
 .status-abilities details {
   margin-top: 5px;
 }
@@ -3278,6 +3302,53 @@ h1 {
 .gear-summary-strip .gear-stat-grid span {
   min-width: 74px;
 }
+.gear-auto-equip {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 7px;
+  border: 1px solid #776046;
+  background: #17121b;
+  box-shadow: inset 0 0 0 1px #302331;
+}
+.gear-auto-equip > div:first-child strong,
+.gear-auto-equip > div:first-child small {
+  display: block;
+}
+.gear-auto-equip > div:first-child strong {
+  color: #f4cf87;
+  font-size: 12px;
+}
+.gear-auto-equip > div:first-child small {
+  margin-top: 2px;
+  color: #bfae8d;
+  font-size: 9px;
+}
+.gear-auto-equip button {
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid #8e704d;
+  border-radius: 2px;
+  background: #241d29;
+  color: #ffe5ad;
+  font: inherit;
+  cursor: pointer;
+}
+.gear-auto-equip button:hover,
+.gear-auto-equip button:focus-visible,
+.gear-auto-source button.is-active {
+  border-color: #d8b06b;
+  background: #51345f;
+  color: #fff0bc;
+}
+.gear-auto-source {
+  display: flex;
+}
+.gear-auto-source button + button {
+  margin-left: -1px;
+}
 .gear-browser {
   margin: 0 0 10px;
   padding: 7px;
@@ -3440,6 +3511,10 @@ h1 {
   .selection-list { max-height: 280px; }
   .gear-summary-strip { grid-template-columns: 1fr; }
   .gear-summary-strip .gear-stat-grid { justify-content: flex-start; }
+  .gear-auto-equip { grid-template-columns: 1fr 1fr; }
+  .gear-auto-equip > div:first-child { grid-column: 1 / -1; }
+  .gear-auto-source { grid-column: 1 / -1; }
+  .gear-auto-source button { flex: 1; }
   .gear-browser-bar { grid-template-columns: 1fr 1fr; }
   .gear-browser input[type="search"] { grid-column: 1 / -1; }
   .gear-browser details[open] { grid-column: 1 / -1; }

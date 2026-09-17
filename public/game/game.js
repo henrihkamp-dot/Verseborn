@@ -92,6 +92,7 @@ const gearBrowser = {
   filterOpen: false,
   sortOpen: false
 };
+let autoEquipPool = "all";
 let selectedItemCategory = "consumables";
 let selectedItemRef = null;
 let selectedSkillHero = "Verseborn";
@@ -1947,6 +1948,18 @@ function resetGearBrowser() {
   selectedGearRef = null;
 }
 
+function autoEquipToolbarHtml(id) {
+  return `<section class="gear-auto-equip" aria-label="Automatic equipment">
+    <div><strong>Auto Equip</strong><small>Role-optimized stats, damage, healing and utility</small></div>
+    <div class="gear-auto-source" role="group" aria-label="Gear source">
+      <button type="button" data-auto-equip-pool="all" class="${autoEquipPool === "all" ? "is-active" : ""}" aria-pressed="${autoEquipPool === "all"}">All gear</button>
+      <button type="button" data-auto-equip-pool="unequipped" class="${autoEquipPool === "unequipped" ? "is-active" : ""}" aria-pressed="${autoEquipPool === "unequipped"}">Unequipped gear</button>
+    </div>
+    <button type="button" data-auto-equip="hero">Optimize ${id}</button>
+    <button type="button" data-auto-equip="party">Optimize everybody</button>
+  </section>`;
+}
+
 function gearBrowserToolbarHtml(visibleCount, totalCount) {
   const statOptions = gearStatOptions();
   const affixOptions = gearAffixOptions();
@@ -3662,6 +3675,212 @@ function gearCopyCount(name) {
 function canEquip(id, gear) {
   const owners = gearOwners[gear?.name];
   return !owners || owners.includes(id);
+}
+
+const AUTO_EQUIP_PROFILES = {
+  Verseborn: { damage: 1, healing: .45, hp: .12, mp: .16, agi: .22, echo: .28, control: .75, support: 1, tank: .2 },
+  Mira: { damage: 1.35, healing: 0, hp: .08, mp: .08, agi: .34, echo: .12, control: 1, support: .15, tank: .05 },
+  Seerin: { damage: .62, healing: .45, hp: .34, mp: .12, agi: .08, echo: .18, control: .7, support: .75, tank: 1 },
+  Kael: { damage: .35, healing: 1.45, hp: .2, mp: .3, agi: .12, echo: .25, control: .35, support: 1.15, tank: .35 },
+  Torren: { damage: .85, healing: .18, hp: .48, mp: .06, agi: .05, echo: .12, control: .55, support: .5, tank: 1.25 },
+  Glimmer: { damage: 1.2, healing: .35, hp: .1, mp: .16, agi: .28, echo: .24, control: .85, support: .55, tank: .12 },
+  Sparky: { damage: 1.2, healing: .35, hp: .1, mp: .18, agi: .24, echo: .32, control: .45, support: .55, tank: .1 }
+};
+
+function autoEquipLoadoutScore(id) {
+  const profile = AUTO_EQUIP_PROFILES[id] || AUTO_EQUIP_PROFILES.Verseborn;
+  const t = totals(id);
+  const output = estimatedHeroOutput(id);
+  const statusProc = ["poison", "sleep", "stun"].reduce((sum, type) => sum + effectValue(id, "statusOnHit", type), 0);
+  const resistance = ["poison", "sleep", "stun"].reduce((sum, type) => sum + effectValue(id, "statusResistance", type), effectValue(id, "allStatusResistance"));
+  const utility = statusProc * 100 * profile.control
+    + effectValue(id, "statusChance") * 65 * profile.control
+    + effectValue(id, "statusDuration") * 7 * profile.control
+    + effectValue(id, "buffDuration") * 8 * profile.support
+    + effectValue(id, "blockPower") * 100 * profile.tank
+    + resistance * 36 * (profile.tank + .25)
+    + effectValue(id, "echoing") * 260
+    + effectValue(id, "openingTurnProgress") * 45 * (profile.agi + .4)
+    + effectValue(id, "openingResonance") * .35
+    + effectValue(id, "hpOnHit") * .7
+    + effectValue(id, "mpOnHit") * 1.2
+    + effectValue(id, "battleRegen") * .16
+    + effectValue(id, "weaknessDamage") * 55 * profile.damage
+    + effectValue(id, "poisonDamage") * 55 * (id === "Mira" ? 1 : .25);
+  return output.dps * profile.damage
+    + output.hps * profile.healing
+    + t.max * profile.hp
+    + t.mp * profile.mp
+    + t.agi * profile.agi
+    + t.echo * profile.echo
+    + utility;
+}
+
+function autoEquipGearScore(id, slot, ref) {
+  const hero = baseJobs[id];
+  if (!hero || !Object.hasOwn(hero.gear, slot)) return -1e9;
+  const gear = ref ? gearByName(ref) : null;
+  if (gear && (gear.slot !== slot || !canEquip(id, gear))) return -1e9;
+  const current = hero.gear[slot];
+  try {
+    hero.gear[slot] = ref || null;
+    const rarity = ref ? RARITY_ORDER.indexOf(gearRarity(ref)) : 0;
+    return autoEquipLoadoutScore(id) + rarity * .001 + (ref ? gearItemPower(ref) : 0) * .00001;
+  } finally {
+    hero.gear[slot] = current;
+  }
+}
+
+function gearInventoryTokens(slot) {
+  const tokens = [];
+  state.ownedGear.forEach(name => {
+    const separateRefs = echoGearInstanceRefs(name);
+    if (separateRefs.length) {
+      separateRefs.forEach(ref => {
+        const gear = gearByName(ref);
+        if (gear?.slot === slot) tokens.push({ id: ref, ref, gear, equippedBy: null });
+      });
+      return;
+    }
+    const gear = gearByName(name);
+    if (gear?.slot !== slot) return;
+    const copies = Math.max(1, Number(state.gearCopies[name]) || 1);
+    for (let copy = 0; copy < copies; copy++) tokens.push({ id: `${name}#${copy + 1}`, ref: name, gear, equippedBy: null });
+  });
+  state.party.forEach(id => {
+    const equippedRef = baseJobs[id]?.gear?.[slot];
+    if (!equippedRef) return;
+    const exact = tokens.find(token => !token.equippedBy && token.ref === equippedRef);
+    const fallback = tokens.find(token => !token.equippedBy && gearBaseName(token.ref) === gearBaseName(equippedRef));
+    const token = exact || fallback;
+    if (token) token.equippedBy = id;
+  });
+  return tokens;
+}
+
+function maximizeGearAssignments(weights) {
+  const rows = weights.length;
+  const columns = weights[0]?.length || 0;
+  if (!rows || columns < rows) return [];
+  const maximum = Math.max(0, ...weights.flat().filter(Number.isFinite));
+  const u = Array(rows + 1).fill(0);
+  const v = Array(columns + 1).fill(0);
+  const p = Array(columns + 1).fill(0);
+  const way = Array(columns + 1).fill(0);
+  for (let row = 1; row <= rows; row++) {
+    p[0] = row;
+    let column = 0;
+    const minimum = Array(columns + 1).fill(Infinity);
+    const used = Array(columns + 1).fill(false);
+    do {
+      used[column] = true;
+      const activeRow = p[column];
+      let delta = Infinity;
+      let nextColumn = 0;
+      for (let candidate = 1; candidate <= columns; candidate++) {
+        if (used[candidate]) continue;
+        const cost = maximum - weights[activeRow - 1][candidate - 1] - u[activeRow] - v[candidate];
+        if (cost < minimum[candidate]) {
+          minimum[candidate] = cost;
+          way[candidate] = column;
+        }
+        if (minimum[candidate] < delta) {
+          delta = minimum[candidate];
+          nextColumn = candidate;
+        }
+      }
+      for (let candidate = 0; candidate <= columns; candidate++) {
+        if (used[candidate]) {
+          u[p[candidate]] += delta;
+          v[candidate] -= delta;
+        } else {
+          minimum[candidate] -= delta;
+        }
+      }
+      column = nextColumn;
+    } while (p[column] !== 0);
+    do {
+      const previous = way[column];
+      p[column] = p[previous];
+      column = previous;
+    } while (column !== 0);
+  }
+  const assignment = Array(rows).fill(-1);
+  for (let column = 1; column <= columns; column++) {
+    if (p[column]) assignment[p[column] - 1] = column - 1;
+  }
+  return assignment;
+}
+
+function assignGearRef(id, slot, ref) {
+  const hero = baseJobs[id];
+  if (!hero || !Object.hasOwn(hero.gear, slot)) return false;
+  const currentRef = hero.gear[slot] || null;
+  if (!ref) {
+    hero.gear[slot] = null;
+    return currentRef !== null;
+  }
+  const gear = gearByName(ref);
+  if (!gear || gear.slot !== slot || !ownsGearRef(ref) || !canEquip(id, gear) || currentRef === ref) return false;
+  const holders = state.party.filter(heroId => heroId !== id && baseJobs[heroId].gear[slot] === ref);
+  const usedCopies = state.party.filter(heroId => baseJobs[heroId].gear[slot] === ref).length;
+  if (holders.length && usedCopies >= gearCopyCount(ref)) {
+    const otherId = holders[0];
+    const currentGear = gearByName(currentRef);
+    baseJobs[otherId].gear[slot] = currentGear && canEquip(otherId, currentGear) ? currentRef : null;
+  }
+  hero.gear[slot] = ref;
+  return true;
+}
+
+function autoEquipHero(id, pool = autoEquipPool) {
+  if (!state.party.includes(id)) return false;
+  let changed = false;
+  Object.keys(baseJobs[id].gear).forEach(slot => {
+    const tokens = gearInventoryTokens(slot).filter(token => canEquip(id, token.gear)
+      && (pool === "all" || !token.equippedBy || token.equippedBy === id));
+    const current = baseJobs[id].gear[slot];
+    const candidates = [...tokens, { id: `empty:${slot}`, ref: null, gear: null, equippedBy: null }]
+      .sort((a, b) => autoEquipGearScore(id, slot, b.ref) - autoEquipGearScore(id, slot, a.ref));
+    const best = candidates[0]?.ref || null;
+    if (best !== current) changed = assignGearRef(id, slot, best) || changed;
+  });
+  state.party.forEach(clampHeroVitals);
+  return changed;
+}
+
+function autoEquipParty(pool = autoEquipPool) {
+  const heroes = state.party.filter(id => baseJobs[id]);
+  if (!heroes.length) return false;
+  let changed = false;
+  Object.keys(baseJobs[heroes[0]].gear).forEach(slot => {
+    const tokens = gearInventoryTokens(slot);
+    const choices = [...tokens, ...heroes.map((id, index) => ({ id: `empty:${slot}:${index}`, ref: null, gear: null, equippedBy: null }))];
+    const weights = heroes.map(id => choices.map(choice => {
+      if (choice.gear && !canEquip(id, choice.gear)) return -1e9;
+      if (pool === "unequipped" && choice.equippedBy && choice.equippedBy !== id) return -1e9;
+      return autoEquipGearScore(id, slot, choice.ref);
+    }));
+    const assignment = maximizeGearAssignments(weights);
+    const next = heroes.map((id, index) => choices[assignment[index]]?.ref || null);
+    heroes.forEach((id, index) => {
+      if (baseJobs[id].gear[slot] !== next[index]) changed = true;
+      baseJobs[id].gear[slot] = next[index];
+    });
+  });
+  heroes.forEach(clampHeroVitals);
+  return changed;
+}
+
+function runAutoEquip(target) {
+  const changed = target === "party" ? autoEquipParty() : autoEquipHero(selectedGearHero);
+  selectedGearRef = null;
+  playSfx(changed ? "item" : "menu");
+  updatePanels();
+  renderMenu();
+  showHudNotice(changed
+    ? target === "party" ? `AUTO EQUIP - ${state.party.length} heroes optimized` : `AUTO EQUIP - ${selectedGearHero} optimized`
+    : "AUTO EQUIP - current loadout is already optimal");
 }
 
 function effectValue(id, type, match = null) {
@@ -8914,6 +9133,45 @@ function skillExpectedOutput(id, sk, unit = { id, statuses: [] }, afflicted = fa
     + Math.max(1, Math.round((base + roll) * multiplier * 2)) * crit).reduce((sum, value) => sum + value, 0) / 6;
 }
 
+function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
+  if (sk.power < 0) {
+    return { kind: "healing", scaling: "MAG", healing: healingAmount(id, sk, unit) };
+  }
+  if (!skillTargetsEnemies(sk)) return { kind: "support", scaling: "NONE" };
+  const statKey = skillScaling(sk);
+  const stat = Math.round(totals(id)[statKey] * transformedStatMultiplier(unit, statKey));
+  let base = sk.coefficient ? stat * sk.coefficient : sk.power + stat;
+  const target = { statuses: [] };
+  base *= skillDamageTalentMultiplier(unit, sk, target);
+  if (sk.anim === "ultimate") base *= ultimatePotencyMultiplier(id, sk);
+  const multiplier = outgoingDamageMultiplier(unit, statKey === "str" ? "melee" : "magic", target)
+    * (1 + (sk.buffScaling || 0) * ensureStatuses(unit).filter(status => STATUS_DEFS[status.type]?.buff).length);
+  const normal = Array.from({ length: 6 }, (_, roll) => Math.max(1, Math.round((base + roll) * multiplier)))
+    .reduce((sum, value) => sum + value, 0) / 6;
+  const critical = Array.from({ length: 6 }, (_, roll) => Math.max(1, Math.round((base + roll) * multiplier * 2)))
+    .reduce((sum, value) => sum + value, 0) / 6;
+  const critChance = heroCritChance(id);
+  return {
+    kind: "damage",
+    scaling: statKey.toUpperCase(),
+    normal: Math.round(normal),
+    critical: Math.round(critical),
+    average: Math.round(normal * (1 - critChance) + critical * critChance),
+    critChance
+  };
+}
+
+function statusAbilityMetricsHtml(id, sk, unit) {
+  const output = skillOutputBreakdown(id, sk, unit);
+  if (output.kind === "healing") {
+    return `<div class="status-ability-metrics"><span><b>SCALING</b>${output.scaling}</span><span><b>HPS</b>${output.healing} / ally</span><span><b>OUTPUT</b>per use</span></div>`;
+  }
+  if (output.kind === "support") {
+    return `<div class="status-ability-metrics"><span><b>SCALING</b>None</span><span><b>OUTPUT</b>Utility skill</span></div>`;
+  }
+  return `<div class="status-ability-metrics"><span><b>SCALING</b>${output.scaling}</span><span><b>NORMAL</b>${output.normal}</span><span><b>CRIT</b>${output.critical}</span><span><b>AVG DPS</b>${output.average} (${Math.round(output.critChance * 100)}% CRIT)</span></div>`;
+}
+
 function skillCatalogueHtml(id) {
   const normal = battleSkills(id, { id });
   const form = id === "Glimmer" ? "mech" : id === "Kael" ? "shadowpriest" : null;
@@ -9039,7 +9297,7 @@ function statusAbilityRowsHtml(id, skills, unit = { id, statuses: [] }, originLa
   return skills.map(sk => {
     const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% MP" : `${skillMpCost(id, sk, unit)} MP`;
     const target = battleSkillTargetLabel(id, sk);
-    return `<div class="status-ability-row"><span><strong>${sk.name}</strong><small>${sk.element} / ${target} / ${cost}</small></span><p>${sk.desc}</p><b>${originLabel || abilityUnlockLabel(id, sk)}</b></div>`;
+    return `<div class="status-ability-row"><span><strong>${sk.name}</strong><small>${sk.element} / ${target} / ${cost}</small></span><p>${sk.desc}</p><b>${originLabel || abilityUnlockLabel(id, sk)}</b>${statusAbilityMetricsHtml(id, sk, unit)}</div>`;
   }).join("");
 }
 
@@ -9243,7 +9501,7 @@ function renderMenu() {
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
     const detailIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedSlot];
     const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearBrowser.slot === "all" ? "Gear results" : gearSlotLabel(selectedGearSlot)}</small><strong>${slotChoices.length ? "Select gear" : "No matching gear"}</strong></header><p>${slotChoices.length ? "Choose an item to inspect its stats, effects and affixes." : "Adjust the search or clear the active filters."}</p></article>`;
-    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section>${gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length)}<div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearBrowser.slot === "all" ? "All Gear" : gearSlotLabel(gearBrowser.slot)}</strong><small>${slotChoices.length} matching</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
+    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section>${autoEquipToolbarHtml(id)}${gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length)}<div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearBrowser.slot === "all" ? "All Gear" : gearSlotLabel(gearBrowser.slot)}</strong><small>${slotChoices.length} matching</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
       selectedGearHero = btn.dataset.gearHero;
       selectedGearRef = null;
@@ -9266,6 +9524,11 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-equip]").forEach(btn => btn.onclick = () => equipGear(btn.dataset.equip));
+    el.menuBody.querySelectorAll("[data-auto-equip-pool]").forEach(btn => btn.onclick = () => {
+      autoEquipPool = btn.dataset.autoEquipPool;
+      renderMenu();
+    });
+    el.menuBody.querySelectorAll("[data-auto-equip]").forEach(btn => btn.onclick = () => runAutoEquip(btn.dataset.autoEquip));
     el.menuBody.querySelectorAll("[data-favorite]").forEach(input => input.onchange = () => {
       if (input.checked) state.favoriteGear[input.dataset.favorite] = true;
       else delete state.favoriteGear[input.dataset.favorite];
