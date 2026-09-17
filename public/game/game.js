@@ -325,6 +325,7 @@ const battleSpriteHeights = {
   Kael: 58, KaelShadow: 62, Torren: 57, Seerin: 56
 };
 const BATTLE_IDLE_FRAME_TICKS = 36;
+const BATTLE_DEATH_FRAME_TICKS = 5;
 const battleFrameSequences = {
   Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
@@ -4829,7 +4830,7 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const defaultColumn = animation === "idle"
     ? [0, 1, 2, 3, 2, 1][idlePhase]
     : animation === "death"
-      ? sheet.columns - 1
+      ? Math.min(sheet.columns - 1, Math.floor(Math.max(0, frame - (Number.isFinite(unit.deathTick) ? unit.deathTick : frame)) / BATTLE_DEATH_FRAME_TICKS))
       : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
   const sequence = battleFrameSequences[visualId]?.[animation];
   const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
@@ -6177,8 +6178,9 @@ function drawBattleScene() {
     const drawUnit = () => {
       ctx.save();
       if (down) {
-        ctx.globalAlpha = .48;
-        ctx.filter = "grayscale(1) brightness(.58)";
+        const deathFade = Math.min(1, Math.max(0, (tick - (Number.isFinite(unit.deathTick) ? unit.deathTick : tick)) / (BATTLE_DEATH_FRAME_TICKS * 4)));
+        ctx.globalAlpha = 1 - deathFade * .52;
+        ctx.filter = `grayscale(${deathFade}) brightness(${1 - deathFade * .42})`;
       }
       const x = anchorX + battleOffset(unit);
       if (!drawBattlePartySprite(unit, x, baseline, tick)) drawSprite(unit.id, x - 24, baseline - 52, 0, unit.anim || "idle", tick);
@@ -7320,7 +7322,7 @@ function prepareEnemyForBattle(source, mapId = state.map) {
 
 function battleUnit(id) {
   const h = baseJobs[id], t = totals(id);
-  return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], down: h.hp <= 0, row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: h.hp <= 0 ? "death" : "idle" };
+  return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], down: h.hp <= 0, deathTick: h.hp <= 0 ? tick : null, row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: h.hp <= 0 ? "death" : "idle" };
 }
 
 function hallBattleProgress() {
@@ -7630,6 +7632,7 @@ function markBattleUnitDown(unit) {
   unit.down = true;
   unit.guarding = false;
   unit.anim = "death";
+  if (newlyDown || !Number.isFinite(unit.deathTick)) unit.deathTick = tick;
   return newlyDown;
 }
 
@@ -7638,6 +7641,7 @@ function reviveBattleUnit(unit, ratio) {
   unit.hp = Math.max(1, Math.round(unit.max * ratio));
   unit.down = false;
   unit.anim = "idle";
+  unit.deathTick = null;
   return unit.hp;
 }
 
