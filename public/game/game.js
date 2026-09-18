@@ -2219,9 +2219,9 @@ const baseJobs = {
   ]),
   Mira: character("Mira", "Whispering Arrow", "Shadow", "#12151d", "#050508", "#7e62a8", { str: 12, agi: 17, mag: 9, stam: 7, echo: 8 }, ["Twin Voidthorns", "Ashcloak", "Quiet Circuit", "Veln Crest Token", "Mira Top Hat"], [
     skill("Attack", "melee", "Neutral", 14, 0, "Twin dagger slash."),
-    skill("Voidthorn Mark", "magic", "Shadow", 32, 5, "Marks and exploits weakness."),
-    skill("Silent Step", "melee", "Shadow", 20, 4, "Pushes one node back."),
-    skill("Cut the Tongue", "melee", "Shadow", 28, 7, "A precise dirty strike that deals moderate damage and Silences for 2 turns.", { status: { type: "silence", duration: 2, force: true } }),
+    skill("Voidthorn Mark", "magic", "Shadow", 32, 5, "Marks and exploits weakness, with a devastating payoff against Shadow Exposed enemies.", { shadowExposureBonus: .6 }),
+    skill("Silent Step", "melee", "Shadow", 20, 4, "Pushes one node back. Doubles Stun chance this turn and on Mira's next turn.", { doublesStunChance: true }),
+    skill("Cut the Tongue", "melee", "Shadow", 28, 7, "A precise dirty strike that Silences and inflicts Shadow Exposed for 2 turns.", { status: { type: "silence", duration: 2, force: true }, extraStatuses: [{ type: "shadowExposed", duration: 2, force: true }] }),
     skill("ULT: Whispering Arrow", "ultimate", "Shadow", 92, 100, "Screen-darkening precision strike.")
   ]),
   Seerin: character("Seerin", "Flame's Shield", "Holy Fire", "#8d382e", "#9e3d20", "#f0d39a", { str: 13, agi: 7, mag: 11, stam: 18, echo: 10 }, ["Earth Shield", "Flameguard Plate", "Red Ember Band", "Cinder Star", "Stone Brow Guard"], [
@@ -2461,7 +2461,7 @@ Object.entries(baseJobs).forEach(([id, hero]) => {
     }
     if (sk.name === "ULT: The Name I Chose") sk.allEnemies = true;
     if (sk.name === "ULT: Between Two Names") sk.desc = "STR-based eclipse strike against every enemy; uses your normal critical chance.";
-    if (sk.name === "Voidthorn Mark") sk.desc = "MAG-based Shadow damage. Exploits Shadow weakness.";
+    if (sk.name === "Voidthorn Mark") sk.desc = "MAG + half AGI Shadow damage. Deals 60% extra damage after Shadow Exposed triggers weakness.";
     if (sk.name === "Patch Job") sk.desc = "Heal the most wounded ally.";
     if (sk.pierce) sk.desc = sk.desc.replace("ignores defenses", "partially penetrates Defense Up");
     if (sk.buffs?.some(buff => buff.type === "agilityUp")) {
@@ -2634,6 +2634,7 @@ const STATUS_DEFS = {
   sleep: { label: "SLEEP", short: "SLP", negative: true, duration: 5 },
   stun: { label: "STUN", short: "STN", negative: true, duration: 1 },
   silence: { label: "SILENCE", short: "SIL", icon: "S", negative: true, duration: 2 },
+  shadowExposed: { label: "SHADOW EXPOSED", short: "SH-", icon: "V", negative: true, duration: 2 },
   strengthUp: { label: "STRENGTH UP", short: "STR", buff: true, duration: 3, value: .25 },
   magicUp: { label: "MAGIC UP", short: "MAG", buff: true, duration: 3, value: .25 },
   defenseUp: { label: "DEFENSE UP", short: "DEF", buff: true, duration: 3, value: .25 },
@@ -2650,6 +2651,7 @@ const STATUS_DEFS = {
   holyFollowUp: { label: "HOLY FOLLOW-UP", short: "HLY", buff: true, duration: 1, value: .1 },
   combatDrone: { label: "COMBAT DRONE", short: "DRN", buff: true, duration: 99, value: .25 },
   vampiric: { label: "VAMPIRIC", short: "VMP", icon: "V", buff: true, duration: 3, value: .2 },
+  stunFocus: { label: "STUN FOCUS", short: "STN+", icon: "!", buff: true, duration: 1 },
   resonanceLocked: { label: "RESONANCE LOCK", short: "R-L", negative: true, duration: 2 },
   overheated: { label: "OVERHEATED", short: "HOT", negative: true, duration: 2 }
 };
@@ -4166,6 +4168,7 @@ function effectiveAgility(unit, base) {
 function applySkillStatuses(source, target, sk) {
   const applications = [];
   if (sk.status) applications.push(applyStatus(target, sk.status.type, source, { ...sk.status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
+  (sk.extraStatuses || []).forEach(status => applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element })));
   if (source?.id && sk.element === "Tech" && typedTalentValue(source.id, "techDisrupt") && Math.random() < typedTalentValue(source.id, "techDisrupt")) {
     applications.push(applyStatus(target, "disrupted", source, { chance: 1, duration: 2, value: .15 }));
   }
@@ -4177,7 +4180,7 @@ function applySkillStatuses(source, target, sk) {
   }
   if (source?.id && (sk.power > 0 || sk.coefficient)) {
     ["poison", "sleep", "stun"].forEach(type => {
-      const chance = effectValue(source.id, "statusOnHit", type);
+      const chance = skillStatusOnHitChance(source, sk, type);
       if (chance > 0) applications.push(applyStatus(target, type, source, { chance, potency: type === "poison" ? "weak" : undefined, duration: type === "poison" ? 3 : undefined, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
     });
   }
@@ -4206,6 +4209,11 @@ function applySkillBuffs(source, targets, sk) {
   if (sk.buffs?.some(buff => buff.type === "agilityUp")) reorderRemainingTurns();
   if (songBoost) delete source.nextSongBoost;
   return notes;
+}
+
+function skillStatusOnHitChance(source, sk, type) {
+  const stunMultiplier = type === "stun" && source?.id === "Mira" && (sk.doublesStunChance || statusOf(source, "stunFocus")) ? 2 : 1;
+  return Math.min(.95, effectValue(source.id, "statusOnHit", type) * stunMultiplier);
 }
 
 function statusBadgesHtml(unit) {
@@ -4288,6 +4296,28 @@ function reorderRemainingTurns() {
 
 function skillScaling(sk) {
   return sk.scaling || (sk.anim === "melee" ? "str" : "mag");
+}
+
+function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
+  const statKey = skillScaling(sk);
+  const primary = stats[statKey] * transformedStatMultiplier(unit, statKey);
+  const agility = id === "Mira" ? stats.agi * .5 : 0;
+  return Math.round(primary + agility);
+}
+
+function skillScalingLabel(id, sk) {
+  const primary = skillScaling(sk).toUpperCase();
+  return id === "Mira" && skillTargetsEnemies(sk) ? `${primary} + 0.5 AGI` : primary;
+}
+
+function skillHitsElementWeakness(target, sk) {
+  return Boolean(target && (target.weak === sk.element || (sk.element === "Shadow" && statusOf(target, "shadowExposed"))));
+}
+
+function skillWeaknessMultiplier(id, sk, target) {
+  if (!skillHitsElementWeakness(target, sk)) return 1;
+  const exposurePayoff = sk.shadowExposureBonus && statusOf(target, "shadowExposed") ? 1 + sk.shadowExposureBonus : 1;
+  return 1.55 * (1 + effectValue(id, "weaknessDamage")) * exposurePayoff;
 }
 
 function healingAmount(id, sk, unit = null) {
@@ -7937,25 +7967,25 @@ function skillPreview(u, sk, target = null) {
     const extra = sk.immediateTurn ? ` Extra actions: ${battle?.extraTurns || 0}/2 used.` : "";
     return `${kind} | ${targetLabel}${target ? `: ${target.name}` : ""} | ${cost}. ${sk.desc}${extra}`;
   }
-  const statName = skillScaling(sk).toUpperCase();
-  const statKey = statName === "MAG" ? "mag" : "str";
-  const stat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
+  const statName = skillScalingLabel(u.id, sk);
+  const statKey = skillScaling(sk);
+  const stat = skillOffensiveStat(u.id, sk, u, t);
   const progression = skillDamageTalentMultiplier(u, sk, target) * (sk.anim === "ultimate" ? ultimatePotencyMultiplier(u.id, sk) : 1);
   const low = (sk.coefficient ? stat * sk.coefficient : sk.power + stat) * progression;
   const high = low + 5;
-  const weaknessBonus = effectValue(u.id, "weaknessDamage");
-  const hitsWeakness = target && target.weak === sk.element;
+  const hitsWeakness = skillHitsElementWeakness(target, sk);
+  const naturalWeakness = target && target.weak === sk.element;
   const revealWeakness = target ? knownWeakness(target) : partyCanSeeWeaknesses();
-  const displayWeakness = hitsWeakness && revealWeakness;
+  const displayWeakness = hitsWeakness && (naturalWeakness ? revealWeakness : Boolean(statusOf(target, "shadowExposed")));
   const multiplier = outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", target)
     * (target && hasNegativeStatus(target) ? 1 + (sk.afflictedBonus || 0) : 1)
     * (1 + (sk.buffScaling || 0) * ensureStatuses(u).filter(status => STATUS_DEFS[status.type]?.buff).length);
   const defenseDebuff = statusValue(target, "defenseDown") + (statKey === "mag" ? statusValue(target, "magicDefenseDown") : 0);
   const defense = Math.max(0, statusValue(target, "defenseUp") - defenseDebuff) * (1 - (sk.pierce || 0));
-  const targetRoll = roll => Math.max(1, Math.round((displayWeakness ? Math.floor(Math.floor(roll * 1.55) * (1 + weaknessBonus)) : roll) * multiplier * (1 - defense)));
+  const targetRoll = roll => Math.max(1, Math.round((displayWeakness ? Math.floor(roll * skillWeaknessMultiplier(u.id, sk, target)) : roll) * multiplier * (1 - defense)));
   const targetLow = targetRoll(low);
   const targetHigh = targetRoll(high);
-  const weaknessText = displayWeakness ? " | Weakness included" : "";
+  const weaknessText = displayWeakness ? ` | Weakness included${sk.shadowExposureBonus && statusOf(target, "shadowExposed") ? " + Voidthorn payoff" : ""}` : "";
   const basicEffect = sk.basicAttack ? weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon))?.label : "";
   return `${sk.element} ${statName} | ${targetLow}-${targetHigh} damage${weaknessText} | ${targetLabel} | ${cost}. ${basicEffect ? `${basicEffect}. ` : ""}${sk.desc}`;
 }
@@ -8325,7 +8355,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const afflicted = hasNegativeStatus(hitTarget);
         const critChance = Math.min(.65, heroCritChance(u.id, afflicted) + statusValue(u, "critUp") + statusValue(hitTarget, "marked") + statusValue(hitTarget, "critExposed"));
         const statKey = skillScaling(sk);
-        const offensiveStat = Math.round(t[statKey] * transformedStatMultiplier(u, statKey));
+        const offensiveStat = skillOffensiveStat(u.id, sk, u, t);
         let dmg = (sk.coefficient ? offensiveStat * sk.coefficient : sk.power + offensiveStat) + Math.floor(Math.random() * 6);
         dmg *= skillDamageTalentMultiplier(u, sk, hitTarget);
         if (sk.anim === "ultimate") dmg *= ultimatePotencyMultiplier(u.id, sk);
@@ -8333,13 +8363,12 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           dmg *= 1 + u.nextSongBoost;
           delete u.nextSongBoost;
         }
-        if (hitTarget.weak === sk.element) {
-          if (rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
-          dmg = Math.floor(dmg * 1.55);
-          dmg = Math.floor(dmg * (1 + effectValue(u.id, "weaknessDamage")));
+        if (skillHitsElementWeakness(hitTarget, sk)) {
+          if (hitTarget.weak === sk.element && rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
+          dmg = Math.floor(dmg * skillWeaknessMultiplier(u.id, sk, hitTarget));
           hitTarget.stagger += (sk.staggerPower || 2) + effectValue(u.id, "stagger") + typedTalentValue(u.id, "staggerBonus") + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0);
           state.resonance = Math.min(100, state.resonance + 14);
-          log += ` ${hitTarget.name}: Weakness!`;
+          log += ` ${hitTarget.name}: Weakness!${sk.shadowExposureBonus && statusOf(hitTarget, "shadowExposed") ? " VOIDTHORN RUPTURE!" : ""}`;
         } else {
           hitTarget.stagger += (sk.staggerPower || 1) + typedTalentValue(u.id, "staggerBonus") + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0);
           state.resonance = Math.min(100, state.resonance + 5);
@@ -8416,6 +8445,10 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         log += ` ${hitTarget.name} takes ${dmg}${holyDamage ? ` + ${holyDamage} Holy` : ""}.`;
       });
+      if (u.id === "Mira" && sk.doublesStunChance) {
+        applyStatus(u, "stunFocus", u, { duration: 1, force: true });
+        log += " Mira's Stun chance remains doubled for her next turn.";
+      }
       if (holyFollowUpTriggered) u.statuses = ensureStatuses(u).filter(status => status.type !== "holyFollowUp");
       if (!sk.allEnemies && sk.element === "Sound" && typedTalentValue(u.id, "splashDamage") && totalDamageDealt > 0) {
         battle.enemies.filter(enemy => enemy.hp > 0 && !hitTargets.includes(enemy)).forEach(enemy => {
@@ -9247,7 +9280,7 @@ const characterBios = {
 
 const statusStatHelp = [
   ["STR", "+1 base damage per point for most physical and melee skills."],
-  ["AGI", "Turn order plus 0.10 percentage point CRIT per point. AGI never creates an extra normal turn."],
+  ["AGI", "Turn order plus 0.10 percentage point CRIT per point. Mira also adds half her AGI to every damaging skill. AGI never creates an extra normal turn."],
   ["MAG", "+1 base damage per point for most magic skills, +0.3 healing before bonuses, and +1 Max MP per 2 MAG. MP costs stay fixed, so MAG increases casting endurance."],
   ["STAM", "+4 maximum HP per point. Every hero also has 30 base HP."],
   ["ECHO", "+0.15% Ultimate, Echo and transformation potency per point."],
@@ -9257,17 +9290,18 @@ const statusStatHelp = [
   ["HEAL / ALLY", "HP restored to one ally by the strongest non-ultimate heal. Group heals restore this to each ally."]
 ];
 
-function skillFormula(sk) {
+function skillFormula(sk, id = null) {
   if (sk.power < 0) return `${Math.abs(sk.power)} + ${sk.healScaling ?? .3} x MAG healing`;
   if (!skillTargetsEnemies(sk)) return "Support / no damage scaling";
-  return sk.coefficient ? `${sk.coefficient} x ${skillScaling(sk).toUpperCase()} + 0-5` : `${sk.power} + ${skillScaling(sk).toUpperCase()} + 0-5`;
+  const scaling = skillScalingLabel(id, sk);
+  return sk.coefficient ? `${sk.coefficient} x (${scaling}) + 0-5` : `${sk.power} + ${scaling} + 0-5`;
 }
 
 function skillExpectedOutput(id, sk, unit = { id, statuses: [] }, afflicted = false) {
   if (sk.power < 0) return healingAmount(id, sk, unit);
   if (!skillTargetsEnemies(sk)) return 0;
   const statKey = skillScaling(sk);
-  const stat = Math.round(totals(id)[statKey] * transformedStatMultiplier(unit, statKey));
+  const stat = skillOffensiveStat(id, sk, unit);
   let base = sk.coefficient ? stat * sk.coefficient : sk.power + stat;
   const target = { statuses: afflicted ? [{ type: "poison" }] : [] };
   base *= skillDamageTalentMultiplier(unit, sk, target);
@@ -9286,7 +9320,7 @@ function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
   }
   if (!skillTargetsEnemies(sk)) return { kind: "support", scaling: "NONE" };
   const statKey = skillScaling(sk);
-  const stat = Math.round(totals(id)[statKey] * transformedStatMultiplier(unit, statKey));
+  const stat = skillOffensiveStat(id, sk, unit);
   let base = sk.coefficient ? stat * sk.coefficient : sk.power + stat;
   const target = { statuses: [] };
   base *= skillDamageTalentMultiplier(unit, sk, target);
@@ -9300,7 +9334,7 @@ function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
   const critChance = heroCritChance(id);
   return {
     kind: "damage",
-    scaling: statKey.toUpperCase(),
+    scaling: skillScalingLabel(id, sk),
     normal: Math.round(normal),
     critical: Math.round(critical),
     average: Math.round(normal * (1 - critChance) + critical * critChance),
@@ -9324,7 +9358,7 @@ function skillCatalogueHtml(id) {
   const form = id === "Glimmer" ? "mech" : id === "Kael" ? "shadowpriest" : null;
   const sections = [{ title: "Current skills", skills: normal, unit: { id, statuses: [] } }];
   if (form && normal.some(sk => sk.transform === form)) sections.push({ title: form === "mech" ? "Mech Form skills" : "Shadowpriest skills", skills: TRANSFORMED_SKILLS[form], unit: { id, form, statuses: [] } });
-  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(id)}` : sk.basicAttack ? "0 MP / restores 6% Max MP" : `${skillMpCost(id, sk, section.unit)} fixed MP`} / ${sk.element} / ${skillFormula(sk)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents, ECHO, Ultimate rank and form stats, but no enemy defense, weakness, stagger bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
+  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(id)}` : sk.basicAttack ? "0 MP / restores 6% Max MP" : `${skillMpCost(id, sk, section.unit)} fixed MP`} / ${sk.element} / ${skillFormula(sk, id)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents, ECHO, Ultimate rank and form stats, but no enemy defense, weakness, stagger bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
 }
 
 function estimatedHeroOutput(id) {
@@ -9335,7 +9369,7 @@ function estimatedHeroOutput(id) {
   const afflictedCrit = Math.min(.65, crit + typedTalentValue(id, "afflictedCrit"));
   const damageOptions = skills.filter(sk => sk.anim !== "ultimate" && (sk.power > 0 || sk.coefficient) && skillTargetsEnemies(sk)).map(sk => {
     const statKey = skillScaling(sk);
-    const stat = t[statKey];
+    const stat = skillOffensiveStat(id, sk, { id }, t);
     const statContribution = sk.coefficient ? stat * sk.coefficient : stat;
     const base = (sk.coefficient ? statContribution : sk.power + statContribution) + 2.5;
     const damageType = statKey === "mag" ? "magicDamage" : "physicalDamage";
@@ -9348,7 +9382,7 @@ function estimatedHeroOutput(id) {
       value,
       damageBeforeCrit,
       damageWithoutAgiCrit,
-      statName: statKey.toUpperCase(),
+      statName: skillScalingLabel(id, sk),
       statValue: stat,
       statContribution,
       statShare: base ? statContribution / base : 0,
@@ -9527,7 +9561,7 @@ function gearComparisonHtml(id, slot, ref) {
       const next = Math.round(skillExpectedOutput(id, sk, source));
       const old = Math.round(before[index][0]);
       const afflicted = Math.round(skillExpectedOutput(id, sk, source, true));
-      return `<tr><th>${sk.name}<small>${source.form || skillFormula(sk)}</small></th><td>${old}</td><td>${next}<small>${next - old >= 0 ? "+" : ""}${next - old}</small></td><td>${sk.power < 0 ? "Heal / ally" : `${Math.round(before[index][1])} to ${afflicted}`}</td></tr>`;
+      return `<tr><th>${sk.name}<small>${source.form || skillFormula(sk, id)}</small></th><td>${old}</td><td>${next}<small>${next - old >= 0 ? "+" : ""}${next - old}</small></td><td>${sk.power < 0 ? "Heal / ally" : `${Math.round(before[index][1])} to ${afflicted}`}</td></tr>`;
     }).join("");
   } finally {
     baseJobs[id].gear[slot] = original;
@@ -9602,7 +9636,7 @@ function renderMenu() {
       const capstoneChosen = tier === 5 && activeTalents(id).some(option => option.tier === 5);
       const locked = !selected && (tierLocked || (available <= 0 && !capstoneChosen));
       const stateText = selected ? "CHOSEN" : tierLocked ? `SPEND ${requirement} POINTS FIRST` : capstoneChosen ? "SWAP CAPSTONE" : available > 0 ? "AVAILABLE" : "NO POINT AVAILABLE";
-      return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" aria-pressed="${selected}" ${locked ? "disabled" : ""}><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p>${entry.type === "newSkill" ? `<small>${skillFormula(entry.value)} / ${entry.value.anim === "ultimate" ? "100 Resonance" : `${entry.value.cost} fixed MP`}</small>` : ""}<small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : capstoneChosen ? "SWAP" : "+"}</b></button>`;
+      return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" aria-pressed="${selected}" ${locked ? "disabled" : ""}><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p>${entry.type === "newSkill" ? `<small>${skillFormula(entry.value, id)} / ${entry.value.anim === "ultimate" ? "100 Resonance" : `${entry.value.cost} fixed MP`}</small>` : ""}<small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : capstoneChosen ? "SWAP" : "+"}</b></button>`;
       }).join("")}</div></section>`;
     }).join("");
     el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Flameguard Talents</strong><p>Gain 1 point at levels 4, 8, 12, 16, 20, 24, 28, 32, 36 and 40. Spend 2 points to open each next tier; choose only one Tier 5 capstone.</p></div><span>${hero.name} / ${progress.talents.length} spent / ${available} ready</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><button type="button" class="talent-reset" data-reset-talents="${id}" ${progress.talents.length ? "" : "disabled"}>Reset talents</button></div>${xpProgressHtml(id)}</header><div class="talent-tiers">${choices}</div></section>${skillCatalogueHtml(id)}`;
