@@ -9,10 +9,13 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "tools" / "sprite_sources" / "party"
 OUTPUT = ROOT / "public" / "game" / "assets" / "sprites" / "battle"
-TEMP = Path.home() / "AppData" / "Local" / "Temp"
 FRAME_COLUMNS = 5
 BASELINE_MARGIN = 14
+ALPHA_THRESHOLD = 12
+SOURCE_CROP_MARGIN = 6
+ATLAS_EDGE_MARGIN = 8
 
 
 @dataclass(frozen=True)
@@ -20,133 +23,134 @@ class Row:
     start: int
     end: int
     centers: tuple[int, ...]
-    hide_after: int | None = None
-    clear_bottom: int = 0
-    alpha_threshold: int = 160
-    clear_top: int = 48
-    clear_left: int = 145
-    center_offset: int = 95
+    left: int = 0
+    right: int | None = None
+    trim_top: int = 42
+
+
+def rows(*values: Row) -> tuple[Row, ...]:
+    return values
 
 
 SHEETS = {
-    "Verseborn": {
-        "source": TEMP / "codex-clipboard-06bdd53e-bf0b-4e9b-9d3a-7286a945aff5.png",
-        "file": "verseborn.png",
-        "rows": [
-            Row(165, 390, (105, 270, 435, 600), 720),
-            Row(390, 610, (110, 300, 490, 690, 920)),
-            Row(605, 815, (105, 300, 500, 705, 930)),
-            Row(810, 1080, (120, 365, 625, 890)),
-            Row(1075, 1390, (115, 350, 610, 885)),
-            Row(1370, 1536, (90, 285, 485, 685, 910)),
-        ],
-        "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
-    },
     "Mira": {
-        "source": TEMP / "codex-clipboard-91b4c59e-860d-4307-9fd7-e9a42f80f02a.png",
+        "source": "mira.png",
         "file": "mira.png",
-        "rows": [
-            Row(240, 405, (105, 270, 440, 605), 720, clear_top=0, clear_left=0, center_offset=0),
-            Row(455, 600, (105, 375, 625, 900), clear_top=0, clear_left=0, center_offset=0),
-            Row(655, 820, (105, 330, 570, 815, 1000), clear_top=0, clear_left=0, center_offset=0),
-            Row(875, 1035, (110, 365, 625, 900), clear_top=0, clear_left=0, center_offset=0),
-            Row(1090, 1265, (110, 375, 660, 925), clear_top=0, clear_left=0, center_offset=0),
-            Row(1320, 1448, (95, 300, 515, 735, 970), clear_top=0, clear_left=0, center_offset=0),
-        ],
+        "rows": rows(
+            Row(240, 405, (101, 249, 406, 558), right=660),
+            Row(455, 600, (122, 421, 692, 956)),
+            Row(655, 820, (102, 330, 562, 790, 990)),
+            Row(875, 1035, (131, 414, 708, 959)),
+            Row(1090, 1265, (126, 407, 695, 952)),
+            Row(1320, 1448, (103, 312, 533, 740, 958)),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "Sparky": {
-        "source": TEMP / "codex-clipboard-c092a8e9-d2fe-4193-848e-be9bad0a42e5.png",
+        "source": "sparky.png",
         "file": "sparky.png",
-        "rows": [
-            Row(175, 400, (105, 285, 465, 645), 745),
-            Row(400, 600, (105, 300, 500, 705, 995)),
-            Row(595, 815, (110, 315, 515, 720, 995)),
-            Row(810, 1035, (125, 390, 675, 955)),
-            Row(1028, 1315, (120, 390, 690, 965)),
-            Row(1320, 1448, (85, 300, 520, 745, 970)),
-        ],
+        "rows": rows(
+            Row(175, 392, (95, 256, 421, 584), right=700, trim_top=90),
+            Row(400, 587, (126, 337, 532, 756, 986), trim_top=50),
+            Row(595, 802, (121, 340, 560, 760, 973), trim_top=50),
+            Row(810, 1020, (138, 420, 800), trim_top=50),
+            Row(1028, 1255, (140, 420, 702, 962), trim_top=50),
+            Row(1320, 1448, (103, 293, 510, 742, 968)),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "Glimmer": {
-        "source": TEMP / "codex-clipboard-d50bfe82-989d-4994-9634-b7dfd47d8fbf.png",
+        "source": "glimmer.png",
         "file": "glimmer.png",
-        "rows": [
-            Row(170, 390, (105, 275, 445, 615), 735),
-            Row(385, 595, (105, 300, 500, 710, 985)),
-            Row(590, 790, (105, 300, 500, 710, 985)),
-            Row(780, 1060, (120, 375, 660, 950), clear_bottom=16),
-            Row(1050, 1325, (120, 380, 675, 960)),
-            Row(1318, 1448, (90, 300, 515, 735, 970)),
-        ],
+        "rows": rows(
+            Row(175, 377, (101, 260, 410, 557), right=700, trim_top=50),
+            Row(385, 582, (116, 407, 680, 841, 1001), trim_top=50),
+            Row(590, 772, (119, 329, 535, 750, 970), trim_top=50),
+            Row(780, 1042, (140, 372, 643, 941), trim_top=50),
+            Row(1050, 1278, (145, 332, 552, 761, 982), trim_top=50),
+            Row(1318, 1448, (127, 336, 535, 745, 960)),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "GlimmerMech": {
-        "source": TEMP / "codex-clipboard-5d0a0e17-038f-4706-af04-d511d1483d1f.png",
+        "source": "glimmer-mech.png",
         "file": "glimmer-mech.png",
-        "rows": [
-            Row(175, 385, (105, 290, 480, 665), 760),
-            Row(550, 745, (110, 315, 520, 730, 990)),
-            Row(740, 950, (105, 315, 525, 740, 995)),
-            Row(940, 1235, (125, 390, 680, 965)),
-            Row(940, 1235, (125, 390, 680, 965)),
-            Row(1235, 1448, (90, 305, 525, 745, 970)),
-        ],
+        "rows": rows(
+            Row(185, 385, (220, 388, 548, 713), left=150, right=820, trim_top=0),
+            Row(385, 590, (220, 420, 620, 820, 980), left=150, trim_top=0),
+            Row(585, 800, (220, 410, 600, 790, 980), left=150, trim_top=0),
+            Row(790, 1045, (220, 450, 680, 930), left=150, trim_top=0),
+            Row(1035, 1280, (220, 450, 690, 940), left=150, trim_top=0),
+            Row(1265, 1448, (220, 360, 545, 745, 965), left=150, trim_top=60),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "Kael": {
-        "source": TEMP / "codex-clipboard-a435012b-7209-4964-a82d-fe4ab2e0ebb8.png",
+        "source": "kael.png",
         "file": "kael.png",
-        "rows": [
-            Row(190, 420, (105, 285, 465, 645), 760),
-            Row(405, 620, (105, 300, 500, 710, 985)),
-            Row(610, 875, (110, 315, 525, 735, 980)),
-            Row(860, 1105, (125, 390, 680, 960)),
-            Row(1090, 1300, (120, 325, 515, 700, 885), alpha_threshold=220),
-            Row(1285, 1448, (95, 305, 520, 740, 970)),
-        ],
+        "rows": rows(
+            Row(190, 420, (240, 382, 520, 675), left=175, right=760, trim_top=20),
+            Row(405, 620, (240, 420, 610, 790, 980), left=170, trim_top=0),
+            Row(610, 875, (240, 430, 610, 790, 980), left=170, trim_top=0),
+            Row(860, 1105, (230, 430, 700, 950), left=170, trim_top=0),
+            Row(1090, 1300, (210, 400, 580, 770, 970), left=170, trim_top=0),
+            Row(1285, 1448, (230, 395, 555, 750, 970), left=170, trim_top=0),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 1, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "KaelShadow": {
-        "source": TEMP / "codex-clipboard-6a45bde1-2028-427f-9c45-5b9b43b27774.png",
+        "source": "kael-shadow.png",
         "file": "kael-shadow.png",
-        "rows": [
-            Row(185, 425, (105, 285, 465, 645), 760),
-            Row(420, 605, (105, 300, 500, 710, 985)),
-            Row(595, 820, (105, 310, 515, 725, 985)),
-            Row(815, 1040, (120, 385, 675, 955)),
-            Row(1035, 1285, (120, 385, 675, 955)),
-            Row(1278, 1448, (90, 305, 520, 740, 970)),
-        ],
+        "rows": rows(
+            Row(185, 425, (230, 385, 525, 675), left=170, right=760, trim_top=24),
+            Row(420, 605, (230, 430, 650, 930), left=170, trim_top=0),
+            Row(595, 820, (230, 410, 590, 770, 980), left=170, trim_top=0),
+            Row(815, 1040, (230, 470, 680, 940), left=170, trim_top=0),
+            Row(1035, 1285, (230, 430, 650, 930), left=170, trim_top=0),
+            Row(1278, 1448, (210, 400, 570, 760, 970), left=170, trim_top=0),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "Torren": {
-        "source": TEMP / "codex-clipboard-ba2f0bfb-2c0f-4503-994f-675a5fda1d19.png",
+        "source": "torren.png",
         "file": "torren.png",
-        "rows": [
-            Row(175, 390, (105, 285, 465, 645), 750),
-            Row(380, 600, (105, 300, 500, 710, 985)),
-            Row(590, 815, (105, 305, 510, 720, 985)),
-            Row(805, 1055, (120, 385, 675, 955)),
-            Row(1045, 1310, (120, 385, 675, 955)),
-            Row(1305, 1448, (90, 305, 520, 740, 970)),
-        ],
+        "rows": rows(
+            Row(175, 372, (99, 270, 446, 621), right=740, trim_top=50),
+            Row(380, 582, (120, 412, 691, 957), trim_top=50),
+            Row(590, 797, (111, 314, 519, 735, 952), trim_top=50),
+            Row(805, 1037, (115, 355, 631, 935), trim_top=50),
+            Row(1045, 1263, (120, 400, 680, 930), trim_top=50),
+            Row(1305, 1448, (112, 311, 532, 755, 977)),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
     "Seerin": {
-        "source": TEMP / "codex-clipboard-bd0bc8aa-ccb1-47e7-8ed3-82a718efd997.png",
+        "source": "seerin.png",
         "file": "seerin.png",
-        "rows": [
-            Row(175, 390, (105, 285, 465, 645), 750),
-            Row(385, 605, (105, 300, 500, 710, 985)),
-            Row(595, 815, (105, 305, 510, 720, 985)),
-            Row(805, 1045, (120, 385, 675, 955)),
-            Row(1035, 1325, (120, 385, 675, 955)),
-            Row(1315, 1448, (90, 305, 520, 740, 970)),
-        ],
+        "rows": rows(
+            Row(175, 377, (103, 237, 382, 520), right=650, trim_top=50),
+            Row(385, 587, (115, 380, 680, 950), trim_top=50),
+            Row(595, 797, (120, 336, 535, 748, 980), trim_top=50),
+            Row(805, 1027, (125, 390, 680, 950), trim_top=50),
+            Row(1035, 1285, (125, 390, 675, 950), trim_top=50),
+            Row(1315, 1448, (104, 307, 522, 728, 972)),
+        ),
         "row_map": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
     },
 }
+
+
+def quiet_boundary(alpha: np.ndarray, left_center: int, right_center: int) -> int:
+    midpoint = (left_center + right_center) // 2
+    radius = max(18, min(54, (right_center - left_center) // 3))
+    left = max(left_center + 8, midpoint - radius)
+    right = min(right_center - 8, midpoint + radius)
+    occupancy = np.count_nonzero(alpha[:, left:right + 1] > ALPHA_THRESHOLD, axis=0)
+    if not occupancy.size:
+        return midpoint
+    # A three-column window avoids choosing a single transparent hole inside an effect.
+    smoothed = np.convolve(occupancy, np.ones(3, dtype=np.int32), mode="same")
+    return left + int(np.argmin(smoothed))
 
 
 class DisjointSet:
@@ -154,9 +158,9 @@ class DisjointSet:
         self.parent: list[int] = []
 
     def add(self) -> int:
-        index = len(self.parent)
-        self.parent.append(index)
-        return index
+        value = len(self.parent)
+        self.parent.append(value)
+        return value
 
     def find(self, value: int) -> int:
         while self.parent[value] != value:
@@ -165,10 +169,10 @@ class DisjointSet:
         return value
 
     def union(self, left: int, right: int) -> None:
-        left_root = self.find(left)
-        right_root = self.find(right)
-        if left_root != right_root:
-            self.parent[right_root] = left_root
+        left = self.find(left)
+        right = self.find(right)
+        if left != right:
+            self.parent[right] = left
 
 
 def connected_runs(mask: np.ndarray) -> list[list[tuple[int, int, int]]]:
@@ -176,8 +180,7 @@ def connected_runs(mask: np.ndarray) -> list[list[tuple[int, int, int]]]:
     runs: list[tuple[int, int, int, int]] = []
     previous: list[tuple[int, int, int]] = []
     for y, row in enumerate(mask):
-        padded = np.pad(row.astype(np.int8), (1, 1))
-        changes = np.diff(padded)
+        changes = np.diff(np.pad(row.astype(np.int8), (1, 1)))
         starts = np.flatnonzero(changes == 1)
         ends = np.flatnonzero(changes == -1) - 1
         current: list[tuple[int, int, int]] = []
@@ -200,161 +203,211 @@ def connected_runs(mask: np.ndarray) -> list[list[tuple[int, int, int]]]:
     return list(grouped.values())
 
 
-def component_metrics(runs: list[tuple[int, int, int]]) -> dict[str, float]:
-    area = sum(end - start + 1 for _, start, end in runs)
-    min_x = min(start for _, start, _ in runs)
-    max_x = max(end for _, _, end in runs)
-    min_y = min(y for y, _, _ in runs)
-    max_y = max(y for y, _, _ in runs)
-    weighted_x = sum(((start + end) / 2) * (end - start + 1) for _, start, end in runs)
-    return {
-        "area": area,
-        "min_x": min_x,
-        "max_x": max_x,
-        "min_y": min_y,
-        "max_y": max_y,
-        "width": max_x - min_x + 1,
-        "height": max_y - min_y + 1,
-        "center_x": weighted_x / area,
-    }
+def clean_presentation_chrome(frame: Image.Image) -> Image.Image:
+    pixels = np.asarray(frame, dtype=np.uint8).copy()
+    mask = pixels[:, :, 3] > ALPHA_THRESHOLD
+    for runs in connected_runs(mask):
+        area = sum(end - start + 1 for _, start, end in runs)
+        if area < 40:
+            continue
+        min_x = min(start for _, start, _ in runs)
+        max_x = max(end for _, _, end in runs)
+        min_y = min(y for y, _, _ in runs)
+        max_y = max(y for y, _, _ in runs)
+        width = max_x - min_x + 1
+        height = max_y - min_y + 1
+        touches_edge = min_x <= 3 or max_x >= frame.width - 4 or min_y <= 3 or max_y >= frame.height - 4
+        component_pixels = []
+        for y, start, end in runs:
+            component_pixels.append(pixels[y, start:end + 1, :3])
+        colors = np.concatenate(component_pixels, axis=0)
+        gold = (colors[:, 0] > 105) & (colors[:, 1] > 48) & (colors[:, 2] < 105) & (colors[:, 0] > colors[:, 1] * 1.2)
+        gold_ratio = float(np.count_nonzero(gold)) / max(1, len(colors))
+        looks_like_rule = height <= 22 and width >= 36 and width >= height * 4
+        looks_like_label = height <= 66 and width >= 110 and width >= height * 3
+        if gold_ratio < 0.14 or not (looks_like_rule or looks_like_label):
+            continue
+        for y, start, end in runs:
+            pixels[y, start:end + 1] = 0
+
+    cleaned = Image.fromarray(pixels)
+    bounds = cleaned.getbbox()
+    return cleaned.crop(bounds) if bounds else Image.new("RGBA", (1, 1))
 
 
-def row_groups(image: Image.Image, row: Row) -> list[dict[str, object]]:
+def extract_frames(image: Image.Image, row: Row) -> list[Image.Image]:
     pixels = np.asarray(image, dtype=np.uint8)
-    # A firm alpha threshold separates neighbouring presentation poses whose
-    # anti-aliased glow fringes touch, while retaining the solid pixel artwork.
-    alpha = pixels[row.start:row.end, :, 3] > row.alpha_threshold
-    # These are presentation sheets rather than uniform atlases. Each labelled row
-    # still lays its animation beats left-to-right, so split only the usable artwork
-    # area. Masking the label strip prevents headings and divider bars becoming
-    # sprites; keeping every frame on a larger destination canvas prevents clipping.
-    if row.clear_top:
-        alpha[:row.clear_top, :] = False
-    if row.clear_left:
-        alpha[:, :row.clear_left] = False
-    if row.clear_bottom:
-        alpha[-row.clear_bottom:, :] = False
-    if row.hide_after is not None:
-        alpha[:, row.hide_after:] = False
-    centers = tuple(min(center + row.center_offset, image.width - 48) for center in row.centers)
-    components: list[dict[str, object]] = []
-    for runs in connected_runs(alpha):
-        metrics = component_metrics(runs)
-        if metrics["area"] < 8:
-            continue
-        if row.clear_top == 0 and metrics["max_y"] < 32:
-            continue
-        # The presentation sheets contain long ornamental row dividers. Some
-        # begin just below the label mask and are otherwise close enough to a
-        # pose to be assigned to it. They are UI chrome, never animation art.
-        if metrics["width"] > 240 and metrics["height"] < 45:
-            continue
-        frame_index = min(range(len(centers)), key=lambda index: abs(metrics["center_x"] - centers[index]))
-        if abs(metrics["center_x"] - centers[frame_index]) <= 280:
-            components.append({"runs": runs, "metrics": metrics, "frame": frame_index})
+    top = min(row.end - 1, row.start + row.trim_top)
+    alpha = pixels[top:row.end, :, 3]
+    boundaries = [row.left]
+    boundaries.extend(
+        quiet_boundary(alpha, left_center, right_center)
+        for left_center, right_center in zip(row.centers, row.centers[1:])
+    )
+    boundaries.append(row.right or image.width)
 
-    groups: list[dict[str, object]] = []
-    for frame_index, center in enumerate(centers):
-        frame_components = [component for component in components if component["frame"] == frame_index]
-        if not frame_components:
-            groups.append({"components": [], "center": center, "bounds": (center, row.end - row.start, center, 0)})
-            continue
-        min_x = min(component["metrics"]["min_x"] for component in frame_components)
-        max_x = max(component["metrics"]["max_x"] for component in frame_components)
-        min_y = min(component["metrics"]["min_y"] for component in frame_components)
-        max_y = max(component["metrics"]["max_y"] for component in frame_components)
-        groups.append({"components": frame_components, "center": center, "bounds": (min_x, min_y, max_x, max_y)})
-    return groups
+    frames: list[Image.Image] = []
+    for index in range(len(row.centers)):
+        left = boundaries[index]
+        right = boundaries[index + 1]
+        visible = alpha[:, left:right] > ALPHA_THRESHOLD
+        ys, xs = np.nonzero(visible)
+        if not len(xs):
+            raise ValueError(f"No artwork found in row {row} frame {index}")
+        min_x = max(0, int(xs.min()) - SOURCE_CROP_MARGIN)
+        max_x = min(right - left - 1, int(xs.max()) + SOURCE_CROP_MARGIN)
+        min_y = max(0, int(ys.min()) - SOURCE_CROP_MARGIN)
+        max_y = min(row.end - top - 1, int(ys.max()) + SOURCE_CROP_MARGIN)
+        frame = image.crop((left + min_x, top + min_y, left + max_x + 1, top + max_y + 1))
+        if row.end < image.height:
+            frame = clean_presentation_chrome(frame)
+        else:
+            bounds = frame.getbbox()
+            frame = frame.crop(bounds) if bounds else Image.new("RGBA", (1, 1))
+        frames.append(frame)
+    return frames
 
 
 def next_multiple(value: int, size: int = 32) -> int:
     return ((value + size - 1) // size) * size
 
 
+def packed_order(frame_count: int, is_idle: bool) -> list[int]:
+    if frame_count >= FRAME_COLUMNS:
+        return list(range(FRAME_COLUMNS))
+    order = list(range(frame_count))
+    while len(order) < FRAME_COLUMNS:
+        order.append(0 if is_idle else frame_count - 1)
+    return order
+
+
+def validate_atlas_margins(atlas: Image.Image, cell_width: int, cell_height: int, rows: int, name: str) -> None:
+    alpha = np.asarray(atlas, dtype=np.uint8)[:, :, 3]
+    for row in range(rows):
+        for column in range(FRAME_COLUMNS):
+            cell = alpha[
+                row * cell_height:(row + 1) * cell_height,
+                column * cell_width:(column + 1) * cell_width,
+            ]
+            ys, xs = np.nonzero(cell > ALPHA_THRESHOLD)
+            if not len(xs):
+                raise ValueError(f"{name} row {row} frame {column} is empty")
+            margins = (int(xs.min()), cell_width - 1 - int(xs.max()), int(ys.min()), cell_height - 1 - int(ys.max()))
+            if min(margins) < ATLAS_EDGE_MARGIN:
+                raise ValueError(f"{name} row {row} frame {column} touches its cell edge: {margins}")
+
+
 def build_sheet(name: str, config: dict[str, object]) -> dict[str, object]:
-    source = Path(config["source"])
+    source = SOURCE / str(config["source"])
     if not source.exists():
         raise FileNotFoundError(source)
     image = Image.open(source).convert("RGBA")
-    rows: list[Row] = config["rows"]
-    grouped_rows = [row_groups(image, row) for row in rows]
+    configured_rows: tuple[Row, ...] = config["rows"]
+    extracted = [extract_frames(image, row) for row in configured_rows]
 
-    idle_groups = grouped_rows[0]
-    idle_frame_order = list(range(len(idle_groups)))
-    while len(idle_frame_order) < FRAME_COLUMNS:
-        idle_frame_order.append(0)
-    idle_anchor_offsets = []
-    for group_index in idle_frame_order[:FRAME_COLUMNS]:
-        group = idle_groups[group_index]
-        components = group["components"]
-        if not components:
-            idle_anchor_offsets.append(0)
-            continue
-        main_component = max(components, key=lambda component: component["metrics"]["area"])
-        idle_anchor_offsets.append(round(main_component["metrics"]["center_x"] - group["center"], 2))
+    widest = max(frame.width for frames in extracted for frame in frames)
+    tallest = max(frame.height for frames in extracted for frame in frames)
+    cell_width = next_multiple(widest + 24)
+    cell_height = next_multiple(tallest + BASELINE_MARGIN + 10)
+    baseline = cell_height - BASELINE_MARGIN
+    atlas = Image.new("RGBA", (cell_width * FRAME_COLUMNS, cell_height * len(extracted)))
 
-    left_extent = right_extent = top_extent = 0
-    idle_heights: list[int] = []
-    for row_index, (row, groups) in enumerate(zip(rows, grouped_rows)):
-        for group in groups:
-            min_x, min_y, max_x, max_y = group["bounds"]
-            center = group["center"]
-            left_extent = max(left_extent, center - min_x)
-            right_extent = max(right_extent, max_x - center)
-            top_extent = max(top_extent, (row.end - row.start) - min_y)
-            if row_index == 0 and group["components"]:
-                idle_heights.append(max_y - min_y + 1)
-    cell_width = next_multiple(max(384, int(2 * max(left_extent, right_extent) + 40)))
-    cell_height = next_multiple(max(256, int(top_extent + BASELINE_MARGIN + 18)))
-    atlas = Image.new("RGBA", (cell_width * FRAME_COLUMNS, cell_height * len(rows)))
-    source_pixels = np.asarray(image, dtype=np.uint8)
+    idle_heights = [frame.height for frame in extracted[0]]
+    idle_anchor_offsets: list[float] = []
+    for row_index, frames in enumerate(extracted):
+        order = packed_order(len(frames), row_index == 0)
+        for column, frame_index in enumerate(order):
+            frame = frames[frame_index]
+            x = column * cell_width + (cell_width - frame.width) // 2
+            y = row_index * cell_height + baseline - frame.height
+            atlas.alpha_composite(frame, (x, y))
+            if row_index == 0:
+                idle_anchor_offsets.append(0)
 
-    for row_index, (row, groups) in enumerate(zip(rows, grouped_rows)):
-        frame_order = list(range(len(groups)))
-        while len(frame_order) < FRAME_COLUMNS:
-            frame_order.append(0 if row_index == 0 else frame_order[-1])
-        for column, group_index in enumerate(frame_order[:FRAME_COLUMNS]):
-            group = groups[group_index]
-            frame = np.zeros((cell_height, cell_width, 4), dtype=np.uint8)
-            offset_x = cell_width // 2 - int(group["center"])
-            offset_y = cell_height - BASELINE_MARGIN - row.end
-            for component in group["components"]:
-                for local_y, start, end in component["runs"]:
-                    source_y = row.start + local_y
-                    dest_y = source_y + offset_y
-                    dest_start = start + offset_x
-                    dest_end = end + offset_x + 1
-                    source_start = start
-                    source_end = end + 1
-                    if dest_start < 0:
-                        source_start -= dest_start
-                        dest_start = 0
-                    if dest_end > cell_width:
-                        source_end -= dest_end - cell_width
-                        dest_end = cell_width
-                    if 0 <= dest_y < cell_height and dest_start < dest_end:
-                        frame[dest_y, dest_start:dest_end] = source_pixels[source_y, source_start:source_end]
-            atlas.alpha_composite(Image.fromarray(frame), (column * cell_width, row_index * cell_height))
+    validate_atlas_margins(atlas, cell_width, cell_height, len(extracted), name)
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    atlas.save(OUTPUT / config["file"], optimize=True)
-    reference_height = int(np.median(idle_heights)) if idle_heights else 170
+    atlas.save(OUTPUT / str(config["file"]), optimize=True)
     return {
         "file": config["file"],
         "columns": FRAME_COLUMNS,
-        "rows": len(rows),
+        "rows": len(extracted),
         "cellWidth": cell_width,
         "cellHeight": cell_height,
-        "baseline": cell_height - BASELINE_MARGIN,
-        "referenceHeight": reference_height,
+        "baseline": baseline,
+        "referenceHeight": int(np.median(idle_heights)),
         "idleAnchorOffsets": idle_anchor_offsets,
         "rowMap": config["row_map"],
+        "directFrames": True,
+    }
+
+
+def build_verseborn() -> dict[str, object]:
+    source = Image.open(SOURCE / "verseborn-derived.png").convert("RGBA")
+    source_cell_width = source.width // FRAME_COLUMNS
+    source_cell_height = source.height // 6
+    source_orders = (
+        (1, 2, 1, 2, 1),
+        (1, 1, 2, 3, 4),
+        (1, 1, 2, 3, 4),
+        (1, 1, 2, 3, 4),
+        (1, 1, 2, 3, 4),
+        (1, 1, 2, 3, 4),
+    )
+    extracted: list[list[Image.Image]] = []
+    for row, order in enumerate(source_orders):
+        frames: list[Image.Image] = []
+        for column in order:
+            frame = source.crop((
+                column * source_cell_width,
+                row * source_cell_height,
+                (column + 1) * source_cell_width,
+                (row + 1) * source_cell_height,
+            ))
+            frame = clean_presentation_chrome(frame)
+            frames.append(frame)
+        populated = [index for index, frame in enumerate(frames) if frame.getbbox()]
+        if not populated:
+            raise ValueError(f"Verseborn row {row} contains no artwork")
+        for index, frame in enumerate(frames):
+            if frame.getbbox():
+                continue
+            nearest = min(populated, key=lambda candidate: abs(candidate - index))
+            frames[index] = frames[nearest].copy()
+        extracted.append(frames)
+
+    widest = max(frame.width for frames in extracted for frame in frames)
+    tallest = max(frame.height for frames in extracted for frame in frames)
+    cell_width = next_multiple(widest + 24)
+    cell_height = next_multiple(tallest + BASELINE_MARGIN + 10)
+    baseline = cell_height - BASELINE_MARGIN
+    atlas = Image.new("RGBA", (cell_width * FRAME_COLUMNS, cell_height * 6))
+    for row, frames in enumerate(extracted):
+        for column, frame in enumerate(frames):
+            x = column * cell_width + (cell_width - frame.width) // 2
+            y = row * cell_height + baseline - frame.height
+            atlas.alpha_composite(frame, (x, y))
+    validate_atlas_margins(atlas, cell_width, cell_height, 6, "Verseborn")
+    atlas.save(OUTPUT / "verseborn.png", optimize=True)
+    return {
+        "file": "verseborn.png",
+        "columns": FRAME_COLUMNS,
+        "rows": 6,
+        "cellWidth": cell_width,
+        "cellHeight": cell_height,
+        "baseline": baseline,
+        "referenceHeight": int(np.median([frame.height for frame in extracted[0]])),
+        "idleAnchorOffsets": [0] * FRAME_COLUMNS,
+        "rowMap": {"idle": 0, "melee": 1, "block": 2, "magic": 2, "ultimate1": 3, "ultimate2": 4, "death": 5},
+        "directFrames": True,
     }
 
 
 def main() -> None:
-    manifest = {name: build_sheet(name, config) for name, config in SHEETS.items()}
-    (OUTPUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="ascii")
+    manifest_path = OUTPUT / "manifest.json"
+    manifest = {"Verseborn": build_verseborn()}
+    manifest.update({name: build_sheet(name, config) for name, config in SHEETS.items()})
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="ascii")
     print(json.dumps(manifest, indent=2))
 
 

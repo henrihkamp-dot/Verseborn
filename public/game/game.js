@@ -645,7 +645,7 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
 
 async function loadBattleAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/battle/manifest.json?v=flame-guard-30a");
+    const response = await fetch("assets/sprites/battle/manifest.json?v=party-clean-74b");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -655,7 +655,7 @@ async function loadBattleAnimationSheets() {
         resolve();
       };
       image.onerror = resolve;
-      image.src = `assets/sprites/battle/${config.file}?v=flame-guard-30a`;
+      image.src = `assets/sprites/battle/${config.file}?v=party-clean-74b`;
     })));
   } catch (_) {
     // Stable world sprites remain the fallback if a battle-only asset fails.
@@ -4857,16 +4857,19 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const duration = Math.max(1, activeEffect?.duration || 24);
   const progress = activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
   const idlePhase = Math.floor((frame + (unit.id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS) % 6;
+  const usesDirectFrames = sheet.directFrames === true;
   const defaultColumn = animation === "idle"
     ? [0, 1, 2, 3, 2, 1][idlePhase]
     : animation === "death"
       ? Math.min(sheet.columns - 1, Math.floor(Math.max(0, frame - (Number.isFinite(unit.deathTick) ? unit.deathTick : frame)) / BATTLE_DEATH_FRAME_TICKS))
-      : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
-  const sequence = battleFrameSequences[visualId]?.[animation];
+      : usesDirectFrames
+        ? Math.min(sheet.columns - 1, Math.floor(progress * sheet.columns))
+        : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
+  const sequence = usesDirectFrames ? null : battleFrameSequences[visualId]?.[animation];
   const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
   const targetHeight = battleSpriteHeights[visualId] || 54;
   const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight);
-  const idleCrop = animation === "idle" ? battleIdleSourceCrops[visualId] : null;
+  const idleCrop = animation === "idle" && !usesDirectFrames ? battleIdleSourceCrops[visualId] : null;
   const sourceOffsetX = idleCrop?.x || 0;
   const sourceOffsetY = idleCrop?.y || 0;
   const sourceWidth = idleCrop?.width || sheet.cellWidth;
