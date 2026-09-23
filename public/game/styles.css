@@ -1351,7 +1351,7 @@ canvas:focus {
 .rarity-rare { color: #88bdf0 !important; border-color: #466c8e; }
 .rarity-epic { color: #cf9bf2 !important; border-color: #76518d; }
 .rarity-legendary { color: #ffd27d !important; border-color: #a87932; }
-.rarity-platinum { color: #e9f8ff !important; border-color: #94c9d5; text-shadow: 0 0 7px #6bb8cb99; }
+.rarity-mythic { color: #f5fcff !important; border-color: #69dff1; background: #11272d; text-shadow: 0 0 6px #65e6ffcc, 0 0 10px #e8b95d88; }
 
 .gear-affixes {
   display: grid !important;
@@ -1381,6 +1381,17 @@ canvas:focus {
   padding-left: 5px;
   font-weight: bold;
 }
+
+.mythic-set-details {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+  padding-left: 5px;
+  border-left: 2px solid #69dff1;
+}
+
+.mythic-set-details small { color: #b9edf5 !important; font-size: 9px !important; }
+.mythic-set-details .is-mythic-set-bonus { color: #f5d88d !important; }
 
 .status-chips {
   grid-column: 1 / -1;

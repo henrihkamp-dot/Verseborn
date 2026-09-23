@@ -1319,8 +1319,213 @@ const ngPlusSignatureNames = new Set([
   "Worldroot Shield", "Klik-Wrench Infinite", "Elderflame Claws"
 ]);
 
+function mythicItem(name, slot, stats, desc, effect, mythicSet = null) {
+  return { ...item(name, slot, stats, desc, effect), mythicSet };
+}
+
+const HALL_MYTHIC_LOOT_TABLES = {
+  41: [
+    mythicItem("Riotbrand Maul", "weapon", { str: 17, stam: 9, agi: 5 }, "A scorched uprising-club reforged from Ash Quarter tools and broken levy chains.", [
+      { type: "physicalDamage", value: .18, label: "+18% physical damage" },
+      { type: "statusOnHit", status: "stun", value: .16, label: "16% chance to Stun on hit" }
+    ], "ashenInsurrection"),
+    mythicItem("Ash Quarter Bulwark", "armour", { stam: 17, str: 8, agi: 4 }, "Soot-black protection hammered together by the crowd that refused to kneel.", [
+      { type: "blockPower", value: .28, label: "28% stronger personal guard" },
+      { type: "statusResistance", status: "stun", value: .35, label: "+35% Stun resistance" }
+    ], "ashenInsurrection"),
+    mythicItem("Gnomefire Seal", "ring", { str: 9, mag: 8, agi: 8 }, "A tiny riot-sign that still radiates the impossible confidence of an angry crowd.", [
+      { type: "statusChance", value: .18, label: "+18% status application chance" },
+      { type: "critChance", value: .1, label: "+10% critical chance" }
+    ], "ashenInsurrection"),
+    mythicItem("Sootline Chain", "necklace", { stam: 10, agi: 9, mag: 7 }, "A broken chain threaded with bells, lock teeth and the names of the Sootline rebels.", [
+      { type: "hpOnHit", value: 7, label: "Restore 7 HP after dealing damage" },
+      { type: "openingTurnProgress", value: .16, label: "+16% opening turn progress" }
+    ])
+  ],
+  42: [
+    mythicItem("Interdict Crozier", "weapon", { mag: 17, stam: 8, echo: 6 }, "A forbidden Reverie focus whose sealed pages answer only to disobedient magic.", [
+      { type: "magicDamage", value: .2, label: "+20% magic damage" },
+      { type: "statusOnHit", status: "sleep", value: .17, label: "17% chance to Sleep on hit" }
+    ], "forbiddenMargin"),
+    mythicItem("Archive Veil", "armour", { stam: 16, mag: 9, agi: 5 }, "Custodian cloth layered with erased commands and the shadows left in their margins.", [
+      { type: "allStatusResistance", value: .22, label: "+22% resistance to all statuses" },
+      { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+    ]),
+    mythicItem("Margin of Silence", "ring", { mag: 10, agi: 9, echo: 6 }, "Nyx wrote one final correction into this black-edged archive ring.", [
+      { type: "statusChance", value: .2, label: "+20% status application chance" },
+      { type: "afflictedDamage", value: .18, label: "+18% damage against afflicted targets" }
+    ], "forbiddenMargin"),
+    mythicItem("Custodian's Last Circlet", "helmet", { mag: 12, stam: 9, agi: 6 }, "The final key to an archive that no longer accepts ordained truth.", [
+      { type: "statusResistance", status: "sleep", value: .5, label: "+50% Sleep resistance" },
+      { type: "weaknessDamage", value: .24, label: "+24% weakness damage" }
+    ], "forbiddenMargin")
+  ],
+  43: [
+    mythicItem("Worldsplitter Axe", "weapon", { str: 18, stam: 9, agi: 5 }, "Grumm's trial-force and Kaeldrin's verdict meet in one mountain-breaking edge.", [
+      { type: "physicalDamage", value: .21, label: "+21% physical damage" },
+      { type: "stagger", value: 2, label: "+2 stagger on weakness hits" }
+    ], "stonewakeCrown"),
+    mythicItem("Stonewake Crownplate", "armour", { stam: 18, str: 8, echo: 4 }, "Royal plate remade to carry Stonewake weight without bowing beneath it.", [
+      { type: "blockPower", value: .32, label: "32% stronger personal guard" },
+      { type: "statusResistance", status: "stun", value: .45, label: "+45% Stun resistance" }
+    ], "stonewakeCrown"),
+    mythicItem("King's Faultline Torque", "necklace", { str: 9, stam: 10, mag: 7 }, "A cracked royal torque that points unerringly toward the next break in the line.", [
+      { type: "weaknessDamage", value: .26, label: "+26% weakness damage" },
+      { type: "hpOnHit", value: 7, label: "Restore 7 HP after dealing damage" }
+    ], "stonewakeCrown"),
+    mythicItem("Spellbinder Bastion", "helmet", { mag: 10, stam: 10, agi: 7 }, "Lysra's ward geometry shaped into a helm that refuses both spell and stone.", [
+      { type: "magicDamage", value: .17, label: "+17% magic damage" },
+      { type: "allStatusResistance", value: .2, label: "+20% resistance to all statuses" }
+    ])
+  ],
+  44: [
+    mythicItem("Midnight Chime Cannon", "weapon", { mag: 16, agi: 10, str: 6 }, "A Clock Goblin bell and False Dawn lock rebuilt into a weapon that fires on the thirteenth chime.", [
+      { type: "magicDamage", value: .2, label: "+20% magic damage" },
+      { type: "statusOnHit", status: "stun", value: .18, label: "18% chance to Stun on hit" }
+    ], "clockworkRiot"),
+    mythicItem("Riot Clockwork Band", "ring", { agi: 10, mag: 9, str: 6 }, "Its gears accelerate whenever order begins to look too comfortable.", [
+      { type: "openingTurnProgress", value: .2, label: "+20% opening turn progress" },
+      { type: "critChance", value: .11, label: "+11% critical chance" }
+    ], "clockworkRiot"),
+    mythicItem("Lockbreaker Pendant", "necklace", { str: 9, mag: 9, agi: 8 }, "A Dawn Station master key snapped at exactly the right moment.", [
+      { type: "statusChance", value: .2, label: "+20% status application chance" },
+      { type: "mpOnHit", value: 6, label: "Restore 6 MP after dealing damage" }
+    ]),
+    mythicItem("Tibby's Grandmaster Goggles", "helmet", { mag: 11, agi: 10, echo: 6 }, "Tibby insists every lens is calibrated. None agree on what time it is.", [
+      { type: "echoing", value: .08, label: "8% skill Echo turn progress" },
+      { type: "weaknessDamage", value: .25, label: "+25% weakness damage" }
+    ], "clockworkRiot")
+  ],
+  45: [
+    mythicItem("Blimpstone Banquet Coat", "armour", { stam: 16, mag: 8, agi: 5 }, "Berend's formal kitchen whites, reinforced for a dinner service that became a siege.", [
+      { type: "battleRegen", value: 32, label: "Restore 32 HP after victory" },
+      { type: "allStatusResistance", value: .18, label: "+18% resistance to all statuses" }
+    ], "tavernRefrain"),
+    mythicItem("Last Call Signet", "ring", { str: 9, agi: 9, stam: 7 }, "Marla's last-call knock captured in a ring heavy enough to end an argument.", [
+      { type: "critChance", value: .12, label: "+12% critical chance" },
+      { type: "statusOnHit", status: "stun", value: .16, label: "16% chance to Stun on hit" }
+    ]),
+    mythicItem("Bellwick Encore Locket", "necklace", { mag: 10, agi: 9, echo: 7 }, "Jory's encore keeps playing after the room, and occasionally causality, has gone quiet.", [
+      { type: "openingResonance", value: 24, label: "+24 Resonance at battle start" },
+      { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+    ], "tavernRefrain"),
+    mythicItem("Marla's Lantern Crown", "helmet", { str: 10, stam: 9, agi: 8 }, "A practical crown made from tavern brass, lampglass and unapologetic authority.", [
+      { type: "openingTurnProgress", value: .18, label: "+18% opening turn progress" },
+      { type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" }
+    ], "tavernRefrain")
+  ],
+  46: [
+    mythicItem("Cindralis Edictblade", "weapon", { str: 15, mag: 10, agi: 7 }, "Prince Lucan's decree translated from courtly script into a decisive edge.", [
+      { type: "physicalDamage", value: .17, label: "+17% physical damage" },
+      { type: "magicDamage", value: .17, label: "+17% magic damage" }
+    ], "royalDecree"),
+    mythicItem("Nullcourt Regalia", "armour", { stam: 16, mag: 9, agi: 5 }, "Court regalia lined with nullscript so no command can own the wearer twice.", [
+      { type: "allStatusResistance", value: .24, label: "+24% resistance to all statuses" },
+      { type: "statusDurationReduction", value: 1, label: "Negative statuses last -1 turn" }
+    ]),
+    mythicItem("Prince's Unbroken Seal", "ring", { mag: 10, agi: 8, echo: 7 }, "A royal seal that survived the wyrm, the null field and its own succession.", [
+      { type: "statusChance", value: .22, label: "+22% status application chance" },
+      { type: "openingResonance", value: 22, label: "+22 Resonance at battle start" }
+    ], "royalDecree"),
+    mythicItem("Crown Decree Chain", "necklace", { mag: 9, stam: 10, echo: 7 }, "Every link bears a different clause; together they reject the old crown's final order.", [
+      { type: "mpOnHit", value: 6, label: "Restore 6 MP after dealing damage" },
+      { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" }
+    ], "royalDecree")
+  ],
+  47: [
+    mythicItem("Red Memory Halberd", "weapon", { str: 16, mag: 9, stam: 7 }, "The Old Guard's remembered flame burns along a blade rimed with wyrm-frost.", [
+      { type: "physicalDamage", value: .19, label: "+19% physical damage" },
+      { type: "weaknessDamage", value: .25, label: "+25% weakness damage" }
+    ], "frostburnGuard"),
+    mythicItem("Sentinel Emberplate", "armour", { stam: 18, str: 7, mag: 5 }, "Last Gate plating reheated in Elder flame until frost and command both cracked.", [
+      { type: "blockPower", value: .34, label: "34% stronger personal guard" },
+      { type: "allStatusResistance", value: .2, label: "+20% resistance to all statuses" }
+    ], "frostburnGuard"),
+    mythicItem("Frostburn Signet", "ring", { str: 8, mag: 8, stam: 9 }, "Blue ice and red ember orbit without agreeing which one should melt.", [
+      { type: "statusOnHit", status: "stun", value: .17, label: "17% chance to Stun on hit" },
+      { type: "statusResistance", status: "stun", value: .4, label: "+40% Stun resistance" }
+    ]),
+    mythicItem("Tja's Winterflame Crown", "helmet", { mag: 12, agi: 8, stam: 7 }, "Tja's immaculate frostwork framed by an older, considerably less polite fire.", [
+      { type: "magicDamage", value: .2, label: "+20% magic damage" },
+      { type: "openingTurnProgress", value: .18, label: "+18% opening turn progress" }
+    ], "frostburnGuard")
+  ],
+  48: [
+    mythicItem("Unwritten Quillblade", "weapon", { mag: 16, agi: 10, echo: 6 }, "A black archive quill sharpened on every name the nullscript failed to erase.", [
+      { type: "magicDamage", value: .2, label: "+20% magic damage" },
+      { type: "afflictedDamage", value: .21, label: "+21% damage against afflicted targets" }
+    ], "unwrittenNames"),
+    mythicItem("Vael's Black Index", "armour", { stam: 15, mag: 10, agi: 5 }, "Nyx's living index sewn into a mantle; every page turns before the spell arrives.", [
+      { type: "allStatusResistance", value: .21, label: "+21% resistance to all statuses" },
+      { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+    ], "unwrittenNames"),
+    mythicItem("Nameless Archive Chain", "necklace", { mag: 11, stam: 8, agi: 7 }, "A chain of blank nameplates that remembers exactly who wore it.", [
+      { type: "echoing", value: .08, label: "8% skill Echo turn progress" },
+      { type: "mpOnHit", value: 6, label: "Restore 6 MP after dealing damage" }
+    ], "unwrittenNames"),
+    mythicItem("Nullscript Halo", "helmet", { mag: 12, agi: 9, echo: 6 }, "A halo of rejected commands orbiting the one mind they cannot catalogue.", [
+      { type: "statusChance", value: .21, label: "+21% status application chance" },
+      { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" }
+    ])
+  ],
+  49: [
+    mythicItem("Reprise Company Mantle", "armour", { stam: 16, mag: 8, agi: 5 }, "One mantle carrying traces of every fighter who answered the Company's reprise.", [
+      { type: "allStatusResistance", value: .22, label: "+22% resistance to all statuses" },
+      { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+    ], "companyReprise"),
+    mythicItem("Hall of Names Signet", "ring", { str: 9, mag: 8, agi: 8 }, "Nine names circle its face; the tenth appears only when the wearer commits.", [
+      { type: "critChance", value: .12, label: "+12% critical chance" },
+      { type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" }
+    ], "companyReprise"),
+    mythicItem("Final Company Medallion", "necklace", { stam: 10, mag: 9, echo: 7 }, "A shared commendation for surviving a company that refuses to stay in one timeline.", [
+      { type: "openingResonance", value: 26, label: "+26 Resonance at battle start" },
+      { type: "hpOnHit", value: 7, label: "Restore 7 HP after dealing damage" }
+    ], "companyReprise"),
+    mythicItem("Reprise Command Crown", "helmet", { str: 9, mag: 9, stam: 9 }, "Maeric's authority, Marla's resolve and Rava's fire without any of their patience.", [
+      { type: "weaknessDamage", value: .27, label: "+27% weakness damage" },
+      { type: "blockPower", value: .22, label: "22% stronger personal guard" }
+    ])
+  ],
+  50: [
+    mythicItem("Solinar's Frostfire Greatsword", "weapon", { str: 15, mag: 12, echo: 6 }, "Solinar's final sunrise held between Frostmile ice and Leviathan flame.", [
+      { type: "physicalDamage", value: .18, label: "+18% physical damage" },
+      { type: "magicDamage", value: .18, label: "+18% magic damage" }
+    ], "finalSunrise"),
+    mythicItem("Eclipse of Solinar", "ring", { str: 9, mag: 9, echo: 7 }, "A dark solar ring formed at the instant Solinar's two inherited powers collided.", [
+      { type: "critChance", value: .12, label: "+12% critical chance" },
+      { type: "openingResonance", value: 28, label: "+28 Resonance at battle start" }
+    ], "finalSunrise"),
+    mythicItem("Confluence Heart", "necklace", { mag: 11, stam: 9, echo: 6 }, "The stable center where Ember Leviathan heat and Frostmile cold become one pulse.", [
+      { type: "mpOnHit", value: 7, label: "Restore 7 MP after dealing damage" },
+      { type: "allStatusResistance", value: .22, label: "+22% resistance to all statuses" }
+    ]),
+    mythicItem("Final Sunrise Crown", "helmet", { mag: 12, stam: 9, echo: 6 }, "The crown Solinar wears only after the false boundary between winter and flame burns away.", [
+      { type: "weaknessDamage", value: .3, label: "+30% weakness damage" },
+      { type: "echoing", value: .08, label: "8% skill Echo turn progress" }
+    ], "finalSunrise")
+  ]
+};
+
+const MYTHIC_GEAR = Object.values(HALL_MYTHIC_LOOT_TABLES).flat();
+const mythicGearNames = new Set(MYTHIC_GEAR.map(gear => gear.name));
+MYTHIC_GEAR.forEach(gear => gearDb[gear.slot].push(gear));
+
+const MYTHIC_SETS = {
+  ashenInsurrection: { name: "Ashen Insurrection", pieces: ["Riotbrand Maul", "Ash Quarter Bulwark", "Gnomefire Seal"], bonus: { type: "statusOnHit", status: "stun", value: .1, label: "10% additional chance to Stun on hit" } },
+  forbiddenMargin: { name: "Forbidden Margin", pieces: ["Interdict Crozier", "Margin of Silence", "Custodian's Last Circlet"], bonus: { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" } },
+  stonewakeCrown: { name: "Stonewake Crown", pieces: ["Worldsplitter Axe", "Stonewake Crownplate", "King's Faultline Torque"], bonus: { type: "stagger", value: 2, label: "+2 stagger on weakness hits" } },
+  clockworkRiot: { name: "Clockwork Riot", pieces: ["Midnight Chime Cannon", "Riot Clockwork Band", "Tibby's Grandmaster Goggles"], bonus: { type: "openingTurnProgress", value: .2, label: "+20% opening turn progress" } },
+  tavernRefrain: { name: "Tavern Refrain", pieces: ["Blimpstone Banquet Coat", "Bellwick Encore Locket", "Marla's Lantern Crown"], bonus: { type: "openingResonance", value: 25, label: "+25 Resonance at battle start" } },
+  royalDecree: { name: "Royal Decree", pieces: ["Cindralis Edictblade", "Prince's Unbroken Seal", "Crown Decree Chain"], bonus: { type: "statusChance", value: .22, label: "+22% status application chance" } },
+  frostburnGuard: { name: "Frostburn Old Guard", pieces: ["Red Memory Halberd", "Sentinel Emberplate", "Tja's Winterflame Crown"], bonus: { type: "blockPower", value: .18, label: "18% stronger personal guard" } },
+  unwrittenNames: { name: "Unwritten Names", pieces: ["Unwritten Quillblade", "Vael's Black Index", "Nameless Archive Chain"], bonus: { type: "echoing", value: .08, label: "8% skill Echo turn progress" } },
+  companyReprise: { name: "Company Reprise", pieces: ["Reprise Company Mantle", "Hall of Names Signet", "Final Company Medallion"], bonus: { type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" } },
+  finalSunrise: { name: "Final Sunrise", pieces: ["Solinar's Frostfire Greatsword", "Eclipse of Solinar", "Final Sunrise Crown"], bonus: { type: "weaknessDamage", value: .25, label: "+25% weakness damage" } }
+};
+
+const HALL_MYTHIC_THEMES = { 41: "mountain", 42: "ruins", 43: "mountain", 44: "ruins", 45: "dragon", 46: "ruins", 47: "dragon", 48: "ruins", 49: "mountain", 50: "dragon" };
 const HALL_LEGENDARY_STAGE = 21;
-const HALL_PLATINUM_STAGE = 41;
+const HALL_MYTHIC_STAGE = 41;
 const HALL_ULTIMATE_REWARD_STAGES = new Set([21, 24, 27, 30, 33, 36, 39]);
 const HALL_STANDARD_GEAR_POOL = [
   ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
@@ -1473,6 +1678,81 @@ function migrateEchoForgeInstances() {
   });
 }
 
+function mythicMigrationTarget(slot, seed, offset = 0) {
+  const candidates = MYTHIC_GEAR.filter(gear => gear.slot === slot);
+  if (!candidates.length) return null;
+  let hash = 0;
+  for (const character of String(seed || slot)) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  return candidates[(hash + offset) % candidates.length];
+}
+
+function migratePlatinumGear() {
+  state.gearInstances ||= {};
+  gearInstances = state.gearInstances;
+  const legacyRarity = "Platinum";
+  const sourceNamesWithInstances = new Set();
+  const touchedSourceNames = new Set();
+  const touchedMythicNames = new Set();
+
+  Object.values(gearInstances).forEach(instance => {
+    if (!instance?.name) return;
+    sourceNamesWithInstances.add(instance.name);
+    const effectiveRarity = instance.rarity || state.gearRarities?.[instance.name];
+    if (effectiveRarity !== legacyRarity) return;
+    const sourceName = instance.name;
+    const target = mythicMigrationTarget(gearByName(sourceName)?.slot, `${sourceName}:${instance.id}`);
+    if (!target) return;
+    instance.name = target.name;
+    instance.rarity = "Mythic";
+    touchedSourceNames.add(sourceName);
+    touchedMythicNames.add(target.name);
+  });
+
+  Object.entries({ ...(state.gearRarities || {}) }).forEach(([sourceName, rarity]) => {
+    if (rarity !== legacyRarity || sourceNamesWithInstances.has(sourceName)) return;
+    const sourceGear = gearByName(sourceName);
+    const count = Math.max(1, Number(state.gearCopies[sourceName]) || (state.ownedGear.includes(sourceName) ? 1 : 0));
+    const legacyAffixes = Array.isArray(state.gearAffixes[sourceName]) ? state.gearAffixes[sourceName].map(entry => ({ ...entry })) : [];
+    const createdRefs = [];
+    for (let index = 0; index < count; index++) {
+      const target = mythicMigrationTarget(sourceGear?.slot, sourceName, index);
+      if (!target) continue;
+      const ref = createEchoGearInstance(target.name, {
+        allowAny: true,
+        rarity: "Mythic",
+        affixes: legacyAffixes,
+        rollAffixes: false
+      });
+      if (ref) createdRefs.push(ref);
+      touchedMythicNames.add(target.name);
+    }
+    let holderIndex = 0;
+    Object.values(baseJobs).forEach(hero => Object.keys(hero.gear || {}).forEach(slot => {
+      if (hero.gear[slot] !== sourceName || !createdRefs.length) return;
+      hero.gear[slot] = createdRefs[Math.min(holderIndex++, createdRefs.length - 1)];
+    }));
+    touchedSourceNames.add(sourceName);
+  });
+
+  touchedSourceNames.forEach(sourceName => {
+    delete state.gearRarities[sourceName];
+    delete state.gearAffixes[sourceName];
+    if (!echoGearInstanceRefs(sourceName).length) {
+      delete state.gearCopies[sourceName];
+      state.ownedGear = state.ownedGear.filter(name => name !== sourceName);
+    } else {
+      syncEchoForgeCopies(sourceName);
+    }
+  });
+  touchedMythicNames.forEach(name => {
+    echoGearInstanceRefs(name).forEach((ref, index) => {
+      const instance = gearInstance(ref);
+      if (instance) instance.copyNumber = index + 1;
+    });
+    syncEchoForgeCopies(name);
+  });
+}
+
 function ownedGearRefs(slot = null, heroId = null) {
   return state.ownedGear.flatMap(name => {
     const separateRefs = echoGearInstanceRefs(name);
@@ -1552,6 +1832,7 @@ function gearIconHtml(gear, heroId, fallbackIndex, className = "") {
 
 function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
+  if (mythicGearNames.has(gear?.name)) return "EMBER HALL 41-50 MYTHIC / ALL HEROES";
   if (ngPlusSignatureNames.has(gear?.name)) return `HALL 21+ / NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
   if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / ${gear.echoRarity.toUpperCase()} UPGRADE OF ${gear.echoBase.toUpperCase()} / ALL HEROES`;
   if (ngPlusChestGearNames.has(gear?.name)) return "NG+ RANDOM CHEST GEAR / ALL HEROES";
@@ -1599,7 +1880,15 @@ const WEAPON_BASIC_ATTACK_EFFECTS = {
   "Loopglass Sabre": { type: "status", status: "physicalVulnerability", value: .16, duration: 3, label: "BASIC ATTACK: applies 16% Physical Vulnerability" },
   "Reverie Hexrod": { type: "status", status: "magicVulnerability", value: .2, duration: 3, label: "BASIC ATTACK: applies 20% Magic Vulnerability" },
   "Stonewake Maul": { type: "break", value: 2, label: "BASIC ATTACK: deals +2 Break" },
-  "Cinder Repeater": { type: "status", status: "critExposed", value: .12, duration: 2, label: "BASIC ATTACK: exposes target to +12% CRIT" }
+  "Cinder Repeater": { type: "status", status: "critExposed", value: .12, duration: 2, label: "BASIC ATTACK: exposes target to +12% CRIT" },
+  "Riotbrand Maul": { type: "status", status: "stun", duration: 1, label: "BASIC ATTACK: inflicts Stun" },
+  "Interdict Crozier": { type: "status", status: "sleep", duration: 2, label: "BASIC ATTACK: inflicts Sleep" },
+  "Worldsplitter Axe": { type: "break", value: 3, label: "BASIC ATTACK: deals +3 Break" },
+  "Midnight Chime Cannon": { type: "status", status: "stun", duration: 1, label: "BASIC ATTACK: inflicts Stun" },
+  "Cindralis Edictblade": { type: "status", status: "physicalVulnerability", value: .18, duration: 3, label: "BASIC ATTACK: applies 18% Physical Vulnerability" },
+  "Red Memory Halberd": { type: "status", status: "burn", duration: 4, label: "BASIC ATTACK: inflicts Burn" },
+  "Unwritten Quillblade": { type: "status", status: "magicVulnerability", value: .2, duration: 3, label: "BASIC ATTACK: applies 20% Magic Vulnerability" },
+  "Solinar's Frostfire Greatsword": { type: "status", status: "burn", duration: 5, coefficient: .32, label: "BASIC ATTACK: inflicts strong Frostfire Burn" }
 };
 
 function weaponBasicAttackEffect(gear) {
@@ -1619,17 +1908,31 @@ function gearEffectLabels(gear) {
   return basic ? [basic.label, ...labels] : labels;
 }
 
+function mythicSetDefinition(gear) {
+  return gear?.mythicSet ? MYTHIC_SETS[gear.mythicSet] || null : null;
+}
+
+function activeMythicSetEffects(id) {
+  const equippedNames = new Set(Object.values(baseJobs[id]?.gear || {}).map(gearBaseName));
+  return Object.values(MYTHIC_SETS)
+    .filter(set => set.pieces.every(name => equippedNames.has(name)))
+    .map(set => set.bonus);
+}
+
 function gearEffectHtml(gear, className = "rare-effect") {
   const basic = weaponBasicAttackEffect(gear);
   const effects = [...(basic ? [{ ...basic, basicAttackUnique: true }] : []), ...gearEffects(gear)].filter(effect => effect.label);
-  return effects.length ? `<span class="gear-unique-effects ${className}">${effects.map(effect => {
+  const set = mythicSetDefinition(gear);
+  const setHtml = set ? `<span class="mythic-set-details"><small class="is-mythic-set"><b>${set.name} set</b> / ${set.pieces.join(" / ")}</small><small class="is-mythic-set-bonus"><b>3-piece:</b> ${set.bonus.label}</small></span>` : "";
+  const effectHtml = effects.length ? `<span class="gear-unique-effects ${className}">${effects.map(effect => {
     const label = gearEffectLabel(effect);
     return `<small class="${effect.echoUnique ? "is-echo-unique" : effect.basicAttackUnique ? "is-basic-attack" : ""}">${label}</small>`;
   }).join("")}</span>` : "";
+  return `${effectHtml}${setHtml}`;
 }
 
-const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Platinum: 5 };
-const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Platinum"];
+const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 };
+const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
 const HALL_GEAR_RARITIES = RARITY_ORDER.slice(1, 5);
 
 function affix(key, label, type, min, max, options = {}) {
@@ -1703,6 +2006,7 @@ function defaultGearRarity(name) {
   const baseName = gearBaseName(name);
   const gear = gearByName(baseName);
   if (!gear) return "Common";
+  if (mythicGearNames.has(baseName)) return "Mythic";
   if (ngPlusSignatureNames.has(baseName) || postgameGearNames.has(baseName)) return "Legendary";
   if (echoForgeGearNames.has(baseName)) return gear.echoRarity || "Legendary";
   if (ngPlusChestGearNames.has(baseName)) return "Epic";
@@ -1795,7 +2099,8 @@ function upgradeOwnedLegendaryGear() {
 }
 
 function gearRarity(name) {
-  return gearInstance(name)?.rarity || state.gearRarities?.[gearBaseName(name)] || defaultGearRarity(name);
+  const rarity = gearInstance(name)?.rarity || state.gearRarities?.[gearBaseName(name)] || defaultGearRarity(name);
+  return rarity === "Platinum" ? "Mythic" : rarity;
 }
 
 function gearAffixes(name) {
@@ -1910,6 +2215,7 @@ function gearSearchText(ref) {
     ...gearEffects(gear),
     ...(weaponBasicAttackEffect(gear) ? [weaponBasicAttackEffect(gear)] : [])
   ];
+  const set = mythicSetDefinition(gear);
   const searchable = [
     gearDisplayName(ref),
     gear.name,
@@ -1918,6 +2224,9 @@ function gearSearchText(ref) {
     gearRarity(ref),
     gear.desc,
     gearAccessLabel(gear),
+    set?.name,
+    set?.bonus?.label,
+    ...(set?.pieces || []),
     ...Object.keys(gear.stats || {}),
     ...fixed.flatMap(entry => [entry.label, entry.type, entry.status, entry.element]),
     ...gearAffixes(ref).flatMap(entry => {
@@ -2883,6 +3192,7 @@ function loadGame(saveKey = SAVE_KEY) {
     });
   });
   migrateEchoForgeInstances();
+  migratePlatinumGear();
   upgradeOwnedLegendaryGear();
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
@@ -3970,7 +4280,10 @@ function effectValue(id, type, match = null) {
       .filter(effect => effect.type === type && (match === null || effect.status === match || effect.stat === match))
       .reduce((sum, effect) => sum + (effect.value || 0), 0);
   }, 0);
-  return fixed + affixValue(id, type, match);
+  const setBonus = activeMythicSetEffects(id)
+    .filter(effect => effect.type === type && (match === null || effect.status === match || effect.stat === match))
+    .reduce((sum, effect) => sum + (effect.value || 0), 0);
+  return fixed + setBonus + affixValue(id, type, match);
 }
 
 function talentPointsEarned(level) {
@@ -7524,7 +7837,7 @@ function renderHallBattleMap() {
     const isCleared = cleared.has(info.stage);
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
-    const lootLabel = info.stage >= HALL_PLATINUM_STAGE ? "Platinum gear" : HALL_ULTIMATE_REWARD_STAGES.has(info.stage)
+    const lootLabel = info.stage >= HALL_MYTHIC_STAGE ? "Mythic gear" : HALL_ULTIMATE_REWARD_STAGES.has(info.stage)
       ? "Legendary / ultimate weapon"
       : info.stage >= HALL_LEGENDARY_STAGE ? "Legendary gear" : "Uncommon-Legendary gear";
     return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
@@ -9027,7 +9340,7 @@ function winBattle(log) {
       buildTurnOrder();
       runCurrentTurn(`${log} The next wave enters.`);
     };
-    if (Number(battle.hallStage) >= HALL_PLATINUM_STAGE) {
+    if (Number(battle.hallStage) >= HALL_MYTHIC_STAGE) {
       const total = hallBattleInfo(battle.hallStage).waves.length + 1;
       battle.enemies.forEach(unit => {
         unit.anim = "death";
@@ -9148,6 +9461,7 @@ function rollHallGearRarity() {
 }
 
 function hallGearRewardCandidates(stage) {
+  if (stage >= HALL_MYTHIC_STAGE) return HALL_MYTHIC_LOOT_TABLES[stage] || [];
   const deepHall = stage >= HALL_LEGENDARY_STAGE;
   const pool = deepHall ? HALL_LEGENDARY_GEAR_POOL : HALL_STANDARD_GEAR_POOL;
   if (deepHall && HALL_ULTIMATE_REWARD_STAGES.has(stage)) {
@@ -9164,9 +9478,9 @@ function guaranteeHallBattleGearReward(rewards, stage = 1) {
   const candidates = hallGearRewardCandidates(stage);
   const gear = candidates[Math.floor(Math.random() * candidates.length)];
   if (!gear) return null;
-  const rarity = stage >= HALL_PLATINUM_STAGE ? "Platinum" : stage >= HALL_LEGENDARY_STAGE ? "Legendary" : rollHallGearRarity();
+  const rarity = stage >= HALL_MYTHIC_STAGE ? "Mythic" : stage >= HALL_LEGENDARY_STAGE ? "Legendary" : rollHallGearRarity();
   const themes = ["swamp", "ruins", "mountain", "dragon"];
-  const theme = themes[Math.floor(Math.random() * themes.length)];
+  const theme = HALL_MYTHIC_THEMES[stage] || themes[Math.floor(Math.random() * themes.length)];
   const awarded = awardGearDrop(gear.name, rarity, rewards.drops, { theme, separateCopy: true });
   rewards.gearDrops.push(awarded);
   return awarded;
@@ -10866,7 +11180,7 @@ function runQaChecks() {
 
     const affixCounts = RARITY_ORDER.map(rarity => [rarity, rollGearAffixes(gearByName("Ashrunner Knife"), rarity, "mountain").length]);
     check("affix-counts", affixCounts.every(([rarity, count]) => count === RARITY_AFFIX_COUNTS[rarity]), JSON.stringify(affixCounts));
-    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Platinum: 5 }));
+    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 }));
     const rangedAffixes = Array.from({ length: 20 }, () => rollGearAffixes(gearByName("Ashrunner Knife"), "Epic", "mountain")).flat();
     check("affix-ranges", rangedAffixes.every(entry => entry.value >= entry.min && entry.value <= entry.max));
     check("early-status-gear", zoneStarterGear.filter(gear => gear.slot === "weapon").every(gear => gearEffects(gear).some(effect => effect.type === "statusOnHit")) && zoneStarterGear.some(gear => gear.slot === "armour" && gearEffects(gear).some(effect => effect.type === "statusOnHit")));
