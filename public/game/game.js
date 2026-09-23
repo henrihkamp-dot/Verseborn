@@ -2871,11 +2871,7 @@ function loadGame(saveKey = SAVE_KEY) {
   state.gearCopies ||= {};
   state.discoveredMaps = Array.isArray(state.discoveredMaps) ? state.discoveredMaps.filter(id => maps[id]) : ["lantern"];
   state.flags ||= {};
-  state.hallBattles ||= { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
-  state.hallBattles.unlockedStage = Math.max(1, Math.min(50, Number(state.hallBattles.unlockedStage) || 1));
-  state.hallBattles.clearedStages = Array.isArray(state.hallBattles.clearedStages) ? [...new Set(state.hallBattles.clearedStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 50))] : [];
-  state.hallBattles.recruitStages = Array.isArray(state.hallBattles.recruitStages) ? [...new Set(state.hallBattles.recruitStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))] : [];
-  state.hallBattles.pendingRecruit = Number(state.hallBattles.pendingRecruit) || 0;
+  state.hallBattles = normalizeHallBattleProgress(state.hallBattles);
   if (!maps[state.map]) state.map = "lantern";
   Object.entries(data.heroes || {}).forEach(([id, saved]) => {
     if (!baseJobs[id]) return;
@@ -7440,8 +7436,26 @@ function battleUnit(id) {
   return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], down: h.hp <= 0, deathTick: h.hp <= 0 ? tick : null, row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: h.hp <= 0 ? "death" : "idle" };
 }
 
+function normalizeHallBattleProgress(progress) {
+  const maxStage = HALL_BATTLE_BLUEPRINTS.length;
+  const normalized = progress && typeof progress === "object"
+    ? progress
+    : { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
+  normalized.clearedStages = Array.isArray(normalized.clearedStages)
+    ? [...new Set(normalized.clearedStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= maxStage))].sort((a, b) => a - b)
+    : [];
+  const highestCleared = normalized.clearedStages.at(-1) || 0;
+  const savedUnlock = Math.max(1, Math.min(maxStage, Number(normalized.unlockedStage) || 1));
+  normalized.unlockedStage = Math.min(maxStage, Math.max(savedUnlock, highestCleared + 1));
+  normalized.recruitStages = Array.isArray(normalized.recruitStages)
+    ? [...new Set(normalized.recruitStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))]
+    : [];
+  normalized.pendingRecruit = Number(normalized.pendingRecruit) || 0;
+  return normalized;
+}
+
 function hallBattleProgress() {
-  state.hallBattles ||= { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
+  state.hallBattles = normalizeHallBattleProgress(state.hallBattles);
   return state.hallBattles;
 }
 
@@ -7832,10 +7846,11 @@ function triggerPartyDefeat(log = "") {
 
 function recordHallBattleClear(stage) {
   const progress = hallBattleProgress();
-  if (progress.clearedStages.includes(stage)) return false;
+  const firstClear = !progress.clearedStages.includes(stage);
+  progress.unlockedStage = Math.min(HALL_BATTLE_BLUEPRINTS.length, Math.max(progress.unlockedStage, stage + 1));
+  if (!firstClear) return false;
   progress.clearedStages.push(stage);
   progress.clearedStages.sort((a, b) => a - b);
-  progress.unlockedStage = Math.min(HALL_BATTLE_BLUEPRINTS.length, Math.max(progress.unlockedStage, stage + 1));
   state.echoForgeRank = Math.max(state.echoForgeRank || 0, Math.min(40, stage));
   const remainingRecruit = HALL_RECRUITS.some(id => !state.party.includes(id));
   if (remainingRecruit && stage % HALL_RECRUIT_INTERVAL === 0 && !progress.recruitStages.includes(stage)) progress.pendingRecruit = stage;
