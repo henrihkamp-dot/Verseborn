@@ -1,0 +1,344 @@
+{
+  "Verseborn": {
+    "file": "verseborn.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 398,
+    "cellHeight": 401,
+    "baseline": 350,
+    "referenceHeight": 268,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 3,
+    "anchorX": 214,
+    "idleStabilization": [
+      0,
+      22,
+      42,
+      54
+    ]
+  },
+  "Mira": {
+    "file": "mira.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 374,
+    "cellHeight": 341,
+    "baseline": 308,
+    "referenceHeight": 280,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 0,
+    "anchorX": 189,
+    "idleStabilization": [
+      0,
+      7,
+      10,
+      6
+    ]
+  },
+  "Seerin": {
+    "file": "seerin.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 382,
+    "cellHeight": 394,
+    "baseline": 326,
+    "referenceHeight": 272,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 3,
+    "anchorX": 202,
+    "idleStabilization": [
+      0,
+      13,
+      22,
+      16
+    ]
+  },
+  "Torren": {
+    "file": "torren.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 413,
+    "cellHeight": 395,
+    "baseline": 342,
+    "referenceHeight": 229,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 0,
+    "anchorX": 208,
+    "idleStabilization": [
+      0,
+      2,
+      9,
+      4
+    ]
+  },
+  "Glimmer": {
+    "file": "glimmer.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 430,
+    "cellHeight": 361,
+    "baseline": 318,
+    "referenceHeight": 254,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 0,
+    "anchorX": 191,
+    "idleStabilization": [
+      0,
+      10,
+      14,
+      18
+    ]
+  },
+  "GlimmerMech": {
+    "file": "glimmer-mech.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 384,
+    "cellHeight": 377,
+    "baseline": 348,
+    "referenceHeight": 264,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 1,
+    "anchorX": 196,
+    "idleStabilization": [
+      0,
+      10,
+      9,
+      15
+    ]
+  },
+  "Kael": {
+    "file": "kael.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 406,
+    "cellHeight": 346,
+    "baseline": 303,
+    "referenceHeight": 255,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 0,
+    "anchorX": 200,
+    "idleStabilization": [
+      0,
+      36,
+      52,
+      60
+    ]
+  },
+  "KaelShadow": {
+    "file": "kael-shadow.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 378,
+    "cellHeight": 423,
+    "baseline": 351,
+    "referenceHeight": 278,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 2,
+    "anchorX": 205,
+    "idleStabilization": [
+      0,
+      14,
+      20,
+      16
+    ]
+  },
+  "Sparky": {
+    "file": "sparky.png",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 363,
+    "cellHeight": 350,
+    "baseline": 320,
+    "referenceHeight": 226,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "block": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "ultimate1": 3,
+      "ultimate2": 3,
+      "death": 4
+    },
+    "directFrames": true,
+    "sourceGrid": [
+      4,
+      5
+    ],
+    "sourceEdgeContacts": 0,
+    "anchorX": 154,
+    "idleStabilization": [
+      0,
+      8,
+      12,
+      14
+    ]
+  }
+}

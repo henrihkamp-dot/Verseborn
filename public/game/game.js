@@ -321,11 +321,11 @@ const walkSpriteSheets = {};
 const animationSheets = {};
 const battleAnimationSheets = {};
 const battleSpriteHeights = {
-  Verseborn: 54, Mira: 56, Sparky: 44, Glimmer: 52, GlimmerMech: 62,
-  Kael: 58, KaelShadow: 62, Torren: 57, Seerin: 56
+  Verseborn: 46, Mira: 48, Sparky: 34, Glimmer: 43, GlimmerMech: 52,
+  Kael: 47, KaelShadow: 50, Torren: 49, Seerin: 48
 };
-const BATTLE_IDLE_FRAME_TICKS = 36;
-const BATTLE_DEATH_FRAME_TICKS = 8;
+const BATTLE_IDLE_FRAME_TICKS = 48;
+const BATTLE_DEATH_FRAME_TICKS = 10;
 const battleFrameSequences = {
   Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
@@ -645,7 +645,7 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
 
 async function loadBattleAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/battle/manifest.json?v=party-clean-74b");
+    const response = await fetch("assets/sprites/battle-v2/manifest.json?v=party-release-75");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -655,7 +655,7 @@ async function loadBattleAnimationSheets() {
         resolve();
       };
       image.onerror = resolve;
-      image.src = `assets/sprites/battle/${config.file}?v=party-clean-74b`;
+      image.src = `assets/sprites/battle-v2/${config.file}?v=party-release-75`;
     })));
   } catch (_) {
     // Stable world sprites remain the fallback if a battle-only asset fails.
@@ -4377,9 +4377,10 @@ function battleSkills(id, unit = null) {
   return [...base, ...extra];
 }
 
-function battleAnimationName(sk) {
+function battleAnimationName(sk, unit = null) {
   if (sk.anim !== "ultimate") return sk.anim;
-  return sk.ultimateIndex === 2 || sk.transform ? "ultimate2" : "ultimate1";
+  if (!unit?.form && ["Kael", "Glimmer"].includes(unit?.id) && !sk.transform) return "magic";
+  return "ultimate";
 }
 
 function activateTransformation(unit, form) {
@@ -5985,8 +5986,8 @@ function drawFalseDawn(p) {
 
 const battlePartyLayouts = {
   1: [[72, 124]],
-  2: [[62, 108], [82, 140]],
-  3: [[52, 104], [84, 132], [52, 160]]
+  2: [[54, 106], [90, 144]],
+  3: [[44, 101], [91, 132], [44, 162]]
 };
 const BATTLE_ARENA_HEIGHT = 188;
 
@@ -8270,7 +8271,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   battle.targetMode = false;
   battle.pendingSkill = null;
   battle.resolving = true;
-  u.anim = battleAnimationName(sk);
+  u.anim = battleAnimationName(sk, u);
   if (selectedSkill.anim !== "ultimate") {
     u.mp -= selectedCost;
     if (u.nextSkillDiscount && selectedCost > 0) delete u.nextSkillDiscount;
@@ -11202,6 +11203,20 @@ function runQaChecks() {
     baseJobs.Verseborn.hp = total.max;
     baseJobs.Verseborn.mp = total.mp;
     startBattle("QA Buff Battle", [enemy("Slow Test Sentinel", 180, 5, "Shadow", "#655", 1)], null);
+  } else if (qaMode === "flamesolo") {
+    mode = "walk";
+    const requestedHero = qaParams.get("hero");
+    const hero = baseJobs[requestedHero] ? requestedHero : "Verseborn";
+    addParty(hero);
+    progressFor(hero).level = 40;
+    const transformTalent = hero === "Glimmer" ? "Mech Form" : hero === "Kael" ? "Shadowpriest" : null;
+    if (transformTalent && !progressFor(hero).talents.includes(transformTalent)) progressFor(hero).talents.push(transformTalent);
+    const total = totals(hero);
+    baseJobs[hero].hp = total.max;
+    baseJobs[hero].mp = total.mp;
+    state.activeParty = [hero];
+    state.resonance = 100;
+    startBattle(`${hero} Sprite QA`, [enemy("Training Construct", 9999, 1, "Shadow", "#655", 1)], null);
   } else if (["flame1", "flame2", "flameforms"].includes(qaMode)) {
     mode = "walk";
     const ids = qaMode === "flame1" ? ["Verseborn", "Sparky", "Glimmer"] : qaMode === "flame2" ? ["Kael", "Torren", "Seerin"] : ["Glimmer", "Kael", "Sparky"];
