@@ -325,7 +325,7 @@ const battleSpriteHeights = {
   Kael: 47, KaelShadow: 50, Torren: 49, Seerin: 48
 };
 const BATTLE_IDLE_FRAME_TICKS = 48;
-const BATTLE_DEATH_FRAME_TICKS = 10;
+const BATTLE_DEATH_FRAME_TICKS = 14;
 const battleFrameSequences = {
   Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
@@ -378,18 +378,40 @@ const enemyAnimationFiles = {
   Grumm: "Grumm",
   Kaeldrin: "Kaeldrin",
   Marla: "Marla",
-  Lyrsa: "Lyrsa",
-  Nyx: "Nyx",
+  Lyrsa: "Lysra",
+  Lysra: "Lysra",
+  Nyx: "Nyx Vael",
+  "Nyx Vael": "Nyx Vael",
   Rava: "Rava",
   Shade: "Shade",
   Tja: "Tja",
   "Archive Custodian": "Archive Custodian",
-  "Ash Wyrm": "Ash Wyrm",
+  "Red Dragon Lord": "Red Dragon Lord",
   "Cracked Pillar": "Cracked Pillar",
-  "Seal Bearer": "Seal Bearer",
+  "Corrupt Clergy": "Corrupt Clergy",
   "Dock Foreman": "Dock Foreman",
   "Dawn Gate Sentinel": "Dawn Gate Sentinel",
-  Jory: "Jory"
+  Jory: "Jory Bellwick",
+  "Jory Bellwick": "Jory Bellwick",
+  Slobbo: "Slobbo",
+  Brokk: "Brokk",
+  "High Administrator Thaddeus": "High Administrator Thaddeus",
+  Gorg: "Gorg",
+  "Clock Goblin": "Clock Goblin",
+  "Lord Sprocket": "Lord Sprocket",
+  "Baron Revus Veln": "Baron Revus Veln",
+  "Sir Reginald": "Sir Reginald",
+  "Saint Justin": "Saint Justin",
+  "Elder Plumpin": "Elder Plumpin",
+  "Ash Quarter Thugg": "Ash Quarter Thugg",
+  "Angry Gnome Mob": "Angry Gnome Mob",
+  "Berend Blimpstone": "Berend Blimpstone",
+  "Prince Lucan Cindralis": "Prince Lucan Cindralis",
+  Tibby: "Tibby",
+  Solinar: "Solinar",
+  "Solinar Enraged": "Solinar Enraged",
+  "Frostmile Wyrm": "Frostmile Wyrm",
+  "Ember Leviathan": "Ember Leviathan"
 };
 const enemyAnimationHeights = {
   "Inkbound Auditor": 47,
@@ -397,38 +419,70 @@ const enemyAnimationHeights = {
   Grumm: 55,
   Kaeldrin: 55,
   Marla: 49,
-  Lyrsa: 51,
-  Nyx: 48,
+  Lysra: 51,
+  "Nyx Vael": 48,
   Rava: 51,
   Shade: 50,
   Tja: 50,
   "Archive Custodian": 49,
-  "Ash Wyrm": 62,
+  "Red Dragon Lord": 62,
   "Cracked Pillar": 58,
-  "Seal Bearer": 51,
+  "Corrupt Clergy": 51,
   "Dock Foreman": 53,
   "Dawn Gate Sentinel": 58,
-  Jory: 49
+  "Jory Bellwick": 49,
+  Slobbo: 48,
+  Brokk: 54,
+  "High Administrator Thaddeus": 51,
+  Gorg: 58,
+  "Clock Goblin": 48,
+  "Lord Sprocket": 51,
+  "Baron Revus Veln": 52,
+  "Sir Reginald": 52,
+  "Saint Justin": 51,
+  "Elder Plumpin": 49,
+  "Ash Quarter Thugg": 48,
+  "Angry Gnome Mob": 49,
+  "Berend Blimpstone": 49,
+  "Prince Lucan Cindralis": 51,
+  Tibby: 48,
+  Solinar: 65,
+  "Solinar Enraged": 65,
+  "Frostmile Wyrm": 62,
+  "Ember Leviathan": 63
 };
+const HALL_FINALE_SPRITES = new Set(["Frostmile Wyrm", "Ember Leviathan", "Solinar", "Solinar Enraged"]);
+
+function enemyBattleScale(key) {
+  return battle?.hallStage === 50 && HALL_FINALE_SPRITES.has(key) ? 1.25 : 1;
+}
 const magicNpcAnimations = new Set(["Lyrsa", "Nyx", "Jory"]);
 const enemyAbilityProfiles = {
-  Jory: { row: 0, element: "Sound", melee: "Lute Crack", magic: "Star Note", ultimate: "Grand Chord", pattern: ["magic", "melee", "magic", "ultimate"] },
-  Nyx: { row: 1, element: "Shadow", melee: "Margin Snap", magic: "Quiet Index", ultimate: "Gravebind", pattern: ["magic", "melee", "magic", "ultimate"] },
+  "Jory Bellwick": { row: 0, element: "Sound", melee: "Lute Crack", magic: "Star Note", ultimate: "Grand Chord", pattern: ["magic", "melee", "magic", "ultimate"] },
+  "Nyx Vael": { row: 1, element: "Shadow", melee: "Margin Snap", magic: "Quiet Index", ultimate: "Gravebind", pattern: ["magic", "melee", "magic", "ultimate"] },
   Rava: { row: 2, element: "Ancient Fire", melee: "Cinder Spear", magic: "Ember Javelin", ultimate: "Dragon's Breath", pattern: ["melee", "magic", "melee", "ultimate"] },
   Grumm: { row: 3, element: "Earth", melee: "Granite Cleave", magic: "Boulder Toss", ultimate: "Mountain Breaker", pattern: ["melee", "magic", "melee", "ultimate"] },
   Kaeldrin: { row: 4, element: "Holy Fire", melee: "Rankbreaker", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn", pattern: ["melee", "heal", "magic", "ultimate"] },
-  Lyrsa: { row: 5, element: "Sigil", melee: "Spellstaff Sweep", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence", pattern: ["magic", "heal", "melee", "ultimate"] },
+  Lysra: { row: 5, element: "Sigil", melee: "Spellstaff Sweep", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence", pattern: ["magic", "heal", "melee", "ultimate"] },
   Shade: { row: 6, element: "Shadow", melee: "Twin Fang", magic: "Throwing Daggers", ultimate: "Shadow Storm", pattern: ["melee", "magic", "melee", "ultimate"] },
   Marla: { row: 7, element: "Heart", melee: "Pan Swing", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true, pattern: ["melee", "heal", "magic", "ultimate"] },
   "King Maeric": { element: "Holy Fire", melee: "Sceptre Judgment", magic: "Lion Seal", heal: "Royal Bulwark", ultimate: "Crown of Cindervale", pattern: ["melee", "heal", "magic", "ultimate"] },
   Tja: { element: "Sigil", melee: "Frost Flourish", magic: "Crystal Waltz", ultimate: "Winter Encore", pattern: ["magic", "melee", "magic", "ultimate"] },
   "Inkbound Auditor": { element: "Shadow", melee: "Quill Rend", magic: "Red Ink Edict", ultimate: "Audit of the Nameless", pattern: ["magic", "melee", "magic", "ultimate"] },
   "Archive Custodian": { element: "Sigil", melee: "Ledger Crush", magic: "Forbidden Index", heal: "Restore Entry", ultimate: "Archive Lock", pattern: ["magic", "heal", "melee", "ultimate"] },
-  "Ash Wyrm": { element: "Ancient Fire", melee: "Cinder Claw", magic: "Ash Breath", ultimate: "First Ember Eruption", pattern: ["melee", "magic", "magic", "ultimate"] },
+  "Red Dragon Lord": { element: "Ancient Fire", melee: "Cinder Claw", magic: "Ash Breath", ultimate: "First Ember Eruption", pattern: ["melee", "magic", "magic", "ultimate"] },
   "Cracked Pillar": { element: "Earth", melee: "Stonefall", magic: "Faultline Pulse", ultimate: "Armory Collapse", pattern: ["melee", "magic", "melee", "ultimate"] },
-  "Seal Bearer": { element: "Holy Fire", melee: "Mace Seal", magic: "Binding Litany", heal: "Clergy Ward", ultimate: "Final Absolution", pattern: ["melee", "heal", "magic", "ultimate"] },
+  "Corrupt Clergy": { element: "Holy Fire", melee: "Mace Seal", magic: "Binding Litany", heal: "Clergy Ward", ultimate: "Final Absolution", pattern: ["melee", "heal", "magic", "ultimate"] },
   "Dock Foreman": { element: "Shadow", melee: "Hook Lash", magic: "Drowned Order", ultimate: "Anchor Below", pattern: ["melee", "magic", "melee", "ultimate"] },
-  "Dawn Gate Sentinel": { element: "Holy Fire", melee: "Gate Halberd", magic: "Dawn Window", heal: "Sentinel Ward", ultimate: "Last Gate Protocol", pattern: ["melee", "heal", "magic", "ultimate"] }
+  "Dawn Gate Sentinel": { element: "Holy Fire", melee: "Gate Halberd", magic: "Dawn Window", heal: "Sentinel Ward", ultimate: "Last Gate Protocol", pattern: ["melee", "heal", "magic", "ultimate"] },
+  "Angry Gnome Mob": { element: "Earth", melee: "Mob Rush", magic: "Flying Crockery", ultimate: "Uprising", pattern: ["melee", "magic", "melee", "ultimate"] },
+  "Ash Quarter Thugg": { element: "Earth", melee: "Cinder Club", magic: "Ash Hurl", ultimate: "Quarterbreaker", pattern: ["melee", "magic", "melee", "ultimate"] },
+  "Berend Blimpstone": { element: "Heart", melee: "Whisk Strike", magic: "Crown Cake", heal: "Kitchen Remedy", ultimate: "Royal Banquet", pattern: ["magic", "heal", "melee", "ultimate"] },
+  "Prince Lucan Cindralis": { element: "Holy Fire", melee: "Prince's Blade", magic: "Blue Edict", ultimate: "Cindralis Decree", pattern: ["magic", "melee", "magic", "ultimate"] },
+  Tibby: { element: "Sound", melee: "Trunk Bash", magic: "Starry Flourish", ultimate: "Grand Entrance", pattern: ["melee", "magic", "magic", "ultimate"] },
+  Solinar: { element: "Holy Fire", melee: "Solar Blade", magic: "Crown of Light", heal: "Solar Renewal", ultimate: "Final Sunrise", pattern: ["magic", "melee", "heal", "ultimate"] },
+  "Frostmile Wyrm": { element: "Sigil", melee: "Frost Talon", magic: "Glacial Breath", ultimate: "Winter's End", pattern: ["melee", "magic", "magic", "ultimate"] },
+  "Ember Leviathan": { element: "Ancient Fire", melee: "Molten Fang", magic: "Ember Torrent", ultimate: "Leviathan Eruption", pattern: ["melee", "magic", "magic", "ultimate"] }
 };
 const animationLayouts = {
   Marla: { columns: 4, rows: 7, chromaBlack: true },
@@ -702,7 +756,7 @@ function loadMarlaBattleSheet() {
 
 async function loadEnemyAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-34a");
+    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-80");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -712,7 +766,7 @@ async function loadEnemyAnimationSheets() {
         resolve();
       };
       image.onerror = resolve;
-      image.src = `assets/sprites/enemies-battle/${config.file}?v=opponents-34a`;
+      image.src = `assets/sprites/enemies-battle/${config.file}?v=opponents-80`;
     })));
   } catch (_) {
     // The original compact battle sprites remain available if an opponent sheet fails.
@@ -1266,6 +1320,7 @@ const ngPlusSignatureNames = new Set([
 ]);
 
 const HALL_LEGENDARY_STAGE = 21;
+const HALL_PLATINUM_STAGE = 41;
 const HALL_ULTIMATE_REWARD_STAGES = new Set([21, 24, 27, 30, 33, 36, 39]);
 const HALL_STANDARD_GEAR_POOL = [
   ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
@@ -1573,9 +1628,9 @@ function gearEffectHtml(gear, className = "rare-effect") {
   }).join("")}</span>` : "";
 }
 
-const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4 };
-const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
-const HALL_GEAR_RARITIES = RARITY_ORDER.slice(1);
+const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Platinum: 5 };
+const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Platinum"];
+const HALL_GEAR_RARITIES = RARITY_ORDER.slice(1, 5);
 
 function affix(key, label, type, min, max, options = {}) {
   return { key, label, type, min, max, ...options };
@@ -1735,7 +1790,7 @@ function upgradeOwnedLegendaryGear() {
       else state.gearRarities[name] = rarity;
     }
     const rarity = gearRarity(ref);
-    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || rarity === "Legendary") topUpGearAffixes(ref, rarity, "dragon");
+    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || RARITY_ORDER.indexOf(rarity) >= RARITY_ORDER.indexOf("Legendary")) topUpGearAffixes(ref, rarity, "dragon");
   });
 }
 
@@ -2114,7 +2169,7 @@ const inventoryDb = {
   "Ledger Scrap": { type: "Battle Loot", desc: "Discarded ledger paper. Useful to collectors and clerks." },
   "Iron Chain Link": { type: "Quest Material", desc: "A sturdy repair part requested by Marla." },
   "Broken Wax Seal": { type: "Battle Loot", desc: "A clergy seal with its command broken." },
-  "Ash Ink": { type: "Quest Material", desc: "Ink recovered from an Ash Scribe." },
+  "Ash Ink": { type: "Quest Material", desc: "Ink recovered from High Administrator Thaddeus." },
   "Resonant Stone": { type: "Crafting Material", desc: "Stone that still hums after battle." },
   "False Dawn Cog": { type: "Rare Material", desc: "A calibrated cog from the False Dawn system." },
   "Loopglass Shard": { type: "New Game Plus Material", desc: "Glass that reflects a route the party has already survived." },
@@ -2627,7 +2682,7 @@ const STATUS_DEFS = {
   marked: { label: "MARKED", short: "MRK", negative: true, duration: 4, value: .12 },
   physicalVulnerability: { label: "PHYSICAL VULNERABILITY", short: "PV-", negative: true, duration: 3, value: .18 },
   magicVulnerability: { label: "MAGIC VULNERABILITY", short: "MV-", negative: true, duration: 3, value: .18 },
-  agilityDown: { label: "AGILITY DOWN", short: "AG-", negative: true, duration: 3, value: .15 },
+  agilityDown: { label: "AGILITY REDUCED", short: "AG-", negative: true, duration: 3, value: .15 },
   holyVulnerability: { label: "HOLY VULNERABILITY", short: "HV-", negative: true, duration: 2, value: .2 },
   critExposed: { label: "CRIT EXPOSED", short: "CR-", negative: true, duration: 2, value: .12 },
   disrupted: { label: "DISRUPTED", short: "DSP", negative: true, duration: 3, value: .15 },
@@ -2638,8 +2693,8 @@ const STATUS_DEFS = {
   strengthUp: { label: "STRENGTH UP", short: "STR", buff: true, duration: 3, value: .25 },
   magicUp: { label: "MAGIC UP", short: "MAG", buff: true, duration: 3, value: .25 },
   defenseUp: { label: "DEFENSE UP", short: "DEF", buff: true, duration: 3, value: .25 },
-  defenseDown: { label: "DEFENSE DOWN", short: "DWN", negative: true, duration: 3, value: .2 },
-  magicDefenseDown: { label: "MAGIC DEFENSE DOWN", short: "MR-", negative: true, duration: 3, value: .25 },
+  defenseDown: { label: "DEFENSE REDUCED", short: "DF-", negative: true, duration: 3, value: .2 },
+  magicDefenseDown: { label: "MAGIC DEFENSE REDUCED", short: "MR-", negative: true, duration: 3, value: .25 },
   mechGuard: { label: "REINFORCED CHASSIS", short: "RIG", buff: true, duration: 2, value: .25 },
   damageUp: { label: "DAMAGE UP", short: "DMG", buff: true, duration: 3, value: .15 },
   agilityUp: { label: "AGILITY UP", short: "AGI", buff: true, duration: 3, value: .25 },
@@ -2671,16 +2726,16 @@ const TRANSFORMED_SKILLS = {
   mech: [
     skill("Piston Impact", "melee", "Tech", 0, 0, "1.35x STR Tech strike with heavy stagger.", { coefficient: 1.35, staggerPower: 3, multiHit: 2, basicAttack: true }),
     skill("Gearstorm Barrage", "magic", "Tech", 0, 10, "1.9x MAG multi-hit barrage.", { coefficient: 1.9, multiHit: 4 }),
-    skill("Arc Reactor Burst", "magic", "Tech", 0, 12, "1.5x MAG to all enemies with Defense Down.", { coefficient: 1.5, allEnemies: true, status: { type: "defenseDown", chance: .6, duration: 3, value: .2 } }),
+    skill("Arc Reactor Burst", "magic", "Tech", 0, 12, "1.5x MAG to all enemies with reduced Defense.", { coefficient: 1.5, allEnemies: true, status: { type: "defenseDown", chance: .6, duration: 3, value: .2 } }),
     skill("Reinforced Chassis", "block", "Tech", 0, 8, "Reduce incoming damage by 25% for two actions.", { targetSide: "self", buffs: [{ type: "mechGuard", duration: 2, value: .25 }] }),
     skill("Maximum Overdrive", "ultimate", "Tech", 0, 100, "2.8x MAG multi-hit blast against all enemies.", { coefficient: 2.8, allEnemies: true, multiHit: 5, ultimateIndex: 1 })
   ],
   shadowpriest: [
     skill("Void Lance", "magic", "Shadow", 0, 7, "1.6x MAG shadow strike.", { coefficient: 1.6 }),
     skill("Umbral Wave", "magic", "Shadow", 0, 10, "1.45x MAG against all enemies.", { coefficient: 1.45, allEnemies: true }),
-    skill("Soul Rend", "magic", "Shadow", 0, 12, "2.0x MAG and Magic Defense Down.", { coefficient: 2, status: { type: "magicDefenseDown", chance: 1, duration: 3, value: .25 } }),
+    skill("Soul Rend", "magic", "Shadow", 0, 12, "2.0x MAG and reduced Magic Defense.", { coefficient: 2, status: { type: "magicDefenseDown", chance: 1, duration: 3, value: .25 } }),
     skill("Dark Communion", "magic", "Shadow", 0, 9, "1.5x MAG and heal for 25% of damage dealt.", { coefficient: 1.5, selfHealRatio: .25 }),
-    skill("Eclipse", "ultimate", "Shadow", 0, 100, "2.75x MAG against all enemies with Magic Defense Down.", { coefficient: 2.75, allEnemies: true, multiHit: 4, ultimateIndex: 2, status: { type: "magicDefenseDown", chance: 1, duration: 2, value: .2 } })
+    skill("Eclipse", "ultimate", "Shadow", 0, 100, "2.75x MAG against all enemies with reduced Magic Defense.", { coefficient: 2.75, allEnemies: true, multiHit: 4, ultimateIndex: 2, status: { type: "magicDefenseDown", chance: 1, duration: 2, value: .2 } })
   ]
 };
 
@@ -2817,8 +2872,8 @@ function loadGame(saveKey = SAVE_KEY) {
   state.discoveredMaps = Array.isArray(state.discoveredMaps) ? state.discoveredMaps.filter(id => maps[id]) : ["lantern"];
   state.flags ||= {};
   state.hallBattles ||= { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 };
-  state.hallBattles.unlockedStage = Math.max(1, Math.min(40, Number(state.hallBattles.unlockedStage) || 1));
-  state.hallBattles.clearedStages = Array.isArray(state.hallBattles.clearedStages) ? [...new Set(state.hallBattles.clearedStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))] : [];
+  state.hallBattles.unlockedStage = Math.max(1, Math.min(50, Number(state.hallBattles.unlockedStage) || 1));
+  state.hallBattles.clearedStages = Array.isArray(state.hallBattles.clearedStages) ? [...new Set(state.hallBattles.clearedStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 50))] : [];
   state.hallBattles.recruitStages = Array.isArray(state.hallBattles.recruitStages) ? [...new Set(state.hallBattles.recruitStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))] : [];
   state.hallBattles.pendingRecruit = Number(state.hallBattles.pendingRecruit) || 0;
   if (!maps[state.map]) state.map = "lantern";
@@ -2927,31 +2982,31 @@ const vendors = {
 };
 
 const lootTables = {
-  "Ledger Cutter": loot([8, 15], [["Ledger Scrap", 1, 1]], [["Echo-Thread Lute", .18]]),
-  "Chain Warden": loot([12, 20], [["Iron Chain Link", 1, 2], ["Marla's Soup", .35, 1]], [["Sealbreak Vestment", .12]]),
-  "Seal Bearer": loot([14, 22], [["Broken Wax Seal", 1, 2], ["Clockwork Tonic", .3, 1]], [["Sealbreak Vestment", .2]]),
-  "Ash Scribe": loot([10, 18], [["Ash Ink", 1, 2], ["Ash Ward", .3, 1]], [["Echo-Thread Lute", .1]]),
-  "Buried Construct": loot([18, 28], [["Resonant Stone", 1, 2]], [["Faultline Signet", .22]]),
+  "Slobbo": loot([8, 15], [["Ledger Scrap", 1, 1]], [["Echo-Thread Lute", .18]]),
+  "Brokk": loot([12, 20], [["Iron Chain Link", 1, 2], ["Marla's Soup", .35, 1]], [["Sealbreak Vestment", .12]]),
+  "Corrupt Clergy": loot([14, 22], [["Broken Wax Seal", 1, 2], ["Clockwork Tonic", .3, 1]], [["Sealbreak Vestment", .2]]),
+  "High Administrator Thaddeus": loot([10, 18], [["Ash Ink", 1, 2], ["Ash Ward", .3, 1]], [["Echo-Thread Lute", .1]]),
+  "Gorg": loot([18, 28], [["Resonant Stone", 1, 2]], [["Faultline Signet", .22]]),
   "Cracked Pillar": loot([16, 25], [["Resonant Stone", 1, 2], ["Marla's Soup", .3, 1]], [["Faultline Signet", .16]]),
-  "Wrong Bell": loot([24, 36], [["False Dawn Cog", 1, 2]], [["Local Truth Lens", .24]]),
-  "Gate Lock": loot([22, 34], [["Tempered Lockplate", 1, 2], ["Clockwork Tonic", .35, 1]], [["Local Truth Lens", .16]]),
-  "Ash Wyrm": loot([32, 48], [["Ancient Ember Scale", 1, 2], ["Ash Ward", .5, 1]], [["Wyrmheart Ember", .35]])
+  "Clock Goblin": loot([24, 36], [["False Dawn Cog", 1, 2]], [["Local Truth Lens", .24]]),
+  "Lord Sprocket": loot([22, 34], [["Tempered Lockplate", 1, 2], ["Clockwork Tonic", .35, 1]], [["Local Truth Lens", .16]]),
+  "Red Dragon Lord": loot([32, 48], [["Ancient Ember Scale", 1, 2], ["Ash Ward", .5, 1]], [["Wyrmheart Ember", .35]])
 };
 
 Object.assign(lootTables, {
   "Inkbound Auditor": loot([38, 56], [["Living Ash Ink", 1, 2]], [["Echo-Thread Lute", .45]]),
   "Dock Foreman": loot([70, 95], [["Foreman's Black Ledger", 1, 1]], [["Sealbreak Vestment", .55]]),
-  "Orphaned Sigil": loot([42, 64], [["Unclaimed Sigil", 1, 2]], [["Sealbreak Vestment", .45]]),
+  "Saint Justin": loot([42, 64], [["Unclaimed Sigil", 1, 2]], [["Sealbreak Vestment", .45]]),
   "Archive Custodian": loot([82, 110], [["Custodian Seal", 1, 1]], [["Faultline Signet", .6]]),
-  "Redacted Witness": loot([48, 72], [["Redacted Testimony", 1, 1]], [["Local Truth Lens", .5]]),
-  "First Ember Memory": loot([55, 80], [["Ancient Ember Scale", 1, 2]], [["Wyrmheart Ember", .62]]),
-  "Dawn Null": loot([60, 88], [["Null Calibration Shard", 1, 2]], [["Local Truth Lens", .58]]),
+  "Sir Reginald": loot([48, 72], [["Redacted Testimony", 1, 1]], [["Local Truth Lens", .5]]),
+  "Elder Plumpin": loot([55, 80], [["Ancient Ember Scale", 1, 2]], [["Wyrmheart Ember", .62]]),
+  "Baron Revus Veln": loot([60, 88], [["Null Calibration Shard", 1, 2]], [["Local Truth Lens", .58]]),
   "Dawn Gate Sentinel": loot([110, 145], [["Sentinel Core", 1, 1]], [["Wyrmheart Ember", .7]]),
   "Kaeldrin": loot([180, 240], [["Stonewake Medal", 1, 1]], [["Stonewake Oathblade", 1]]),
-  "Lyrsa": loot([170, 230], [["Loopglass Shard", 1, 2]], [["Echo Vow Chain", .7]]),
-  "Nyx": loot([150, 210], [["Loopglass Shard", 1, 2]], [["Causality Visor", .65]]),
+  "Lysra": loot([170, 230], [["Loopglass Shard", 1, 2]], [["Echo Vow Chain", .7]]),
+  "Nyx Vael": loot([150, 210], [["Loopglass Shard", 1, 2]], [["Causality Visor", .65]]),
   "Rava": loot([165, 225], [["Orphan Ember Thread", 1, 2]], [["Orphanheart Coat", .7]]),
-  "Jory": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]]),
+  "Jory Bellwick": loot([190, 250], [["Orphan Ember Thread", 1, 2]], [["Second-Loop Signet", .75]]),
   "Shade": loot([145, 205], [["Loopglass Shard", 1, 2]], [["Second-Loop Signet", .55]]),
   "Grumm": loot([155, 215], [["Stonewake Medal", 1, 1], ["Resonant Stone", 1, 2]], [["Stonewake Oathblade", .5]]),
   "Marla": loot([130, 190], [["Marla's Soup", 1, 2]], [["Orphanheart Coat", .45]]),
@@ -2971,11 +3026,11 @@ const quests = [
 
 const sideQuests = [
   sideQuest("marlaCrate", "A Crate Owed Twice", "Marla", "fetch", { item: "Iron Chain Link", amount: 3 }, { gold: 75, xp: 90, items: { "Marla's Soup": 2 } }, "Bring Marla three chain links for repairs under the Lantern."),
-  sideQuest("nyxInk", "Ink That Remembers", "Nyx", "kill", { names: ["Ash Scribe"], amount: 3 }, { gold: 110, xp: 120, items: { "Clockwork Tonic": 2 } }, "Defeat three returning Ash Scribes and recover what their ink observed."),
+  sideQuest("nyxInk", "Ink That Remembers", "Nyx", "kill", { names: ["High Administrator Thaddeus"], amount: 3 }, { gold: 110, xp: 120, items: { "Clockwork Tonic": 2 } }, "Defeat High Administrator Thaddeus three times and recover what his ink observed."),
   sideQuest("harlEscort", "A Name Walks Home", "Harl", "escort", { map: "lantern" }, { gold: 125, xp: 140, items: { "Ash Ward": 2 } }, "Escort Harl safely from the ledger house back to the Drunk Lantern."),
   sideQuest("ravaWave", "Nobody Crosses This Yard", "Rava", "wave", { waves: 3 }, { gold: 150, xp: 180, gear: "Rava's Guard Ring" }, "Hold the Reverie dormitory through three escalating clergy waves."),
   sideQuest("rareLore", "Names Outside the Ledger", "Nyx", "rare", { amount: 2 }, { gold: 240, xp: 260, gear: "Nyx's Margin Note" }, "Find and defeat two lore-marked rare spawns across Cindervale."),
-  sideQuest("stonewakeTrial", "The Weight of the Old Rank", "Kaeldrin", "boss", { flag: "ngStonewakeWon", amount: 1 }, { gold: 900, xp: 900, gears: ["Stonewake Oathblade", "Second Verse Lute", "Worldroot Shield"] }, "In New Game Plus, defeat Kaeldrin and Lyrsa in Stonewake's full-rank trial.", { requiresNgPlus: true }),
+  sideQuest("stonewakeTrial", "The Weight of the Old Rank", "Kaeldrin", "boss", { flag: "ngStonewakeWon", amount: 1 }, { gold: 900, xp: 900, gears: ["Stonewake Oathblade", "Second Verse Lute", "Worldroot Shield"] }, "In New Game Plus, defeat Kaeldrin and Lysra in Stonewake's full-rank trial.", { requiresNgPlus: true }),
   sideQuest("orphanTrial", "The Children Answer Back", "Jory", "boss", { flag: "ngOrphanTrialWon", amount: 1 }, { gold: 1000, xp: 1050, gears: ["Orphanheart Coat", "Veln Eclipse Blades", "Cinderstar Aegis", "Unbound Oathstaff"] }, "In New Game Plus, survive Nyx, Rava and Jory's Reverie counter-trial.", { requiresNgPlus: true })
 ];
 
@@ -2987,7 +3042,7 @@ const maps = {
   emberHallBattles: map("Ember Hall - Trial Room", "Ember Hall Battle", "lantern", [], [
     point(4, 7, "Marla", [["Marla", "Back already? Sit down if you need patching up. The Trial Gate will still be there when the soup is finished."], ["Marla", "I kept the counter stocked. Old victories earn real experience here, so there is no shame in training twice."]], "hallRest", undefined, "marla"),
     point(11, 7, "Glimmer", [["Glimmer", "Forty stable battle records. Stable is relative, but the enemies are definitely real enough to hit back."], ["Glimmer", "Clear the newest record to open the next one. Cleared records stay available for training and XP."]], undefined, undefined, "workshop"),
-    point(8, 5, "Stage", [["Trial Gate", "The Hall records forty battles. Every cleared stage remains available to replay for its normal XP." ]], "hallBattleMap")
+    point(8, 5, "Stage", [["Trial Gate", "The Hall records fifty battles. Every cleared stage remains available to replay for its normal XP." ]], "hallBattleMap")
   ], ["Trial Gate", "Choose an unlocked battle or replay an old victory for XP."], { background: "ember-hall-battle", collision: "lantern", grid: [0, 0], gridSize: [1, 1] }),
 
   lantern: map("The Drunk Lantern", "Issue 1", "lantern", [{ x: 14, y: 8, to: "ashLane", tx: 2, ty: 8 }], [
@@ -2999,21 +3054,21 @@ const maps = {
   ashLane: map("Ash Quarter - Sootline Alley", "Issue 1", "ash", [{ x: 1, y: 8, to: "lantern", tx: 13, ty: 8 }, { x: 14, y: 8, to: "sootMarket", tx: 2, ty: 8 }, { x: 8, y: 5, to: "ledgerHouse", tx: 7, ty: 6 }], [
     chest(5, 7, "ash-songbound", { gear: "Songbound Rosin", gold: 24 })
   ], ["A2 - Sootline Alley", "A residential route with returning street threats."], { background: "ash-route", panorama: true, view: 0, views: 3, music: "overworld", walkable: [[1, 6, 14, 10]], grid: [1, 2], gridSize: [5, 5], spawns: [
-    spawn("ash-ledger-1", 9, 8, "Soot Ledger Prowlers", [enemy("Ledger Cutter", 52, 8, "Sound", "#71513e", 2)], { respawn: 24 }),
-    spawn("ash-rare-auditor", 12, 7, "Rare: Inkbound Auditor", [enemy("Inkbound Auditor", 94, 13, "Holy Fire", "#40304f", 2, "Ash Scribe")], { respawn: 105, rare: true, lore: "A clerk erased from every registry except its own ink." })
+    spawn("ash-ledger-1", 9, 8, "Soot Ledger Prowlers", [enemy("Slobbo", 52, 8, "Sound", "#71513e", 2)], { respawn: 24 }),
+    spawn("ash-rare-auditor", 12, 7, "Rare: Inkbound Auditor", [enemy("Inkbound Auditor", 94, 13, "Holy Fire", "#40304f", 2, "High Administrator Thaddeus")], { respawn: 105, rare: true, lore: "A clerk erased from every registry except its own ink." })
   ] }),
 
   sootMarket: map("Ash Quarter - Soot Market", "Issue 1", "ash", [{ x: 1, y: 8, to: "ashLane", tx: 13, ty: 8 }, { x: 14, y: 8, to: "ashDock", tx: 2, ty: 8 }], [
     chest(5, 7, "ash-cinderbite", { gear: "Cinderbite Edge", items: { "Marla's Soup": 1 } })
   ], ["A3 - Soot Market", "The main route branches into a searchable ledger house."], { background: "ash-route", panorama: true, view: 1, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [2, 2], gridSize: [5, 5], spawns: [
-    spawn("market-chain-1", 11, 8, "Chain Runners", [enemy("Chain Warden", 64, 9, "Shadow", "#4a4542", 1)], { respawn: 30 })
+    spawn("market-chain-1", 11, 8, "Chain Runners", [enemy("Brokk", 64, 9, "Shadow", "#4a4542", 1)], { respawn: 30 })
   ] }),
 
   ashDock: map("Ash Quarter - Ledger Docks", "Issue 1", "ash", [{ x: 1, y: 8, to: "sootMarket", tx: 13, ty: 8 }, { x: 14, y: 8, to: "reverieCourt", tx: 3, ty: 10, needs: "issue1" }], [
     recruitPoint(7, 7, "Mira", [["Mira", "You came alone. Good. Quiet footsteps survive longer on these docks."], ["Verseborn", "I can do quiet. Briefly."], ["Mira", "The route is physical. The lie is administrative. Together, that makes a dungeon."], ["Mira", "Draw your lute. I will cover the blind side."]], "harbor"),
     chest(4, 8, "ash-echo", { gear: "Echo Collector", gold: 30 })
   ], ["A4 - Ledger Docks", "The first story battle sits beyond two explorable field units."], { background: "ash-route", panorama: true, view: 2, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [3, 2], gridSize: [5, 5], spawns: [
-    spawn("dock-foreman", 11, 8, "Miniboss: Dock Foreman", [enemy("Dock Foreman", 126, 15, "Tech", "#403b39", 2, "Chain Warden")], { boss: true, lore: "The foreman kept moving names after the orders stopped." })
+    spawn("dock-foreman", 11, 8, "Miniboss: Dock Foreman", [enemy("Dock Foreman", 126, 15, "Tech", "#403b39", 2, "Brokk")], { boss: true, lore: "The foreman kept moving names after the orders stopped." })
   ] }),
 
   ledgerHouse: map("Old Ledger House", "Issue 1", "ash", [{ x: 7, y: 5, to: "ashLane", tx: 8, ty: 6 }], [
@@ -3025,7 +3080,7 @@ const maps = {
     recruitPoint(6, 7, "Seerin", [["Seerin", "You may inspect the building. You may not take a child."], ["Verseborn", "Then stand with me while we prove who tried."], ["Seerin", "My oath is to life. You are confusing that with authority."], ["Seerin", "I will hold the line. You make them listen."]], "clergy"),
     chest(4, 8, "reverie-hearthwall", { gear: "Hearthwall Crest", gold: 38 })
   ], ["B1 - Shelter Courtyard", "Protection comes before institutional permission."], { background: "reverie-route", panorama: true, view: 0, views: 3, walkable: [[1, 5, 14, 10]], grid: [3, 3], gridSize: [5, 5], spawns: [
-    spawn("court-seal-1", 11, 9, "Clergy Seal Patrol", [enemy("Seal Bearer", 70, 10, "Shadow", "#9d5436", 1)], { respawn: 38 })
+    spawn("court-seal-1", 11, 9, "Clergy Seal Patrol", [enemy("Corrupt Clergy", 70, 10, "Shadow", "#9d5436", 1)], { respawn: 38 })
   ] }),
 
   reverieDorm: map("Reverie - Dormitory Wing", "Issue 2", "reverie", [{ x: 6, y: 5, direction: "up", to: "reverieCourt", tx: 13, ty: 5 }, { x: 14, y: 7, direction: "right", to: "reverieSeal", tx: 11, ty: 9 }], [
@@ -3034,20 +3089,20 @@ const maps = {
     point(13, 6, "Jory", [["Jory", "The first loop taught us where the Flameguard leaves openings."], ["Rava", "You wanted stronger opponents. Try not to complain when you get them."], ["Nyx", "I documented seventeen likely mistakes. We only need one."]], "ngOrphanTrial", "newGamePlus"),
     chest(9, 8, "reverie-silent", { gear: "Silent Reliquary", items: { "Ash Ward": 1 } })
   ], ["B2 - Dormitory Wing", "NPC side quests and a wave-defense encounter live off the main route."], { background: "reverie-route", panorama: true, view: 1, views: 3, walkable: [[1, 5, 14, 10]], grid: [4, 3], gridSize: [5, 5], spawns: [
-    spawn("dorm-scribe-1", 12, 7, "Ash Scribe Remnant", [enemy("Ash Scribe", 58, 8, "Sound", "#6d5948", 2)], { respawn: 34 })
+    spawn("dorm-scribe-1", 12, 7, "High Administrator Thaddeus Remnant", [enemy("High Administrator Thaddeus", 58, 8, "Sound", "#6d5948", 2)], { respawn: 34 })
   ] }),
 
   reverieSeal: map("Reverie - Sealed Hall", "Issue 2", "reverie", [{ x: 11, y: 10, direction: "down", to: "reverieDorm", tx: 13, ty: 7 }, { x: 12, y: 4, direction: "up", to: "guildSteps", tx: 2, ty: 8, needs: "issue2" }], [
     chest(13, 8, "reverie-roadwarden", { gear: "Roadwarden Plate", gold: 42 })
   ], ["B3 - Sealed Hall", "A cold threshold and a rare lore encounter."], { background: "reverie-route", panorama: true, view: 2, views: 3, walkable: [[1, 5, 14, 10]], grid: [4, 4], gridSize: [5, 5], spawns: [
-    spawn("reverie-rare-sigil", 12, 6, "Rare: Orphaned Sigil", [enemy("Orphaned Sigil", 108, 14, "Tech", "#b9a274", 2, "Seal Bearer")], { respawn: 120, rare: true, lore: "A protection rite that outlived the priest who abandoned it." })
+    spawn("reverie-rare-sigil", 12, 6, "Rare: Saint Justin", [enemy("Saint Justin", 108, 14, "Tech", "#b9a274", 2, "Corrupt Clergy")], { respawn: 120, rare: true, lore: "A protection rite that outlived the priest who abandoned it." })
   ] }),
 
   reverieArchive: map("Reverie - Clergy Archive", "Issue 2", "reverie", [{ x: 8, y: 12, direction: "down", to: "reverieCourt", tx: 10, ty: 5 }], [
     recruitPoint(7, 7, "Kael", [["Kael", "I will keep the seal. Not as obedience. As evidence."], ["Verseborn", "Evidence travels better with witnesses."], ["Kael", "Then I will walk with the Flameguard. Quietly."]], "issue2", "clergyWon"),
     chest(5, 7, "reverie-echo", { gear: "Echo Collector", items: { "Clockwork Tonic": 1 } })
   ], ["B2b - Clergy Archive", "A short moral dungeon interior with a permanent custodian miniboss."], { background: "reverie", collision: "reverie", grid: [3, 4], gridSize: [5, 5], spawns: [
-    spawn("archive-custodian", 8, 6, "Miniboss: Archive Custodian", [enemy("Archive Custodian", 142, 16, "Earth", "#6d5948", 2, "Ash Scribe")], { boss: true, lore: "It files people under the rules they broke." })
+    spawn("archive-custodian", 8, 6, "Miniboss: Archive Custodian", [enemy("Archive Custodian", 142, 16, "Earth", "#6d5948", 2, "High Administrator Thaddeus")], { boss: true, lore: "It files people under the rules they broke." })
   ] }),
 
   guildSteps: map("Guildspire - Crown Steps", "Issue 3", "guildspire", [{ x: 1, y: 8, to: "reverieSeal", tx: 13, ty: 8 }, { x: 14, y: 8, to: "guildRegistry", tx: 2, ty: 8 }], [
@@ -3063,7 +3118,7 @@ const maps = {
     point(8, 6, "Lyrsa", [["Lyrsa", "Mira Veln refusing privilege is still a privilege. Fascinating posture."]]),
     chest(5, 8, "guild-cinderbite", { gear: "Cinderbite Edge", gold: 55 })
   ], ["C3 - Audience Hall", "Political dialogue and a rare archive apparition."], { background: "guildspire-route", panorama: true, view: 2, views: 3, walkable: [[1, 4, 14, 10]], grid: [2, 2], gridSize: [3, 3], spawns: [
-    spawn("guild-rare-witness", 12, 8, "Rare: Redacted Witness", [enemy("Redacted Witness", 118, 15, "Ancient Fire", "#4d4167", 2, "Wrong Bell")], { respawn: 135, rare: true, lore: "A testimony removed from the record but not from the hall." })
+    spawn("guild-rare-witness", 12, 8, "Rare: Sir Reginald", [enemy("Sir Reginald", 118, 15, "Ancient Fire", "#4d4167", 2, "Clock Goblin")], { respawn: 135, rare: true, lore: "A testimony removed from the record but not from the hall." })
   ] }),
 
   guildCouncil: map("Guildspire - Council Chamber", "Issue 3", "guildspire", [{ x: 8, y: 12, to: "guildRegistry", tx: 8, ty: 10 }], [
@@ -3075,7 +3130,7 @@ const maps = {
   emberYard: map("Ember Hall - Training Yard", "Issue 3", "ember", [{ x: 4, y: 12, direction: "down", to: "guildHall", tx: 13, ty: 8 }, { x: 8, y: 6, direction: "right", to: "emberHearth", tx: 9, ty: 6 }], [
     chest(2, 9, "ember-lens", { gear: "Impossible Lens", gold: 60 })
   ], ["D1 - Training Yard", "A broad home-base field with repeatable training constructs."], { background: "ember-route", panorama: true, view: 0, views: 5, music: "overworld", walkable: [[1, 3, 14, 11]], grid: [0, 2], gridSize: [5, 5], spawns: [
-    spawn("yard-construct", 4, 5, "Training Construct", [enemy("Buried Construct", 78, 11, "Earth", "#6f5540", 1)], { respawn: 22 })
+    spawn("yard-construct", 4, 5, "Training Construct", [enemy("Gorg", 78, 11, "Earth", "#6f5540", 1)], { respawn: 22 })
   ] }),
 
   emberHearth: map("Ember Hall - Hearth Room", "Issue 3", "ember", [{ x: 8, y: 6, direction: "left", to: "emberYard", tx: 7, ty: 6 }, { x: 13, y: 3, direction: "up", to: "emberWorkshop", tx: 7, ty: 10 }, { x: 11, y: 12, direction: "down", to: "emberCellar", tx: 8, ty: 10, needs: "torren" }], [
@@ -3096,7 +3151,7 @@ const maps = {
   emberRoof: map("Ember Hall - Roof Watch", "Issue 3", "ember", [{ x: 10, y: 6, direction: "left", to: "emberArmory", tx: 8, ty: 6 }, { x: 14, y: 6, direction: "right", to: "dawnCauseway", tx: 2, ty: 8, needs: "sparky" }], [
     chest(14, 9, "ember-echo", { gear: "Echo Collector", gold: 68 })
   ], ["D5 - Roof Watch", "The home-base grid ends at the road to False Dawn."], { background: "ember-route", panorama: true, view: 4, views: 5, walkable: [[1, 4, 14, 10]], grid: [4, 2], gridSize: [5, 5], spawns: [
-    spawn("roof-rare-memory", 11, 7, "Rare: First Ember Memory", [enemy("First Ember Memory", 124, 16, "Sigil", "#5a2f52", 3, "Ash Wyrm")], { respawn: 145, rare: true, lore: "A dragon memory that recognizes Sparky before anyone else does." })
+    spawn("roof-rare-memory", 11, 7, "Rare: Elder Plumpin", [enemy("Elder Plumpin", 124, 16, "Sigil", "#5a2f52", 3, "Red Dragon Lord")], { respawn: 145, rare: true, lore: "A dragon memory that recognizes Sparky before anyone else does." })
   ] }),
 
   emberCellar: map("Ember Hall - Resonance Cellar", "Issue 3", "ember", [{ x: 8, y: 12, to: "emberHearth", tx: 11, ty: 10 }], [
@@ -3106,21 +3161,21 @@ const maps = {
   dawnCauseway: map("False Dawn - Storm Causeway", "Issue 4", "alarm", [{ x: 1, y: 8, to: "emberRoof", tx: 13, ty: 6 }, { x: 14, y: 8, to: "dawnStation", tx: 2, ty: 8 }], [
     chest(4, 8, "dawn-songbound", { gear: "Songbound Rosin", gold: 72 })
   ], ["E1 - Storm Causeway", "A consistent high-altitude tech dungeon begins."], { background: "dawn-route", panorama: true, view: 0, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [0, 1], gridSize: [3, 3], spawns: [
-    spawn("dawn-bell-1", 9, 8, "Wrong Bell Patrol", [enemy("Wrong Bell", 78, 11, "Tech", "#a66a35", 2)], { respawn: 42 })
+    spawn("dawn-bell-1", 9, 8, "Clock Goblin Patrol", [enemy("Clock Goblin", 78, 11, "Tech", "#a66a35", 2)], { respawn: 42 })
   ] }),
 
   dawnStation: map("False Dawn - Calibration Station", "Issue 4", "alarm", [{ x: 1, y: 8, direction: "left", to: "dawnCauseway", tx: 13, ty: 8 }, { x: 9, y: 4, direction: "up", to: "dawnGate", tx: 2, ty: 8 }], [
     point(4, 7, "Harl", [["Harl", "The central system marked these supplies obsolete. Locally, they still work."], ["Verseborn", "That is becoming a theme."]], undefined, undefined, "dawn"),
     chest(5, 7, "dawn-nightneedle", { gear: "Nightneedle Harness", items: { "Clockwork Tonic": 2 } })
   ], ["E2 - Calibration Station", "Side platforms hold regular and rare system remnants."], { background: "dawn-route", panorama: true, view: 1, views: 3, walkable: [[1, 5, 14, 10]], grid: [1, 1], gridSize: [3, 3], spawns: [
-    spawn("station-lock-1", 8, 8, "Calibration Husk", [enemy("Gate Lock", 76, 10, "Earth", "#58616b", 1)], { respawn: 45 }),
-    spawn("dawn-rare-null", 12, 7, "Rare: Dawn Null", [enemy("Dawn Null", 132, 17, "Sound", "#26353e", 2, "Wrong Bell")], { respawn: 160, rare: true, lore: "A local truth the central alarm failed to overwrite." })
+    spawn("station-lock-1", 8, 8, "Calibration Husk", [enemy("Lord Sprocket", 76, 10, "Earth", "#58616b", 1)], { respawn: 45 }),
+    spawn("dawn-rare-null", 12, 7, "Rare: Baron Revus Veln", [enemy("Baron Revus Veln", 132, 17, "Sound", "#26353e", 2, "Clock Goblin")], { respawn: 160, rare: true, lore: "A local truth the central alarm failed to overwrite." })
   ] }),
 
   dawnGate: map("False Dawn - Exterior Gate", "Issue 4", "alarm", [{ x: 1, y: 8, to: "dawnStation", tx: 9, ty: 5 }, { x: 14, y: 8, to: "alarm", tx: 2, ty: 6, needs: "spawn:gate-sentinel" }], [
     chest(5, 8, "dawn-emberwell", { gear: "Emberwell Chain", items: { "Ash Ward": 2 } })
   ], ["E3 - Exterior Gate", "The gate sentinel is a miniboss and never respawns."], { background: "dawn-route", panorama: true, view: 2, views: 3, walkable: [[1, 5, 14, 10]], grid: [2, 1], gridSize: [3, 3], spawns: [
-    spawn("gate-sentinel", 10, 8, "Miniboss: Dawn Gate Sentinel", [enemy("Dawn Gate Sentinel", 168, 18, "Ancient Fire", "#58616b", 1, "Gate Lock")], { boss: true, lore: "The last lock between command and observation." })
+    spawn("gate-sentinel", 10, 8, "Miniboss: Dawn Gate Sentinel", [enemy("Dawn Gate Sentinel", 168, 18, "Ancient Fire", "#58616b", 1, "Lord Sprocket")], { boss: true, lore: "The last lock between command and observation." })
   ] }),
 
   alarm: map("False Dawn - Alarm Core", "Issue 4", "alarm", [{ x: 1, y: 6, direction: "left", to: "dawnGate", tx: 13, ty: 8 }], [
@@ -3131,31 +3186,41 @@ const maps = {
 };
 
 const HALL_ENEMY_LIBRARY = {
-  ledger: { name: "Ledger Cutter", hp: 42, atk: 6, weak: "Sound", color: "#71513e", node: 1 },
-  chain: { name: "Chain Warden", hp: 54, atk: 8, weak: "Shadow", color: "#4a4542", node: 1 },
-  scribe: { name: "Ash Scribe", hp: 48, atk: 7, weak: "Sound", color: "#6d5948", node: 2 },
+  ledger: { name: "Slobbo", hp: 42, atk: 6, weak: "Sound", color: "#71513e", node: 1 },
+  chain: { name: "Brokk", hp: 54, atk: 8, weak: "Shadow", color: "#4a4542", node: 1 },
+  scribe: { name: "High Administrator Thaddeus", hp: 48, atk: 7, weak: "Sound", color: "#6d5948", node: 2 },
   auditor: { name: "Inkbound Auditor", hp: 76, atk: 10, weak: "Holy Fire", color: "#40304f", node: 3 },
   foreman: { name: "Dock Foreman", hp: 108, atk: 12, weak: "Tech", color: "#403b39", node: 3 },
-  seal: { name: "Seal Bearer", hp: 62, atk: 9, weak: "Shadow", color: "#9d5436", node: 2 },
-  sigil: { name: "Orphaned Sigil", hp: 82, atk: 11, weak: "Tech", color: "#b9a274", node: 2, sprite: "Seal Bearer" },
+  seal: { name: "Corrupt Clergy", hp: 62, atk: 9, weak: "Shadow", color: "#9d5436", node: 2 },
+  sigil: { name: "Saint Justin", hp: 82, atk: 11, weak: "Tech", color: "#b9a274", node: 2, sprite: "Corrupt Clergy" },
   custodian: { name: "Archive Custodian", hp: 118, atk: 13, weak: "Earth", color: "#6d5948", node: 3 },
-  construct: { name: "Buried Construct", hp: 68, atk: 9, weak: "Earth", color: "#6f5540", node: 1 },
+  construct: { name: "Gorg", hp: 68, atk: 9, weak: "Earth", color: "#6f5540", node: 1 },
   pillar: { name: "Cracked Pillar", hp: 72, atk: 9, weak: "Tech", color: "#55473c", node: 2 },
-  memory: { name: "First Ember Memory", hp: 104, atk: 13, weak: "Sigil", color: "#5a2f52", node: 3, sprite: "Ash Wyrm" },
-  wyrm: { name: "Ash Wyrm", hp: 132, atk: 15, weak: "Sigil", color: "#5a2f52", node: 3 },
-  bell: { name: "Wrong Bell", hp: 70, atk: 10, weak: "Tech", color: "#a66a35", node: 2 },
-  lock: { name: "Gate Lock", hp: 76, atk: 11, weak: "Earth", color: "#58616b", node: 2 },
-  null: { name: "Dawn Null", hp: 104, atk: 14, weak: "Sound", color: "#26353e", node: 3, sprite: "Wrong Bell" },
+  memory: { name: "Elder Plumpin", hp: 104, atk: 13, weak: "Sigil", color: "#5a2f52", node: 3, sprite: "Red Dragon Lord" },
+  wyrm: { name: "Red Dragon Lord", hp: 132, atk: 15, weak: "Sigil", color: "#5a2f52", node: 3 },
+  bell: { name: "Clock Goblin", hp: 70, atk: 10, weak: "Tech", color: "#a66a35", node: 2 },
+  lock: { name: "Lord Sprocket", hp: 76, atk: 11, weak: "Earth", color: "#58616b", node: 2 },
+  null: { name: "Baron Revus Veln", hp: 104, atk: 14, weak: "Sound", color: "#26353e", node: 3, sprite: "Clock Goblin" },
   sentinel: { name: "Dawn Gate Sentinel", hp: 146, atk: 16, weak: "Ancient Fire", color: "#58616b", node: 3 },
   shade: { name: "Shade", hp: 112, atk: 16, weak: "Holy Fire", color: "#30283f", node: 3 },
   grumm: { name: "Grumm", hp: 154, atk: 17, weak: "Sound", color: "#594331", node: 3 },
-  lyrsa: { name: "Lyrsa", hp: 126, atk: 16, weak: "Shadow", color: "#77619a", node: 3 },
+  lyrsa: { name: "Lysra", hp: 126, atk: 16, weak: "Shadow", color: "#77619a", node: 3, sprite: "Lyrsa" },
   kaeldrin: { name: "Kaeldrin", hp: 166, atk: 18, weak: "Tech", color: "#d7c68f", node: 3 },
-  nyx: { name: "Nyx", hp: 118, atk: 17, weak: "Holy Fire", color: "#49375d", node: 3 },
+  nyx: { name: "Nyx Vael", hp: 118, atk: 17, weak: "Holy Fire", color: "#49375d", node: 3, sprite: "Nyx" },
   rava: { name: "Rava", hp: 136, atk: 18, weak: "Earth", color: "#75442d", node: 3 },
-  jory: { name: "Jory", hp: 116, atk: 16, weak: "Shadow", color: "#8d6337", node: 3 },
+  jory: { name: "Jory Bellwick", hp: 116, atk: 16, weak: "Shadow", color: "#8d6337", node: 3, sprite: "Jory" },
   tja: { name: "Tja", hp: 138, atk: 18, weak: "Ancient Fire", color: "#416d79", node: 3 },
-  king: { name: "King Maeric", hp: 194, atk: 20, weak: "Shadow", color: "#aa7b35", node: 3 }
+  king: { name: "King Maeric", hp: 194, atk: 20, weak: "Shadow", color: "#aa7b35", node: 3 },
+  mob: { name: "Angry Gnome Mob", hp: 152, atk: 19, weak: "Sound", color: "#71513e", node: 3 },
+  thugg: { name: "Ash Quarter Thugg", hp: 142, atk: 20, weak: "Holy Fire", color: "#56403a", node: 3 },
+  berend: { name: "Berend Blimpstone", hp: 146, atk: 18, weak: "Shadow", color: "#a98657", node: 3 },
+  prince: { name: "Prince Lucan Cindralis", hp: 184, atk: 23, weak: "Shadow", color: "#667ea9", node: 3 },
+  tibby: { name: "Tibby", hp: 134, atk: 19, weak: "Tech", color: "#8d6337", node: 3 },
+  marla: { name: "Marla", hp: 150, atk: 18, weak: "Sound", color: "#6a5142", node: 3 },
+  solinar: { name: "Solinar", hp: 210, atk: 31, weak: "Shadow", color: "#df843a", node: 3 },
+  solinarEnraged: { name: "Solinar", hp: 230, atk: 36, weak: "Shadow", color: "#df843a", node: 3, finalState: "enraged" },
+  frostmile: { name: "Frostmile Wyrm", hp: 140, atk: 26, weak: "Ancient Fire", color: "#92b8d6", node: 3 },
+  leviathan: { name: "Ember Leviathan", hp: 175, atk: 29, weak: "Sigil", color: "#9d472e", node: 3 }
 };
 
 const HALL_BATTLE_BLUEPRINTS = [
@@ -3166,7 +3231,7 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["The Dock Foreman", "ashDock", ["foreman"], true],
   ["Courtyard Seal", "reverieCourt", ["seal"]],
   ["Dormitory Scribes", "reverieDorm", ["scribe", "seal"]],
-  ["The Orphaned Sigil", "reverieSeal", ["sigil", "scribe"]],
+  ["Saint Justin", "reverieSeal", ["sigil", "scribe"]],
   ["Clergy Lockdown", "reverieDorm", ["seal", "scribe", "seal"]],
   ["The Archive Custodian", "reverieArchive", ["custodian"], true],
   ["Crown Step Construct", "guildSteps", ["construct"]],
@@ -3176,12 +3241,12 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["The Ex-Rank", "guildCouncil", ["kaeldrin", "grumm"], true],
   ["Buried Hall Memory", "emberYard", ["construct", "pillar"]],
   ["Armory Collapse", "emberArmory", ["pillar", "construct", "pillar"]],
-  ["First Ember Memory", "emberRoof", ["memory"]],
+  ["Elder Plumpin", "emberRoof", ["memory"]],
   ["Resonance Breach", "emberCellar", ["wyrm", "pillar"]],
-  ["The Ash Wyrm", "emberRoof", ["wyrm"], true],
-  ["Wrong Bell Patrol", "dawnCauseway", ["bell"]],
+  ["The Red Dragon Lord", "emberRoof", ["wyrm"], true],
+  ["Clock Goblin Patrol", "dawnCauseway", ["bell"]],
   ["Calibration Locks", "dawnStation", ["lock", "bell"]],
-  ["The Dawn Null", "dawnStation", ["null", "bell"]],
+  ["Baron Revus Veln", "dawnStation", ["null", "bell"]],
   ["Seal at the Gate", "dawnGate", ["sentinel", "lock"]],
   ["Last Gate Protocol", "dawnGate", ["sentinel"], true],
   ["The Shadow's Edge", "reverieArchive", ["shade"]],
@@ -3198,8 +3263,18 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["Stonewake Rebellion", "emberYard", ["grumm", "rava", "kaeldrin"]],
   ["Royal Winter", "dawnCauseway", ["tja", "king"]],
   ["The Final Archive", "alarm", ["custodian", "sentinel", "wyrm"]],
-  ["Hall of Forty Echoes", "alarm", ["king", "kaeldrin", "sentinel"], true]
-].map(([name, mapId, enemies, boss], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss) }));
+  ["Hall of Forty Echoes", "alarm", ["king", "kaeldrin", "sentinel"], true],
+  ["Sootline Uprising", "ashLane", ["mob", "thugg"], true, [["ledger", "chain"], ["bell", "lock", "thugg"]]],
+  ["Reverie Interdict", "reverieSeal", ["seal", "sigil"], true, [["scribe", "custodian"], ["shade", "nyx"]]],
+  ["Stonewake Last Trial", "guildHall", ["grumm", "construct"], true, [["kaeldrin", "lyrsa"], ["sigil", "king"]]],
+  ["Clockwork Riot", "dawnStation", ["bell", "lock"], true, [["tibby", "thugg"], ["construct", "lock", "bell"]]],
+  ["Tavern Refrain", "lantern", ["mob", "tibby"], true, [["berend", "jory"], ["marla", "berend", "mob"]]],
+  ["Noble Decree", "guildCouncil", ["null", "sigil"], true, [["prince", "king"], ["prince", "wyrm"]]],
+  ["Ember Old Guard", "emberRoof", ["memory", "tja"], true, [["wyrm", "chain"], ["sentinel", "wyrm"]]],
+  ["Names in the Archive", "reverieArchive", ["nyx", "scribe"], true, [["custodian", "prince"], ["sigil", "null"]]],
+  ["Company Reprise", "emberYard", ["shade", "grumm", "tja"], true, [["kaeldrin", "lyrsa", "jory"], ["king", "marla", "rava"]]],
+  ["Solinar's Final Sunrise", "alarm", ["frostmile"], true, [["leviathan"], ["solinar"], ["solinarEnraged"]]]
+].map(([name, mapId, enemies, boss, waves = []], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss), waves }));
 
 const HALL_RECRUIT_INTERVAL = 3;
 const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
@@ -4658,9 +4733,9 @@ function visibleSpawns() {
 
 function enemySpriteIndex(name) {
   return {
-    "Ledger Cutter": 0, "Chain Warden": 1, "Seal Bearer": 2,
-    "Ash Scribe": 3, "Buried Construct": 4, "Cracked Pillar": 5,
-    "Wrong Bell": 6, "Gate Lock": 7, "Ash Wyrm": 8
+    "Slobbo": 0, "Brokk": 1, "Corrupt Clergy": 2,
+    "High Administrator Thaddeus": 3, "Gorg": 4, "Cracked Pillar": 5,
+    "Clock Goblin": 6, "Lord Sprocket": 7, "Red Dragon Lord": 8
   }[name] ?? 0;
 }
 
@@ -4686,7 +4761,7 @@ function drawWorldEnemy(spawnPoint) {
     const scale = targetHeight / Math.max(1, animatedSheet.referenceHeight);
     const width = Math.max(1, Math.round(cell.w * scale));
     const height = Math.max(1, Math.round(cell.h * scale));
-    drawFieldShadow(anchorX, baseline, key === "Ash Wyrm" ? 12 : spawnPoint.boss ? 10 : 8);
+    drawFieldShadow(anchorX, baseline, key === "Red Dragon Lord" ? 12 : spawnPoint.boss ? 10 : 8);
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     if (spawnPoint.facingX > 0) {
@@ -6019,7 +6094,7 @@ function battleFloaterPosition(target) {
   if (enemyIndex >= 0) {
     const [x, baseline] = enemyBattlePosition(enemyIndex, battle.enemies.length);
     const key = enemyAnimationKey(target);
-    return [x, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) + 8)];
+    return [x, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) * enemyBattleScale(key) + 8)];
   }
   return [LOGICAL_WIDTH / 2, 80];
 }
@@ -6129,16 +6204,7 @@ function drawBattleVitalBar(anchorX, y, value, max, label, colour, width = 42) {
 }
 
 function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
-  if (unit.hp <= 0) {
-    if (!enemySide) {
-      const deathAge = Number.isFinite(unit.deathTick) ? tick - unit.deathTick : BATTLE_DEATH_FRAME_TICKS * 4;
-      if (deathAge < BATTLE_DEATH_FRAME_TICKS * 4) return;
-      drawRect(anchorX - 18, baseline + 5, 36, 8, "#160d16e8");
-      drawRect(anchorX - 17, baseline + 6, 34, 6, "#542735");
-      drawText("DOWN", anchorX, baseline + 11, "#e6a6a1", 5, "center");
-    }
-    return;
-  }
+  if (unit.hp <= 0) return;
   if (enemySide) {
     if (partyCanSeeWeaknesses()) rememberWeakness(unit);
     const label = knownWeakness(unit) ? unit.weak : "???";
@@ -6175,7 +6241,7 @@ function drawBattleTurnRail() {
   const turns = battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive);
   drawRect(3, 3, LOGICAL_WIDTH - 6, 17, "#090a11dd");
   drawRect(4, 4, LOGICAL_WIDTH - 8, 1, "#8b6a45");
-  drawText(`R${battle.round}/${MAX_BATTLE_ROUNDS}`, 8, 15, "#f0c97a", 6);
+  drawText(`R${battle.round}/${battle.roundCap || MAX_BATTLE_ROUNDS}`, 8, 15, "#f0c97a", 6);
   if (!turns.length) return;
   const startX = 39;
   const gap = 2;
@@ -6234,7 +6300,7 @@ function drawBattleScene() {
       enemyUnit.deathTick = tick;
       enemyUnit.defeatUntil = tick + (animatedDeath ? 30 : 12);
     }
-    if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil) return;
+    if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil && battle.phaseTransition?.step !== "fallen") return;
     const [anchorX, baseline] = enemyBattlePosition(index, battle.enemies.length);
     if (enemyUnit.hp <= 0 && !animatedDeath) ctx.globalAlpha = Math.max(0, (enemyUnit.defeatUntil - tick) / 12);
     const hasTurn = turn?.side === "enemy" && turn.index === index;
@@ -6244,12 +6310,24 @@ function drawBattleScene() {
     const drawUnit = () => drawEnemy(enemyUnit, anchorX - 8 + battleOffset(enemyUnit), baseline - 31);
     if (hasTurn) drawWithTurnOutline(drawUnit, "#ffc08a");
     else drawUnit();
-    drawBattleVitals(enemyUnit, anchorX, baseline, true);
+    drawBattleVitals(enemyUnit, anchorX, baseline + (battle.hallStage === 50 ? 8 : 0), true);
     ctx.globalAlpha = 1;
   });
   drawEffect();
   drawBattleFloaters();
   drawBattleTurnRail();
+  if (battle.phaseTransition?.step === "incoming") {
+    const phase = battle.phaseTransition;
+    drawRect(0, 19, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT - 19, "#090a15d9");
+    drawRect(28, 48, LOGICAL_WIDTH - 56, 100, "#17121fef");
+    drawRect(28, 48, LOGICAL_WIDTH - 56, 2, "#d9ae65");
+    drawText(`PHASE ${phase.number}/${phase.total}`, LOGICAL_WIDTH / 2, 69, "#f4c776", 8, "center");
+    phase.names.forEach((name, index) => {
+      const size = Math.max(5, Math.min(8, Math.floor(390 / name.length)));
+      drawText(name, LOGICAL_WIDTH / 2, 90 + index * 11, "#fff0da", size, "center");
+    });
+    drawText("THE BATTLE CONTINUES", LOGICAL_WIDTH / 2, 136, "#bcb0ca", 5, "center");
+  }
 }
 
 function battleArenaFor(map) {
@@ -6372,6 +6450,7 @@ function drawNpcBattleEnemy(e, px, py) {
 }
 
 function enemyAnimationKey(e) {
+  if (battle?.hallStage === 50 && e.finalState === "enraged" && enemyAnimationSheets["Solinar Enraged"]) return "Solinar Enraged";
   if (enemyAnimationFiles[e.name]) return enemyAnimationFiles[e.name];
   if (enemyAnimationFiles[e.sprite]) return enemyAnimationFiles[e.sprite];
   return null;
@@ -6399,7 +6478,7 @@ function drawAnimatedEnemy(e, px, py) {
   if (attacking) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
   if (dying) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
   const column = Math.max(0, Math.min(sheet.columns - 1, sequence[sequenceIndex] ?? 0));
-  const targetHeight = enemyAnimationHeights[key] || 46;
+  const targetHeight = (enemyAnimationHeights[key] || 46) * enemyBattleScale(key);
   const anchorX = px + 8;
   const baseline = py + 31;
   const scale = Math.min(
@@ -6688,7 +6767,7 @@ function updatePanels() {
     const activeStage = battle?.hallStage || progress.unlockedStage;
     el.chapter.textContent = "Ember Hall Battle";
     el.place.textContent = mode === "battle" ? `${map.name} / Stage ${activeStage}` : "Ember Hall - Trial Room";
-    el.questTitle.textContent = `Trial Gate ${progress.clearedStages.length}/40`;
+    el.questTitle.textContent = `Trial Gate ${progress.clearedStages.length}/${HALL_BATTLE_BLUEPRINTS.length}`;
     el.questText.textContent = progress.pendingRecruit ? "Choose a new Flameguard recruit." : `Next: ${objective.label}.`;
     el.beatTitle.textContent = `Stage ${progress.unlockedStage} Available`;
     el.beatText.textContent = "Cleared battle records remain open for normal XP.";
@@ -6708,7 +6787,7 @@ function updatePanels() {
     const combatUnit = battle?.party?.find(unit => unit.id === id);
     const hp = combatUnit ? combatUnit.hp : h.hp;
     const down = hp <= 0;
-    return `<div class="hero-row ${down ? "is-down" : ""}"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>LV ${progress.level} / ${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${down ? "DOWN" : `${hp}/${t.max}`}</span></div>`;
+    return `<div class="hero-row ${down ? "is-down" : ""}"><span class="dot" style="background:${h.color}"></span><strong>${h.name}<small>LV ${progress.level} / ${h.title} / STR ${t.str} AGI ${t.agi} MAG ${t.mag} STAM ${t.stam}</small></strong><span>${hp}/${t.max}</span></div>`;
   }).join("");
   updateSkillPointNotice();
   queueSave();
@@ -7237,25 +7316,25 @@ function runEvent(event) {
   if (event === "acceptIssue1") { state.quest = 0; showTalk([["Quest", "Ash Boy's First Verse accepted."], ["Marla", "Follow the marked route east. Mira is watching the Ledger Docks."]]); }
   if (event === "harbor") {
     addParty("Mira");
-    startBattle("Harbor Name-Thieves", [enemy("Ledger Cutter", 58, 9, "Sound", "#71513e", 2), enemy("Chain Warden", 68, 10, "Shadow", "#4a4542", 1)], "harborWon");
+    startBattle("Harbor Name-Thieves", [enemy("Slobbo", 58, 9, "Sound", "#71513e", 2), enemy("Brokk", 68, 10, "Shadow", "#4a4542", 1)], "harborWon");
   }
   if (event === "issue1") { state.quest = 1; state.resonance += 12; const xp = awardPartyXp(180, "Issue 1"); showTalk([["Mira", "Next stop: Reverie. This is no longer just a dock case."], ["Progress", xp]]); }
-  if (event === "clergy") { addParty("Seerin"); startBattle("Fire Clergy Assessors", [enemy("Seal Bearer", 74, 10, "Shadow", "#9d5436", 1), enemy("Ash Scribe", 60, 8, "Sound", "#6d5948", 2)], "clergyWon"); }
+  if (event === "clergy") { addParty("Seerin"); startBattle("Fire Clergy Assessors", [enemy("Corrupt Clergy", 74, 10, "Shadow", "#9d5436", 1), enemy("High Administrator Thaddeus", 60, 8, "Sound", "#6d5948", 2)], "clergyWon"); }
   if (event === "issue2") { addParty("Kael"); state.quest = 2; state.resonance += 15; const xp = awardPartyXp(260, "Issue 2"); showTalk([["Kael", "Faith under pressure is still faith. Obedience under pressure is only fear."], ["Progress", xp]]); }
   if (event === "registry") { state.flags.registered = true; state.resonance += 10; showTalk([["Guild Clerk", "Flameguard: provisional rank assigned."], ["Verseborn", "Provisional is official for interesting."]]); }
   if (event === "torren") { addParty("Torren"); showTalk([["Torren", "An empty chair is not a debt."]]); }
   if (event === "ravaWave") {
     activateSideQuest("ravaWave");
-    startBattle("Reverie Courtyard - Wave 1", [enemy("Seal Bearer", 68, 10, "Shadow", "#9d5436", 1)], "ravaWaveWon", null, [
-      { name: "Reverie Courtyard - Wave 2", enemies: [enemy("Ash Scribe", 62, 9, "Sound", "#6d5948", 1), enemy("Ash Scribe", 62, 9, "Sound", "#6d5948", 2)] },
-      { name: "Reverie Courtyard - Wave 3", enemies: [enemy("Seal Bearer", 92, 13, "Tech", "#9d5436", 1), enemy("Ash Scribe", 70, 10, "Sound", "#6d5948", 2)] }
+    startBattle("Reverie Courtyard - Wave 1", [enemy("Corrupt Clergy", 68, 10, "Shadow", "#9d5436", 1)], "ravaWaveWon", null, [
+      { name: "Reverie Courtyard - Wave 2", enemies: [enemy("High Administrator Thaddeus", 62, 9, "Sound", "#6d5948", 1), enemy("High Administrator Thaddeus", 62, 9, "Sound", "#6d5948", 2)] },
+      { name: "Reverie Courtyard - Wave 3", enemies: [enemy("Corrupt Clergy", 92, 13, "Tech", "#9d5436", 1), enemy("High Administrator Thaddeus", 70, 10, "Sound", "#6d5948", 2)] }
     ]);
   }
-  if (event === "ember") startBattle("Ember Hall Resonance", [enemy("Buried Construct", 86, 12, "Earth", "#6f5540", 1), enemy("Cracked Pillar", 76, 7, "Tech", "#55473c", 2)], "emberWon");
+  if (event === "ember") startBattle("Ember Hall Resonance", [enemy("Gorg", 86, 12, "Earth", "#6f5540", 1), enemy("Cracked Pillar", 76, 7, "Tech", "#55473c", 2)], "emberWon");
   if (event === "sparky") { addParty("Sparky"); state.quest = 3; state.resonance += 18; const xp = awardPartyXp(360, "Issue 3"); showTalk([["Sparky", "Prrrp!"], ["Verseborn", "Tiny dragon. Ancient heart. Family."], ["Progress", xp]]); }
   if (event === "dawn") {
     addParty("Glimmer");
-    const enemies = [enemy("Wrong Bell", 82, 11, "Tech", "#a66a35", 2), enemy("Gate Lock", 78, 10, "Earth", "#58616b", 1), enemy("Ash Wyrm", 72, 12, "Ancient Fire", "#5a2f52", 3)];
+    const enemies = [enemy("Clock Goblin", 82, 11, "Tech", "#a66a35", 2), enemy("Lord Sprocket", 78, 10, "Earth", "#58616b", 1), enemy("Red Dragon Lord", 72, 12, "Ancient Fire", "#5a2f52", 3)];
     showBossIntro("False Dawn System", enemies[2], () => startBattle("False Dawn System", enemies, "dawnWon"));
   }
   if (event === "ending") {
@@ -7267,7 +7346,7 @@ function runEvent(event) {
   if (event === "ngStonewakeTrial") {
     activateSideQuest("stonewakeTrial");
     const kaeldrin = enemy("Kaeldrin", 185, 23, "Shadow", "#d9c07b", 2, "Kaeldrin");
-    const lyrsa = enemy("Lyrsa", 160, 25, "Tech", "#8b6ac4", 1, "Lyrsa");
+    const lyrsa = enemy("Lysra", 160, 25, "Tech", "#8b6ac4", 1, "Lyrsa");
     kaeldrin.levelHint = lyrsa.levelHint = 20;
     kaeldrin.npcBoss = lyrsa.npcBoss = true;
     showTalk([["Kaeldrin", "Stonewake advances at full strength."], ["Lyrsa", "Order begins with precision. Let us measure yours."], ["Verseborn", "Flameguard, second verse."]], {
@@ -7277,9 +7356,9 @@ function runEvent(event) {
   }
   if (event === "ngOrphanTrial") {
     activateSideQuest("orphanTrial");
-    const nyx = enemy("Nyx", 145, 22, "Holy Fire", "#473c62", 1, "Nyx");
+    const nyx = enemy("Nyx Vael", 145, 22, "Holy Fire", "#473c62", 1, "Nyx");
     const rava = enemy("Rava", 180, 24, "Earth", "#43685a", 2, "Rava");
-    const jory = enemy("Jory", 170, 26, "Sound", "#755247", 3, "Jory");
+    const jory = enemy("Jory Bellwick", 170, 26, "Sound", "#755247", 3, "Jory");
     [nyx, rava, jory].forEach(unit => { unit.levelHint = 20; unit.npcBoss = true; });
     showTalk([["Nyx", "The first loop supplied adequate combat data."], ["Rava", "Translation: we know your tricks."], ["Jory", "Reverie trial begins now."]], {
       portraits: ["Nyx", "Rava"],
@@ -7370,19 +7449,21 @@ function hallBattleInfo(stage) {
   return HALL_BATTLE_BLUEPRINTS[Number(stage) - 1] || null;
 }
 
-function hallEnemiesForStage(stage) {
+function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
   const info = hallBattleInfo(stage);
   if (!info) return [];
-  const healthScale = 1 + Math.max(0, stage - 1) * .052;
-  const attackScale = 1 + Math.max(0, stage - 1) * .024;
-  return info.enemies.map(key => {
+  const advanced = stage > 40;
+  const healthScale = (1 + Math.max(0, stage - 1) * .052) * (advanced ? 1.12 + phaseIndex * .08 : 1);
+  const attackScale = (1 + Math.max(0, stage - 1) * .024) * (advanced ? 1.08 + phaseIndex * .04 : 1);
+  return (keys || info.enemies).map(key => {
     const profile = HALL_ENEMY_LIBRARY[key];
     const unit = enemy(profile.name, Math.round(profile.hp * healthScale), Math.round(profile.atk * attackScale), profile.weak, profile.color, profile.node, profile.sprite || null);
+    if (profile.finalState) unit.finalState = profile.finalState;
     unit.levelHint = stage;
     unit.fixedLevel = true;
     if (info.boss || enemyAbilityProfiles[unit.name]) {
       unit.npcBoss = true;
-      unit.resistanceTier = info.boss ? "boss" : "elite";
+      unit.resistanceTier = info.boss && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
     }
     return unit;
   });
@@ -7402,19 +7483,22 @@ function openHallBattleMap() {
 }
 
 function hallEncounterDetails(info) {
-  const profiles = info.enemies.map(key => HALL_ENEMY_LIBRARY[key]);
+  const profiles = [info.enemies, ...info.waves].flat().map(key => HALL_ENEMY_LIBRARY[key]);
   const counts = profiles.reduce((all, profile) => ({ ...all, [profile.name]: (all[profile.name] || 0) + 1 }), {});
-  const enemies = Object.entries(counts).map(([name, amount]) => amount > 1 ? `${name} x${amount}` : name).join(" + ");
+  const enemies = info.waves.length
+    ? [info.enemies, ...info.waves].map((wave, index) => `Phase ${index + 1}: ${wave.map(key => `${HALL_ENEMY_LIBRARY[key].name}${HALL_ENEMY_LIBRARY[key].finalState ? " (Enraged)" : ""}`).join(" + ")}`).join(" / ")
+    : Object.entries(counts).map(([name, amount]) => amount > 1 ? `${name} x${amount}` : name).join(" + ");
   const weaknesses = [...new Set(profiles.map(profile => profile.weak))].join(" / ");
   const traits = [];
   if (info.boss) traits.push("Boss pattern and high status resistance");
   else if (profiles.some(profile => enemyAbilityProfiles[profile.name])) traits.push("Elite attack pattern");
   if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.heal)) traits.push("Enemy healing");
-  if (profiles.some(profile => profile.name === "Nyx")) traits.push("Sleep pressure");
+  if (profiles.some(profile => profile.name === "Nyx Vael")) traits.push("Sleep pressure");
   else if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.element === "Shadow")) traits.push("Poison pressure");
   if (profiles.some(profile => ["Earth", "Tech"].includes(enemyAbilityProfiles[profile.name]?.element))) traits.push("Stun pressure");
   if (profiles.length >= 3) traits.push("Three-enemy formation");
   else if (profiles.length === 2) traits.push("Dual formation");
+  if (info.waves.length) traits.unshift(`${info.waves.length + 1} phases / one battle`);
   return { enemies, weaknesses, traits: traits.join(" / ") || "Straight combat" };
 }
 
@@ -7426,12 +7510,12 @@ function renderHallBattleMap() {
     const isCleared = cleared.has(info.stage);
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
-    const lootLabel = HALL_ULTIMATE_REWARD_STAGES.has(info.stage)
+    const lootLabel = info.stage >= HALL_PLATINUM_STAGE ? "Platinum gear" : HALL_ULTIMATE_REWARD_STAGES.has(info.stage)
       ? "Legendary / ultimate weapon"
       : info.stage >= HALL_LEGENDARY_STAGE ? "Legendary gear" : "Uncommon-Legendary gear";
-    return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${info.stage} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
+    return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
-  el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/40 cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
+  el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/${HALL_BATTLE_BLUEPRINTS.length} cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
   el.menuBody.querySelector("[data-close-hall]")?.addEventListener("click", closeHallOverlay);
   el.menuBody.querySelectorAll("[data-hall-stage]").forEach(button => button.addEventListener("click", () => startHallBattleStage(Number(button.dataset.hallStage))));
 }
@@ -7451,7 +7535,9 @@ function startHallBattleStage(stage) {
   el.menu.classList.add("hidden");
   document.querySelector(".menu-tabs").classList.remove("hidden");
   state.map = info.mapId;
-  startBattle(`Hall ${String(stage).padStart(2, "0")}/40 - ${info.name}`, hallEnemiesForStage(stage), undefined, null, [], { hallBoss: info.boss });
+  const label = `Hall ${String(stage).padStart(2, "0")}/${HALL_BATTLE_BLUEPRINTS.length} - ${info.name}`;
+  const waves = info.waves.map((keys, index) => ({ name: `${label} - Phase ${index + 2}/${info.waves.length + 1}${keys.includes("solinarEnraged") ? " / Enraged" : ""}`, enemies: hallEnemiesForStage(stage, keys, index + 1) }));
+  startBattle(label, hallEnemiesForStage(stage), undefined, null, waves, { hallBoss: info.boss, hallFinale: stage === 50, roundCap: stage === 50 ? 40 : stage > 40 ? 32 : MAX_BATTLE_ROUNDS });
   battle.hallStage = stage;
   battle.hallBoss = info.boss;
   updateMusic();
@@ -7734,13 +7820,13 @@ function triggerPartyDefeat(log = "") {
   battle.party.forEach(markBattleUnitDown);
   state.resonance = Number.isFinite(battle.startingResonance) ? battle.startingResonance : state.resonance;
   if (battle.retryEvent) delete state.flags[battle.retryEvent];
-  renderBattle(`${log} The Flameguard is down.`);
+  renderBattle(`${log} The Flameguard has fallen.`);
   document.querySelector(".game")?.classList.add("battle-final-fall");
   playSfx("block");
   setTimeout(() => {
     if (!battle?.defeatPending || battleResultState) return;
     showBattleResult("defeat", [], returnAfterDefeat);
-  }, 360);
+  }, 1150);
   return true;
 }
 
@@ -7749,8 +7835,8 @@ function recordHallBattleClear(stage) {
   if (progress.clearedStages.includes(stage)) return false;
   progress.clearedStages.push(stage);
   progress.clearedStages.sort((a, b) => a - b);
-  progress.unlockedStage = Math.min(40, Math.max(progress.unlockedStage, stage + 1));
-  state.echoForgeRank = Math.max(state.echoForgeRank || 0, stage);
+  progress.unlockedStage = Math.min(HALL_BATTLE_BLUEPRINTS.length, Math.max(progress.unlockedStage, stage + 1));
+  state.echoForgeRank = Math.max(state.echoForgeRank || 0, Math.min(40, stage));
   const remainingRecruit = HALL_RECRUITS.some(id => !state.party.includes(id));
   if (remainingRecruit && stage % HALL_RECRUIT_INTERVAL === 0 && !progress.recruitStages.includes(stage)) progress.pendingRecruit = stage;
   return true;
@@ -7758,6 +7844,7 @@ function recordHallBattleClear(stage) {
 
 function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], options = {}) {
   mode = "battle";
+  el.battle.dataset.hallFinale = options.hallFinale ? "true" : "false";
   battleResultState = null;
   el.battleResult.classList.add("hidden");
   el.battleResult.classList.remove("is-victory", "is-defeat", "is-leaving");
@@ -7777,7 +7864,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
   const hallBoss = Boolean(options.hallBoss);
   const musicTrack = battleMusicForEncounter(hallBoss);
-  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, startingResonance, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
+  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -7817,7 +7904,7 @@ function renderTurnOrder() {
 }
 
 function battleRoundLimitReached(currentBattle = battle) {
-  return Boolean(currentBattle && currentBattle.round >= MAX_BATTLE_ROUNDS);
+  return Boolean(currentBattle && currentBattle.round >= (currentBattle.roundCap || MAX_BATTLE_ROUNDS));
 }
 
 function runCurrentTurn(log) {
@@ -7897,7 +7984,7 @@ function endBattleDraw(log = "") {
   updatePanels();
   playSfx("block");
   showTalk([
-    ["Draw", `Round ${MAX_BATTLE_ROUNDS} ends with both sides still standing. The battle is a draw.`],
+    ["Draw", `Round ${battle.roundCap || MAX_BATTLE_ROUNDS} ends with both sides still standing. The battle is a draw.`],
     ["System", `No XP, gold, loot or victory progress was awarded.${log ? " You can prepare and challenge the fight again." : ""}`]
   ]);
   return true;
@@ -8039,7 +8126,7 @@ function unitHtml(u, className = "") {
   const pct = Math.max(0, Math.round((u.hp / u.max) * 100));
   const mp = Number.isFinite(u.maxmp) ? `<small>MP ${u.mp}/${u.maxmp}</small>` : "";
   const down = u.hp <= 0 || u.down;
-  return `<div class="unit ${className} ${down ? "is-down" : ""}"><strong>${u.name}</strong><span>${down ? "DOWN" : `${Math.max(0, u.hp)}/${u.max}`}</span>${mp}<div class="bar"><span style="width:${pct}%"></span></div>${statusBadgesHtml(u)}</div>`;
+  return `<div class="unit ${className} ${down ? "is-down" : ""}"><strong>${u.name}</strong><span>${Math.max(0, u.hp)}/${u.max}</span>${mp}<div class="bar"><span style="width:${pct}%"></span></div>${statusBadgesHtml(u)}</div>`;
 }
 
 function chooseSkillTarget(u, sk) {
@@ -8683,19 +8770,27 @@ function enemyMagicElement(unit) {
 
 function enemyCanHeal(unit) {
   const profile = enemyAbilityProfile(unit);
-  return Boolean(profile?.heal || /clergy|paladin|seal bearer|sentinel|gate lock/i.test(`${unit.name} ${unit.sprite || ""}`));
+  return Boolean(profile?.heal || /clergy|paladin|seal bearer|sentinel|gate lock|lord sprocket/i.test(`${unit.name} ${unit.sprite || ""}`));
 }
 
 function enemyStatusFor(unit, actionKind) {
   const profile = enemyAbilityProfile(unit);
   const element = profile?.element || enemyMagicElement(unit);
-  const type = element === "Shadow" ? (unit.name === "Nyx" ? "sleep" : "poison") : ["Earth", "Tech"].includes(element) ? "stun" : null;
+  const type = element === "Shadow" ? (["Nyx", "Nyx Vael"].includes(unit.name) ? "sleep" : "poison") : ["Earth", "Tech"].includes(element) ? "stun" : null;
   if (!type) return null;
   return { type, chance: actionKind === "ultimate" ? .8 : .48 };
 }
 
 function enemyActionForKind(unit, kind, target = null) {
   const profile = enemyAbilityProfile(unit);
+  if (unit.finalState === "enraged" && kind === "magic") {
+    const frost = (unit.finalMagicStep || 0) % 2 === 0;
+    unit.finalMagicStep = (unit.finalMagicStep || 0) + 1;
+    return frost
+      ? { kind, name: "Glacial Breath", element: "Sigil", status: { type: "stun", chance: .48 } }
+      : { kind, name: "Ember Torrent", element: "Ancient Fire" };
+  }
+  if (unit.finalState === "enraged" && kind === "ultimate") return { kind, name: "Frostfire Cataclysm", element: "Ancient Fire", status: { type: "stun", chance: .8 } };
   if (kind === "heal") return { kind, name: profile?.heal || "Seal Mend", element: profile?.element || "Holy Fire", target, healing: true };
   if (kind === "ultimate") {
     const action = { kind, name: profile?.ultimate || "Resonant Rupture", element: profile?.element || enemyMagicElement(unit), target: profile?.ultimateHeal ? unit : null, healing: Boolean(profile?.ultimateHeal) };
@@ -8718,8 +8813,9 @@ function chooseEnemyAction(unit) {
   if ((unit.resonance || 0) >= 100) {
     return enemyActionForKind(unit, "ultimate");
   }
-  if (profile?.pattern && (unit.npcBoss || unit.resistanceTier === "boss" || battle.echoHuntRank)) {
-    const kind = profile.pattern[(unit.patternStep || 0) % profile.pattern.length];
+  const pattern = unit.finalState === "enraged" ? ["magic", "melee", "magic", "ultimate"] : profile?.pattern;
+  if (pattern && (unit.npcBoss || unit.resistanceTier === "boss" || battle.echoHuntRank)) {
+    const kind = pattern[(unit.patternStep || 0) % pattern.length];
     unit.patternStep = (unit.patternStep || 0) + 1;
     if (kind === "heal" && !wounded) return enemyActionForKind(unit, "magic");
     return enemyActionForKind(unit, kind, kind === "heal" ? wounded : null);
@@ -8870,7 +8966,7 @@ function resolveEnemyTurn(turn, prev) {
         defender.flash = 12;
         addBattleFloater(defender, dmg, { damageType: action.kind === "melee" ? "Physical" : action.element, crit: action.kind === "ultimate" });
         const statusResult = defender.hp > 0 && action.status ? applyStatus(defender, action.status.type, e, action.status) : null;
-        actionLog += ` ${defender.name} takes ${dmg}.${fell ? ` ${defender.name} is DOWN.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
+        actionLog += ` ${defender.name} takes ${dmg}.${fell ? ` ${defender.name} falls.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
       });
       battle.ward = false;
       if (action.kind === "ultimate") e.resonance = 0;
@@ -8898,19 +8994,48 @@ function resolveEnemyTurn(turn, prev) {
 }
 
 function winBattle(log) {
-  if (!battle || battle.ended || battle.defeatPending) return;
+  if (!battle || battle.ended || battle.defeatPending || battle.phaseTransition) return;
   battle.defeated.push(...battle.enemies);
   if (battle.waves.length) {
     if (battleRoundLimitReached()) return endBattleDraw(log);
     const nextWave = battle.waves.shift();
-    battle.name = nextWave.name;
-    battle.enemies = nextWave.enemies;
-    battle.ward = false;
-    el.battleName.textContent = nextWave.name;
-    state.resonance = Math.min(100, state.resonance + 10);
-    battle.round++;
-    buildTurnOrder();
-    runCurrentTurn(`${log} The next wave enters.`);
+    const activeBattle = battle;
+    const advanceWave = () => {
+      if (battle !== activeBattle || mode !== "battle") return;
+      battle.phaseTransition = null;
+      battle.name = nextWave.name;
+      battle.enemies = nextWave.enemies;
+      battle.ward = false;
+      el.battleName.textContent = nextWave.name;
+      state.resonance = Math.min(100, state.resonance + 10);
+      battle.round++;
+      buildTurnOrder();
+      runCurrentTurn(`${log} The next wave enters.`);
+    };
+    if (Number(battle.hallStage) >= HALL_PLATINUM_STAGE) {
+      const total = hallBattleInfo(battle.hallStage).waves.length + 1;
+      battle.enemies.forEach(unit => {
+        unit.anim = "death";
+        if (!Number.isFinite(unit.deathTick)) unit.deathTick = tick;
+        unit.defeatUntil = Math.max(unit.defeatUntil || 0, tick + 60);
+      });
+      battle.phaseTransition = {
+        step: "fallen",
+        number: total - battle.waves.length,
+        total,
+        names: nextWave.enemies.map(unit => unit.finalState === "enraged" ? `${unit.name} / Enraged` : unit.name)
+      };
+      battle.resolving = true;
+      renderBattle(`${log} The defeated wave falls.`);
+      setTimeout(() => {
+        if (battle !== activeBattle || mode !== "battle") return;
+        battle.phaseTransition.step = "incoming";
+        renderBattle(`Phase ${battle.phaseTransition.number}/${total} approaches.`);
+        setTimeout(advanceWave, 850);
+      }, 900);
+    } else {
+      advanceWave();
+    }
     return;
   }
   const hallStage = Number(battle.hallStage) || 0;
@@ -8981,7 +9106,7 @@ function winBattle(log) {
   });
   if (resonanceEarned) resultEntries.push({ kind: "resonance", icon: "R", label: "Resonance", value: `+${resonanceEarned}` });
   resultEntries.push({ kind: "xp", icon: "EXP", label: "EXP", value: `+${earnedXp}` });
-  if (hallStage && firstHallClear) resultEntries.push({ kind: "record", icon: "#", label: "Hall Record", detail: hallStage >= 40 ? "All battle records cleared" : `Stage ${hallStage + 1} unlocked`, value: `${hallStage}/40` });
+  if (hallStage && firstHallClear) resultEntries.push({ kind: "record", icon: "#", label: "Hall Record", detail: hallStage >= HALL_BATTLE_BLUEPRINTS.length ? "All battle records cleared" : `Stage ${hallStage + 1} unlocked`, value: `${hallStage}/${HALL_BATTLE_BLUEPRINTS.length}` });
   showBattleResult("victory", resultEntries, () => {
     if (hallStage) returnToHallAfterBattle();
     if (hallStage && hallProgress.pendingRecruit) openHallRecruitment();
@@ -9024,7 +9149,7 @@ function guaranteeHallBattleGearReward(rewards, stage = 1) {
   const candidates = hallGearRewardCandidates(stage);
   const gear = candidates[Math.floor(Math.random() * candidates.length)];
   if (!gear) return null;
-  const rarity = stage >= HALL_LEGENDARY_STAGE ? "Legendary" : rollHallGearRarity();
+  const rarity = stage >= HALL_PLATINUM_STAGE ? "Platinum" : stage >= HALL_LEGENDARY_STAGE ? "Legendary" : rollHallGearRarity();
   const themes = ["swamp", "ruins", "mountain", "dragon"];
   const theme = themes[Math.floor(Math.random() * themes.length)];
   const awarded = awardGearDrop(gear.name, rarity, rewards.drops, { theme, separateCopy: true });
@@ -9982,13 +10107,13 @@ function startEndgameHunt() {
     return unit;
   };
   const formations = [
-    { name: "Redacted Witnesses", enemies: [rankedEnemy("Dawn Null", 92, 14, "Sound", "#4f6570", 2, "Wrong Bell"), rankedEnemy("Redacted Witness", 82, 13, "Holy Fire", "#413044", 1, "Ash Scribe")] },
-    { name: "First Ember Memory", enemies: [rankedEnemy("First Ember Memory", 116, 16, "Shadow", "#6a3552", 2, "Ash Wyrm"), rankedEnemy("Orphaned Sigil", 96, 15, "Tech", "#8a6640", 1, "Seal Bearer")] },
-    { name: "Dawn Gate Recalibration", enemies: [rankedEnemy("Dawn Gate Sentinel", 148, 19, "Ancient Fire", "#58616b", 2, "Gate Lock")] },
+    { name: "Reginald's Retinue", enemies: [rankedEnemy("Baron Revus Veln", 92, 14, "Sound", "#4f6570", 2, "Clock Goblin"), rankedEnemy("Sir Reginald", 82, 13, "Holy Fire", "#413044", 1, "High Administrator Thaddeus")] },
+    { name: "Elder Plumpin", enemies: [rankedEnemy("Elder Plumpin", 116, 16, "Shadow", "#6a3552", 2, "Red Dragon Lord"), rankedEnemy("Saint Justin", 96, 15, "Tech", "#8a6640", 1, "Corrupt Clergy")] },
+    { name: "Dawn Gate Recalibration", enemies: [rankedEnemy("Dawn Gate Sentinel", 148, 19, "Ancient Fire", "#58616b", 2, "Lord Sprocket")] },
     { name: "Stonewake Shadows", enemies: [rankedEnemy("Shade", 104, 18, "Holy Fire", "#4b2633", 2, "Shade", true), rankedEnemy("Grumm", 132, 20, "Sound", "#755034", 1, "Grumm", true)] },
     { name: "Lantern Name-Runners", enemies: [rankedEnemy("Marla", 110, 17, "Shadow", "#8a5b3d", 2, "Marla", true), rankedEnemy("Harl", 118, 19, "Tech", "#5b4a40", 1, "Harl", true)] },
-    { name: "Stonewake Command", enemies: [rankedEnemy("Kaeldrin", 138, 22, "Sound", "#62554a", 2, "Kaeldrin", true), rankedEnemy("Lyrsa", 124, 21, "Shadow", "#4c556b", 1, "Lyrsa", true)] },
-    { name: "Reverie Counter-Echo", enemies: [rankedEnemy("Nyx", 106, 20, "Holy Fire", "#473c62", 1, "Nyx", true), rankedEnemy("Rava", 126, 21, "Earth", "#43685a", 2, "Rava", true), rankedEnemy("Jory", 116, 23, "Sound", "#755247", 3, "Jory", true)] },
+    { name: "Stonewake Command", enemies: [rankedEnemy("Kaeldrin", 138, 22, "Sound", "#62554a", 2, "Kaeldrin", true), rankedEnemy("Lysra", 124, 21, "Shadow", "#4c556b", 1, "Lyrsa", true)] },
+    { name: "Reverie Counter-Echo", enemies: [rankedEnemy("Nyx Vael", 106, 20, "Holy Fire", "#473c62", 1, "Nyx", true), rankedEnemy("Rava", 126, 21, "Earth", "#43685a", 2, "Rava", true), rankedEnemy("Jory Bellwick", 116, 23, "Sound", "#755247", 3, "Jory", true)] },
     { name: "Crown and Winter", enemies: [rankedEnemy("King Maeric", 166, 24, "Shadow", "#d4a94f", 3, "King Maeric", true), rankedEnemy("Tja", 122, 22, "Ancient Fire", "#4c88a8", 2, "Tja", true)] }
   ];
   const formation = formations[(rank - 1) % formations.length];
@@ -10726,7 +10851,7 @@ function runQaChecks() {
 
     const affixCounts = RARITY_ORDER.map(rarity => [rarity, rollGearAffixes(gearByName("Ashrunner Knife"), rarity, "mountain").length]);
     check("affix-counts", affixCounts.every(([rarity, count]) => count === RARITY_AFFIX_COUNTS[rarity]), JSON.stringify(affixCounts));
-    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4 }));
+    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Platinum: 5 }));
     const rangedAffixes = Array.from({ length: 20 }, () => rollGearAffixes(gearByName("Ashrunner Knife"), "Epic", "mountain")).flat();
     check("affix-ranges", rangedAffixes.every(entry => entry.value >= entry.min && entry.value <= entry.max));
     check("early-status-gear", zoneStarterGear.filter(gear => gear.slot === "weapon").every(gear => gearEffects(gear).some(effect => effect.type === "statusOnHit")) && zoneStarterGear.some(gear => gear.slot === "armour" && gearEffects(gear).some(effect => effect.type === "statusOnHit")));
@@ -11273,10 +11398,24 @@ function runQaChecks() {
     mode = "walk";
     addParty("Mira");
     state.activeParty = ["Verseborn", "Mira"];
-    startBattle("QA Down State", [enemy("Training Construct", 999, 1, "Shadow", "#655", 1)], null);
+    startBattle("QA Death State", [enemy("Training Construct", 999, 1, "Shadow", "#655", 1)], null);
     battle.party[0].hp = 0;
     markBattleUnitDown(battle.party[0]);
-    renderBattle("Verseborn is DOWN. Mira continues the fight.");
+    renderBattle("Verseborn falls. Mira continues the fight.");
+  } else if (qaMode === "hallstage") {
+    mode = "walk";
+    state.gameMode = "hallBattles";
+    const stage = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(qaParams.get("stage")) || 41));
+    ["Verseborn", "Mira", "Seerin"].forEach(id => {
+      addParty(id);
+      progressFor(id).level = MAX_LEVEL;
+      baseJobs[id].hp = totals(id).max;
+      baseJobs[id].mp = totals(id).mp;
+    });
+    state.activeParty = ["Verseborn", "Mira", "Seerin"];
+    state.hallBattles.unlockedStage = HALL_BATTLE_BLUEPRINTS.length;
+    state.resonance = 100;
+    startHallBattleStage(stage);
   } else if (qaMode === "map") {
     const mapId = qaParams.get("qaMap");
     if (maps[mapId]) {
