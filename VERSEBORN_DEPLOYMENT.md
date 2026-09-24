@@ -23,6 +23,12 @@ For isolated code or data changes, including gear, loot tables and labels:
 6. Run a basic production integrity check.
 7. Package the updated reduced runtime and verify it remains below 256 MiB before publishing.
 
+When replacing `dist/client/game/game.js` in the reduced runtime, preserve the
+runtime's `.webp` asset-path conversion. The source build uses `.png` names,
+while the reduced package contains the corresponding lossless `.webp` files.
+Before publishing, verify the packaged `game.js` has no `.png` references and
+that every referenced runtime `.webp` file exists in the package.
+
 ## Full Reduced-Runtime Rebuilds
 
 Rebuild and revalidate the full reduced runtime only when one or more of these are true:
