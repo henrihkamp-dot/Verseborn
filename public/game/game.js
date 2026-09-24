@@ -324,6 +324,7 @@ const battleSpriteHeights = {
   Verseborn: 46, Mira: 48, Sparky: 34, Glimmer: 43, GlimmerMech: 52,
   Kael: 47, KaelShadow: 50, Torren: 49, Seerin: 48
 };
+const BATTLE_COMPOSITION_SCALE = .92;
 const BATTLE_IDLE_FRAME_TICKS = 48;
 const BATTLE_DEATH_FRAME_TICKS = 14;
 const battleFrameSequences = {
@@ -5324,7 +5325,7 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
         : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
   const sequence = usesDirectFrames ? null : battleFrameSequences[visualId]?.[animation];
   const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
-  const targetHeight = battleSpriteHeights[visualId] || 54;
+  const targetHeight = (battleSpriteHeights[visualId] || 54) * BATTLE_COMPOSITION_SCALE;
   const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight);
   const idleCrop = animation === "idle" && !usesDirectFrames ? battleIdleSourceCrops[visualId] : null;
   const sourceOffsetX = idleCrop?.x || 0;
@@ -6443,7 +6444,7 @@ function drawFalseDawn(p) {
 const battlePartyLayouts = {
   1: [[72, 124]],
   2: [[54, 106], [90, 144]],
-  3: [[44, 101], [91, 132], [44, 162]]
+  3: [[46, 99], [91, 131], [46, 161]]
 };
 const BATTLE_ARENA_HEIGHT = 188;
 
@@ -6453,10 +6454,10 @@ function partyBattlePosition(index, count = battle?.party?.length || 1) {
 
 function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
   const positions = count === 1
-    ? [[198, 124]]
+    ? [[184, 124]]
     : count === 2
-      ? [[215, 96], [181, 146]]
-      : [[216, 88], [178, 128], [216, 160]];
+      ? [[202, 106], [166, 144]]
+      : [[210, 99], [165, 131], [210, 161]];
   return positions[index] || [190, 105];
 }
 
@@ -6832,7 +6833,7 @@ function drawNpcBattleEnemy(e, px, py) {
   const col = attacking
     ? Math.min(sheet.columns - 1, Math.floor(progress * sheet.columns))
     : [0, 0, Math.min(3, sheet.columns - 1), 0][Math.floor((tick + id.length * 3) / 16) % 4];
-  const targetHeight = Math.round((animatedNpcHeights[id] || 26) * 1.9);
+  const targetHeight = Math.round((animatedNpcHeights[id] || 26) * 1.9 * BATTLE_COMPOSITION_SCALE);
   const scale = targetHeight / Math.max(1, sheet.referenceHeight);
   const source = animationFrameRect(sheet, col, row);
   const sourceWidth = source.w;
@@ -6884,7 +6885,7 @@ function drawAnimatedEnemy(e, px, py) {
   if (attacking) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
   if (dying) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
   const column = Math.max(0, Math.min(sheet.columns - 1, sequence[sequenceIndex] ?? 0));
-  const targetHeight = (enemyAnimationHeights[key] || 46) * enemyBattleScale(key);
+  const targetHeight = (enemyAnimationHeights[key] || 46) * enemyBattleScale(key) * BATTLE_COMPOSITION_SCALE;
   const anchorX = px + 8;
   const baseline = py + 31;
   const scale = Math.min(
@@ -6929,7 +6930,7 @@ function drawEnemy(e, px, py) {
   const col = index % 3;
   const boss = index >= 6;
   const construct = index === 4 || index === 5;
-  const scale = 1;
+  const scale = BATTLE_COMPOSITION_SCALE;
   const rowTop = Math.floor(row * source.image.height / 3);
   const idleRowTop = Math.floor(row * enemySheet.image.height / 3);
   const cellLeft = Math.floor(col * source.image.width / 3);
@@ -6942,7 +6943,7 @@ function drawEnemy(e, px, py) {
   const baseline = py + 31 + bob;
   const destX = Math.round(anchorX + (cell.x - sourceCenterX) * scale);
   const destY = Math.round(baseline + (cell.y - (rowTop + idleBaseline)) * scale);
-  ctx.drawImage(source.image, cell.x, cell.y, cell.w, cell.h, destX, destY, cell.w, cell.h);
+  ctx.drawImage(source.image, cell.x, cell.y, cell.w, cell.h, destX, destY, Math.round(cell.w * scale), Math.round(cell.h * scale));
   if (e.anim === "attack") e.animTick = (e.animTick || 0) + 1;
 }
 
@@ -7964,6 +7965,8 @@ function startHallBattleStage(stage) {
   startBattle(label, hallEnemiesForStage(stage), undefined, null, waves, { hallBoss: info.boss, hallFinale: stage === 50, roundCap: stage === 50 ? 40 : stage > 40 ? 32 : MAX_BATTLE_ROUNDS });
   battle.hallStage = stage;
   battle.hallBoss = info.boss;
+  el.chapter.textContent = "Ember Hall Battle";
+  el.place.textContent = `${currentMap().name} / Stage ${stage}`;
   updateMusic();
 }
 

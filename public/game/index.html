@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
   <title>Verseborn getting started</title>
-  <link rel="stylesheet" href="styles.css?v=hall-release-82">
+  <link rel="stylesheet" href="styles.css?v=hall-release-83">
 </head>
 <body>
   <main class="shell">
@@ -15,9 +15,13 @@
         <span><strong>SKILL POINT READY</strong><small id="skillPointNoticeDetail"></small></span>
       </button>
       <div class="hud">
-        <div>
+        <div class="hud-location">
           <strong id="chapter">Issue 1</strong>
           <span id="place">The Drunk Lantern</span>
+        </div>
+        <div class="hud-battle-resonance" aria-label="Party Resonance">
+          <span>Party Resonance</span>
+          <div class="battle-resonance-track"><i id="battleResonance"></i></div>
         </div>
         <div id="hint">Klik in het spel. Beweeg met WASD of de pijlen.</div>
       </div>
@@ -46,10 +50,6 @@
           <strong id="battleName">Battle</strong>
           <span id="battleLog">Kies een actie.</span>
           <div id="turnOrder" class="turn-order" aria-label="Turn order"></div>
-          <div class="battle-resonance" aria-label="Resonance">
-            <span>Resonance</span>
-            <div class="battle-resonance-track"><i id="battleResonance"></i></div>
-          </div>
         </div>
         <div id="partyRows" class="party-rows"></div>
         <div id="enemyRows" class="enemy-rows"></div>
@@ -132,6 +132,6 @@
     </aside>
   </main>
 
-  <script src="game.js?v=hall-release-82"></script>
+  <script src="game.js?v=hall-release-83"></script>
 </body>
 </html>
