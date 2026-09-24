@@ -538,6 +538,7 @@ let titleIdleFrames = [];
 let stageSelectorImage = null;
 let chestSheet = null;
 let echoProjectileSheet = null;
+let breakIconSheet = null;
 let spriteLoadProgress = 0;
 let runtimeAssetsReady = false;
 
@@ -588,6 +589,27 @@ function cellBounds(imageData, width, height, col, row, columns, rows) {
   }
   if (minX > maxX) return { x: startX, y: startY, w: cellWidth, h: cellHeight };
   return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+
+function loadBreakIconSheet() {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const paint = canvas.getContext("2d", { willReadFrequently: true });
+      paint.drawImage(image, 0, 0);
+      const pixels = paint.getImageData(0, 0, canvas.width, canvas.height);
+      breakIconSheet = {
+        image,
+        cells: [0, 1, 2, 3].map(column => cellBounds(pixels, canvas.width, canvas.height, column, 0, 4, 1))
+      };
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = "assets/ui/break-icons.png";
+  });
 }
 
 function loadSpriteSheet(id) {
@@ -968,6 +990,7 @@ function loadEchoProjectileSheet() {
 }
 
 Promise.all([
+  loadBreakIconSheet(),
   loadBattleAnimationSheets(),
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
   ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
@@ -2626,6 +2649,8 @@ const baseJobs = {
 
 const MAX_LEVEL = 40;
 const MAX_BATTLE_ROUNDS = 20;
+const BREAK_THRESHOLD = 3;
+const BREAK_STR_COEFFICIENT = .35;
 const XP_MULTIPLIER = 2;
 const TRANSFORMATION_UNLOCK_LEVEL = 10;
 const TALENT_POINT_LEVELS = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40];
@@ -2896,14 +2921,14 @@ const compactTalentTrees = {
     talentNode(2, "Earthen Guard", "newSkill", skill("Earthen Guard", "block", "Earth", 0, 6, "Gain a personal stone barrier for 4 actions.", { targetSide: "self", buffs: [{ type: "barrier", value: .3, duration: 4 }] })),
     talentNode(2, "Concussive Blow", "basicBreak", 2, "Normal Attack deals +2 Break."),
     talentNode(2, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break becomes an area attack that damages every living enemy."),
-    talentNode(3, "Fault Line", "newSkill", skill("Fault Line", "melee", "Earth", 0, 11, "1.25x STR to all enemies with high Break.", { coefficient: 1.25, allEnemies: true, staggerPower: 3 })),
+    talentNode(3, "Fault Line", "newSkill", skill("Fault Line", "melee", "Earth", 0, 11, "1.25x STR + 0.625x STAM to all enemies with high Break.", { coefficient: 1.25, allEnemies: true, staggerPower: 3 })),
     talentNode(3, "Rockslide", "brokenDamage", .2, "Deal 20% more physical damage to recently Broken enemies."),
     talentNode(3, "Cover Me", "intercept", .25, "25% chance to absorb an attack intended for a wounded ally."),
     talentNode(4, "Living Mountain", "barrierBoost", .25, "Torren's barriers are 25% stronger."),
     talentNode(4, "Aftershock", "aftershock", .3, "Heavy Earth attacks trigger a 30% shockwave against other enemies."),
     talentNode(4, "Stonefury", "damageResonance", .25, "Taking damage generates 25% more Resonance."),
     talentNode(5, "Mountain Stands", "newSkill", skill("ULT II: Mountain Stands", "ultimate", "Earth", 0, 100, "Grant long Party Guard and a powerful barrier.", { targetSide: "party", partyWide: true, ultimateIndex: 2, grantsWard: true, buffs: [{ type: "barrier", value: .35, duration: 5 }] })),
-    talentNode(5, "Worldbreaker", "newSkill", skill("ULT II: Worldbreaker", "ultimate", "Earth", 0, 100, "2.75x STR to all enemies with extreme Break.", { coefficient: 2.75, scaling: "str", allEnemies: true, ultimateIndex: 2, staggerPower: 5 })),
+    talentNode(5, "Worldbreaker", "newSkill", skill("ULT II: Worldbreaker", "ultimate", "Earth", 0, 100, "2.75x STR + 1.375x STAM to all enemies with extreme Break.", { coefficient: 2.75, scaling: "str", allEnemies: true, ultimateIndex: 2, staggerPower: 5 })),
     talentNode(5, "Immovable Object", "defendBoost", .2, "Defend and personal Guard gain 20 percentage points of reduction."),
   ],
   Glimmer: [
@@ -2998,6 +3023,7 @@ const STATUS_DEFS = {
   sleep: { label: "SLEEP", short: "SLP", negative: true, duration: 5 },
   stun: { label: "STUN", short: "STN", negative: true, duration: 1 },
   silence: { label: "SILENCE", short: "SIL", icon: "S", negative: true, duration: 2 },
+  broken: { label: "BROKEN", short: "BRK", icon: "!", negative: true, duration: 1 },
   shadowExposed: { label: "SHADOW EXPOSED", short: "SH-", icon: "V", negative: true, duration: 2 },
   strengthUp: { label: "STRENGTH UP", short: "STR", buff: true, duration: 3, value: .25 },
   magicUp: { label: "MAGIC UP", short: "MAG", buff: true, duration: 3, value: .25 },
@@ -4375,7 +4401,40 @@ function statusValue(unit, type) {
 }
 
 function hasNegativeStatus(unit) {
-  return ensureStatuses(unit).some(status => STATUS_DEFS[status.type]?.negative && status.type !== "overheated");
+  return ensureStatuses(unit).some(status => STATUS_DEFS[status.type]?.negative && !["broken", "overheated"].includes(status.type));
+}
+
+function currentBreakStrength(source) {
+  if (!source?.id) return Math.max(1, source?.stats?.str || source?.atk || 1);
+  return Math.max(1, Math.round(totals(source.id).str * (1 + statusValue(source, "strengthUp"))));
+}
+
+function addBreakProgress(source, target, amount) {
+  const gain = Math.max(0, Math.round(amount || 0));
+  const total = Math.max(0, target?.stagger || 0) + gain;
+  const breaks = Math.floor(total / BREAK_THRESHOLD);
+  if (target) target.stagger = total % BREAK_THRESHOLD;
+  return {
+    gain,
+    breaks,
+    remainder: target?.stagger || 0,
+    bonusDamage: breaks * Math.max(1, Math.round(currentBreakStrength(source) * BREAK_STR_COEFFICIENT))
+  };
+}
+
+function brokenPhysicalDamageMultiplier(source, statKey, target) {
+  if (source?.id !== "Torren" || statKey !== "str" || !statusOf(target, "broken")) return 1;
+  return 1 + typedTalentValue(source.id, "brokenDamage");
+}
+
+function tryEvadeAttack(defender) {
+  const evasion = statusValue(defender, "evasion");
+  if (!evasion || Math.random() >= evasion) return false;
+  defender.statuses = defender.statuses.filter(status => status.type !== "evasion");
+  if (defender.id === "Mira" && typedTalentValue(defender.id, "evasionAfterDodge")) {
+    applyStatus(defender, "critUp", defender, { duration: 2, value: typedTalentValue(defender.id, "evasionAfterDodge"), force: true });
+  }
+  return true;
 }
 
 function statusApplicationChance(target, type, baseChance = 1, source = null) {
@@ -4686,11 +4745,15 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
   const statKey = skillScaling(sk);
   const primary = stats[statKey] * transformedStatMultiplier(unit, statKey);
   const agility = id === "Mira" ? stats.agi * .5 : 0;
+  if (id === "Torren" && statKey === "str" && skillTargetsEnemies(sk)) {
+    return primary + stats.stam * transformedStatMultiplier(unit, "stam") * .5;
+  }
   return Math.round(primary + agility);
 }
 
 function skillScalingLabel(id, sk) {
   const primary = skillScaling(sk).toUpperCase();
+  if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return "STR + 0.5 STAM";
   return id === "Mira" && skillTargetsEnemies(sk) ? `${primary} + 0.5 AGI` : primary;
 }
 
@@ -4783,7 +4846,7 @@ function skillHitsAll(id, sk) {
 }
 
 function skillTargetsEnemies(sk) {
-  return sk.targetSide !== "party" && sk.targetSide !== "self" && sk.power >= 0 && sk.anim !== "block";
+  return !["ally", "party", "self"].includes(sk.targetSide) && sk.power >= 0 && sk.anim !== "block";
 }
 
 function partyCanSeeWeaknesses() {
@@ -6530,7 +6593,7 @@ function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
 }
 
 function drawBattleStatusBadges(unit, anchorX, y) {
-  const statuses = ensureStatuses(unit);
+  const statuses = ensureStatuses(unit).filter(status => status.type !== "broken");
   if (!statuses.length) return;
   const visible = statuses.slice(0, 3);
   const chipWidth = 17;
@@ -6543,6 +6606,23 @@ function drawBattleStatusBadges(unit, anchorX, y) {
     drawRect(x + 1, y + 1, chipWidth - 2, 5, def?.negative ? "#30151e" : "#142d34");
     drawText(`${def?.short || "FX"}${status.remaining}`, x + Math.floor(chipWidth / 2), y + 5, def?.negative ? "#ffb1ae" : "#bcecf1", 4, "center");
   });
+}
+
+function drawEnemyBreakIcon(unit, anchorX) {
+  if (!breakIconSheet || unit.hp <= 0) return;
+  const broken = Boolean(statusOf(unit, "broken"));
+  const breakValue = Math.max(0, Math.min(BREAK_THRESHOLD, Math.floor(unit.stagger || 0)));
+  if (!broken && breakValue === 0) return;
+  const cell = breakIconSheet.cells[broken ? 3 : breakValue - 1];
+  if (!cell) return;
+  const size = 18;
+  const [, enemyTop] = battleFloaterPosition(unit);
+  const x = Math.round(anchorX - size / 2);
+  const y = Math.max(21, Math.round(enemyTop - size - 2));
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x, y, size, size);
+  ctx.restore();
 }
 
 function drawBattleTurnRail() {
@@ -6619,6 +6699,7 @@ function drawBattleScene() {
     const drawUnit = () => drawEnemy(enemyUnit, anchorX - 8 + battleOffset(enemyUnit), baseline - 31);
     if (hasTurn) drawWithTurnOutline(drawUnit, "#ffc08a");
     else drawUnit();
+    drawEnemyBreakIcon(enemyUnit, anchorX);
     drawBattleVitals(enemyUnit, anchorX, baseline + (battle.hallStage === 50 ? 8 : 0), true);
     ctx.globalAlpha = 1;
   });
@@ -8325,7 +8406,7 @@ function renderBattle(log) {
   renderTurnOrder();
   el.partyRows.innerHTML = battle.party.map(unit => unitHtml({ ...unit, name: unit.form ? `${unit.name} - ${unit.form === "mech" ? "MECH" : "SHADOWPRIEST"} ${unit.formTurns}` : unit.name }, turn?.side === "party" && turn.id === unit.id ? "is-active" : "")).join("");
   if (partyCanSeeWeaknesses()) battle.enemies.forEach(rememberWeakness);
-  el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} Lv ${e.level} - Weak: ${knownWeakness(e) ? e.weak : "???"}`, hp: e.hp, max: e.max, statuses: e.statuses })).join("");
+  el.enemyRows.innerHTML = battle.enemies.map(e => unitHtml({ name: `${e.name} Lv ${e.level} - Weak: ${knownWeakness(e) ? e.weak : "???"}`, hp: e.hp, max: e.max, stagger: e.stagger, statuses: e.statuses })).join("");
   el.actions.innerHTML = "";
   el.actions.classList.toggle("is-items", battle.itemMode);
   el.actions.classList.toggle("is-targets", battle.targetMode);
@@ -8771,6 +8852,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const holyFollowUpPower = statusValue(u, "holyFollowUp");
       let holyFollowUpTriggered = false;
       hitTargets.forEach(hitTarget => {
+        const brokenAtHitStart = Boolean(statusOf(hitTarget, "broken"));
         const afflicted = hasNegativeStatus(hitTarget);
         const critChance = Math.min(.65, heroCritChance(u.id, afflicted) + statusValue(u, "critUp") + statusValue(hitTarget, "marked") + statusValue(hitTarget, "critExposed"));
         const statKey = skillScaling(sk);
@@ -8782,20 +8864,21 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           dmg *= 1 + u.nextSongBoost;
           delete u.nextSongBoost;
         }
-        if (skillHitsElementWeakness(hitTarget, sk)) {
+        const weaknessHit = skillHitsElementWeakness(hitTarget, sk);
+        const weaponBreak = sk.basicAttack ? weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon)) : null;
+        const breakGain = (sk.staggerPower || (weaknessHit ? 2 : 1))
+          + (weaknessHit ? effectValue(u.id, "stagger") : 0)
+          + typedTalentValue(u.id, "staggerBonus")
+          + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0)
+          + (weaponBreak?.type === "break" ? weaponBreak.value : 0);
+        const breakResult = addBreakProgress(u, hitTarget, breakGain);
+        if (weaknessHit) {
           if (hitTarget.weak === sk.element && rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
           dmg = Math.floor(dmg * skillWeaknessMultiplier(u.id, sk, hitTarget));
-          hitTarget.stagger += (sk.staggerPower || 2) + effectValue(u.id, "stagger") + typedTalentValue(u.id, "staggerBonus") + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0);
           state.resonance = Math.min(100, state.resonance + 14);
           log += ` ${hitTarget.name}: Weakness!${sk.shadowExposureBonus && statusOf(hitTarget, "shadowExposed") ? " VOIDTHORN RUPTURE!" : ""}`;
         } else {
-          hitTarget.stagger += (sk.staggerPower || 1) + typedTalentValue(u.id, "staggerBonus") + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0);
           state.resonance = Math.min(100, state.resonance + 5);
-        }
-        if (hitTarget.stagger >= 3) {
-          dmg += 12;
-          hitTarget.stagger = 0;
-          log += ` ${hitTarget.name}: Stagger break!`;
         }
         if (afflicted && sk.afflictedBonus) dmg *= 1 + sk.afflictedBonus;
         if (sk.buffScaling) dmg *= 1 + ensureStatuses(u).filter(status => STATUS_DEFS[status.type]?.buff).length * sk.buffScaling;
@@ -8816,6 +8899,12 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const wordPierce = u.id === "Verseborn" && sk.element === "Sound" ? typedTalentValue(u.id, "wordPierce") : 0;
         const defense = Math.max(0, statusValue(hitTarget, "defenseUp") - defenseDebuff) * (1 - Math.min(.8, (sk.pierce || 0) + wordPierce));
         dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", hitTarget) * (1 - defense)));
+        if (brokenAtHitStart) dmg = Math.max(1, Math.round(dmg * brokenPhysicalDamageMultiplier(u, statKey, hitTarget)));
+        if (breakResult.breaks) {
+          dmg += breakResult.bonusDamage;
+          applyStatus(hitTarget, "broken", u, { duration: 1, force: true });
+          log += ` ${hitTarget.name}: BROKEN! +${breakResult.bonusDamage} Break damage; ${breakResult.remainder}/${BREAK_THRESHOLD} Break remains.`;
+        }
         const sleepBreak = breakSleepFromDamage(hitTarget);
         if (sleepBreak) log += ` ${hitTarget.name}: ${sleepBreak}`;
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
@@ -8851,8 +8940,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (sk.basicAttack) {
           const weaponNote = applyWeaponBasicAttackEffect(u, hitTarget);
           if (weaponNote) statusNotes.push(weaponNote);
-          const weaponBreak = weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon));
-          if (weaponBreak?.type === "break") hitTarget.stagger += weaponBreak.value;
         }
         if (statusNotes.length) log += ` ${hitTarget.name}: ${statusNotes.join(" / ")}.`;
         if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
@@ -9242,10 +9329,7 @@ function resolveEnemyTurn(turn, prev) {
       const allTargets = action.kind === "ultimate" && (e.npcBoss || e.node >= 3);
       const hitTargets = allTargets ? battle.party.filter(member => member.hp > 0) : [target].filter(member => member.hp > 0);
       hitTargets.forEach(defender => {
-        const evasion = statusValue(defender, "evasion");
-        if (evasion && Math.random() < evasion) {
-          defender.statuses = defender.statuses.filter(status => status.type !== "evasion");
-          if (defender.id === "Mira" && typedTalentValue(defender.id, "evasionAfterDodge")) applyStatus(defender, "critUp", defender, { duration: 2, value: typedTalentValue(defender.id, "evasionAfterDodge"), force: true });
+        if (tryEvadeAttack(defender)) {
           actionLog += ` ${defender.name} evades the attack.`;
           return;
         }
@@ -9963,7 +10047,10 @@ function statusCardHtml(id) {
   const baseCrit = Math.round(output.critInfo.base * 100);
   const agiCrit = (output.critInfo.agilityBonus * 100).toFixed(1);
   const afflictedText = output.afflictedCrit > output.crit ? ` / ${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "";
-  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span></div>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
+  const combatUnit = battle?.party?.find(unit => unit.id === id);
+  const activeEvasion = statusValue(combatUnit, "evasion");
+  const evasionHtml = activeEvasion ? `<span><small>ACTIVE EVASION</small><strong>${Math.round(activeEvasion * 100)}%</strong><em>Applies to enemy attacks and is consumed on a successful dodge.</em></span>` : "";
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span>${evasionHtml}</div>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
 }
 
 function toggleTalent(value) {
