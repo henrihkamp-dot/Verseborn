@@ -151,7 +151,7 @@ let battle = null;
 let effect = null;
 let battleFloaters = [];
 let battleResultState = null;
-const BATTLE_FLOATER_LIFETIME = 78;
+const BATTLE_FLOATER_LIFETIME = 120;
 let codexIndex = 0;
 let battleActionIndex = 0;
 let heldDirection = null;
@@ -3375,7 +3375,7 @@ const maps = {
     point(4, 7, "Marla", [["Marla", "Back already? Sit down if you need patching up. The Trial Gate will still be there when the soup is finished."], ["Marla", "I kept the counter stocked. Old victories earn real experience here, so there is no shame in training twice."]], "hallRest", undefined, "marla"),
     point(11, 7, "Glimmer", [["Glimmer", "Forty stable battle records. Stable is relative, but the enemies are definitely real enough to hit back."], ["Glimmer", "Clear the newest record to open the next one. Cleared records stay available for training and XP."]], undefined, undefined, "workshop"),
     point(8, 5, "Stage", [["Trial Gate", "The Hall records fifty battles. Every cleared stage remains available to replay for its normal XP." ]], "hallBattleMap")
-  ], ["Trial Gate", "Choose an unlocked battle or replay an old victory for XP."], { background: "ember-hall-battle", collision: "lantern", grid: [0, 0], gridSize: [1, 1] }),
+  ], ["Trial Gate", "Choose an unlocked battle or replay an old victory for XP."], { background: "ember-hall-battle", collision: "emberHallBattles", grid: [0, 0], gridSize: [1, 1] }),
 
   lantern: map("The Drunk Lantern", "Issue 1", "lantern", [{ x: 14, y: 8, to: "ashLane", tx: 2, ty: 8 }], [
     point(4, 7, "Marla", [["Marla", "Soup first. Heroics after. Harl vanished near the old dock ledger room."], ["Verseborn", "A missing man, a tavern tab, and a song waiting to be wrong. Classic start."], ["Marla", "Find Harl. Start at the Ledger Docks, and bring him home."]], "acceptIssue1", undefined, "marla", "marlaCrate"),
@@ -3943,6 +3943,10 @@ const palettes = {
 };
 
 const collisionMasks = {
+  emberHallBattles: [
+    [1, 1, 14, 4], [2, 5, 6, 5], [9, 5, 13, 5],
+    [2, 9, 5, 12], [9, 9, 14, 12], [6, 10, 8, 12]
+  ],
   lantern: [
     [1, 1, 14, 4], [2, 5, 6, 5], [9, 5, 13, 5],
     [2, 9, 5, 11], [9, 9, 12, 11], [13, 9, 14, 12]
@@ -4967,6 +4971,11 @@ function heroCritBreakdown(id) {
 function heroCritChance(id, afflicted = false) {
   const normal = heroCritBreakdown(id).total;
   return Math.min(.65, normal + (afflicted ? typedTalentValue(id, "afflictedCrit") : 0));
+}
+
+function healingCritChance(unit) {
+  if (!unit?.id) return 0;
+  return Math.min(1, heroCritChance(unit.id) + statusValue(unit, "critUp") + (unit.id === "Kael" ? .1 : 0));
 }
 
 function ultimateRank(id) {
@@ -6460,13 +6469,13 @@ function battleFloaterPosition(target) {
   const partyIndex = battle?.party?.indexOf(target) ?? -1;
   if (partyIndex >= 0) {
     const [x, baseline] = partyBattlePosition(partyIndex, battle.party.length);
-    return [x, baseline - 55];
+    return [x + 2, baseline - 55];
   }
   const enemyIndex = battle?.enemies?.indexOf(target) ?? -1;
   if (enemyIndex >= 0) {
     const [x, baseline] = enemyBattlePosition(enemyIndex, battle.enemies.length);
     const key = enemyAnimationKey(target);
-    return [x, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) * enemyBattleScale(key) + 8)];
+    return [x - 2, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) * enemyBattleScale(key) + 8)];
   }
   return [LOGICAL_WIDTH / 2, 80];
 }
@@ -6496,28 +6505,35 @@ function drawBattleFloaters() {
   battleFloaters.forEach(floater => {
     const age = tick - floater.born;
     if (age < 0) return;
-    const rise = Math.round(Math.min(age, 48) * .28);
-    const alpha = Math.min(1, (BATTLE_FLOATER_LIFETIME - age) / 12);
+    const rise = Math.round(Math.min(age, 40) * .16);
+    const alpha = Math.min(1, (BATTLE_FLOATER_LIFETIME - age) / 30);
     const healing = floater.kind === "heal";
-    const main = `${healing ? "+" : ""}${floater.amount}`;
-    const mainSize = floater.crit ? 13 : 10;
+    const main = `${floater.crit ? "CRIT! " : ""}${healing ? "+" : ""}${floater.amount}`;
+    const mainSize = floater.crit ? 15 : 10;
     const [laneX, laneY] = battleFloaterLaneOffsets[floater.lane] || battleFloaterLaneOffsets[0];
-    const mainX = Math.max(18, Math.min(LOGICAL_WIDTH - 18, floater.x + laneX));
     const mainY = floater.y - rise + laneY;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.lineJoin = "round";
-    ctx.font = `bold ${mainSize}px "Comic Sans MS", "Comic Sans", cursive`;
-    ctx.lineWidth = floater.crit ? 3 : 2;
+    ctx.font = `${floater.crit ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
+    const halfWidth = Math.ceil(ctx.measureText(main).width / 2) + 4;
+    const mainX = Math.max(halfWidth, Math.min(LOGICAL_WIDTH - halfWidth, floater.x + laneX));
+    ctx.lineWidth = floater.crit ? 5 : 2;
     ctx.strokeStyle = "#160d13";
-    ctx.fillStyle = healing ? "#65e88a" : "#ff5b55";
     ctx.strokeText(main, mainX, mainY);
+    if (floater.crit) {
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#ffd45c";
+      ctx.strokeText(main, mainX, mainY);
+    }
+    ctx.fillStyle = healing ? "#65e88a" : "#ff5b55";
     ctx.fillText(main, mainX, mainY);
     ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
     ctx.lineWidth = 2;
-    const label = `${floater.crit ? "CRIT! " : ""}${healing ? "HEAL" : floater.damageType.toUpperCase()}`;
+    ctx.strokeStyle = "#160d13";
+    const label = healing ? "HEAL" : floater.damageType.toUpperCase();
     ctx.strokeText(label, mainX, mainY + 7);
     ctx.fillText(label, mainX, mainY + 7);
     ctx.restore();
@@ -8808,11 +8824,14 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const healing = healingAmount(u.id, sk, u);
       const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : sk.targetSide === "self" ? [u] : [wounded];
       let totalRestored = 0;
+      let criticalHeals = 0;
       healTargets.forEach(ally => {
-        const restored = Math.min(healing, ally.max - ally.hp);
+        const critical = Math.random() < healingCritChance(u);
+        const restored = Math.min(critical ? healing * 2 : healing, ally.max - ally.hp);
         ally.hp += restored;
         totalRestored += restored;
-        addBattleFloater(ally, restored, { kind: "heal" });
+        if (critical && restored) criticalHeals++;
+        addBattleFloater(ally, restored, { kind: "heal", crit: critical });
       });
       if (sk.cleanse || /Oath Unbound/.test(sk.name)) {
         let cleansed = 0;
@@ -8824,6 +8843,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       if (buffNotes.length) log += ` ${buffNotes.join(" ")}.`;
       state.resonance = Math.min(100, state.resonance + 5);
       log += ` ${healTargets.length > 1 ? "The party recovers" : `${healTargets[0].name} recovers`} ${totalRestored} HP.`;
+      if (criticalHeals) log += ` ${criticalHeals === 1 ? "CRITICAL HEAL!" : `${criticalHeals} CRITICAL HEALS!`}`;
     } else if (!skillTargetsEnemies(sk)) {
       if (sk.transform && activateTransformation(u, sk.transform)) {
         log += ` ${sk.transform === "mech" ? "Mech Form" : "Shadowpriest"} engaged for ${u.formTurns} actions.`;
