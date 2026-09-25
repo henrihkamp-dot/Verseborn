@@ -459,31 +459,31 @@ function enemyBattleScale(key) {
 }
 const magicNpcAnimations = new Set(["Lyrsa", "Nyx", "Jory"]);
 const enemyAbilityProfiles = {
-  "Jory Bellwick": { row: 0, element: "Sound", melee: "Lute Crack", magic: "Star Note", ultimate: "Grand Chord", pattern: ["magic", "melee", "magic", "ultimate"] },
-  "Nyx Vael": { row: 1, element: "Shadow", melee: "Margin Snap", magic: "Quiet Index", ultimate: "Gravebind", pattern: ["magic", "melee", "magic", "ultimate"] },
-  Rava: { row: 2, element: "Ancient Fire", melee: "Cinder Spear", magic: "Ember Javelin", ultimate: "Dragon's Breath", pattern: ["melee", "magic", "melee", "ultimate"] },
-  Grumm: { row: 3, element: "Earth", melee: "Granite Cleave", magic: "Boulder Toss", ultimate: "Mountain Breaker", pattern: ["melee", "magic", "melee", "ultimate"] },
-  Kaeldrin: { row: 4, element: "Holy Fire", melee: "Rankbreaker", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn", pattern: ["melee", "heal", "magic", "ultimate"] },
-  Lysra: { row: 5, element: "Sigil", melee: "Spellstaff Sweep", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence", pattern: ["magic", "heal", "melee", "ultimate"] },
-  Shade: { row: 6, element: "Shadow", melee: "Twin Fang", magic: "Throwing Daggers", ultimate: "Shadow Storm", pattern: ["melee", "magic", "melee", "ultimate"] },
-  Marla: { row: 7, element: "Heart", melee: "Pan Swing", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true, pattern: ["melee", "heal", "magic", "ultimate"] },
-  "King Maeric": { element: "Holy Fire", melee: "Sceptre Judgment", magic: "Lion Seal", heal: "Royal Bulwark", ultimate: "Crown of Cindervale", pattern: ["melee", "heal", "magic", "ultimate"] },
-  Tja: { element: "Sigil", melee: "Frost Flourish", magic: "Crystal Waltz", ultimate: "Winter Encore", pattern: ["magic", "melee", "magic", "ultimate"] },
-  "Inkbound Auditor": { element: "Shadow", melee: "Quill Rend", magic: "Red Ink Edict", ultimate: "Audit of the Nameless", pattern: ["magic", "melee", "magic", "ultimate"] },
-  "Archive Custodian": { element: "Sigil", melee: "Ledger Crush", magic: "Forbidden Index", heal: "Restore Entry", ultimate: "Archive Lock", pattern: ["magic", "heal", "melee", "ultimate"] },
-  "Red Dragon Lord": { element: "Ancient Fire", melee: "Cinder Claw", magic: "Ash Breath", ultimate: "First Ember Eruption", pattern: ["melee", "magic", "magic", "ultimate"] },
-  "Cracked Pillar": { element: "Earth", melee: "Stonefall", magic: "Faultline Pulse", ultimate: "Armory Collapse", pattern: ["melee", "magic", "melee", "ultimate"] },
-  "Corrupt Clergy": { element: "Holy Fire", melee: "Mace Seal", magic: "Binding Litany", heal: "Clergy Ward", ultimate: "Final Absolution", pattern: ["melee", "heal", "magic", "ultimate"] },
-  "Dock Foreman": { element: "Shadow", melee: "Hook Lash", magic: "Drowned Order", ultimate: "Anchor Below", pattern: ["melee", "magic", "melee", "ultimate"] },
-  "Dawn Gate Sentinel": { element: "Holy Fire", melee: "Gate Halberd", magic: "Dawn Window", heal: "Sentinel Ward", ultimate: "Last Gate Protocol", pattern: ["melee", "heal", "magic", "ultimate"] },
-  "Angry Gnome Mob": { element: "Earth", melee: "Mob Rush", magic: "Flying Crockery", ultimate: "Uprising", pattern: ["melee", "magic", "melee", "ultimate"] },
-  "Ash Quarter Thugg": { element: "Earth", melee: "Cinder Club", magic: "Ash Hurl", ultimate: "Quarterbreaker", pattern: ["melee", "magic", "melee", "ultimate"] },
-  "Berend Blimpstone": { element: "Heart", melee: "Whisk Strike", magic: "Crown Cake", heal: "Kitchen Remedy", ultimate: "Royal Banquet", pattern: ["magic", "heal", "melee", "ultimate"] },
-  "Prince Lucan Cindralis": { element: "Holy Fire", melee: "Prince's Blade", magic: "Blue Edict", ultimate: "Cindralis Decree", pattern: ["magic", "melee", "magic", "ultimate"] },
-  Tibby: { element: "Sound", melee: "Trunk Bash", magic: "Starry Flourish", ultimate: "Grand Entrance", pattern: ["melee", "magic", "magic", "ultimate"] },
-  Solinar: { element: "Holy Fire", melee: "Solar Blade", magic: "Crown of Light", heal: "Solar Renewal", ultimate: "Final Sunrise", pattern: ["magic", "melee", "heal", "ultimate"] },
-  "Frostmile Wyrm": { element: "Sigil", melee: "Frost Talon", magic: "Glacial Breath", ultimate: "Winter's End", pattern: ["melee", "magic", "magic", "ultimate"] },
-  "Ember Leviathan": { element: "Ancient Fire", melee: "Molten Fang", magic: "Ember Torrent", ultimate: "Leviathan Eruption", pattern: ["melee", "magic", "magic", "ultimate"] }
+  "Jory Bellwick": { row: 0, element: "Sound", melee: "Lute Crack", magic: "Star Note", ultimate: "Grand Chord", pattern: ["magic", "melee", "magic"] },
+  "Nyx Vael": { row: 1, element: "Shadow", melee: "Margin Snap", magic: "Quiet Index", ultimate: "Gravebind", pattern: ["magic", "melee", "magic"] },
+  Rava: { row: 2, element: "Ancient Fire", melee: "Cinder Spear", magic: "Ember Javelin", ultimate: "Dragon's Breath", pattern: ["melee", "magic", "melee"] },
+  Grumm: { row: 3, element: "Earth", melee: "Granite Cleave", magic: "Boulder Toss", ultimate: "Mountain Breaker", pattern: ["melee", "magic", "melee"] },
+  Kaeldrin: { row: 4, element: "Holy Fire", melee: "Rankbreaker", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn", pattern: ["melee", "heal", "magic"] },
+  Lysra: { row: 5, element: "Sigil", melee: "Spellstaff Sweep", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence", pattern: ["magic", "heal", "melee"] },
+  Shade: { row: 6, element: "Shadow", melee: "Twin Fang", magic: "Throwing Daggers", ultimate: "Shadow Storm", pattern: ["melee", "magic", "melee"] },
+  Marla: { row: 7, element: "Heart", melee: "Pan Swing", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true, pattern: ["melee", "heal", "magic"] },
+  "King Maeric": { element: "Holy Fire", melee: "Sceptre Judgment", magic: "Lion Seal", heal: "Royal Bulwark", ultimate: "Crown of Cindervale", pattern: ["melee", "heal", "magic"] },
+  Tja: { element: "Sigil", melee: "Frost Flourish", magic: "Crystal Waltz", ultimate: "Winter Encore", pattern: ["magic", "melee", "magic"] },
+  "Inkbound Auditor": { element: "Shadow", melee: "Quill Rend", magic: "Red Ink Edict", ultimate: "Audit of the Nameless", pattern: ["magic", "melee", "magic"] },
+  "Archive Custodian": { element: "Sigil", melee: "Ledger Crush", magic: "Forbidden Index", heal: "Restore Entry", ultimate: "Archive Lock", pattern: ["magic", "heal", "melee"] },
+  "Red Dragon Lord": { element: "Ancient Fire", melee: "Cinder Claw", magic: "Ash Breath", ultimate: "First Ember Eruption", pattern: ["melee", "magic", "magic"] },
+  "Cracked Pillar": { element: "Earth", melee: "Stonefall", magic: "Faultline Pulse", ultimate: "Armory Collapse", pattern: ["melee", "magic", "melee"] },
+  "Corrupt Clergy": { element: "Holy Fire", melee: "Mace Seal", magic: "Binding Litany", heal: "Clergy Ward", ultimate: "Final Absolution", pattern: ["melee", "heal", "magic"] },
+  "Dock Foreman": { element: "Shadow", melee: "Hook Lash", magic: "Drowned Order", ultimate: "Anchor Below", pattern: ["melee", "magic", "melee"] },
+  "Dawn Gate Sentinel": { element: "Holy Fire", melee: "Gate Halberd", magic: "Dawn Window", heal: "Sentinel Ward", ultimate: "Last Gate Protocol", pattern: ["melee", "heal", "magic"] },
+  "Angry Gnome Mob": { element: "Earth", melee: "Mob Rush", magic: "Flying Crockery", ultimate: "Uprising", pattern: ["melee", "magic", "melee"] },
+  "Ash Quarter Thugg": { element: "Earth", melee: "Cinder Club", magic: "Ash Hurl", ultimate: "Quarterbreaker", pattern: ["melee", "magic", "melee"] },
+  "Berend Blimpstone": { element: "Heart", melee: "Whisk Strike", magic: "Crown Cake", heal: "Kitchen Remedy", ultimate: "Royal Banquet", pattern: ["magic", "heal", "melee"] },
+  "Prince Lucan Cindralis": { element: "Holy Fire", melee: "Prince's Blade", magic: "Blue Edict", ultimate: "Cindralis Decree", pattern: ["magic", "melee", "magic"] },
+  Tibby: { element: "Sound", melee: "Trunk Bash", magic: "Starry Flourish", ultimate: "Grand Entrance", pattern: ["melee", "magic", "magic"] },
+  Solinar: { element: "Holy Fire", melee: "Solar Blade", magic: "Crown of Light", heal: "Solar Renewal", ultimate: "Final Sunrise", pattern: ["magic", "melee", "heal"] },
+  "Frostmile Wyrm": { element: "Sigil", melee: "Frost Talon", magic: "Glacial Breath", ultimate: "Winter's End", pattern: ["melee", "magic", "magic"] },
+  "Ember Leviathan": { element: "Ancient Fire", melee: "Molten Fang", magic: "Ember Torrent", ultimate: "Leviathan Eruption", pattern: ["melee", "magic", "magic"] }
 };
 const animationLayouts = {
   Marla: { columns: 4, rows: 7, chromaBlack: true },
@@ -9475,6 +9475,29 @@ function enemyActionForKind(unit, kind, target = null) {
   return { kind: "melee", name: profile?.melee || "Melee Strike", element: "Physical" };
 }
 
+function enemyActionHitsAll(unit, action) {
+  return action.kind === "ultimate" && (unit.npcBoss || unit.node >= 3);
+}
+
+function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member => member.hp > 0)) {
+  let valid = candidates.filter(member => member.hp > 0);
+  if (!valid.length) return null;
+  if (enemyActionHitsAll(unit, action)) return valid[Math.floor(Math.random() * valid.length)];
+  const awake = valid.filter(member => !statusOf(member, "sleep"));
+  if (awake.length) valid = awake;
+  if (action.status?.type) {
+    const unaffected = valid.filter(member => !statusOf(member, action.status.type));
+    if (unaffected.length) valid = unaffected;
+  }
+  return valid[Math.floor(Math.random() * valid.length)];
+}
+
+function enemyTargetsForAction(unit, action, target) {
+  return enemyActionHitsAll(unit, action)
+    ? battle.party.filter(member => member.hp > 0)
+    : [target].filter(member => member?.hp > 0);
+}
+
 function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
   if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
@@ -9484,9 +9507,10 @@ function chooseEnemyAction(unit) {
   if ((unit.resonance || 0) >= 100) {
     return enemyActionForKind(unit, "ultimate");
   }
-  const pattern = unit.finalState === "enraged" ? ["magic", "melee", "magic", "ultimate"] : profile?.pattern;
+  const pattern = unit.finalState === "enraged" ? ["magic", "melee", "magic"] : profile?.pattern;
   if (pattern && (unit.npcBoss || unit.resistanceTier === "boss" || battle.echoHuntRank)) {
-    const kind = pattern[(unit.patternStep || 0) % pattern.length];
+    const patternIndex = (unit.patternStep || 0) % pattern.length;
+    const kind = pattern[patternIndex];
     unit.patternStep = (unit.patternStep || 0) + 1;
     if (kind === "heal" && !wounded) return enemyActionForKind(unit, "magic");
     return enemyActionForKind(unit, kind, kind === "heal" ? wounded : null);
@@ -9548,9 +9572,9 @@ function resolveEnemyTurn(turn, prev) {
     return finishTurn(prev);
   }
   const action = chooseEnemyAction(e);
-  let target = action.target || liveParty[Math.floor(Math.random() * liveParty.length)];
+  let target = action.target || chooseEnemyTarget(e, action, liveParty);
   if (!action.healing && target.hp / target.max < .35) {
-    const interceptor = liveParty.find(ally => ally !== target && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
+    const interceptor = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
     if (interceptor) target = interceptor;
   }
   const timingKey = action.kind === "heal" ? "magic" : action.kind;
@@ -9582,8 +9606,8 @@ function resolveEnemyTurn(turn, prev) {
       if (enemyCanHeal(e)) actionLog += " DEFENSE UP.";
       playSfx("item");
     } else {
-      const allTargets = action.kind === "ultimate" && (e.npcBoss || e.node >= 3);
-      const hitTargets = allTargets ? battle.party.filter(member => member.hp > 0) : [target].filter(member => member.hp > 0);
+      const allTargets = enemyActionHitsAll(e, action);
+      const hitTargets = enemyTargetsForAction(e, action, target);
       hitTargets.forEach(defender => {
         if (tryEvadeAttack(defender)) {
           actionLog += ` ${defender.name} evades the attack.`;
