@@ -166,9 +166,11 @@ let screenSlide = null;
 let titleMenuIndex = 0;
 let titleSubmenuIndex = 0;
 let titleMenuState = "main";
+let activeSaveSlot = 1;
 let saveTimer = null;
 
 const titleMenuEntries = ["Story Mode", "Ember Hall"];
+const saveSlotEntries = ["Save Slot 1", "Save Slot 2", "Back"];
 const titleSubmenuEntries = [
   ["New", "Continue", "Back"],
   ["New Run", "Continue Run", "Back"]
@@ -3176,7 +3178,7 @@ const state = {
   flags: {}
 };
 
-function savedGameExists(saveKey = SAVE_KEY) {
+function savedGameExists(saveKey = storySaveKey()) {
   try {
     return Boolean(localStorage.getItem(saveKey));
   } catch {
@@ -3184,8 +3186,46 @@ function savedGameExists(saveKey = SAVE_KEY) {
   }
 }
 
+function saveSlotKey(baseKey, slot = activeSaveSlot) {
+  return slot === 2 ? `${baseKey}-slot-2` : baseKey;
+}
+
+function storySaveKey(slot = activeSaveSlot) {
+  return saveSlotKey(SAVE_KEY, slot);
+}
+
+function hallSaveKey(slot = activeSaveSlot) {
+  return saveSlotKey(HALL_SAVE_KEY, slot);
+}
+
+function hallSceneHistoryKey(slot = activeSaveSlot) {
+  return saveSlotKey(HALL_SCENE_HISTORY_KEY, slot);
+}
+
+function titleSaveKey(modeIndex = titleMenuIndex, slot = activeSaveSlot) {
+  return modeIndex === 1 ? hallSaveKey(slot) : storySaveKey(slot);
+}
+
+function saveSlotSummary(modeIndex, slot) {
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(titleSaveKey(modeIndex, slot)) || "null");
+  } catch {
+    data = null;
+  }
+  if (!data?.state) return { exists: false, detail: "" };
+  const party = Array.isArray(data.state.party) ? data.state.party : [];
+  const levels = party.map(id => Number(data.state.heroProgress?.[id]?.level)).filter(Number.isFinite);
+  const partyLevel = levels.length ? Math.max(1, Math.round(levels.reduce((sum, level) => sum + level, 0) / levels.length)) : 1;
+  if (modeIndex === 1) {
+    const stage = Math.max(1, Number(data.state.hallBattles?.unlockedStage) || 1);
+    return { exists: true, detail: `STAGE ${stage} / PARTY LV ${partyLevel}` };
+  }
+  return { exists: true, detail: `PARTY LV ${partyLevel}` };
+}
+
 function activeSaveKey() {
-  return state.gameMode === "hallBattles" ? HALL_SAVE_KEY : SAVE_KEY;
+  return state.gameMode === "hallBattles" ? hallSaveKey() : storySaveKey();
 }
 
 function saveGame(saveKey = activeSaveKey()) {
@@ -3217,7 +3257,7 @@ function queueSave() {
   saveTimer = setTimeout(saveGame, 500);
 }
 
-function loadGame(saveKey = SAVE_KEY) {
+function loadGame(saveKey = activeSaveKey()) {
   let data;
   try {
     data = JSON.parse(localStorage.getItem(saveKey) || "null");
@@ -5703,7 +5743,7 @@ function drawTitleMenu(layout) {
   ctx.lineWidth = Math.max(1, Math.round(2 * layout.scale));
   ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
 
-  const entries = titleMenuState === "main" ? titleMenuEntries : titleSubmenuEntries[titleMenuIndex];
+  const entries = titleMenuEntriesForState();
   const selectedIndex = titleMenuState === "main" ? titleMenuIndex : titleSubmenuIndex;
   const startY = entries.length === 2 ? 468 : 449;
   const fontSize = Math.max(14, Math.round(30 * layout.scale));
@@ -5723,10 +5763,21 @@ function drawTitleMenu(layout) {
       ctx.fillStyle = "rgba(77, 35, 126, 0.78)";
       ctx.fillRect(sx(576), top, Math.round(296 * layout.scale), height);
     }
-    const unavailableContinue = titleMenuState !== "main" && index === 1
-      && !savedGameExists(titleMenuIndex === 0 ? SAVE_KEY : HALL_SAVE_KEY);
+    const unavailableContinue = titleActionMenuOpen() && index === 1
+      && !savedGameExists(titleSaveKey());
     ctx.fillStyle = unavailableContinue ? "#746d77" : index === selectedIndex ? "#fff0bd" : "#f0e4c6";
-    ctx.fillText(entry.toUpperCase(), sx(732), sy(startY + 22 + index * 49));
+    if (titleSlotMenuOpen() && index < 2) {
+      const summary = saveSlotSummary(titleMenuIndex, index + 1);
+      ctx.font = `bold ${Math.max(12, Math.round(21 * layout.scale))}px "Courier New", monospace`;
+      ctx.fillText(`${entry.toUpperCase()} / ${summary.exists ? "EXISTING" : "EMPTY"}`, sx(732), sy(startY + (summary.exists ? 15 : 22) + index * 49));
+      if (summary.detail) {
+        ctx.font = `bold ${Math.max(9, Math.round(13 * layout.scale))}px "Courier New", monospace`;
+        ctx.fillStyle = "#d8c2f2";
+        ctx.fillText(summary.detail, sx(732), sy(startY + 34 + index * 49));
+      }
+    } else {
+      ctx.fillText(entry.toUpperCase(), sx(732), sy(startY + 22 + index * 49));
+    }
   });
 
   const arrowBob = Math.round(Math.sin(tick / 18) * 2);
@@ -5738,12 +5789,26 @@ function drawTitleMenu(layout) {
   ctx.textAlign = "left";
 }
 
+function titleSlotMenuOpen() {
+  return titleMenuState === "story" || titleMenuState === "hall";
+}
+
+function titleActionMenuOpen() {
+  return titleMenuState === "storyActions" || titleMenuState === "hallActions";
+}
+
+function titleMenuEntriesForState() {
+  if (titleMenuState === "main") return titleMenuEntries;
+  if (titleSlotMenuOpen()) return saveSlotEntries;
+  return titleSubmenuEntries[titleMenuIndex];
+}
+
 function moveTitleSelection(direction) {
   if (!runtimeAssetsReady) return;
   if (titleMenuState === "main") {
     titleMenuIndex = (titleMenuIndex + direction + titleMenuEntries.length) % titleMenuEntries.length;
   } else {
-    const submenu = titleSubmenuEntries[titleMenuIndex];
+    const submenu = titleMenuEntriesForState();
     titleSubmenuIndex = (titleSubmenuIndex + direction + submenu.length) % submenu.length;
   }
   playSfx("menu");
@@ -5756,6 +5821,12 @@ function openTitleSubmenu() {
 }
 
 function closeTitleSubmenu() {
+  if (titleActionMenuOpen()) {
+    titleMenuState = titleMenuIndex === 0 ? "story" : "hall";
+    titleSubmenuIndex = activeSaveSlot - 1;
+    playSfx("menu");
+    return;
+  }
   titleMenuState = "main";
   titleSubmenuIndex = 0;
   playSfx("menu");
@@ -5763,9 +5834,9 @@ function closeTitleSubmenu() {
 
 function startTitleGame(continueGame = false) {
   if (!runtimeAssetsReady) return;
-  const loaded = continueGame && loadGame();
+  const loaded = continueGame && loadGame(storySaveKey());
   if (!continueGame) {
-    try { localStorage.removeItem(SAVE_KEY); } catch {}
+    try { localStorage.removeItem(storySaveKey()); } catch {}
   }
   state.gameMode = "story";
   mode = "walk";
@@ -5779,8 +5850,8 @@ function startTitleGame(continueGame = false) {
 function resetHallBattleRun() {
   clearTimeout(saveTimer);
   try {
-    localStorage.removeItem(HALL_SAVE_KEY);
-    localStorage.removeItem(HALL_SCENE_HISTORY_KEY);
+    localStorage.removeItem(hallSaveKey());
+    localStorage.removeItem(hallSceneHistoryKey());
   } catch {}
   gearInstances = {};
   Object.entries(baseJobs).forEach(([id, hero]) => {
@@ -5831,7 +5902,7 @@ function resetHallBattleRun() {
 
 function startHallBattles(continueGame = false) {
   if (!runtimeAssetsReady) return;
-  const loaded = continueGame && loadGame(HALL_SAVE_KEY);
+  const loaded = continueGame && loadGame(hallSaveKey());
   if (!loaded) resetHallBattleRun();
   state.gameMode = "hallBattles";
   state.map = "emberHallBattles";
@@ -5844,7 +5915,7 @@ function startHallBattles(continueGame = false) {
   updateMusic();
   updatePanels();
   updateSkillPointNotice();
-  if (!loaded) saveGame(HALL_SAVE_KEY);
+  if (!loaded) saveGame(hallSaveKey());
   showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - Stage 1 ready");
   if (!loaded) playRecruitScene(RECRUIT_SCENES.find(scene => scene.id === EMBER_HALL_INTRO_ID));
 }
@@ -5853,13 +5924,20 @@ function activateTitleSelection() {
   if (!runtimeAssetsReady) return;
   if (titleMenuState === "main") return openTitleSubmenu();
   if (titleSubmenuIndex === 2) return closeTitleSubmenu();
-  const saveKey = titleMenuIndex === 0 ? SAVE_KEY : HALL_SAVE_KEY;
+  if (titleSlotMenuOpen()) {
+    activeSaveSlot = titleSubmenuIndex + 1;
+    titleMenuState = titleMenuIndex === 0 ? "storyActions" : "hallActions";
+    titleSubmenuIndex = savedGameExists(titleSaveKey()) ? 1 : 0;
+    playSfx("menu");
+    return;
+  }
+  const saveKey = titleSaveKey();
   if (titleSubmenuIndex === 1 && !savedGameExists(saveKey)) {
     playSfx("menu");
     return;
   }
   if (titleMenuIndex === 1 && titleSubmenuIndex === 0) {
-    if (savedGameExists(HALL_SAVE_KEY) && !window.confirm("Start a new Ember Hall run? Your current Hall progress and Scene Memories will be erased.")) return;
+    if (savedGameExists(hallSaveKey()) && !window.confirm(`Start a new Ember Hall run in Save Slot ${activeSaveSlot}? This slot's Hall progress and Scene Memories will be erased.`)) return;
     playSfx("menu");
     return startHallBattles(false);
   }
@@ -5876,7 +5954,7 @@ function titleMenuPointerTarget(event) {
   const sourceX = (canvasX - layout.x) / layout.scale;
   const sourceY = (canvasY - layout.y) / layout.scale;
   if (sourceX >= 570 && sourceX <= 880) {
-    const entries = titleMenuState === "main" ? titleMenuEntries : titleSubmenuEntries[titleMenuIndex];
+    const entries = titleMenuEntriesForState();
     const startY = entries.length === 2 ? 468 : 449;
     for (let index = 0; index < entries.length; index++) {
       if (sourceY >= startY + index * 49 && sourceY <= startY + index * 49 + 43) {
@@ -8113,7 +8191,7 @@ function emptyRecruitSceneHistory() {
 
 function loadRecruitSceneHistory() {
   try {
-    const saved = JSON.parse(localStorage.getItem(HALL_SCENE_HISTORY_KEY) || "null");
+    const saved = JSON.parse(localStorage.getItem(hallSceneHistoryKey()) || "null");
     return {
       seen: Array.isArray(saved?.seen) ? [...new Set(saved.seen.filter(id => RECRUIT_SCENES.some(scene => scene.id === id)))] : [],
       lastByRecruit: saved?.lastByRecruit && typeof saved.lastByRecruit === "object" ? { ...saved.lastByRecruit } : {}
@@ -8124,7 +8202,7 @@ function loadRecruitSceneHistory() {
 }
 
 function saveRecruitSceneHistory(history) {
-  try { localStorage.setItem(HALL_SCENE_HISTORY_KEY, JSON.stringify(history)); } catch {}
+  try { localStorage.setItem(hallSceneHistoryKey(), JSON.stringify(history)); } catch {}
 }
 
 function selectRecruitScene(recruit, history = loadRecruitSceneHistory()) {
