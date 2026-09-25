@@ -990,7 +990,26 @@ function loadEchoProjectileSheet() {
   });
 }
 
+const characterVfxSheets = {};
+
+async function loadCharacterVfxSheets() {
+  try {
+    const response = await fetch("assets/effects/characters/manifest.json");
+    if (!response.ok) return;
+    const manifest = await response.json();
+    await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => { characterVfxSheets[id] = { ...config, image }; resolve(); };
+      image.onerror = resolve;
+      image.src = `assets/effects/characters/${config.file}`;
+    })));
+  } catch (error) {
+    console.warn("Character VFX unavailable; retaining fallback effects.", error);
+  }
+}
+
 Promise.all([
+  loadCharacterVfxSheets(),
   loadBreakIconSheet(),
   loadBattleAnimationSheets(),
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
@@ -6949,6 +6968,12 @@ function drawEnemy(e, px, py) {
 
 function drawEffect() {
   if (!effect) return;
+  if (effect.characterVfx) {
+    effect.t++;
+    drawCharacterVfx(effect);
+    if (performance.now() - effect.startedAt > effect.timing.totalMs) effect = null;
+    return;
+  }
   effect.t++;
   const x = effect.toX ?? effect.x;
   const y = effect.toY ?? effect.y;
@@ -8642,7 +8667,122 @@ function battleActionTiming(anim) {
   }[anim] || { effectTicks: 48, impactTicks: 28, impactMs: 460, totalMs: 950 };
 }
 
+function characterVfxRow(caster, sk) {
+  if (sk.transform || sk.basicAttack || sk.name === "Defend") return null;
+  if (sk.power < 0) return "heal";
+  if (!skillTargetsEnemies(sk)) return "heal";
+  if (sk.anim === "ultimate") return "ultimate";
+  return "projectile";
+}
+
+function skillVisualTiming(caster, sk) {
+  const timing = battleActionTiming(sk.anim);
+  const row = characterVfxRow(caster, sk);
+  if (!row || !characterVfxSheets[battleVisualId(caster)]) return timing;
+  if (row === "ultimate") {
+    const impactMs = Math.round(timing.impactMs * .75);
+    return { ...timing, impactMs, totalMs: impactMs + timing.totalMs - timing.impactMs };
+  }
+  if (row !== "heal") return timing;
+  // Guard/heal poses share the existing animation, but give the healing effect time to travel.
+  return { ...timing, impactMs: Math.max(780, timing.impactMs), totalMs: Math.max(1320, timing.totalMs) };
+}
+
+function battleVfxAnchor(unit) {
+  const partyIndex = battle.party.indexOf(unit);
+  if (partyIndex >= 0) {
+    const [x, baseline] = partyBattlePosition(partyIndex, battle.party.length);
+    return { x, y: baseline - 27 };
+  }
+  const enemyIndex = battle.enemies.indexOf(unit);
+  const [x, baseline] = enemyBattlePosition(Math.max(0, enemyIndex), battle.enemies.length);
+  const key = enemyAnimationKey(unit);
+  const height = (enemyAnimationHeights[key] || 44) * enemyBattleScale(key);
+  return { x, y: baseline - Math.max(17, height * .48) };
+}
+
+function characterVfxTargets(caster, sk, target) {
+  if (!(sk.power < 0) && !skillTargetsEnemies(sk)) {
+    if (sk.partyWide || sk.targetSide === "party") return battle.party.filter(ally => ally.hp > 0);
+    return [sk.targetSide === "ally" ? target : caster];
+  }
+  if (sk.power < 0) {
+    const living = battle.party.filter(ally => ally.hp > 0 || sk.revive);
+    const healthRatio = ally => ally.hp > 0 ? ally.hp / ally.max : sk.revive;
+    const wounded = living.slice().sort((a, b) => healthRatio(a) - healthRatio(b))[0] || caster;
+    const healed = sk.partyWide || talentValue(caster.id, "partyHeal", sk.name) > 0
+      ? living : sk.targetSide === "self" ? [caster] : [wounded];
+    return [...new Set([...healed, ...(sk.revive ? battle.party.filter(ally => ally.hp <= 0) : [])])];
+  }
+  return skillHitsAll(caster.id, sk) ? battle.enemies.filter(enemy => enemy.hp > 0) : [target];
+}
+
+function characterVfxSample(fx, target, elapsed) {
+  const from = battleVfxAnchor(fx.source);
+  const to = battleVfxAnchor(target);
+  const launchMs = fx.vfxRow === "ultimate" ? 180 : 100;
+  const progress = Math.max(0, Math.min(1, (elapsed - launchMs) / (fx.timing.impactMs - launchMs)));
+  const phase = elapsed >= fx.timing.impactMs ? 'impact' : elapsed < launchMs ? 'begin' : 'travel';
+  const frame = phase === 'impact' ? 3 : phase === 'begin' ? 0 : progress < .5 ? 1 : 2;
+  return { from, to, frame, phase, progress, x: from.x + (to.x - from.x) * progress, y: from.y + (to.y - from.y) * progress };
+}
+
+function drawCharacterVfx(fx) {
+  const sheet = characterVfxSheets[fx.characterVfx];
+  if (!sheet) return;
+  const elapsed = performance.now() - fx.startedAt;
+  if (elapsed < 0) return;
+  const row = sheet.rows[fx.vfxRow];
+  fx.targets.forEach(target => {
+    const sample = characterVfxSample(fx, target, elapsed);
+    const impact = sample.phase === 'impact';
+    const connected = sheet.modes[row] === 'connected';
+    const cell = sheet.rects[row][connected ? 0 : sample.frame];
+    const size = fx.vfxRow === "ultimate" ? (impact ? 92 : 76) : fx.vfxRow === "heal" ? (impact ? 64 : 48) : (impact ? 62 : 52);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 20, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT - 20);
+    ctx.clip();
+    ctx.translate(sample.x, sample.y);
+    // Healing circles remain upright; offensive projectiles follow the actual diagonal.
+    const angle = !impact && fx.vfxRow !== "heal" ? Math.atan2(sample.to.y - sample.from.y, sample.to.x - sample.from.x) : 0;
+    ctx.rotate(angle);
+    const fadeStart = fx.timing.totalMs - 180;
+    ctx.globalAlpha = elapsed > fadeStart ? Math.max(0, (fx.timing.totalMs - elapsed) / 180) : 1;
+    ctx.imageSmoothingEnabled = true;
+    const anchorX = connected ? cell.anchorX : .5;
+    const anchorY = connected ? cell.anchorY : .5;
+    const stretch = connected ? (sample.phase === 'begin' ? 1 : impact ? 2.2 : 1.6 + sample.progress * .6) : sample.phase === 'travel' ? 1.6 : 1;
+    let scale = size / Math.max(cell.h, cell.w / stretch);
+    // Fit the entire rotated image, including the tail behind its impact anchor.
+    for (const x of [-cell.w * anchorX, cell.w * (1 - anchorX)]) {
+      for (const y of [-cell.h * anchorY, cell.h * (1 - anchorY)]) {
+        const dx = x * Math.cos(angle) - y * Math.sin(angle);
+        const dy = x * Math.sin(angle) + y * Math.cos(angle);
+        if (dx) scale = Math.min(scale, (dx < 0 ? sample.x : LOGICAL_WIDTH - sample.x) / Math.abs(dx));
+        if (dy) scale = Math.min(scale, (dy < 0 ? sample.y - 20 : BATTLE_ARENA_HEIGHT - sample.y) / Math.abs(dy));
+      }
+    }
+    scale = Math.max(0, scale);
+    const width = cell.w * scale, height = cell.h * scale;
+    ctx.drawImage(sheet.image, cell.x, cell.y, cell.w, cell.h, -width * anchorX, -height * anchorY, width, height);
+    ctx.restore();
+  });
+}
+
 function makeBattleEffect(caster, skillData, target) {
+  const vfxRow = characterVfxRow(caster, skillData);
+  const spriteId = battleVisualId(caster);
+  if (vfxRow && characterVfxSheets[spriteId]) {
+    return {
+      characterVfx: spriteId, vfxRow, source: caster,
+      targets: characterVfxTargets(caster, skillData, target),
+      timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
+      kind: skillData.anim, caster: caster.id, skill: skillData.name,
+      t: 0, duration: battleActionTiming(skillData.anim).effectTicks,
+      impactTicks: battleActionTiming(skillData.anim).impactTicks
+    };
+  }
   const casterIndex = Math.max(0, battle.party.indexOf(caster));
   const [fromX, fromBaseline] = partyBattlePosition(casterIndex, battle.party.length);
   const partyTargetIndex = battle.party.indexOf(target);
@@ -8782,7 +8922,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     : skillTargetsEnemies(sk)
       ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0])
       : u;
-  const timing = battleActionTiming(sk.anim);
+  const timing = skillVisualTiming(u, sk);
   battle.targetMode = false;
   battle.pendingSkill = null;
   battle.resolving = true;
