@@ -991,6 +991,20 @@ function loadEchoProjectileSheet() {
 }
 
 const characterVfxSheets = {};
+const statusIconImages = {};
+let statusHoverAreas = [];
+let statusPointer = null;
+let statusTooltip = null;
+
+function loadStatusIcons() {
+  const types = ['strengthUp','magicUp','defenseUp','damageUp','agilityUp','critUp','shadowUp','echoPower','evasion','barrier','mechGuard','holyFollowUp','combatDrone','vampiric','stunFocus','poison','burn','bleed','marked','physicalVulnerability','magicVulnerability','holyVulnerability','critExposed','agilityDown','disrupted','defenseDown','magicDefenseDown','sleep','stun','silence','shadowExposed','resonanceLocked','overheated'];
+  return Promise.all(types.map(type => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => { statusIconImages[type] = image; resolve(); };
+    image.onerror = resolve;
+    image.src = `assets/ui/status/${type}.webp`;
+  })));
+}
 
 async function loadCharacterVfxSheets() {
   try {
@@ -1009,6 +1023,7 @@ async function loadCharacterVfxSheets() {
 }
 
 Promise.all([
+  loadStatusIcons(),
   loadCharacterVfxSheets(),
   loadBreakIconSheet(),
   loadBattleAnimationSheets(),
@@ -6629,20 +6644,95 @@ function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
 }
 
 function drawBattleStatusBadges(unit, anchorX, y) {
-  const statuses = ensureStatuses(unit).filter(status => status.type !== "broken");
-  if (!statuses.length) return;
-  const visible = statuses.slice(0, 3);
-  const chipWidth = 17;
+  const statuses = (unit.statuses || []).filter(status => status.type !== "broken");
+  const visible = statuses.slice(0, 4);
+  const chipWidth = 8;
+  const chipHeight = 10;
   const gap = 1;
-  const total = visible.length * chipWidth + (visible.length - 1) * gap;
+  const overflow = Math.max(0, statuses.length - 4);
+  const total = Math.max(0, visible.length * (chipWidth + gap) - gap) + (overflow ? 7 : 0);
+  const barTop = y - 24;
+  y = Math.min(y, BATTLE_ARENA_HEIGHT - chipHeight);
+  const startX = anchorX - total / 2;
+  const left = Math.max(1, Math.min(LOGICAL_WIDTH - total - 1, startX));
+  const hoverLeft = Math.min(left, anchorX - 31);
+  statusHoverAreas.push({ unit, x: hoverLeft, y: barTop, w: Math.max(left + total, anchorX + 31) - hoverLeft, h: y + chipHeight - barTop });
   visible.forEach((status, index) => {
     const def = STATUS_DEFS[status.type];
-    const x = Math.round(anchorX - total / 2 + index * (chipWidth + gap));
-    drawRect(x, y, chipWidth, 7, def?.negative ? "#7f2f39" : "#345c66");
-    drawRect(x + 1, y + 1, chipWidth - 2, 5, def?.negative ? "#30151e" : "#142d34");
-    drawText(`${def?.short || "FX"}${status.remaining}`, x + Math.floor(chipWidth / 2), y + 5, def?.negative ? "#ffb1ae" : "#bcecf1", 4, "center");
+    const x = Math.round(left + index * (chipWidth + gap));
+    drawRect(x, y, chipWidth, chipHeight, def?.negative ? '#7f2f39' : '#52655d');
+    drawRect(x + .5, y + .5, chipWidth - 1, chipHeight - 1, '#100d18');
+    const image = statusIconImages[status.type];
+    if (image) { ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(image, x, y, chipWidth, 7); ctx.restore(); }
+    else drawText(def?.short || '?', x + 4, y + 5, '#fff0da', 3, 'center');
+    drawRect(x + .5, y + 6, chipWidth - 1, 3.5, '#100d18');
+    drawText(statusDisplayData(unit, status).compact, x + 4, y + 9, '#fff0da', 3, 'center');
   });
+  if (overflow) drawText(`+${overflow}`, left + total - 3, y + 7, '#ffe096', 3, 'center');
 }
+
+function statusDisplayData(unit, status) {
+  const def = STATUS_DEFS[status.type] || {};
+  const value = statusValue(unit, status.type);
+  const percent = `${Math.round(value * 1000) / 10}%`;
+  const descriptions = {
+    strengthUp: `Physical attack damage +${percent}.`, magicUp: `Magic attack damage +${percent}.`,
+    defenseUp: `Reduces incoming damage by ${percent}; combines with other defenses.`, damageUp: `Direct damage +${percent}.`,
+    agilityUp: `Initiative AGI +${percent}; does not grant an extra action.`, critUp: `Attack critical chance +${percent}, subject to the total cap.`,
+    shadowUp: `Direct attack damage +${percent} in the current combat implementation.`, echoPower: `Adds ${value.toFixed(2)} to the Ultimate ECHO multiplier.`,
+    evasion: `${percent} chance to evade an eligible attack. Removed after a successful dodge.`, barrier: `${percent} damage reduction, not a separate HP shield.`,
+    mechGuard: `Reduces incoming damage by ${percent}.`, holyFollowUp: `Next damaging action adds ${percent} Holy follow-up damage.`,
+    combatDrone: `Drone follows damaging actions. Applied power: ${percent}; source talents can add further damage.`,
+    vampiric: `Heal ${percent} of direct damage dealt.`, stunFocus: 'Doubles Mira\'s existing gear-based Stun chance; does not create a chance by itself.',
+    poison: `${value} damage at the start of each action.`, burn: `${value} damage at the start of each action.`, bleed: `${value} damage at the start of each action.`,
+    marked: `Attacks against this target gain ${percent} critical chance.`, physicalVulnerability: `Takes ${percent} more physical damage from player attacks.`,
+    magicVulnerability: `Takes ${percent} more magical damage from player attacks.`, holyVulnerability: `Takes ${percent} more Holy Fire damage.`,
+    critExposed: `Attacks against this target gain ${percent} critical chance.`, agilityDown: `Initiative AGI reduced by ${percent}.`,
+    disrupted: `Outgoing damage reduced by ${percent}.`, defenseDown: `Subtracts ${percent} from active Defense Up; not a flat damage bonus.`,
+    magicDefenseDown: `Subtracts ${percent} from active Defense Up against magic.`, sleep: 'Skips actions; direct damage wakes the target.',
+    stun: 'Skips an action.', silence: 'Prevents magic / Ultimate use for affected enemies; they use melee instead.',
+    shadowExposed: 'Shadow attacks trigger weakness; Voidthorn Mark gains its extra payoff.', broken: 'Recently Broken. Enables Broken interactions; does not itself skip an action.',
+    resonanceLocked: 'Prevents enemy Resonance gains.', overheated: 'Cannot receive another granted extra action. This is not a speed buff.'
+  };
+  const potency = Number.isFinite(status.value ?? def.value);
+  return { name: def.label || status.type, kind: def.negative ? 'Debuff' : 'Buff', remaining: status.remaining,
+    compact: def.buff && potency ? (status.type === 'echoPower' ? `+${value.toFixed(2)}` : percent) : `${status.remaining}t`,
+    description: descriptions[status.type] || 'Active combat status.' };
+}
+
+function statusTooltipHtml(unit) {
+  const escape = text => String(text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  return `<strong>${escape(unit.name || unit.id)}</strong>` + (unit.statuses || []).map(status => {
+    const data = statusDisplayData(unit, status);
+    return `<section><b>${escape(data.name)}</b><small>${data.kind} · ${escape(data.remaining)} actions remaining</small><p>${escape(data.description)}</p></section>`;
+  }).join('');
+}
+
+function updateStatusTooltip() {
+  const rect = canvas.getBoundingClientRect();
+  const x = statusPointer ? (statusPointer.x - rect.left) * LOGICAL_WIDTH / rect.width : -1;
+  const y = statusPointer ? (statusPointer.y - rect.top) * LOGICAL_HEIGHT / rect.height : -1;
+  const area = mode === 'battle' && statusHoverAreas.find(a => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h);
+  if (!area || !area.unit.statuses?.length) { if (statusTooltip) statusTooltip.hidden = true; return; }
+  if (!statusTooltip) {
+    statusTooltip = document.createElement('div');
+    statusTooltip.className = 'battle-status-tooltip';
+    statusTooltip.setAttribute('role', 'tooltip');
+    document.body.appendChild(statusTooltip);
+  }
+  statusTooltip.hidden = false;
+  const html = statusTooltipHtml(area.unit);
+  if (statusTooltip.innerHTML !== html) statusTooltip.innerHTML = html;
+  const box = statusTooltip.getBoundingClientRect();
+  statusTooltip.style.left = `${Math.max(8, Math.min(innerWidth - box.width - 8, statusPointer.x + 14))}px`;
+  statusTooltip.style.top = `${Math.max(8, Math.min(innerHeight - box.height - 8, statusPointer.y + 16))}px`;
+}
+
+canvas.addEventListener('pointermove', event => { statusPointer = { x: event.clientX, y: event.clientY }; updateStatusTooltip(); });
+canvas.addEventListener('pointerleave', () => { statusPointer = null; updateStatusTooltip(); });
+canvas.addEventListener('wheel', event => {
+  if (statusTooltip && !statusTooltip.hidden) { statusTooltip.scrollTop += event.deltaY; event.preventDefault(); }
+}, { passive: false });
 
 function drawEnemyBreakIcon(unit, anchorX) {
   if (!breakIconSheet || unit.hp <= 0) return;
@@ -6685,6 +6775,7 @@ function drawBattleTurnRail() {
 }
 
 function drawBattleScene() {
+  statusHoverAreas = [];
   const map = currentMap();
   const arenaId = battleArenaFor(map);
   const background = battleImages[arenaId];
@@ -6742,6 +6833,7 @@ function drawBattleScene() {
   drawEffect();
   drawBattleFloaters();
   drawBattleTurnRail();
+  updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
     const phase = battle.phaseTransition;
     drawRect(0, 19, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT - 19, "#090a15d9");
@@ -7169,6 +7261,7 @@ function drawMenuBack() {
 }
 
 function draw(now = performance.now()) {
+  if (mode !== 'battle' && statusTooltip) statusTooltip.hidden = true;
   tick++;
   syncResponsiveMode();
   ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);

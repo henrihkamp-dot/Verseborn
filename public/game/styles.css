@@ -4249,3 +4249,11 @@ html.touch-phone.touch-landscape body[data-play-mode="atlas"] .game {
     width: 80px;
   }
 }
+/* Status details overlay; does not participate in battlefield layout. */
+.battle-status-tooltip { position: fixed; z-index: 1000; width: 280px; max-width: calc(100vw - 16px); max-height: min(420px, 55vh); overflow-y: auto; padding: 10px; box-sizing: border-box; border: 1px solid #c59b5e; background: #100d18fa; color: #eee1c9; font: 12px/1.4 monospace; box-shadow: 0 3px 12px #000b; pointer-events: none; }
+.battle-status-tooltip[hidden] { display: none; }
+.battle-status-tooltip > strong { color: #ffe096; }
+.battle-status-tooltip section { border-top: 1px solid #4d394c; margin-top: 7px; padding-top: 6px; }
+.battle-status-tooltip b { display: block; color: #f0c97a; font-size: 11px; }
+.battle-status-tooltip small { display: block; color: #c6b8d2; }
+.battle-status-tooltip p { margin: 3px 0 0; }

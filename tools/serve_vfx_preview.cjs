@@ -11,5 +11,9 @@ http.createServer((req,res)=>{
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file=path.join(file,'index.html');
   if (!fs.existsSync(file)) { res.writeHead(404).end(); return; }
   res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});
+  if (url.searchParams.has('statusPreview') && path.extname(file)==='.html') {
+    const fixture=`<script>if(battle){battle.party[0].statuses=[{type:'evasion',value:.35,remaining:2},{type:'barrier',value:.42,remaining:4},{type:'vampiric',value:.25,remaining:3},{type:'critUp',value:.18,remaining:2},{type:'poison',value:19,remaining:5},{type:'silence',remaining:1},{type:'broken',remaining:1}];battle.enemies[0].statuses=[{type:'burn',value:23,remaining:4},{type:'marked',value:.18,remaining:2},{type:'magicVulnerability',value:.27,remaining:3},{type:'stun',remaining:1},{type:'broken',remaining:1}];}</script>`;
+    res.end(fs.readFileSync(file,'utf8').replace('</body>',fixture+'</body>'));return;
+  }
   fs.createReadStream(file).pipe(res);
 }).listen(port,'127.0.0.1',()=>console.log(`VFX preview: http://127.0.0.1:${port}/game/?qa=flamesolo&hero=Mira`));
