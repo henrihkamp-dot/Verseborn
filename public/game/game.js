@@ -50,6 +50,7 @@ const el = {
   battleLog: $("battleLog"),
   turnOrder: $("turnOrder"),
   battleResonance: $("battleResonance"),
+  enemyBattleResonance: $("enemyBattleResonance"),
   partyRows: $("partyRows"),
   enemyRows: $("enemyRows"),
   actions: $("actions"),
@@ -460,32 +461,275 @@ function enemyBattleScale(key) {
   return battle?.hallStage === 50 && HALL_FINALE_SPRITES.has(key) ? 1.25 : 1;
 }
 const magicNpcAnimations = new Set(["Lyrsa", "Nyx", "Jory"]);
+function enemyMove(name, kind, element, mpCost = 0, options = {}) {
+  return { name, kind, element, mpCost, ...options };
+}
+
+function enemyCombatProfile(role, crit, identity, moves, pattern, options = {}) {
+  return {
+    role,
+    crit,
+    identity,
+    maxMp: identity.mp,
+    moves,
+    pattern,
+    melee: moves.melee?.name,
+    magic: moves.magic?.name,
+    heal: moves.heal?.name,
+    ultimate: moves.ultimate?.name,
+    ultimateHeal: Boolean(moves.ultimate?.healing),
+    ...options
+  };
+}
+
+const em = enemyMove;
 const enemyAbilityProfiles = {
-  "Jory Bellwick": { row: 0, element: "Sound", melee: "Lute Crack", magic: "Star Note", ultimate: "Grand Chord", pattern: ["magic", "melee", "magic"] },
-  "Nyx Vael": { row: 1, element: "Shadow", melee: "Margin Snap", magic: "Quiet Index", ultimate: "Gravebind", pattern: ["magic", "melee", "magic"] },
-  Rava: { row: 2, element: "Ancient Fire", melee: "Cinder Spear", magic: "Ember Javelin", ultimate: "Dragon's Breath", pattern: ["melee", "magic", "melee"] },
-  Grumm: { row: 3, element: "Earth", melee: "Granite Cleave", magic: "Boulder Toss", ultimate: "Mountain Breaker", pattern: ["melee", "magic", "melee"] },
-  Kaeldrin: { row: 4, element: "Holy Fire", melee: "Rankbreaker", magic: "Radiant Lance", heal: "Divine Seal", ultimate: "Blade of Dawn", pattern: ["melee", "heal", "magic"] },
-  Lysra: { row: 5, element: "Sigil", melee: "Spellstaff Sweep", magic: "Arcane Missile", heal: "Barrier Spell", ultimate: "Astral Convergence", pattern: ["magic", "heal", "melee"] },
-  Shade: { row: 6, element: "Shadow", melee: "Twin Fang", magic: "Throwing Daggers", ultimate: "Shadow Storm", pattern: ["melee", "magic", "melee"] },
-  Marla: { row: 7, element: "Heart", melee: "Pan Swing", magic: "Soup Splash", heal: "Stamina Stew", ultimate: "Feast for All", ultimateHeal: true, pattern: ["melee", "heal", "magic"] },
-  "King Maeric": { element: "Holy Fire", melee: "Sceptre Judgment", magic: "Lion Seal", heal: "Royal Bulwark", ultimate: "Crown of Cindervale", pattern: ["melee", "heal", "magic"] },
-  Tja: { element: "Sigil", melee: "Frost Flourish", magic: "Crystal Waltz", ultimate: "Winter Encore", pattern: ["magic", "melee", "magic"] },
-  "Inkbound Auditor": { element: "Shadow", melee: "Quill Rend", magic: "Red Ink Edict", ultimate: "Audit of the Nameless", pattern: ["magic", "melee", "magic"] },
-  "Archive Custodian": { element: "Sigil", melee: "Ledger Crush", magic: "Forbidden Index", heal: "Restore Entry", ultimate: "Archive Lock", pattern: ["magic", "heal", "melee"] },
-  "Red Dragon Lord": { element: "Ancient Fire", melee: "Cinder Claw", magic: "Ash Breath", ultimate: "First Ember Eruption", pattern: ["melee", "magic", "magic"] },
-  "Cracked Pillar": { element: "Earth", melee: "Stonefall", magic: "Faultline Pulse", ultimate: "Armory Collapse", pattern: ["melee", "magic", "melee"] },
-  "Corrupt Clergy": { element: "Holy Fire", melee: "Mace Seal", magic: "Binding Litany", heal: "Clergy Ward", ultimate: "Final Absolution", pattern: ["melee", "heal", "magic"] },
-  "Dock Foreman": { element: "Shadow", melee: "Hook Lash", magic: "Drowned Order", ultimate: "Anchor Below", pattern: ["melee", "magic", "melee"] },
-  "Dawn Gate Sentinel": { element: "Holy Fire", melee: "Gate Halberd", magic: "Dawn Window", heal: "Sentinel Ward", ultimate: "Last Gate Protocol", pattern: ["melee", "heal", "magic"] },
-  "Angry Gnome Mob": { element: "Earth", melee: "Mob Rush", magic: "Flying Crockery", ultimate: "Uprising", pattern: ["melee", "magic", "melee"] },
-  "Ash Quarter Thugg": { element: "Earth", melee: "Cinder Club", magic: "Ash Hurl", ultimate: "Quarterbreaker", pattern: ["melee", "magic", "melee"] },
-  "Berend Blimpstone": { element: "Heart", melee: "Whisk Strike", magic: "Crown Cake", heal: "Kitchen Remedy", ultimate: "Royal Banquet", pattern: ["magic", "heal", "melee"] },
-  "Prince Lucan Cindralis": { element: "Holy Fire", melee: "Prince's Blade", magic: "Blue Edict", ultimate: "Cindralis Decree", pattern: ["magic", "melee", "magic"] },
-  Tibby: { element: "Sound", melee: "Trunk Bash", magic: "Starry Flourish", ultimate: "Grand Entrance", pattern: ["melee", "magic", "magic"] },
-  Solinar: { element: "Holy Fire", melee: "Solar Blade", magic: "Crown of Light", heal: "Solar Renewal", ultimate: "Final Sunrise", pattern: ["magic", "melee", "heal"] },
-  "Frostmile Wyrm": { element: "Sigil", melee: "Frost Talon", magic: "Glacial Breath", ultimate: "Winter's End", pattern: ["melee", "magic", "magic"] },
-  "Ember Leviathan": { element: "Ancient Fire", melee: "Molten Fang", magic: "Ember Torrent", ultimate: "Leviathan Eruption", pattern: ["melee", "magic", "magic"] }
+  Slobbo: enemyCombatProfile("utility", .12, { hp: 80, mp: 96, str: 78, mag: 118, stam: 78, agi: 124 }, {
+    melee: em("Ledger Jab", "melee", "Physical", 0, { coefficient: .92, status: { type: "defenseDown", chance: .2, duration: 3, value: .2 } }),
+    magic: em("Tech Pulse", "magic", "Tech", 18, { coefficient: .9, status: { type: "stun", chance: .28 } }),
+    buff: em("Efficiency Protocol", "buff", "Tech", 20, { targetSide: "self", buffs: [{ type: "agilityUp", duration: 3, value: .25 }] }),
+    ultimate: em("Resonant Rupture", "ultimate", "Tech", 0, { coefficient: 1.12, allTargets: true })
+  }, ["magic", "buff", "melee"], { element: "Tech", affixes: { statusPotency: .15 } }),
+  Brokk: enemyCombatProfile("bruiser", .12, { hp: 120, mp: 64, str: 132, mag: 62, stam: 128, agi: 76 }, {
+    melee: em("Hammerfall", "melee", "Physical", 0, { coefficient: .95, breakPower: 1 }),
+    magic: em("Holy Pulse", "magic", "Holy Fire", 18, { coefficient: .92, scaling: "hybrid" }),
+    buff: em("Battle Temper", "buff", "Physical", 20, { targetSide: "self", buffs: [{ type: "strengthUp", duration: 3, value: .25 }] }),
+    ultimate: em("Judgment Breaker", "ultimate", "Holy Fire", 0, { coefficient: 1.62, scaling: "str", breakPower: 3 })
+  }, ["melee", "buff", "magic"], { element: "Holy Fire", affixes: { physicalDamage: .1, breakPower: 1 } }),
+  "High Administrator Thaddeus": enemyCombatProfile("controller", .09, { hp: 92, mp: 126, str: 70, mag: 138, stam: 90, agi: 98 }, {
+    melee: em("Audit Stamp", "melee", "Physical", 0, { coefficient: .8, status: { type: "disrupted", chance: .25, duration: 3, value: .15 } }),
+    magic: em("Tech Pulse", "magic", "Tech", 20, { coefficient: .92, status: { type: "stun", chance: .35 } }),
+    buff: em("Administrative Order", "buff", "Tech", 22, { targetRole: "caster", buffs: [{ type: "magicUp", duration: 3, value: .25 }] }),
+    utility: em("Audit Lock", "utility", "Tech", 24, { status: { type: "silence", chance: .65, duration: 2 } }),
+    ultimate: em("Final Audit", "ultimate", "Tech", 0, { coefficient: 1.16, allTargets: true, status: { type: "disrupted", chance: .7, duration: 3, value: .15 } })
+  }, ["magic", "buff", "utility", "melee"], { element: "Tech", affixes: { statusPotency: .18, buffDuration: 1 } }),
+  "Inkbound Auditor": enemyCombatProfile("dps", .16, { hp: 94, mp: 106, str: 96, mag: 128, stam: 84, agi: 112 }, {
+    melee: em("Quill Rend", "melee", "Physical", 0, { coefficient: .9, status: { type: "bleed", chance: .2, duration: 3 } }),
+    magic: em("Red Ink Edict", "magic", "Shadow", 21, { coefficient: 1, status: { type: "poison", chance: .65, duration: 4 }, extraStatuses: [{ type: "marked", chance: .5, duration: 4, value: .12 }] }),
+    buff: em("Red Ledger", "buff", "Shadow", 20, { targetSide: "self", buffs: [{ type: "critUp", duration: 3, value: .15 }] }),
+    ultimate: em("Audit of the Nameless", "ultimate", "Shadow", 0, { coefficient: 1.7, payoff: "afflicted", payoffMultiplier: 1.25, critBonus: .15 })
+  }, ["magic", "buff", "melee"], { element: "Shadow", affixes: { damageAfflicted: .12, statusPotency: .15 } }),
+  "Dock Foreman": enemyCombatProfile("tank", .08, { hp: 138, mp: 70, str: 128, mag: 70, stam: 148, agi: 66 }, {
+    melee: em("Hook Lash", "melee", "Physical", 0, { coefficient: .92, breakPower: 2 }),
+    magic: em("Drowned Order", "magic", "Physical", 19, { coefficient: 1.02, scaling: "str", status: { type: "poison", chance: .45, duration: 4 } }),
+    buff: em("Brace", "buff", "Earth", 20, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .25 }] }),
+    ultimate: em("Anchor Below", "ultimate", "Earth", 0, { coefficient: 1.58, scaling: "str", payoff: "broken", payoffMultiplier: 1.25, breakPower: 2 })
+  }, ["melee", "buff", "magic"], { element: "Earth", affixes: { physicalResistance: .12, breakPower: 1 } }),
+  "Corrupt Clergy": enemyCombatProfile("healer", .06, { hp: 92, mp: 138, str: 68, mag: 142, stam: 96, agi: 82 }, {
+    melee: em("Mace Seal", "melee", "Physical", 0, { coefficient: .75 }),
+    magic: em("Binding Litany", "magic", "Holy Fire", 20, { coefficient: .94 }),
+    heal: em("Clergy Ward", "heal", "Holy Fire", 25, { healing: true, healCoefficient: 1.65 }),
+    cleanse: em("Purging Litany", "cleanse", "Holy Fire", 20, { cleanse: true }),
+    buff: em("Dark Benediction", "buff", "Holy Fire", 29, { targetRole: "caster", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "defenseUp", duration: 2, value: .18 }] }),
+    ultimate: em("Final Absolution", "ultimate", "Holy Fire", 0, { coefficient: 1.08, allTargets: true, teamBuffs: [{ type: "barrier", duration: 3, value: .22 }] })
+  }, ["magic", "heal", "cleanse", "buff"], { element: "Holy Fire", affixes: { healPotency: .18 } }),
+  "Saint Justin": enemyCombatProfile("hybrid", .1, { hp: 116, mp: 108, str: 112, mag: 112, stam: 126, agi: 86 }, {
+    melee: em("Sanctified Strike", "melee", "Holy Fire", 0, { coefficient: .92, scaling: "hybrid" }),
+    magic: em("Radiant Ward", "magic", "Holy Fire", 19, { coefficient: .88 }),
+    heal: em("Merciful Seal", "heal", "Holy Fire", 25, { healing: true, healCoefficient: 1.35, cleanse: true }),
+    buff: em("Radiant Oath", "buff", "Holy Fire", 27, { targetRole: "threatened", buffs: [{ type: "barrier", duration: 3, value: .25 }, { type: "damageUp", duration: 2, value: .12 }] }),
+    ultimate: em("Saint's Judgment", "ultimate", "Holy Fire", 0, { coefficient: 1.62, scaling: "hybrid" })
+  }, ["melee", "buff", "heal", "magic"], { element: "Holy Fire", affixes: { elementDamage: .12, barrierPotency: .15 } }),
+  "Archive Custodian": enemyCombatProfile("healer", .06, { hp: 128, mp: 148, str: 72, mag: 136, stam: 132, agi: 72 }, {
+    melee: em("Ledger Crush", "melee", "Physical", 0, { coefficient: .78 }),
+    magic: em("Forbidden Index", "magic", "Arcane", 21, { coefficient: .96 }),
+    heal: em("Restore Entry", "heal", "Arcane", 27, { healing: true, healCoefficient: 1.45, cleanse: true }),
+    buff: em("Preservation Protocol", "buff", "Arcane", 28, { targetRole: "threatened", buffs: [{ type: "defenseUp", duration: 3, value: .25 }, { type: "barrier", duration: 2, value: .18 }] }),
+    utility: em("Resonance Lock", "utility", "Arcane", 24, { partyResonanceDrain: 18, status: { type: "disrupted", chance: .6, duration: 3, value: .15 } }),
+    ultimate: em("Archive Lock", "ultimate", "Arcane", 0, { coefficient: 1.08, allTargets: true, partyResonanceDrain: 30 })
+  }, ["magic", "heal", "buff", "utility"], { element: "Arcane", affixes: { mpEfficiency: .12 } }),
+  Gorg: enemyCombatProfile("bruiser", .12, { hp: 118, mp: 86, str: 118, mag: 112, stam: 116, agi: 78 }, {
+    melee: em("Furnace Fist", "melee", "Physical", 0, { coefficient: .92, status: { type: "burn", chance: .2, duration: 4 } }),
+    magic: em("Ancient Fire Pulse", "magic", "Ancient Fire", 20, { coefficient: 1.02, status: { type: "burn", chance: .55, duration: 4 } }),
+    buff: em("Stoke the Furnace", "buff", "Ancient Fire", 20, { targetSide: "self", requiresEnemyStatus: "burn", buffs: [{ type: "damageUp", duration: 3, value: .18 }] }),
+    ultimate: em("Magma Collapse", "ultimate", "Ancient Fire", 0, { coefficient: 1.16, allTargets: true, payoff: "burning", payoffMultiplier: 1.18 })
+  }, ["magic", "buff", "melee"], { element: "Ancient Fire", affixes: { elementDamage: .12, statusPotency: .12 } }),
+  "Cracked Pillar": enemyCombatProfile("tank", .06, { hp: 145, mp: 74, str: 112, mag: 74, stam: 158, agi: 54 }, {
+    melee: em("Stonefall", "melee", "Earth", 0, { coefficient: .9, breakPower: 2 }),
+    magic: em("Faultline", "magic", "Earth", 22, { coefficient: 1, scaling: "str", breakPower: 2, status: { type: "stun", chance: .32 } }),
+    buff: em("Stone Guard", "buff", "Earth", 27, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .28 }, { type: "barrier", duration: 2, value: .18 }] }),
+    ultimate: em("Armory Collapse", "ultimate", "Earth", 0, { coefficient: 1.04, allTargets: true, breakPower: 3 })
+  }, ["melee", "buff", "magic"], { element: "Earth", affixes: { physicalResistance: .15, breakPower: 1 } }),
+  Grumm: enemyCombatProfile("tank", .09, { hp: 150, mp: 78, str: 138, mag: 58, stam: 155, agi: 60 }, {
+    melee: em("Granite Cleave", "melee", "Physical", 0, { coefficient: .94, breakPower: 2 }),
+    magic: em("Boulder Toss", "magic", "Earth", 20, { coefficient: 1, scaling: "str", breakPower: 1 }),
+    buff: em("Mountain Stance", "buff", "Earth", 28, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .28 }, { type: "barrier", duration: 2, value: .2 }] }),
+    ultimate: em("Mountain Breaker", "ultimate", "Earth", 0, { coefficient: 1.68, scaling: "str", breakPower: 3, payoff: "broken", payoffMultiplier: 1.22 })
+  }, ["melee", "buff", "magic"], { row: 3, element: "Earth", affixes: { physicalResistance: .15, breakPower: 1 } }),
+  Lysra: enemyCombatProfile("healer", .08, { hp: 86, mp: 150, str: 58, mag: 152, stam: 82, agi: 100 }, {
+    melee: em("Spellstaff Sweep", "melee", "Physical", 0, { coefficient: .72 }),
+    magic: em("Arcane Missile", "magic", "Arcane", 18, { coefficient: 1 }),
+    heal: em("Barrier Spell", "heal", "Arcane", 24, { healing: true, healCoefficient: 1.45, conditionalCleanse: true }),
+    buff: em("Arcane Aegis", "buff", "Arcane", 28, { targetRole: "caster", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "barrier", duration: 3, value: .22 }] }),
+    ultimate: em("Astral Convergence", "ultimate", "Arcane", 0, { coefficient: 1.08, allTargets: true, teamBuffs: [{ type: "magicUp", duration: 3, value: .25 }] })
+  }, ["magic", "buff", "heal", "melee"], { row: 5, element: "Arcane", affixes: { elementDamage: .1, healPotency: .16 } }),
+  Kaeldrin: enemyCombatProfile("hybrid", .14, { hp: 126, mp: 104, str: 136, mag: 112, stam: 122, agi: 98 }, {
+    melee: em("Rankbreaker", "melee", "Physical", 0, { coefficient: .94, status: { type: "physicalVulnerability", chance: .2, duration: 3, value: .18 } }),
+    magic: em("Radiant Lance", "magic", "Holy Fire", 20, { coefficient: 1.02, scaling: "hybrid" }),
+    buff: em("Rally of Dawn", "buff", "Holy Fire", 28, { targetRole: "physical", buffs: [{ type: "strengthUp", duration: 3, value: .25 }, { type: "critUp", duration: 3, value: .15 }] }),
+    heal: em("Divine Seal", "heal", "Holy Fire", 24, { healing: true, healCoefficient: 1.15 }),
+    ultimate: em("Blade of Dawn", "ultimate", "Holy Fire", 0, { coefficient: 1.68, scaling: "hybrid" })
+  }, ["melee", "buff", "magic", "heal"], { row: 4, element: "Holy Fire", affixes: { elementDamage: .12, buffDuration: 1 } }),
+  "Elder Plumpin": enemyCombatProfile("utility", .12, { hp: 106, mp: 126, str: 82, mag: 132, stam: 96, agi: 108 }, {
+    melee: em("Gourd Bonk", "melee", "Physical", 0, { coefficient: .8, randomMinorDebuff: true }),
+    magic: em("Gourd Burst", "magic", "Shadow", 19, { coefficient: .96 }),
+    utility: em("Fairy Spores", "utility", "Shadow", 24, { status: { type: "sleep", chance: .55, duration: 3 }, extraStatuses: [{ type: "poison", chance: .6, duration: 4 }] }),
+    buff: em("Fairy Fortune", "buff", "Shadow", 21, { targetRole: "random", randomBuff: true }),
+    ultimate: em("Harvest Moon", "ultimate", "Shadow", 0, { coefficient: 1.1, allTargets: true, status: { type: "poison", chance: .8, duration: 4 } })
+  }, ["utility", "buff", "magic", "melee"], { element: "Shadow", affixes: { statusPotency: .2 } }),
+  "Red Dragon Lord": enemyCombatProfile("dps", .18, { hp: 132, mp: 112, str: 132, mag: 140, stam: 118, agi: 100 }, {
+    melee: em("Cinder Claw", "melee", "Ancient Fire", 0, { coefficient: .96, status: { type: "burn", chance: .35, duration: 4 } }),
+    magic: em("Ash Breath", "magic", "Ancient Fire", 24, { coefficient: .82, allTargets: true, status: { type: "burn", chance: .45, duration: 4 } }),
+    buff: em("Dragon Fury", "buff", "Ancient Fire", 27, { targetSide: "self", buffs: [{ type: "damageUp", duration: 3, value: .2 }, { type: "critUp", duration: 3, value: .15 }] }),
+    ultimate: em("First Ember Eruption", "ultimate", "Ancient Fire", 0, { coefficient: 1.18, allTargets: true, status: { type: "burn", chance: .85, duration: 4 } })
+  }, ["melee", "buff", "magic"], { element: "Ancient Fire", affixes: { elementDamage: .16, statusPotency: .15 } }),
+  "Clock Goblin": enemyCombatProfile("utility", .1, { hp: 84, mp: 112, str: 72, mag: 105, stam: 78, agi: 152 }, {
+    melee: em("Clock Jab", "melee", "Physical", 0, { coefficient: .78, status: { type: "disrupted", chance: .2, duration: 3, value: .15 } }),
+    magic: em("Sound Pulse", "magic", "Sound", 18, { coefficient: .9 }),
+    utility: em("Tempo Jam", "utility", "Sound", 21, { status: { type: "agilityDown", chance: .75, duration: 3, value: .15 } }),
+    buff: em("Tempo Boost", "buff", "Sound", 20, { targetRole: "fast", buffs: [{ type: "agilityUp", duration: 3, value: .25 }] }),
+    ultimate: em("Resonant Rupture", "ultimate", "Sound", 0, { coefficient: 1.08, allTargets: true })
+  }, ["utility", "buff", "magic", "melee"], { element: "Sound", affixes: { resonanceGeneration: .25 } }),
+  "Lord Sprocket": enemyCombatProfile("utility", .1, { hp: 100, mp: 124, str: 78, mag: 124, stam: 102, agi: 110 }, {
+    melee: em("Gear Wrench", "melee", "Physical", 0, { coefficient: .8, status: { type: "defenseDown", chance: .2, duration: 3, value: .2 } }),
+    magic: em("Boiler Bolt", "magic", "Tech", 19, { coefficient: .96, extraStatuses: [{ type: "burn", chance: .3, duration: 4 }] }),
+    heal: em("Seal Mend", "heal", "Tech", 24, { healing: true, healCoefficient: 1.3 }),
+    buff: em("Overclock", "buff", "Tech", 27, { targetRole: "tech", buffs: [{ type: "agilityUp", duration: 3, value: .25 }, { type: "damageUp", duration: 2, value: .15 }] }),
+    ultimate: em("Clockwork Detonation", "ultimate", "Tech", 0, { coefficient: 1.12, allTargets: true, status: { type: "disrupted", chance: .7, duration: 3, value: .15 } })
+  }, ["magic", "buff", "heal", "melee"], { element: "Tech", affixes: { buffDuration: 1 } }),
+  "Baron Revus Veln": enemyCombatProfile("assassin", .2, { hp: 98, mp: 96, str: 138, mag: 90, stam: 86, agi: 148 }, {
+    melee: em("Duelist's Cut", "melee", "Physical", 0, { coefficient: .98, status: { type: "critExposed", chance: .3, duration: 2, value: .12 } }),
+    magic: em("Tech Lunge", "magic", "Tech", 18, { coefficient: 1.02, scaling: "str" }),
+    utility: em("Duelist's Mark", "utility", "Physical", 18, { status: { type: "marked", chance: .9, duration: 4, value: .12 } }),
+    buff: em("Duelist's Poise", "buff", "Physical", 25, { targetSide: "self", buffs: [{ type: "agilityUp", duration: 3, value: .25 }, { type: "critUp", duration: 3, value: .15 }] }),
+    ultimate: em("Noble Execution", "ultimate", "Physical", 0, { coefficient: 1.72, scaling: "str", payoff: "marked", payoffMultiplier: 1.35, critBonus: .18 })
+  }, ["utility", "buff", "melee", "magic"], { element: "Tech", affixes: { critDamage: .25 } }),
+  "Dawn Gate Sentinel": enemyCombatProfile("tank", .07, { hp: 155, mp: 104, str: 118, mag: 104, stam: 160, agi: 60 }, {
+    melee: em("Gate Halberd", "melee", "Physical", 0, { coefficient: .9, breakPower: 2 }),
+    magic: em("Dawn Window", "magic", "Holy Fire", 20, { coefficient: .92 }),
+    buff: em("Hold the Line", "buff", "Holy Fire", 36, { allAllies: true, buffs: [{ type: "defenseUp", duration: 3, value: .25 }, { type: "barrier", duration: 2, value: .2 }] }),
+    heal: em("Sentinel Ward", "heal", "Holy Fire", 24, { healing: true, healCoefficient: 1.12 }),
+    ultimate: em("Last Gate Protocol", "ultimate", "Holy Fire", 0, { coefficient: 1.08, allTargets: true, teamBuffs: [{ type: "barrier", duration: 3, value: .25 }] })
+  }, ["melee", "buff", "magic", "heal"], { element: "Holy Fire", affixes: { physicalResistance: .14, barrierPotency: .18 } }),
+  Shade: enemyCombatProfile("assassin", .23, { hp: 80, mp: 92, str: 142, mag: 92, stam: 72, agi: 158 }, {
+    melee: em("Twin Fang", "melee", "Physical", 0, { coefficient: .98, status: { type: "bleed", chance: .2, duration: 3 } }),
+    magic: em("Throwing Daggers", "magic", "Shadow", 20, { coefficient: 1.02, scaling: "str", status: { type: "poison", chance: .45, duration: 4 } }),
+    buff: em("Predator's Focus", "buff", "Shadow", 25, { targetSide: "self", buffs: [{ type: "critUp", duration: 3, value: .15 }, { type: "agilityUp", duration: 3, value: .25 }] }),
+    ultimate: em("Shadow Storm", "ultimate", "Shadow", 0, { coefficient: 1.65, payoff: "afflictedOrBroken", payoffMultiplier: 1.3, critBonus: .15 })
+  }, ["buff", "magic", "melee"], { row: 6, element: "Shadow", affixes: { critDamage: .25, damageAfflicted: .15 } }),
+  "Nyx Vael": enemyCombatProfile("controller", .12, { hp: 86, mp: 148, str: 64, mag: 148, stam: 78, agi: 138 }, {
+    melee: em("Margin Snap", "melee", "Shadow", 0, { coefficient: .78, status: { type: "shadowExposed", chance: .3, duration: 2 } }),
+    magic: em("Quiet Index", "magic", "Shadow", 22, { coefficient: .72, status: { type: "sleep", chance: .58, duration: 3 } }),
+    utility: em("Gravebind", "utility", "Shadow", 24, { status: { type: "silence", chance: .7, duration: 2 }, extraStatuses: [{ type: "agilityDown", chance: .7, duration: 3, value: .15 }] }),
+    buff: em("Veil of Nyx", "buff", "Shadow", 25, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "evasion", duration: 2, value: .2 }] }),
+    ultimate: em("Final Index", "ultimate", "Shadow", 0, { coefficient: 1.08, allTargets: true, status: { type: "sleep", chance: .5, duration: 2 } })
+  }, ["magic", "buff", "utility", "melee"], { row: 1, element: "Shadow", affixes: { statusPotency: .2, buffDuration: 1 } }),
+  "Jory Bellwick": enemyCombatProfile("utility", .1, { hp: 90, mp: 136, str: 68, mag: 134, stam: 88, agi: 112 }, {
+    melee: em("Lute Crack", "melee", "Physical", 0, { coefficient: .76, status: { type: "disrupted", chance: .2, duration: 3, value: .15 } }),
+    magic: em("Star Note", "magic", "Sound", 18, { coefficient: .96 }),
+    utility: em("Discordant Chord", "utility", "Sound", 22, { status: { type: "magicVulnerability", chance: .75, duration: 3, value: .18 } }),
+    buff: em("Battle Hymn", "buff", "Sound", 34, { allAllies: true, buffs: [{ type: "damageUp", duration: 3, value: .15 }] }),
+    ultimate: em("Grand Chord", "ultimate", "Sound", 0, { coefficient: 1.1, allTargets: true, teamBuffs: [{ type: "damageUp", duration: 2, value: .15 }] })
+  }, ["buff", "magic", "utility", "melee"], { row: 0, element: "Sound", affixes: { elementDamage: .12, buffDuration: 1 } }),
+  Rava: enemyCombatProfile("dps", .18, { hp: 104, mp: 112, str: 128, mag: 140, stam: 100, agi: 114 }, {
+    melee: em("Cinder Spear", "melee", "Ancient Fire", 0, { coefficient: .94, status: { type: "burn", chance: .25, duration: 4 } }),
+    magic: em("Ember Javelin", "magic", "Ancient Fire", 20, { coefficient: 1.04, status: { type: "burn", chance: .55, duration: 4 } }),
+    heavy: em("Dragon Breath", "magic", "Ancient Fire", 28, { coefficient: .88, allTargets: true, status: { type: "burn", chance: .5, duration: 4 } }),
+    buff: em("Kindled Fury", "buff", "Ancient Fire", 26, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "damageUp", duration: 3, value: .15 }] }),
+    ultimate: em("Cinderstorm", "ultimate", "Ancient Fire", 0, { coefficient: 1.16, allTargets: true, payoff: "burning", payoffMultiplier: 1.18 })
+  }, ["magic", "buff", "heavy", "melee"], { row: 2, element: "Ancient Fire", affixes: { elementDamage: .15, damageAfflicted: .12 } }),
+  Tja: enemyCombatProfile("controller", .11, { hp: 94, mp: 138, str: 68, mag: 144, stam: 86, agi: 132 }, {
+    melee: em("Frost Flourish", "melee", "Physical", 0, { coefficient: .78, status: { type: "agilityDown", chance: .25, duration: 3, value: .15 } }),
+    magic: em("Crystal Waltz", "magic", "Ice", 22, { coefficient: .92, status: { type: "sleep", chance: .42, duration: 3 } }),
+    heavy: em("Ice Lance", "magic", "Ice", 25, { coefficient: 1.12, status: { type: "agilityDown", chance: .65, duration: 3, value: .15 } }),
+    buff: em("Winter Rhythm", "buff", "Ice", 24, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "critUp", duration: 2, value: .1 }] }),
+    ultimate: em("Winter Encore", "ultimate", "Ice", 0, { coefficient: 1.12, allTargets: true, status: { type: "sleep", chance: .35, duration: 2 } })
+  }, ["magic", "buff", "heavy", "melee"], { element: "Ice", affixes: { elementDamage: .12, statusPotency: .18 } }),
+  "King Maeric": enemyCombatProfile("tank", .11, { hp: 158, mp: 118, str: 122, mag: 106, stam: 164, agi: 64 }, {
+    melee: em("Sceptre Judgment", "melee", "Physical", 0, { coefficient: .9, status: { type: "marked", chance: .25, duration: 4, value: .12 } }),
+    magic: em("Lion Seal", "magic", "Holy Fire", 21, { coefficient: .94 }),
+    buff: em("Royal Command", "buff", "Holy Fire", 38, { allAllies: true, buffs: [{ type: "defenseUp", duration: 3, value: .25 }, { type: "strengthUp", duration: 3, value: .2 }] }),
+    heal: em("Royal Bulwark", "heal", "Holy Fire", 26, { healing: true, healCoefficient: 1.15 }),
+    ultimate: em("Crown of Cindervale", "ultimate", "Holy Fire", 0, { coefficient: 1.1, allTargets: true, teamBuffs: [{ type: "defenseUp", duration: 3, value: .25 }, { type: "strengthUp", duration: 3, value: .2 }] })
+  }, ["buff", "melee", "magic", "heal"], { element: "Holy Fire", affixes: { physicalResistance: .16, buffDuration: 1 } }),
+  "Angry Gnome Mob": enemyCombatProfile("dps", .14, { hp: 112, mp: 84, str: 132, mag: 72, stam: 102, agi: 126 }, {
+    melee: em("Mob Rush", "melee", "Physical", 0, { coefficient: 1, breakPower: 1, multiHit: 2 }),
+    magic: em("Flying Crockery", "magic", "Physical", 19, { coefficient: 1, scaling: "str", status: { type: "stun", chance: .3 } }),
+    buff: em("Mob Frenzy", "buff", "Physical", 24, { allAllies: true, requiresFallenAlly: true, buffs: [{ type: "agilityUp", duration: 3, value: .25 }] }),
+    ultimate: em("Uprising", "ultimate", "Physical", 0, { coefficient: 1.1, scaling: "str", allTargets: true, breakPower: 1 })
+  }, ["melee", "magic", "buff"], { element: "Physical", affixes: { resonanceGeneration: .12 } }),
+  "Ash Quarter Thugg": enemyCombatProfile("bruiser", .14, { hp: 122, mp: 72, str: 142, mag: 64, stam: 118, agi: 84 }, {
+    melee: em("Cinder Club", "melee", "Physical", 0, { coefficient: .96, breakPower: 2 }),
+    magic: em("Ash Hurl", "magic", "Physical", 18, { coefficient: 1.02, scaling: "str", status: { type: "stun", chance: .32 } }),
+    buff: em("Street Fury", "buff", "Physical", 20, { targetSide: "self", requiresFallenAlly: true, buffs: [{ type: "strengthUp", duration: 3, value: .3 }] }),
+    ultimate: em("Quarterbreaker", "ultimate", "Physical", 0, { coefficient: 1.62, scaling: "str", payoff: "broken", payoffMultiplier: 1.3, breakPower: 2 })
+  }, ["melee", "magic", "buff"], { element: "Physical", affixes: { breakPower: 1, damageBroken: .15 } }),
+  Tibby: enemyCombatProfile("hybrid", .15, { hp: 102, mp: 104, str: 112, mag: 112, stam: 96, agi: 132 }, {
+    melee: em("Trunk Bash", "melee", "Physical", 0, { coefficient: .9, breakPower: 1 }),
+    magic: em("Starry Flourish", "magic", "Arcane", 19, { coefficient: 1, scaling: "hybrid" }),
+    buff: em("Showtime", "buff", "Arcane", 20, { targetSide: "self", buffs: [{ type: "critUp", duration: 3, value: .15 }] }),
+    ultimate: em("Grand Entrance", "ultimate", "Arcane", 0, { coefficient: 1.58, scaling: "hybrid", status: { type: "stun", chance: .55 } })
+  }, ["melee", "buff", "magic"], { element: "Arcane", affixes: { critDamage: .12, statusPotency: .12 } }),
+  "Berend Blimpstone": enemyCombatProfile("healer", .06, { hp: 106, mp: 144, str: 64, mag: 144, stam: 108, agi: 78 }, {
+    melee: em("Whisk Strike", "melee", "Physical", 0, { coefficient: .72 }),
+    magic: em("Crown Cake", "heal", "Heart", 23, { healing: true, healCoefficient: 1.32 }),
+    heal: em("Kitchen Remedy", "heal", "Heart", 26, { healing: true, healCoefficient: 1.42, cleanse: true }),
+    buff: em("Fortifying Feast", "heal", "Heart", 30, { healing: true, healCoefficient: 1.15, buffs: [{ type: "defenseUp", duration: 3, value: .22 }] }),
+    ultimate: em("Royal Banquet", "ultimate", "Heart", 0, { healing: true, healCoefficient: 1.32, allAllies: true })
+  }, ["magic", "buff", "heal", "melee"], { element: "Heart", affixes: { healPotency: .18, barrierPotency: .12 } }),
+  Marla: enemyCombatProfile("healer", .08, { hp: 102, mp: 158, str: 72, mag: 154, stam: 104, agi: 82 }, {
+    melee: em("Pan Swing", "melee", "Physical", 0, { coefficient: .75, status: { type: "burn", chance: .2, duration: 4 } }),
+    magic: em("Soup Splash", "magic", "Ancient Fire", 18, { coefficient: .9, status: { type: "burn", chance: .35, duration: 4 } }),
+    heal: em("Stamina Stew", "heal", "Heart", 28, { healing: true, healCoefficient: 1.72, cleanse: true }),
+    buff: em("Hot Meal", "heal", "Heart", 27, { healing: true, healCoefficient: 1.1, buffs: [{ type: "strengthUp", duration: 3, value: .25 }] }),
+    ultimate: em("Feast for All", "ultimate", "Heart", 0, { healing: true, healCoefficient: 1.42, allAllies: true })
+  }, ["magic", "heal", "buff", "melee"], { row: 7, element: "Heart", affixes: { healPotency: .22, mpEfficiency: .12 } }),
+  "Prince Lucan Cindralis": enemyCombatProfile("hybrid", .17, { hp: 112, mp: 112, str: 132, mag: 126, stam: 104, agi: 134 }, {
+    melee: em("Prince's Blade", "melee", "Physical", 0, { coefficient: .94, status: { type: "critExposed", chance: .25, duration: 2, value: .12 } }),
+    magic: em("Blue Edict", "magic", "Arcane", 20, { coefficient: 1.02, scaling: "hybrid" }),
+    utility: em("Royal Pressure", "utility", "Arcane", 21, { status: { type: "marked", chance: .8, duration: 4, value: .12 } }),
+    buff: em("Royal Momentum", "buff", "Arcane", 25, { targetSide: "self", buffs: [{ type: "agilityUp", duration: 3, value: .25 }, { type: "critUp", duration: 3, value: .15 }] }),
+    ultimate: em("Cindralis Decree", "ultimate", "Arcane", 0, { coefficient: 1.68, scaling: "hybrid", payoff: "marked", payoffMultiplier: 1.22 })
+  }, ["utility", "buff", "magic", "melee"], { element: "Arcane", affixes: { critDamage: .15 } }),
+  "Sir Reginald": enemyCombatProfile("tank", .09, { hp: 142, mp: 98, str: 122, mag: 102, stam: 154, agi: 64 }, {
+    melee: em("Knight's Blow", "melee", "Physical", 0, { coefficient: .9, breakPower: 2 }),
+    magic: em("Earth Pulse", "magic", "Earth", 21, { coefficient: .96, scaling: "str", breakPower: 1, status: { type: "stun", chance: .3 } }),
+    utility: em("Shadow Pulse", "utility", "Shadow", 22, { coefficient: .84, damaging: true, status: { type: "poison", chance: .55, duration: 4 } }),
+    buff: em("Knight's Oath", "buff", "Earth", 24, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .28 }] }),
+    ultimate: em("Oathbreaker", "ultimate", "Earth", 0, { coefficient: 1.62, scaling: "str", breakPower: 3, payoff: "broken", payoffMultiplier: 1.2 })
+  }, ["melee", "buff", "magic", "utility"], { element: "Earth", affixes: { physicalResistance: .15, breakPower: 1 } }),
+  Harl: enemyCombatProfile("bruiser", .11, { hp: 112, mp: 104, str: 124, mag: 100, stam: 112, agi: 96 }, {
+    melee: em("Stage Hook", "melee", "Physical", 0, { coefficient: .9, status: { type: "disrupted", chance: .2, duration: 3, value: .15 } }),
+    magic: em("Sound Pulse", "magic", "Sound", 18, { coefficient: .94 }),
+    buff: em("Rally", "buff", "Sound", 34, { allAllies: true, buffs: [{ type: "strengthUp", duration: 3, value: .2 }, { type: "damageUp", duration: 3, value: .15 }] }),
+    ultimate: em("Resonant Rupture", "ultimate", "Sound", 0, { coefficient: 1.12, allTargets: true })
+  }, ["buff", "melee", "magic"], { element: "Sound", affixes: { physicalDamage: .1, buffDuration: 1 } }),
+  "Frostmile Wyrm": enemyCombatProfile("boss", .15, { hp: 150, mp: 154, str: 118, mag: 154, stam: 158, agi: 88 }, {
+    melee: em("Frost Talon", "melee", "Ice", 0, { coefficient: .94, breakPower: 2 }),
+    magic: em("Glacial Breath", "magic", "Ice", 26, { coefficient: .86, allTargets: true, status: { type: "agilityDown", chance: .65, duration: 3, value: .15 }, extraStatuses: [{ type: "stun", chance: .25 }] }),
+    buff: em("Frozen Majesty", "buff", "Ice", 26, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .3 }, { type: "critUp", duration: 2, value: .1 }] }),
+    ultimate: em("Winter's End", "ultimate", "Ice", 0, { coefficient: 1.14, allTargets: true, breakPower: 1, status: { type: "agilityDown", chance: .8, duration: 3, value: .2 } })
+  }, ["magic", "buff", "melee"], { element: "Ice", affixes: { elementDamage: .16, statusPotency: .18, breakPower: 1, resonanceGeneration: .18 } }),
+  "Ember Leviathan": enemyCombatProfile("boss", .17, { hp: 165, mp: 146, str: 148, mag: 146, stam: 164, agi: 74 }, {
+    melee: em("Molten Fang", "melee", "Ancient Fire", 0, { coefficient: .98, breakPower: 2, status: { type: "burn", chance: .55, duration: 4 } }),
+    magic: em("Ember Torrent", "magic", "Ancient Fire", 25, { coefficient: .9, allTargets: true, status: { type: "burn", chance: .5, duration: 4 } }),
+    buff: em("Infernal Surge", "buff", "Ancient Fire", 28, { targetSide: "self", buffs: [{ type: "damageUp", duration: 3, value: .22 }, { type: "strengthUp", duration: 3, value: .25 }] }),
+    ultimate: em("Leviathan Eruption", "ultimate", "Ancient Fire", 0, { coefficient: 1.18, allTargets: true, payoff: "burning", payoffMultiplier: 1.18, status: { type: "burn", chance: .9, duration: 4 } })
+  }, ["melee", "buff", "magic"], { element: "Ancient Fire", affixes: { elementDamage: .18, statusPotency: .18, damageAfflicted: .12, resonanceGeneration: .18 } }),
+  Solinar: enemyCombatProfile("boss", .18, { hp: 160, mp: 168, str: 138, mag: 160, stam: 152, agi: 92 }, {
+    melee: em("Solar Blade", "melee", "Holy Fire", 0, { coefficient: .96, scaling: "hybrid", status: { type: "holyVulnerability", chance: .45, duration: 2, value: .2 } }),
+    magic: em("Crown of Light", "magic", "Holy Fire", 24, { coefficient: 1.06 }),
+    heal: em("Solar Renewal", "heal", "Holy Fire", 32, { healing: true, healCoefficient: 1.82, cleanse: true }),
+    buff: em("Dawn Tyrant's Command", "buff", "Holy Fire", 38, { allAllies: true, buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "damageUp", duration: 3, value: .16 }, { type: "barrier", duration: 2, value: .2 }] }),
+    ultimate: em("Final Sunrise", "ultimate", "Holy Fire", 0, { coefficient: 1.2, allTargets: true, teamBuffs: [{ type: "barrier", duration: 2, value: .2 }] })
+  }, ["magic", "buff", "melee", "heal"], { element: "Holy Fire", affixes: { elementDamage: .18, healPotency: .18, barrierPotency: .15, resonanceGeneration: .28 } }),
+  "Solinar Enraged": enemyCombatProfile("boss", .2, { hp: 150, mp: 176, str: 150, mag: 166, stam: 138, agi: 128 }, {
+    melee: em("Solar Blade", "melee", "Holy Fire", 0, { coefficient: 1, scaling: "hybrid", breakPower: 2 }),
+    magic: em("Glacial Breath", "magic", "Ice", 25, { coefficient: .9, allTargets: true, status: { type: "agilityDown", chance: .65, duration: 3, value: .15 } }),
+    heavy: em("Ember Torrent", "magic", "Ancient Fire", 25, { coefficient: .94, allTargets: true, status: { type: "burn", chance: .6, duration: 4 } }),
+    buff: em("Frostfire Ascendance", "buff", "Holy Fire", 34, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .3 }, { type: "critUp", duration: 3, value: .18 }, { type: "agilityUp", duration: 3, value: .25 }] }),
+    ultimate: em("Frostfire Cataclysm", "ultimate", "Ancient Fire", 0, { coefficient: 1.3, allTargets: true, breakPower: 2, status: { type: "burn", chance: .8, duration: 4 }, extraStatuses: [{ type: "agilityDown", chance: .8, duration: 3, value: .2 }] })
+  }, ["magic", "heavy", "buff", "melee"], { element: "Ancient Fire", affixes: { elementDamage: .2, breakPower: 1, critDamage: .25, resonanceGeneration: .3 } })
 };
 const animationLayouts = {
   Marla: { columns: 4, rows: 7, chromaBlack: true },
@@ -6713,8 +6957,8 @@ function drawBattleVitals(unit, anchorX, baseline, enemySide = false) {
     drawText("Weak: " + label, anchorX - 29, baseline + 1, knownWeakness(unit) ? "#ffe096" : "#b4abbc", 5);
   }
   drawBattleVitalBar(anchorX, baseline + 4, unit.hp, unit.max, "HP", enemySide ? "#c85645" : "#e8a64b", enemySide ? 46 : 42);
-  if (enemySide) {
-    drawBattleVitalBar(anchorX, baseline + 11, unit.resonance || 0, 100, "R", "#8a5ac4", 46);
+  if (enemySide && Number.isFinite(unit.maxmp)) {
+    drawBattleVitalBar(anchorX, baseline + 11, unit.mp, unit.maxmp, "MP", "#4f78a8", 46);
   } else if (Number.isFinite(unit.maxmp)) {
     drawBattleVitalBar(anchorX, baseline + 11, unit.mp, unit.maxmp, "MP", "#7d62b8", 42);
   }
@@ -7167,7 +7411,8 @@ function drawEffect() {
 }
 
 function enemyAbilityProfile(unit) {
-  return enemyAbilityProfiles[unit?.sprite] || enemyAbilityProfiles[unit?.name] || null;
+  if (unit?.finalState === "enraged") return enemyAbilityProfiles["Solinar Enraged"];
+  return enemyAbilityProfiles[unit?.name] || enemyAbilityProfiles[unit?.sprite] || null;
 }
 
 function echoProjectileCell(row, col) {
@@ -8001,7 +8246,7 @@ function enemy(name, hp, atk, weak, color, node, sprite = null) {
     mag: Math.max(3, Math.round(atk * .72 + (weak === "Tech" || weak === "Sound" ? 3 : 0))),
     stam: Math.max(5, Math.round(hp / 10 + node * 2))
   };
-  return { name, hp: scaledHp, max: scaledHp, baseMax: scaledHp, baseAtk: atk, baseStats: { ...stats }, atk: scaledAtk, stats, weak, color, node, sprite, level: 1, stagger: 0, resonance: 0, row: 1, anim: "idle", animTick: 0 };
+  return { name, hp: scaledHp, max: scaledHp, baseMax: scaledHp, baseAtk: atk, baseStats: { ...stats }, atk: scaledAtk, stats, weak, color, node, sprite, level: 1, stagger: 0, row: 1, anim: "idle", animTick: 0 };
 }
 
 function prepareEnemyForBattle(source, mapId = state.map) {
@@ -8015,6 +8260,9 @@ function prepareEnemyForBattle(source, mapId = state.map) {
   const max = Math.round(baseMax * ngScale * levelScale);
   const atk = Math.round(baseAtk * (1 + state.ngPlus * .22) * (1 + Math.max(0, level - 1) * .01));
   const baseStats = source.baseStats || source.stats;
+  const profile = enemyAbilityProfile(source);
+  const identity = profile?.identity || { str: 100, mag: 100, stam: 100, agi: 100, mp: 72 };
+  const maxmp = Math.max(0, Math.round(profile?.maxMp || identity.mp || 72));
   return {
     ...source,
     hp: max,
@@ -8023,13 +8271,17 @@ function prepareEnemyForBattle(source, mapId = state.map) {
     level,
     xp: 14 + level * 7,
     stats: {
-      str: atk,
-      agi: Math.round((baseStats.agi || 5) + level * .45 + state.ngPlus * 3),
-      mag: Math.round((baseStats.mag || 3) + level * .35 + state.ngPlus * 2),
-      stam: Math.round((baseStats.stam || 5) + level * .5 + state.ngPlus * 3)
+      str: Math.max(1, Math.round(atk * (identity.str || 100) / 100)),
+      agi: Math.max(1, Math.round(((baseStats.agi || 5) + level * .45 + state.ngPlus * 3) * (identity.agi || 100) / 100)),
+      mag: Math.max(1, Math.round(((baseStats.mag || 3) + level * .35 + state.ngPlus * 2) * (identity.mag || 100) / 100)),
+      stam: Math.max(1, Math.round(((baseStats.stam || 5) + level * .5 + state.ngPlus * 3) * (identity.stam || 100) / 100))
     },
+    mp: maxmp,
+    maxmp,
+    crit: profile?.crit || .08,
+    role: profile?.role || "fighter",
+    affixes: { ...(profile?.affixes || {}) },
     stagger: 0,
-    resonance: 0,
     statuses: [],
     resistanceTier: source.resistanceTier || (source.npcBoss ? "boss" : source.node >= 3 ? "elite" : "normal"),
     statusChances: { ...(source.statusChances || {}) },
@@ -8082,7 +8334,7 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
     if (profile.finalState) unit.finalState = profile.finalState;
     unit.levelHint = stage;
     unit.fixedLevel = true;
-    if (info.boss || enemyAbilityProfiles[unit.name]) {
+    if (info.boss || profile.node >= 3) {
       unit.npcBoss = true;
       unit.resistanceTier = info.boss && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
     }
@@ -8112,7 +8364,7 @@ function hallEncounterDetails(info) {
   const weaknesses = [...new Set(profiles.map(profile => profile.weak))].join(" / ");
   const traits = [];
   if (info.boss) traits.push("Boss pattern and high status resistance");
-  else if (profiles.some(profile => enemyAbilityProfiles[profile.name])) traits.push("Elite attack pattern");
+  else if (profiles.some(profile => profile.node >= 3)) traits.push("Elite attack pattern");
   if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.heal)) traits.push("Enemy healing");
   if (profiles.some(profile => profile.name === "Nyx Vael")) traits.push("Sleep pressure");
   else if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.element === "Shadow")) traits.push("Poison pressure");
@@ -8488,7 +8740,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
   const hallBoss = Boolean(options.hallBoss);
   const musicTrack = battleMusicForEncounter(hallBoss);
-  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
+  battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, enemyResonance: 0, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -8617,6 +8869,9 @@ function endBattleDraw(log = "") {
 function renderBattle(log) {
   el.battleLog.textContent = log;
   el.battleResonance.style.width = `${Math.max(0, Math.min(100, state.resonance))}%`;
+  const enemyResonance = Math.max(0, Math.min(100, battle.enemyResonance || 0));
+  el.enemyBattleResonance.style.width = `${enemyResonance}%`;
+  el.enemyBattleResonance.parentElement?.setAttribute("aria-valuenow", enemyResonance);
   const turn = currentTurn();
   renderTurnOrder();
   el.partyRows.innerHTML = battle.party.map(unit => unitHtml({ ...unit, name: unit.form ? `${unit.name} - ${unit.form === "mech" ? "MECH" : "SHADOWPRIEST"} ${unit.formTurns}` : unit.name }, turn?.side === "party" && turn.id === unit.id ? "is-active" : "")).join("");
@@ -9029,25 +9284,28 @@ function applyWeaponBasicAttackEffect(source, target) {
 }
 
 function gainEnemyResonance(unit, amount) {
-  if (!unit || amount <= 0 || statusOf(unit, "resonanceLocked")) return 0;
-  const before = unit.resonance || 0;
-  unit.resonance = Math.min(100, before + amount);
-  return unit.resonance - before;
+  if (!battle || !unit || amount <= 0) return 0;
+  const locked = battle.enemies.some(enemyUnit => enemyUnit.hp > 0 && statusOf(enemyUnit, "resonanceLocked"));
+  if (locked) return 0;
+  const before = battle.enemyResonance || 0;
+  const generation = 1 + (unit.affixes?.resonanceGeneration || 0);
+  battle.enemyResonance = Math.min(100, before + Math.max(1, Math.round(amount * generation)));
+  return battle.enemyResonance - before;
 }
 
 function applyEnemyResonanceControl(source, target, sk) {
   if (!target || target.hp <= 0) return "";
-  const before = target.resonance || 0;
+  const before = battle?.enemyResonance || 0;
   let removed = 0;
   if (sk.enemyResonanceClear) {
     removed = before;
-    target.resonance = 0;
+    battle.enemyResonance = 0;
   } else if (sk.enemyResonanceDrainRatio) {
     removed = Math.round(before * sk.enemyResonanceDrainRatio);
-    target.resonance = Math.max(0, before - removed);
+    battle.enemyResonance = Math.max(0, before - removed);
   } else if (sk.enemyResonanceDrain) {
     removed = Math.min(before, sk.enemyResonanceDrain);
-    target.resonance = Math.max(0, before - removed);
+    battle.enemyResonance = Math.max(0, before - removed);
   }
   if (sk.enemyResonanceLock) {
     applyStatus(target, "resonanceLocked", source, { duration: sk.enemyResonanceLock, force: true });
@@ -9519,7 +9777,7 @@ function enemyMagicElement(unit) {
 
 function enemyCanHeal(unit) {
   const profile = enemyAbilityProfile(unit);
-  return Boolean(profile?.heal || /clergy|paladin|seal bearer|sentinel|gate lock|lord sprocket/i.test(`${unit.name} ${unit.sprite || ""}`));
+  return Boolean(profile && Object.values(profile.moves || {}).some(move => move.healing));
 }
 
 function enemyStatusFor(unit, actionKind) {
@@ -9532,29 +9790,50 @@ function enemyStatusFor(unit, actionKind) {
 
 function enemyActionForKind(unit, kind, target = null) {
   const profile = enemyAbilityProfile(unit);
-  if (unit.finalState === "enraged" && kind === "magic") {
-    const frost = (unit.finalMagicStep || 0) % 2 === 0;
-    unit.finalMagicStep = (unit.finalMagicStep || 0) + 1;
-    return frost
-      ? { kind, name: "Glacial Breath", element: "Sigil", status: { type: "stun", chance: .48 } }
-      : { kind, name: "Ember Torrent", element: "Ancient Fire" };
+  const configured = profile?.moves?.[kind];
+  if (configured) {
+    const statusPotency = 1 + (unit.affixes?.statusPotency || 0);
+    const enhance = status => status ? { ...status, chance: Math.min(.95, (status.chance ?? 1) * statusPotency) } : null;
+    return {
+      ...configured,
+      status: enhance(configured.status),
+      extraStatuses: (configured.extraStatuses || []).map(enhance),
+      target
+    };
   }
-  if (unit.finalState === "enraged" && kind === "ultimate") return { kind, name: "Frostfire Cataclysm", element: "Ancient Fire", status: { type: "stun", chance: .8 } };
-  if (kind === "heal") return { kind, name: profile?.heal || "Seal Mend", element: profile?.element || "Holy Fire", target, healing: true };
-  if (kind === "ultimate") {
-    const action = { kind, name: profile?.ultimate || "Resonant Rupture", element: profile?.element || enemyMagicElement(unit), target: profile?.ultimateHeal ? unit : null, healing: Boolean(profile?.ultimateHeal) };
-    action.status = action.healing ? null : enemyStatusFor(unit, kind);
-    return action;
-  }
+  if (kind === "ultimate") return { kind, name: profile?.ultimate || "Resonant Rupture", element: profile?.element || enemyMagicElement(unit), coefficient: unit.node >= 3 ? 1.12 : 1.55, allTargets: unit.node >= 3, target };
   if (kind === "magic") {
     const element = enemyMagicElement(unit);
-    return { kind, name: profile?.magic || `${element} Pulse`, element, status: enemyStatusFor(unit, kind) };
+    return { kind, name: profile?.magic || `${element} Pulse`, element, mpCost: 18, coefficient: .92, status: enemyStatusFor(unit, kind), target };
   }
-  return { kind: "melee", name: profile?.melee || "Melee Strike", element: "Physical" };
+  return { kind: "melee", name: profile?.melee || "Melee Strike", element: "Physical", mpCost: 0, coefficient: .92, target };
 }
 
 function enemyActionHitsAll(unit, action) {
-  return action.kind === "ultimate" && (unit.npcBoss || unit.node >= 3);
+  return Boolean(action.allTargets);
+}
+
+function enemyActionDealsDamage(action) {
+  return ["melee", "magic", "ultimate"].includes(action.kind) && !action.healing || Boolean(action.damaging || action.coefficient);
+}
+
+function enemyActionMpCost(unit, action) {
+  if (!action || action.kind === "ultimate") return 0;
+  return Math.max(0, Math.round((action.mpCost || 0) * (1 - (unit.affixes?.mpEfficiency || 0))));
+}
+
+function enemyCanAfford(unit, action) {
+  return enemyActionMpCost(unit, action) <= (unit.mp || 0);
+}
+
+function enemyPayoffMatches(action, target) {
+  if (!action?.payoff || !target) return false;
+  if (action.payoff === "broken") return Boolean(statusOf(target, "broken"));
+  if (action.payoff === "marked") return Boolean(statusOf(target, "marked"));
+  if (action.payoff === "burning") return Boolean(statusOf(target, "burn"));
+  if (action.payoff === "afflicted") return hasNegativeStatus(target);
+  if (action.payoff === "afflictedOrBroken") return hasNegativeStatus(target) || Boolean(statusOf(target, "broken"));
+  return false;
 }
 
 function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member => member.hp > 0)) {
@@ -9563,6 +9842,8 @@ function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member
   if (enemyActionHitsAll(unit, action)) return valid[Math.floor(Math.random() * valid.length)];
   const awake = valid.filter(member => !statusOf(member, "sleep"));
   if (awake.length) valid = awake;
+  const payoffTargets = valid.filter(member => enemyPayoffMatches(action, member));
+  if (payoffTargets.length) valid = payoffTargets;
   if (action.status?.type) {
     const unaffected = valid.filter(member => !statusOf(member, action.status.type));
     if (unaffected.length) valid = unaffected;
@@ -9576,28 +9857,94 @@ function enemyTargetsForAction(unit, action, target) {
     : [target].filter(member => member?.hp > 0);
 }
 
+const ENEMY_CLEANSE_PRIORITY = {
+  stun: 100, sleep: 95, silence: 90, physicalVulnerability: 80, magicVulnerability: 80,
+  holyVulnerability: 80, marked: 78, critExposed: 74, poison: 60, burn: 60, bleed: 60,
+  defenseDown: 45, magicDefenseDown: 45, agilityDown: 40, disrupted: 40, shadowExposed: 40
+};
+
+function enemyCleanseStatus(unit) {
+  return ensureStatuses(unit)
+    .filter(status => STATUS_DEFS[status.type]?.negative && ENEMY_CLEANSE_PRIORITY[status.type] && (status.remaining > 1 || ["stun", "sleep", "silence"].includes(status.type)))
+    .sort((a, b) => (ENEMY_CLEANSE_PRIORITY[b.type] || 0) - (ENEMY_CLEANSE_PRIORITY[a.type] || 0))[0] || null;
+}
+
+function chooseEnemyHealTarget() {
+  return battle.enemies.filter(ally => ally.hp > 0 && ally.hp < ally.max)
+    .sort((a, b) => a.hp / a.max - b.hp / b.max)[0] || null;
+}
+
+function chooseEnemyCleanseTarget() {
+  return battle.enemies.filter(ally => ally.hp > 0 && enemyCleanseStatus(ally))
+    .sort((a, b) => (ENEMY_CLEANSE_PRIORITY[enemyCleanseStatus(b)?.type] || 0) - (ENEMY_CLEANSE_PRIORITY[enemyCleanseStatus(a)?.type] || 0))[0] || null;
+}
+
+function enemyBuffTarget(unit, action) {
+  const living = battle.enemies.filter(ally => ally.hp > 0);
+  const buffs = action.buffs || [];
+  if (action.targetSide === "self") return buffs.some(buff => (statusOf(unit, buff.type)?.remaining || 0) <= 1) ? unit : null;
+  const useful = living.filter(ally => buffs.some(buff => (statusOf(ally, buff.type)?.remaining || 0) <= 1));
+  const candidates = useful.length ? useful : [];
+  if (!candidates.length) return null;
+  if (action.targetRole === "physical") return candidates.sort((a, b) => b.stats.str - a.stats.str)[0];
+  if (action.targetRole === "caster") return candidates.sort((a, b) => b.stats.mag - a.stats.mag)[0];
+  if (action.targetRole === "fast") return candidates.sort((a, b) => b.stats.agi - a.stats.agi)[0];
+  if (action.targetRole === "tech") return candidates.find(ally => enemyAbilityProfile(ally)?.element === "Tech") || candidates.sort((a, b) => b.stats.mag - a.stats.mag)[0];
+  if (action.targetRole === "threatened") return candidates.sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function enemyActionUseful(unit, action) {
+  if (!action || !enemyCanAfford(unit, action)) return false;
+  if (action.requiresEnemyStatus && !battle.party.some(hero => hero.hp > 0 && statusOf(hero, action.requiresEnemyStatus))) return false;
+  if (action.requiresFallenAlly && !battle.defeated.length && !battle.enemies.some(ally => ally.hp <= 0)) return false;
+  if (action.healing) {
+    const target = chooseEnemyHealTarget();
+    if (!target || target.hp / target.max >= .78) return false;
+    action.target = target;
+    return true;
+  }
+  if (action.cleanse && action.kind === "cleanse") {
+    action.target = chooseEnemyCleanseTarget();
+    return Boolean(action.target);
+  }
+  if (action.kind === "buff") {
+    action.target = enemyBuffTarget(unit, action);
+    return Boolean(action.target);
+  }
+  return true;
+}
+
+function enemyProfileAction(unit, key) {
+  return enemyActionForKind(unit, key);
+}
+
 function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
   if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
-  const wounded = battle.enemies
-    .filter(ally => ally.hp > 0 && ally.hp / ally.max < .58)
-    .sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
-  if ((unit.resonance || 0) >= 100) {
+  if ((battle.enemyResonance || 0) >= 100) {
     return enemyActionForKind(unit, "ultimate");
   }
-  const pattern = unit.finalState === "enraged" ? ["magic", "melee", "magic"] : profile?.pattern;
-  if (pattern && (unit.npcBoss || unit.resistanceTier === "boss" || battle.echoHuntRank)) {
+  const wounded = chooseEnemyHealTarget();
+  const healingKey = Object.keys(profile?.moves || {}).find(key => profile.moves[key].healing && enemyCanAfford(unit, profile.moves[key]));
+  if (wounded && wounded.hp / wounded.max < .35 && healingKey) {
+    const action = enemyProfileAction(unit, healingKey);
+    action.target = wounded;
+    return action;
+  }
+  const cleanseKey = Object.keys(profile?.moves || {}).find(key => profile.moves[key].kind === "cleanse");
+  if (cleanseKey) {
+    const cleanse = enemyProfileAction(unit, cleanseKey);
+    if (enemyActionUseful(unit, cleanse)) return cleanse;
+  }
+  const pattern = profile?.pattern || ["magic", "melee"];
+  if (pattern.length) {
     const patternIndex = (unit.patternStep || 0) % pattern.length;
-    const kind = pattern[patternIndex];
     unit.patternStep = (unit.patternStep || 0) + 1;
-    if (kind === "heal" && !wounded) return enemyActionForKind(unit, "magic");
-    return enemyActionForKind(unit, kind, kind === "heal" ? wounded : null);
-  }
-  if (wounded && enemyCanHeal(unit) && Math.random() < .68) {
-    return enemyActionForKind(unit, "heal", wounded);
-  }
-  if (Math.random() < .44) {
-    return enemyActionForKind(unit, "magic");
+    for (let offset = 0; offset < pattern.length; offset++) {
+      const action = enemyProfileAction(unit, pattern[(patternIndex + offset) % pattern.length]);
+      if (enemyActionUseful(unit, action)) return action;
+    }
   }
   return enemyActionForKind(unit, "melee");
 }
@@ -9618,10 +9965,11 @@ function makeEnemyBattleEffect(unit, target, action) {
     toX = anchorX;
     toY = baseline - 24;
   }
-  const timing = battleActionTiming(action.kind === "heal" ? "magic" : action.kind);
+  const visualKind = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
+  const timing = battleActionTiming(visualKind);
   const profile = enemyAbilityProfile(unit);
   return {
-    kind: action.kind === "heal" ? "magic" : action.kind,
+    kind: visualKind,
     actionKind: action.kind,
     caster: unit.sprite || unit.name,
     enemyCaster: true,
@@ -9641,6 +9989,80 @@ function makeEnemyBattleEffect(unit, target, action) {
   };
 }
 
+function enemyActionScalingStat(unit, action) {
+  if (action.scaling === "hybrid") return (unit.stats.str + unit.stats.mag) / 2;
+  if (action.scaling === "str" || action.kind === "melee" || action.element === "Physical") return unit.stats.str;
+  return unit.stats.mag;
+}
+
+function enemyActionCrit(unit, action, target) {
+  const exposed = statusValue(target, "marked") + statusValue(target, "critExposed");
+  const chance = Math.min(.75, (unit.crit || .08) + statusValue(unit, "critUp") + (action.critBonus || 0) + exposed);
+  return Math.random() < chance;
+}
+
+function enemyDamageRoll(unit, action, target) {
+  const random = Math.floor(Math.random() * 6);
+  let damage = enemyActionScalingStat(unit, action) * (action.coefficient || .9) + Math.max(0, unit.level - 1) * .35 + random;
+  const physical = action.scaling === "str" || action.kind === "melee" || action.element === "Physical";
+  const damageKind = physical ? "melee" : "magic";
+  damage *= outgoingDamageMultiplier(unit, damageKind, target);
+  if (!physical) damage *= 1 + (unit.affixes?.elementDamage || 0);
+  else damage *= 1 + (unit.affixes?.physicalDamage || 0);
+  if (hasNegativeStatus(target)) damage *= 1 + (unit.affixes?.damageAfflicted || 0);
+  if (statusOf(target, "broken")) damage *= 1 + (unit.affixes?.damageBroken || 0);
+  if (enemyPayoffMatches(action, target)) damage *= action.payoffMultiplier || 1.2;
+  damage *= 1 + (physical ? statusValue(target, "physicalVulnerability") : statusValue(target, "magicVulnerability"));
+  if (action.element === "Holy Fire") damage *= 1 + statusValue(target, "holyVulnerability");
+  const critical = enemyActionCrit(unit, action, target);
+  if (critical) damage *= 2 + (unit.affixes?.critDamage || 0);
+  damage = Math.max(1, Math.round(damage * incomingDamageMultiplier(target)));
+  return { damage, critical };
+}
+
+function enemyApplyBuffs(source, targets, buffs) {
+  const notes = [];
+  targets.filter(Boolean).forEach(target => {
+    (buffs || []).forEach(buff => {
+      if ((statusOf(target, buff.type)?.remaining || 0) > 1) return;
+      let value = buff.value ?? STATUS_DEFS[buff.type]?.value;
+      if (buff.type === "barrier") value *= 1 + (source.affixes?.barrierPotency || 0);
+      const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 1) + (source.affixes?.buffDuration || 0);
+      const result = applyStatus(target, buff.type, source, { ...buff, value, duration, force: true });
+      if (result.applied) notes.push(`${target.name}: ${result.message}`);
+    });
+  });
+  return notes;
+}
+
+function enemyCleanseOne(target) {
+  const status = enemyCleanseStatus(target);
+  if (!status) return null;
+  target.statuses = ensureStatuses(target).filter(entry => entry !== status);
+  return STATUS_DEFS[status.type]?.label || status.type;
+}
+
+function enemyApplyActionStatuses(source, target, action) {
+  const applications = [];
+  let statuses = [action.status, ...(action.extraStatuses || [])].filter(Boolean);
+  if (action.randomMinorDebuff) {
+    const choices = [
+      { type: "agilityDown", chance: .45, duration: 3, value: .15 },
+      { type: "disrupted", chance: .45, duration: 3, value: .15 },
+      { type: "marked", chance: .45, duration: 4, value: .12 }
+    ];
+    statuses = [choices[Math.floor(Math.random() * choices.length)]];
+  }
+  statuses.forEach(status => applications.push(applyStatus(target, status.type, source, status)));
+  return applications.filter(result => result.applied).map(result => result.message);
+}
+
+function enemyResonanceGainForAction(unit, action) {
+  if (unit.role === "boss") return 20;
+  if (action.healing || ["buff", "cleanse", "utility"].includes(action.kind)) return 13;
+  return action.kind === "magic" ? 14 : 11;
+}
+
 function resolveEnemyTurn(turn, prev) {
   const liveParty = battle.party.filter(p => p.hp > 0);
   if (!liveParty.length) return triggerPartyDefeat(prev);
@@ -9649,14 +10071,20 @@ function resolveEnemyTurn(turn, prev) {
     battle.resolving = false;
     return finishTurn(prev);
   }
-  const action = chooseEnemyAction(e);
-  let target = action.target || chooseEnemyTarget(e, action, liveParty);
-  if (!action.healing && target.hp / target.max < .35) {
+  let action = chooseEnemyAction(e);
+  let target = action.target || (action.healing ? chooseEnemyHealTarget() || e : chooseEnemyTarget(e, action, liveParty));
+  if (!target) {
+    action = enemyActionForKind(e, "melee");
+    target = chooseEnemyTarget(e, action, liveParty);
+  }
+  if (enemyActionDealsDamage(action) && liveParty.includes(target) && target.hp / target.max < .35) {
     const interceptor = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
     if (interceptor) target = interceptor;
   }
-  const timingKey = action.kind === "heal" ? "magic" : action.kind;
+  const timingKey = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
   const timing = battleActionTiming(timingKey);
+  const mpCost = enemyActionMpCost(e, action);
+  e.mp = Math.max(0, e.mp - mpCost);
   e.anim = "attack";
   e.animTick = 0;
   e.attackStyle = action.kind === "melee" ? "melee" : action.kind === "ultimate" ? "ultimate" : "magic";
@@ -9668,21 +10096,50 @@ function resolveEnemyTurn(turn, prev) {
     if (!battle || mode !== "battle" || e.hp <= 0) return;
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
     if (action.healing) {
-      const healTargets = action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
+      const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
       let total = 0;
       healTargets.forEach(ally => {
-        const amount = Math.round(ally.max * (action.kind === "ultimate" ? .24 : .16) + e.stats.mag * (action.kind === "ultimate" ? 1.4 : .9));
+        let amount = (e.stats.mag * (action.healCoefficient || 1.35) + e.stats.stam * .22 + e.level * 1.4) * (1 + (e.affixes?.healPotency || 0));
+        const critical = enemyActionCrit(e, action, ally);
+        if (critical) amount *= 2 + (e.affixes?.critDamage || 0);
+        amount = Math.max(1, Math.round(amount));
         const restored = Math.min(amount, ally.max - ally.hp);
         ally.hp += restored;
         total += restored;
-        addBattleFloater(ally, restored, { kind: "heal" });
-        if (enemyCanHeal(e)) applyStatus(ally, "defenseUp", e, { duration: 2, chance: 1 });
+        addBattleFloater(ally, restored, { kind: "heal", crit: critical });
+        const buffs = action.randomBuff
+          ? [{ type: ["magicUp", "agilityUp", "critUp"][Math.floor(Math.random() * 3)], duration: 3 }]
+          : action.buffs;
+        const buffNotes = enemyApplyBuffs(e, [ally], buffs);
+        if (buffNotes.length) actionLog += ` ${buffNotes.join(", ")}.`;
+        if (action.cleanse || action.conditionalCleanse) {
+          const removed = enemyCleanseOne(ally);
+          if (removed) actionLog += ` ${ally.name} is cleansed of ${removed}.`;
+        }
       });
-      if (action.kind === "ultimate") e.resonance = 0;
-      else gainEnemyResonance(e, 32);
       actionLog += ` ${healTargets.length > 1 ? "The enemy formation restores" : `${target.name} restores`} ${total} HP.`;
-      if (enemyCanHeal(e)) actionLog += " DEFENSE UP.";
       playSfx("item");
+    } else if (action.kind === "buff") {
+      const buffTargets = action.allAllies ? battle.enemies.filter(ally => ally.hp > 0) : [target];
+      const buffs = action.randomBuff
+        ? [{ type: ["magicUp", "agilityUp", "critUp"][Math.floor(Math.random() * 3)], duration: 3 }]
+        : action.buffs;
+      const notes = enemyApplyBuffs(e, buffTargets, buffs);
+      actionLog += ` ${notes.join("; ")}.`;
+      playSfx("item");
+    } else if (action.kind === "cleanse") {
+      const removed = enemyCleanseOne(target);
+      actionLog += removed ? ` ${target.name} is cleansed of ${removed}.` : " No removable condition remains.";
+      playSfx("item");
+    } else if (!enemyActionDealsDamage(action)) {
+      const notes = enemyApplyActionStatuses(e, target, action);
+      if (action.partyResonanceDrain) {
+        const drained = Math.min(state.resonance, action.partyResonanceDrain);
+        state.resonance -= drained;
+        actionLog += ` Party Resonance -${drained}.`;
+      }
+      if (notes.length) actionLog += ` ${target.name}: ${notes.join(", ")}.`;
+      playSfx("magic");
     } else {
       const allTargets = enemyActionHitsAll(e, action);
       const hitTargets = enemyTargetsForAction(e, action, target);
@@ -9691,13 +10148,8 @@ function resolveEnemyTurn(turn, prev) {
           actionLog += ` ${defender.name} evades the attack.`;
           return;
         }
-        const random = Math.floor(Math.random() * (action.kind === "ultimate" ? 9 : 6));
-        let dmg = action.kind === "melee"
-          ? e.atk + random
-          : action.kind === "magic"
-            ? Math.round(e.atk * .7 + e.stats.mag * .75) + random
-            : Math.round((e.atk + e.stats.mag * .5) * (allTargets ? 1.18 : 1.58)) + random;
-        dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(e, action.kind, defender) * incomingDamageMultiplier(defender)));
+        const rolled = enemyDamageRoll(e, action, defender);
+        let dmg = rolled.damage;
         let defenseText = "";
         if (defender.guarding) {
           const reduction = defendReduction(defender);
@@ -9723,6 +10175,17 @@ function resolveEnemyTurn(turn, prev) {
           dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(defender.id, "blockPower")));
           defenseText = " Party Guard softens the hit.";
         }
+        const brokenAtHitStart = Boolean(statusOf(defender, "broken"));
+        const breakPower = Math.max(0, action.breakPower || 0) + (action.kind === "ultimate" ? (e.affixes?.breakPower || 0) : 0);
+        const breakResult = breakPower ? addBreakProgress(e, defender, breakPower) : null;
+        if (breakResult?.breaks) {
+          dmg += breakResult.bonusDamage;
+          applyStatus(defender, "broken", e, { duration: 1, force: true });
+          defenseText += ` ${defender.name} is BROKEN; ${breakResult.remainder}/${BREAK_THRESHOLD} Break remains.`;
+        } else if (breakResult?.gain) {
+          defenseText += ` Break ${defender.stagger}/${BREAK_THRESHOLD}.`;
+        }
+        if (brokenAtHitStart && action.payoff === "broken" && action.payoffStatus) applyStatus(defender, action.payoffStatus.type, e, action.payoffStatus);
         const sleepBreak = breakSleepFromDamage(defender);
         const lastBastion = battle.party.find(ally => ally.hp > 0 && typedTalentValue(ally.id, "lastBastion") && !battle.usedOnce[`lastBastion:${ally.id}`]);
         if (dmg >= defender.hp && lastBastion) {
@@ -9734,15 +10197,24 @@ function resolveEnemyTurn(turn, prev) {
         const fell = markBattleUnitDown(defender);
         if (defender.hp > 0 && typedTalentValue(defender.id, "damageResonance")) state.resonance = Math.min(100, state.resonance + Math.max(1, Math.round(4 * (1 + typedTalentValue(defender.id, "damageResonance")))));
         defender.flash = 12;
-        addBattleFloater(defender, dmg, { damageType: action.kind === "melee" ? "Physical" : action.element, crit: action.kind === "ultimate" });
-        const statusResult = defender.hp > 0 && action.status ? applyStatus(defender, action.status.type, e, action.status) : null;
-        actionLog += ` ${defender.name} takes ${dmg}.${fell ? ` ${defender.name} falls.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statusResult?.message ? ` ${statusResult.message}.` : ""}`;
+        addBattleFloater(defender, dmg, { damageType: action.element || "Physical", crit: rolled.critical });
+        const statuses = defender.hp > 0 ? enemyApplyActionStatuses(e, defender, action) : [];
+        actionLog += ` ${defender.name} takes ${dmg}${rolled.critical ? " CRITICAL" : ""}.${fell ? ` ${defender.name} falls.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statuses.length ? ` ${statuses.join(", ")}.` : ""}`;
       });
       battle.ward = false;
-      if (action.kind === "ultimate") e.resonance = 0;
-      else gainEnemyResonance(e, action.kind === "magic" ? 34 : 27);
+      if (action.partyResonanceDrain) {
+        const drained = Math.min(state.resonance, action.partyResonanceDrain);
+        state.resonance -= drained;
+        actionLog += ` Party Resonance -${drained}.`;
+      }
       playSfx(action.kind === "ultimate" ? "boss" : "hit");
     }
+    if (action.teamBuffs?.length) {
+      const notes = enemyApplyBuffs(e, battle.enemies.filter(ally => ally.hp > 0), action.teamBuffs);
+      if (notes.length) actionLog += ` ${notes.join("; ")}.`;
+    }
+    if (action.kind === "ultimate") battle.enemyResonance = 0;
+    else gainEnemyResonance(e, enemyResonanceGainForAction(e, action));
     if (e.hp <= 0) {
       e.anim = "death";
       e.deathTick = tick;
@@ -9775,6 +10247,7 @@ function winBattle(log) {
       battle.phaseTransition = null;
       battle.name = nextWave.name;
       battle.enemies = nextWave.enemies;
+      battle.enemyResonance = 0;
       battle.ward = false;
       el.battleName.textContent = nextWave.name;
       state.resonance = Math.min(100, state.resonance + 10);

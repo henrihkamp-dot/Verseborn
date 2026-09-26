@@ -205,6 +205,16 @@ canvas:focus {
   display: none;
 }
 
+.hud-enemy-resonance {
+  display: none;
+  grid-template-columns: auto 82px;
+  align-items: center;
+  gap: 6px;
+  color: #efb4aa;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
 #hint {
   color: #dac8a5;
   text-align: right;
@@ -2522,14 +2532,14 @@ body[data-play-mode="battle"] .hud-battle-resonance {
   order: 1;
 }
 
-body[data-play-mode="battle"] .hud-location {
+body[data-play-mode="battle"] .hud-enemy-resonance {
+  display: grid;
   order: 2;
-  min-width: 0;
   margin-left: auto;
-  overflow: hidden;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+body[data-play-mode="battle"] .hud-location {
+  display: none;
 }
 
 body[data-play-mode="battle"] .panel {
@@ -2610,6 +2620,15 @@ body[data-play-mode="battle"] .panel {
   width: 0;
   height: 100%;
   background: #9a78d1;
+}
+
+.enemy-resonance-track {
+  border-color: #7b4e52;
+  background: #241416;
+}
+
+.enemy-resonance-track i {
+  background: #c85645;
 }
 
 .battle:not(.hidden) .enemy-rows {
@@ -2779,7 +2798,8 @@ body[data-play-mode="battle"] .panel {
     font-size: 11px;
   }
 
-  .hud-battle-resonance {
+  .hud-battle-resonance,
+  .hud-enemy-resonance {
     grid-template-columns: auto 48px;
     gap: 4px;
     font-size: 9px;
