@@ -510,6 +510,12 @@ canvas:focus {
   background: #352033;
 }
 
+.hall-recruit.is-selected {
+  border-color: #69dff1;
+  background: #17313a;
+  box-shadow: inset 0 0 0 1px #dffcff;
+}
+
 .hall-recruit img {
   width: 74px;
   height: 74px;
@@ -543,6 +549,31 @@ canvas:focus {
   font-size: 10px;
   font-style: normal;
   line-height: 1.25;
+}
+
+.hall-recruitment > footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 10px 8px;
+  border-top: 2px solid #735643;
+  background: #211827;
+}
+
+.hall-recruitment > footer button {
+  padding: 8px 12px;
+  border: 2px solid #d8b06b;
+  background: #3a2234;
+  color: #ffe5ad;
+  cursor: pointer;
+}
+
+.hall-recruitment > footer button:disabled {
+  opacity: .45;
+  cursor: default;
 }
 
 @media (max-width: 900px) {

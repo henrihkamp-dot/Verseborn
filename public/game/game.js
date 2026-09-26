@@ -1828,20 +1828,50 @@ const MYTHIC_SETS = {
 };
 
 const HALL_MYTHIC_THEMES = { 41: "mountain", 42: "ruins", 43: "mountain", 44: "ruins", 45: "dragon", 46: "ruins", 47: "dragon", 48: "ruins", 49: "mountain", 50: "dragon" };
-const HALL_LEGENDARY_STAGE = 21;
-const HALL_MYTHIC_STAGE = 41;
-const HALL_ULTIMATE_REWARD_STAGES = new Set([21, 24, 27, 30, 33, 36, 39]);
-const HALL_STANDARD_GEAR_POOL = [
-  ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
-  ...questGear,
-  ...chestGear
+const HALL_LEGENDARY_STAGE = 20;
+const HALL_MYTHIC_STAGE = 40;
+const HALL_RARITY_UPGRADE_CHANCE = .08;
+
+const HALL_RARE_GEAR_POOL = [
+  item("Ironwood Staff", "weapon", { mag: 4, stam: 2 }, "A dependable ashwood focus reinforced with iron bands."),
+  item("Embersteel Dagger", "weapon", { str: 3, agi: 3 }, "A practical Hall blade that keeps a steady edge."),
+  item("Ashen Cloak", "armour", { stam: 4, agi: 2 }, "A soot-dark travel cloak lined for sparks and cold corridors."),
+  item("Reinforced Buckler", "armour", { stam: 5, str: 1 }, "A compact field guard repaired at the Ember Hall forge."),
+  item("Copper Sigil Ring", "ring", { mag: 3, stam: 2 }, "A plain copper band stamped with a reliable ward."),
+  item("Sootline Band", "ring", { str: 2, agi: 3 }, "A workmanlike ring worn by Ash Quarter patrols."),
+  item("Lantern Chain", "necklace", { mag: 3, stam: 3 }, "A sturdy brass chain carrying a small Hall lantern token."),
+  item("Embercord Pendant", "necklace", { str: 2, mag: 2, agi: 2 }, "A braided field charm used by junior Flameguard."),
+  item("Sootguard Helm", "helmet", { stam: 4, agi: 2 }, "A serviceable helm with a smoke-darkened brow plate."),
+  item("Copperglass Visor", "helmet", { mag: 3, agi: 3 }, "A practical lens for reading movement through ash and glare.")
 ];
-const HALL_ULTIMATE_WEAPONS = ngPlusGear.filter(gear => ngPlusSignatureNames.has(gear.name));
+
+const HALL_EPIC_GEAR_POOL = [
+  item("Cinderwake Spear", "weapon", { str: 7, mag: 4, agi: 2 }, "An ember-channelled spear made for decisive Hall trials.", { type: "statusOnHit", status: "stun", value: .1, label: "10% chance to Stun on hit" }),
+  item("Reverie Prism Staff", "weapon", { mag: 8, agi: 3, stam: 2 }, "A many-faceted focus that turns remembered spells into clean light.", { type: "magicDamage", value: .1, label: "+10% magic damage" }),
+  item("Emberguard Mantle", "armour", { stam: 8, str: 3, mag: 2 }, "Layered Hall armour carrying a controlled inner warmth.", { type: "blockPower", value: .16, label: "16% stronger personal guard" }),
+  item("Riftstitch Coat", "armour", { stam: 6, mag: 5, agi: 3 }, "Reverie thread closes around impacts before the tear can spread.", { type: "allStatusResistance", value: .1, label: "+10% resistance to all statuses" }),
+  item("Moonfire Signet", "ring", { mag: 5, agi: 5, stam: 2 }, "A silver signet whose pale flame brightens near a weakness.", { type: "weaknessDamage", value: .16, label: "+16% weakness damage" }),
+  item("Faultspark Ring", "ring", { str: 5, stam: 4, agi: 3 }, "A Stonewake spark sealed inside a precisely cracked band.", { type: "stagger", value: 1, label: "+1 stagger on weakness hits" }),
+  item("Stormglass Torque", "necklace", { mag: 6, agi: 5, stam: 2 }, "Charged glass stores a little momentum from every clean strike.", { type: "mpOnHit", value: 3, label: "Restore 3 MP after dealing damage" }),
+  item("Hearthsong Locket", "necklace", { mag: 5, stam: 5, echo: 2 }, "A warm refrain answers after the trial falls quiet.", { type: "battleRegen", value: 14, label: "Restore 14 HP after victory" }),
+  item("Dawnwatch Circlet", "helmet", { mag: 6, agi: 5, stam: 2 }, "A bright Hall circlet tuned to the first opening in a fight.", { type: "openingTurnProgress", value: .1, label: "+10% opening turn progress" }),
+  item("Ashseer Hood", "helmet", { agi: 6, mag: 4, stam: 3 }, "A fine dark hood whose inner lens follows afflicted targets.", { type: "afflictedDamage", value: .12, label: "+12% damage against afflicted targets" })
+];
+
 const HALL_LEGENDARY_GEAR_POOL = [
-  ...postgameGear,
-  ...ngPlusChestGear,
-  ...ngPlusGear
+  item("Oathblade of the First Flame", "weapon", { str: 12, mag: 7, agi: 4 }, "The named blade carried by the first captain to clear Ember Hall.", [{ type: "physicalDamage", value: .16, label: "+16% physical damage" }, { type: "openingResonance", value: 16, label: "+16 Resonance at battle start" }]),
+  item("Star-Scribe's Crozier", "weapon", { mag: 13, agi: 5, echo: 3 }, "A celebrated Reverie relic whose constellations rewrite hostile magic.", [{ type: "magicDamage", value: .16, label: "+16% magic damage" }, { type: "statusChance", value: .14, label: "+14% status application chance" }]),
+  item("Bastion of Cinderhall", "armour", { stam: 14, str: 5, mag: 3 }, "The ceremonial plate that held the Hall's western gate through the Long Ash.", [{ type: "blockPower", value: .26, label: "26% stronger personal guard" }, { type: "allStatusResistance", value: .16, label: "+16% resistance to all statuses" }]),
+  item("Veil of the Last Archivist", "armour", { stam: 11, mag: 8, agi: 4 }, "A prestigious archive mantle preserved after its final keeper vanished.", [{ type: "buffDuration", value: 1, label: "Buffs last +1 turn" }, { type: "statusResistance", status: "sleep", value: .4, label: "+40% Sleep resistance" }]),
+  item("Rava's Crownless Signet", "ring", { str: 8, agi: 8, stam: 4 }, "A famous rebel seal awarded only to those who hold without kneeling.", [{ type: "critChance", value: .1, label: "+10% critical chance" }, { type: "stagger", value: 2, label: "+2 stagger on weakness hits" }]),
+  item("Nyx's Unwritten Seal", "ring", { mag: 9, agi: 7, echo: 4 }, "A named black seal omitted from every obedient version of the archive.", [{ type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" }, { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" }]),
+  item("Chain of Seven Lanterns", "necklace", { mag: 8, stam: 8, agi: 4 }, "Seven honoured Hall lanterns burn in miniature along this storied chain.", [{ type: "openingResonance", value: 22, label: "+22 Resonance at battle start" }, { type: "battleRegen", value: 22, label: "Restore 22 HP after victory" }]),
+  item("Stonewake King's Torque", "necklace", { str: 8, stam: 10, mag: 3 }, "A royal Stonewake torque whose weight became a symbol of earned command.", [{ type: "hpOnHit", value: 6, label: "Restore 6 HP after dealing damage" }, { type: "weaknessDamage", value: .22, label: "+22% weakness damage" }]),
+  item("Crown of the Ember Vigil", "helmet", { mag: 9, agi: 8, stam: 5 }, "The named watch-crown worn through the Hall's longest night.", [{ type: "openingTurnProgress", value: .16, label: "+16% opening turn progress" }, { type: "allStatusResistance", value: .14, label: "+14% resistance to all statuses" }]),
+  item("Helm of the Worldroot", "helmet", { stam: 11, str: 7, agi: 3 }, "A legendary Stonekin helm said to carry the patience of the mountain.", [{ type: "statusResistance", status: "stun", value: .5, label: "+50% Stun resistance" }, { type: "blockPower", value: .22, label: "22% stronger personal guard" }])
 ];
+
+[...HALL_RARE_GEAR_POOL, ...HALL_EPIC_GEAR_POOL, ...HALL_LEGENDARY_GEAR_POOL].forEach(gear => gearDb[gear.slot].push(gear));
 
 const generalDropGear = new Set([
   ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
@@ -2237,7 +2267,6 @@ function gearEffectHtml(gear, className = "rare-effect") {
 
 const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 };
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
-const HALL_GEAR_RARITIES = RARITY_ORDER.slice(1, 5);
 
 function affix(key, label, type, min, max, options = {}) {
   return { key, label, type, min, max, ...options };
@@ -3418,7 +3447,7 @@ const state = {
   discoveredMaps: ["lantern"],
   escort: null,
   fieldWard: false,
-  hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 },
+  hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0, startingCompanions: [], startingWelcomeComplete: false, shopStage: 0, shopOffers: {}, purchasedShopStages: [] },
   flags: {}
 };
 
@@ -3927,8 +3956,8 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["Solinar's Final Sunrise", "alarm", ["frostmile"], true, [["leviathan"], ["solinar"], ["solinarEnraged"]]]
 ].map(([name, mapId, enemies, boss, waves = []], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss), waves }));
 
-const HALL_RECRUIT_INTERVAL = 3;
 const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
+const HALL_RECRUIT_STAGES = [7, 14, 21, 28];
 const RECRUIT_SCENE_ROOM_NAMES = {
   "trial-room": "Ember Hall Trial Room",
   "central-hall": "Central Ember Hall",
@@ -6140,7 +6169,7 @@ function resetHallBattleRun() {
     escort: null,
     fieldWard: false,
     flags: {},
-    hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0 }
+    hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0, startingCompanions: [], startingWelcomeComplete: false, shopStage: 0, shopOffers: {}, purchasedShopStages: [] }
   });
 }
 
@@ -6160,8 +6189,12 @@ function startHallBattles(continueGame = false) {
   updatePanels();
   updateSkillPointNotice();
   if (!loaded) saveGame(hallSaveKey());
-  showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - Stage 1 ready");
-  if (!loaded) playRecruitScene(RECRUIT_SCENES.find(scene => scene.id === EMBER_HALL_INTRO_ID));
+  const progress = hallBattleProgress();
+  const needsStartingParty = !progress.startingWelcomeComplete && progress.startingCompanions.length !== 2;
+  const needsStartingWelcome = !progress.startingWelcomeComplete && progress.startingCompanions.length === 2;
+  showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - choose your starting Flameguard");
+  if (needsStartingParty) openHallStartingPartySelection();
+  else if (needsStartingWelcome) playHallStartingWelcomeSequence(progress.startingCompanions);
 }
 
 function activateTitleSelection() {
@@ -8310,6 +8343,17 @@ function normalizeHallBattleProgress(progress) {
     ? [...new Set(normalized.recruitStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= 40))]
     : [];
   normalized.pendingRecruit = Number(normalized.pendingRecruit) || 0;
+  normalized.startingCompanions = Array.isArray(normalized.startingCompanions)
+    ? [...new Set(normalized.startingCompanions.filter(id => HALL_RECRUITS.includes(id)))].slice(0, 2)
+    : [];
+  normalized.startingWelcomeComplete = typeof normalized.startingWelcomeComplete === "boolean"
+    ? normalized.startingWelcomeComplete
+    : highestCleared > 0;
+  normalized.shopStage = Math.max(0, Math.min(maxStage, Number(normalized.shopStage) || 0));
+  normalized.shopOffers = normalized.shopOffers && typeof normalized.shopOffers === "object" ? { ...normalized.shopOffers } : {};
+  normalized.purchasedShopStages = Array.isArray(normalized.purchasedShopStages)
+    ? [...new Set(normalized.purchasedShopStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= maxStage))]
+    : [];
   return normalized;
 }
 
@@ -8383,9 +8427,7 @@ function renderHallBattleMap() {
     const isCleared = cleared.has(info.stage);
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
-    const lootLabel = info.stage >= HALL_MYTHIC_STAGE ? "Mythic gear" : HALL_ULTIMATE_REWARD_STAGES.has(info.stage)
-      ? "Legendary / ultimate weapon"
-      : info.stage >= HALL_LEGENDARY_STAGE ? "Legendary gear" : "Uncommon-Legendary gear";
+    const lootLabel = `${hallNormalGearRarity(info.stage)} gear${info.stage < HALL_MYTHIC_STAGE ? " / low +1 rarity chance" : ""}`;
     return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
   el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/${HALL_BATTLE_BLUEPRINTS.length} cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
@@ -8405,6 +8447,8 @@ function startHallBattleStage(stage) {
   const info = hallBattleInfo(stage);
   const progress = hallBattleProgress();
   if (!info || (stage > progress.unlockedStage && !progress.clearedStages.includes(stage))) return;
+  ensureHallShopOffer(stage);
+  saveGame(hallSaveKey());
   el.menu.classList.add("hidden");
   document.querySelector(".menu-tabs").classList.remove("hidden");
   state.map = info.mapId;
@@ -8418,9 +8462,89 @@ function startHallBattleStage(stage) {
   updateMusic();
 }
 
+let hallStartingSelection = [];
+
+function openHallStartingPartySelection() {
+  hallStartingSelection = hallStartingSelection.filter(id => HALL_RECRUITS.includes(id)).slice(0, 2);
+  mode = "hallMap";
+  el.menu.classList.remove("is-shop");
+  document.querySelector(".menu-tabs").classList.add("hidden");
+  el.menu.classList.remove("hidden");
+  const cards = HALL_RECRUITS.map(id => {
+    const hero = baseJobs[id];
+    const selected = hallStartingSelection.includes(id);
+    return `<button type="button" class="hall-recruit ${selected ? "is-selected" : ""}" data-hall-start-recruit="${id}" aria-pressed="${selected}"><img src="${portraitSources[id]}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><em>${(characterSpecialties[id] || []).join(" / ")}</em></span></button>`;
+  }).join("");
+  el.menuBody.innerHTML = `<section class="hall-recruitment"><header><div><strong>Choose Two Starting Companions</strong><p>Verseborn is ready. Select exactly two Flameguard to begin Ember Hall at level 1.</p></div></header><div class="hall-recruit-grid">${cards}</div><footer><span>${hallStartingSelection.length}/2 selected</span><button type="button" data-confirm-hall-start ${hallStartingSelection.length === 2 ? "" : "disabled"}>Confirm Starting Party</button></footer></section>`;
+  el.menuBody.querySelectorAll("[data-hall-start-recruit]").forEach(button => button.addEventListener("click", () => {
+    const id = button.dataset.hallStartRecruit;
+    hallStartingSelection = hallStartingSelection.includes(id)
+      ? hallStartingSelection.filter(entry => entry !== id)
+      : hallStartingSelection.length < 2 ? [...hallStartingSelection, id] : hallStartingSelection;
+    openHallStartingPartySelection();
+  }));
+  el.menuBody.querySelector("[data-confirm-hall-start]")?.addEventListener("click", () => confirmHallStartingParty(hallStartingSelection));
+}
+
+function hallStartingWelcomeScenes(companions) {
+  const [first, second] = companions;
+  return [
+    {
+      id: "ember-hall-start-verseborn", recruit: "Verseborn", title: "Verseborn Enters Ember Hall", room: "trial-room", preferred: [], cast: ["Verseborn"], allowWithoutPartner: true,
+      build: () => [["Verseborn", "Ember Hall. New run, first verse.", { actor: "Verseborn", anim: "walk", motion: "entrance", dx: 32, facing: 3, duration: 78 }]]
+    },
+    {
+      id: `ember-hall-start-${first}`, recruit: first, title: `${baseJobs[first].name} Joins`, room: "trial-room", preferred: ["Verseborn"], cast: ["Verseborn", first],
+      build: () => [[first, "I am with you. Let us begin.", { actor: first, anim: "walk", motion: "entrance", dx: 28, facing: 3, duration: 72 }], ["Verseborn", "Then the first line has harmony."]]
+    },
+    {
+      id: `ember-hall-start-${second}`, recruit: second, title: `${baseJobs[second].name} Joins`, room: "trial-room", preferred: ["Verseborn", first], cast: ["Verseborn", first, second],
+      build: () => [[second, "Make room. This trial has three names now.", { actor: second, anim: "walk", motion: "entrance", dx: 28, facing: 3, duration: 72 }], ["Verseborn", "Three Flameguard. Stage One awaits."]]
+    }
+  ];
+}
+
+function playHallStartingWelcomeSequence(companions) {
+  const scenes = hallStartingWelcomeScenes(companions);
+  let index = 0;
+  const playNext = () => {
+    if (index >= scenes.length) {
+      hallBattleProgress().startingWelcomeComplete = true;
+      saveGame(hallSaveKey());
+      startHallBattleStage(1);
+      return;
+    }
+    playRecruitScene(scenes[index++], { replay: true, after: playNext });
+  };
+  playNext();
+}
+
+function confirmHallStartingParty(companions) {
+  const chosen = [...new Set(companions)].filter(id => HALL_RECRUITS.includes(id));
+  if (chosen.length !== 2 || state.party.some(id => id !== "Verseborn")) return false;
+  chosen.forEach(id => addParty(id));
+  state.party = ["Verseborn", ...chosen];
+  state.activeParty = [...state.party];
+  state.party.forEach(id => {
+    state.heroProgress[id] = { level: 1, xp: 0, talents: [], pendingMilestones: [] };
+  });
+  const progress = hallBattleProgress();
+  progress.startingCompanions = [...chosen];
+  progress.startingWelcomeComplete = false;
+  restoreHallParty();
+  saveGame(hallSaveKey());
+  playSfx("item");
+  playHallStartingWelcomeSequence(chosen);
+  return true;
+}
+
+function hallRecruitCandidates() {
+  return HALL_RECRUITS.filter(id => !state.party.includes(id));
+}
+
 function openHallRecruitment() {
   const progress = hallBattleProgress();
-  const candidates = HALL_RECRUITS.filter(id => !state.party.includes(id));
+  const candidates = hallRecruitCandidates();
   if (!candidates.length) {
     progress.pendingRecruit = 0;
     return openHallBattleMap();
@@ -8498,13 +8622,14 @@ function recruitSceneActors(scene, partner) {
   }));
 }
 
-function completeRecruitScene() {
+function completeRecruitScene(after = null) {
   activeRecruitScene = null;
   returnToHallAfterBattle();
   mode = "walk";
   updateMusic();
   updatePanels();
   queueSave();
+  if (typeof after === "function") after();
 }
 
 function playRecruitScene(scene, options = {}) {
@@ -8526,7 +8651,7 @@ function playRecruitScene(scene, options = {}) {
   el.menu.classList.add("hidden");
   document.querySelector(".menu-tabs").classList.remove("hidden");
   const lines = scene.build({ recruit: scene.recruit, partner, history, actors: actors.map(actor => actor.id) });
-  showTalk(lines, { portraits: actors.map(actor => actor.id), skippable: true, after: completeRecruitScene });
+  showTalk(lines, { portraits: actors.map(actor => actor.id), skippable: true, after: () => completeRecruitScene(options.after) });
   updateMusic();
   return true;
 }
@@ -8712,9 +8837,8 @@ function recordHallBattleClear(stage) {
   if (!firstClear) return false;
   progress.clearedStages.push(stage);
   progress.clearedStages.sort((a, b) => a - b);
-  state.echoForgeRank = Math.max(state.echoForgeRank || 0, Math.min(40, stage));
   const remainingRecruit = HALL_RECRUITS.some(id => !state.party.includes(id));
-  if (remainingRecruit && stage % HALL_RECRUIT_INTERVAL === 0 && !progress.recruitStages.includes(stage)) progress.pendingRecruit = stage;
+  if (remainingRecruit && HALL_RECRUIT_STAGES.includes(stage) && !progress.recruitStages.includes(stage)) progress.pendingRecruit = stage;
   return true;
 }
 
@@ -10294,10 +10418,9 @@ function winBattle(log) {
     h.mp = u.mp;
   });
   const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
-  const deepHallBattle = hallStage >= HALL_LEGENDARY_STAGE;
   const rewards = rollBattleLoot(battle.defeated, {
     forceGearRarity: echoHuntBattle ? "Legendary" : null,
-    allowGearLoot: !deepHallBattle
+    allowGearLoot: !hallStage
   });
   const bossBattle = Boolean(battle.hallBoss || battle.spawnRef?.boss || ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(battle.winFlag));
   const battleXp = battle.defeated.reduce((sum, unit) => sum + (unit.xp || 20), 0) + (bossBattle ? 120 + Math.max(...battle.defeated.map(unit => unit.level || 1)) * 12 : 0);
@@ -10371,18 +10494,30 @@ function awardGearDrop(name, requestedRarity, drops, options = {}) {
   return { name, rarity, ref };
 }
 
-function rollHallGearRarity() {
-  return HALL_GEAR_RARITIES[Math.floor(Math.random() * HALL_GEAR_RARITIES.length)];
+function hallNormalGearRarity(stage = 1) {
+  const value = Math.max(1, Number(stage) || 1);
+  if (value >= HALL_MYTHIC_STAGE) return "Mythic";
+  if (value >= HALL_LEGENDARY_STAGE) return "Legendary";
+  if (value >= 10) return "Epic";
+  return "Rare";
 }
 
-function hallGearRewardCandidates(stage) {
-  if (stage >= HALL_MYTHIC_STAGE) return HALL_MYTHIC_LOOT_TABLES[stage] || [];
-  const deepHall = stage >= HALL_LEGENDARY_STAGE;
-  const pool = deepHall ? HALL_LEGENDARY_GEAR_POOL : HALL_STANDARD_GEAR_POOL;
-  if (deepHall && HALL_ULTIMATE_REWARD_STAGES.has(stage)) {
-    const missingUltimateWeapons = HALL_ULTIMATE_WEAPONS.filter(gear => gearCopyCount(gear.name) === 0);
-    if (missingUltimateWeapons.length) return missingUltimateWeapons;
-  }
+function rollHallGearRarity(stage = 1) {
+  const normal = hallNormalGearRarity(stage);
+  if (normal === "Mythic" || Math.random() >= HALL_RARITY_UPGRADE_CHANCE) return normal;
+  return RARITY_ORDER[RARITY_ORDER.indexOf(normal) + 1];
+}
+
+function hallGearPoolForRarity(rarity, stage = 1) {
+  if (rarity === "Rare") return HALL_RARE_GEAR_POOL;
+  if (rarity === "Epic") return HALL_EPIC_GEAR_POOL;
+  if (rarity === "Legendary") return HALL_LEGENDARY_GEAR_POOL;
+  if (rarity === "Mythic") return HALL_MYTHIC_LOOT_TABLES[stage] || MYTHIC_GEAR;
+  return [];
+}
+
+function hallGearRewardCandidates(stage, rarity = rollHallGearRarity(stage)) {
+  const pool = hallGearPoolForRarity(rarity, stage).filter(gear => !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name));
   const unownedCandidates = pool.filter(gear => gearCopyCount(gear.name) === 0);
   return unownedCandidates.length ? unownedCandidates : leastOwnedGearCandidates(pool);
 }
@@ -10390,10 +10525,10 @@ function hallGearRewardCandidates(stage) {
 function guaranteeHallBattleGearReward(rewards, stage = 1) {
   if (!Array.isArray(rewards.gearDrops)) rewards.gearDrops = [];
   if (!Array.isArray(rewards.drops)) rewards.drops = [];
-  const candidates = hallGearRewardCandidates(stage);
+  const rarity = rollHallGearRarity(stage);
+  const candidates = hallGearRewardCandidates(stage, rarity);
   const gear = candidates[Math.floor(Math.random() * candidates.length)];
   if (!gear) return null;
-  const rarity = stage >= HALL_MYTHIC_STAGE ? "Mythic" : stage >= HALL_LEGENDARY_STAGE ? "Legendary" : rollHallGearRarity();
   const themes = ["swamp", "ruins", "mountain", "dragon"];
   const theme = HALL_MYTHIC_THEMES[stage] || themes[Math.floor(Math.random() * themes.length)];
   const awarded = awardGearDrop(gear.name, rarity, rewards.drops, { theme, separateCopy: true });
@@ -11427,9 +11562,43 @@ function closeVendor() {
   document.querySelector(".menu-tabs").classList.remove("hidden");
 }
 
+function hallShopPrice(stage, rarity = hallNormalGearRarity(stage)) {
+  const value = Math.max(1, Number(stage) || 1);
+  if (rarity === "Rare") return 195 + value * 7;
+  if (rarity === "Epic") return 450 + Math.max(0, value - 10) * 24;
+  if (rarity === "Legendary") return 1300 + Math.max(0, value - 20) * 55;
+  return 3500 + Math.max(0, value - 40) * 120;
+}
+
+function ensureHallShopOffer(stage) {
+  const value = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(stage) || 1));
+  const progress = hallBattleProgress();
+  const rarity = hallNormalGearRarity(value);
+  const existing = progress.shopOffers[value];
+  const validExisting = existing && existing.rarity === rarity && hallGearPoolForRarity(rarity, value).some(gear => gear.name === existing.name);
+  if (!validExisting) {
+    const startingNames = new Set(Object.values(STARTING_HERO_GEAR).flatMap(slots => Object.values(slots)));
+    const previousName = progress.shopOffers[value - 1]?.name;
+    const pool = hallGearPoolForRarity(rarity, value).filter(gear => !startingNames.has(gear.name)
+      && !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name) && gear.name !== previousName);
+    const candidates = pool.length ? pool : hallGearPoolForRarity(rarity, value);
+    const gear = candidates[Math.floor(Math.random() * candidates.length)];
+    if (!gear) return null;
+    progress.shopOffers[value] = { name: gear.name, rarity, price: hallShopPrice(value, rarity) };
+  }
+  progress.shopStage = value;
+  const offer = progress.shopOffers[value];
+  return { kind: "gear", ...offer, hallStage: value };
+}
+
 function vendorWares(id) {
   const vendor = vendors[id];
   if (!vendor) return [];
+  if (id === "workshop" && state.gameMode === "hallBattles") {
+    const progress = hallBattleProgress();
+    const offer = ensureHallShopOffer(progress.shopStage || progress.unlockedStage || 1);
+    return offer ? [offer] : [];
+  }
   const wares = [...vendor.wares];
   if (id !== "workshop") return wares;
   if (state.ngPlus > 0) {
@@ -11495,11 +11664,12 @@ function renderVendor() {
   const buyList = `<div class="shop-list">${wares.map((ware, index) => {
     const gear = ware.kind === "gear" ? gearByName(ware.name) : null;
     const repeatableEcho = gear && echoForgeGearNames.has(gear.name);
-    const owned = ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho;
+    const hallOfferPurchased = Number.isInteger(ware.hallStage) && hallBattleProgress().purchasedShopStages.includes(ware.hallStage);
+    const owned = ware.kind === "gear" && (hallOfferPurchased || (state.ownedGear.includes(ware.name) && !repeatableEcho && !ware.hallStage));
     const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
     const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
     const effects = gear ? gearEffectLabels(gear) : [];
-    const displayedRarity = gear ? (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name)) : "Common";
+    const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
     const generatedAffixes = gear ? RARITY_AFFIX_COUNTS[displayedRarity] || 0 : 0;
     const rollText = repeatableEcho
       ? ` Every separate copy rolls a fresh, fully random set of ${generatedAffixes} affixes.`
@@ -11526,12 +11696,14 @@ function renderVendor() {
     return `<div class="shop-row">${gearIconHtml(gear, state.party[0], iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(ref)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
-  const shopNote = activeVendor === "workshop"
+  const shopNote = activeVendor === "workshop" && state.gameMode === "hallBattles"
+    ? `Stage ${hallBattleProgress().shopStage || 1} offer. One ${hallNormalGearRarity(hallBattleProgress().shopStage || 1)} item, fixed for this stage.`
+    : activeVendor === "workshop"
     ? `Echo Forge rank ${forgeRank}/40. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
   el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
-  if (activeVendor === "workshop") {
+  if (activeVendor === "workshop" && state.gameMode !== "hallBattles") {
     el.menuBody.querySelector(".shop-mode-tabs").insertAdjacentHTML("beforeend", `<button type="button" data-shop-tab="reforge" class="${vendorTab === "reforge" ? "is-active" : ""}">Reforge</button>`);
     if (vendorTab === "reforge") {
       el.menuBody.querySelector(".shop-list").outerHTML = rerollPanelHtml();
@@ -11625,14 +11797,17 @@ function buyWare(index) {
   const price = ware?.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware?.price;
   if (!ware || state.gold < price) return;
   const repeatableEcho = ware.kind === "gear" && echoForgeGearNames.has(ware.name);
-  if (ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho) return;
+  const hallOffer = ware.kind === "gear" && Number.isInteger(ware.hallStage);
+  if (hallOffer && hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) return;
+  if (ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho && !hallOffer) return;
   if (ware.kind === "item" && inventoryUsed() >= state.inventorySlots) return;
   state.gold -= price;
   if (ware.kind === "gear") {
     const gear = gearByName(ware.name);
-    const refs = addOwnedGear(ware.name, 1, { rarity: defaultGearRarity(ware.name), rollAffixes: true, theme: repeatableEcho ? "" : activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp" });
+    const refs = addOwnedGear(ware.name, 1, { rarity: ware.rarity || defaultGearRarity(ware.name), rollAffixes: true, theme: repeatableEcho ? "" : activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp", separateCopy: hallOffer });
     const ref = refs[0] || gear?.name;
     if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(ref, gearRarity(ref), repeatableEcho ? "" : "dragon");
+    if (hallOffer) hallBattleProgress().purchasedShopStages.push(ware.hallStage);
   }
   else if (ware.kind === "upgrade") {
     state.inventorySlots += 10;
@@ -11640,6 +11815,7 @@ function buyWare(index) {
   } else addInventoryItem(ware.name, 1);
   playSfx("coin");
   updatePanels();
+  if (hallOffer) queueSave();
   renderVendor();
 }
 
