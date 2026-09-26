@@ -100,6 +100,28 @@ test('Artifact offers are shop-only, fixed, and stay stable when Glimmer is reop
   return HALL_ARTIFACT_GEAR.length===10&&artifacts.length===10&&artifacts.every(ware=>ware.rarity==='Artifact'&&artifactGearNames.has(ware.name)&&!mythicGearNames.has(ware.name)&&!echoForgeGearNames.has(ware.name))&&first.map(ware=>ware.name).join('|')===again.map(ware=>ware.name).join('|');
 })()`);
 
+test('Artifacts have stronger base stats, five affixes, and amplified fixed identities', `(() => {
+  const strongestMythicBySlot=MYTHIC_GEAR.reduce((out,gear)=>{const total=Object.values(gear.stats).reduce((sum,value)=>sum+value,0);out[gear.slot]=Math.max(out[gear.slot]||0,total);return out;},{});
+  return RARITY_AFFIX_COUNTS.Artifact===5&&HALL_ARTIFACT_GEAR.every(gear=>{
+    const total=Object.values(gear.stats).reduce((sum,value)=>sum+value,0);
+    const effects=gearEffects(gear);
+    return total>strongestMythicBySlot[gear.slot]&&rollGearAffixes(gear,'Artifact','dragon').length===5&&effects.some(effect=>effect.artifactUnique)&&(effects.length>=3||weaponBasicAttackEffect(gear));
+  });
+})()`);
+
+test('Existing purchased Artifact copies are migrated to five affixes without replacing the item', `(() => {
+  const stateBackup={ownedGear:[...state.ownedGear],gearInstances:structuredClone(state.gearInstances),gearAffixes:structuredClone(state.gearAffixes),gearRarities:structuredClone(state.gearRarities),gearCopies:structuredClone(state.gearCopies)};
+  const instancesBackup=gearInstances;
+  try {
+    state.ownedGear=['The Unwritten Door']; state.gearInstances={hall_9001:{id:'hall_9001',serial:9001,copyNumber:1,name:'The Unwritten Door',rarity:'Artifact',affixes:[]}}; gearInstances=state.gearInstances;
+    state.gearAffixes={}; state.gearRarities={'The Unwritten Door':'Artifact'}; state.gearCopies={'The Unwritten Door':1};
+    upgradeOwnedLegendaryGear();
+    return gearInstances.hall_9001.name==='The Unwritten Door'&&gearInstances.hall_9001.rarity==='Artifact'&&gearInstances.hall_9001.affixes.length===5;
+  } finally {
+    state.ownedGear=stateBackup.ownedGear; state.gearInstances=stateBackup.gearInstances; state.gearAffixes=stateBackup.gearAffixes; state.gearRarities=stateBackup.gearRarities; state.gearCopies=stateBackup.gearCopies; gearInstances=instancesBackup;
+  }
+})()`);
+
 test('Story workshop and Echo Hunt inventory remain on their existing route', `(() => {
   resetHallBattleRun(); state.gameMode='story'; state.echoForgeRank=2;
   const wares=vendorWares('workshop');

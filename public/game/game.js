@@ -1872,46 +1872,54 @@ const HALL_LEGENDARY_GEAR_POOL = [
 ];
 
 const HALL_ARTIFACT_GEAR = [
-  item("The Unwritten Door", "weapon", { mag: 14, agi: 8, echo: 5 }, "A key-shaped focus that closes the route between hostile intent and gathered Resonance.", [
-    { type: "statusChance", value: .18, label: "+18% status application chance", artifactUnique: true },
-    { type: "mpOnHit", value: 5, label: "Restore 5 MP after dealing damage" }
+  item("The Unwritten Door", "weapon", { mag: 19, agi: 11, echo: 8 }, "A key-shaped focus that closes the route between hostile intent and gathered Resonance.", [
+    { type: "statusChance", value: .3, label: "Threshold Dominion: +30% status application chance", artifactUnique: true },
+    { type: "mpOnHit", value: 10, label: "Restore 10 MP after dealing damage" }
   ]),
-  item("Cinderwinter Paradox", "weapon", { str: 12, mag: 12, stam: 5 }, "Frost and ember share one edge without agreeing which of them is real.", [
-    { type: "physicalDamage", value: .14, label: "+14% physical damage", artifactUnique: true },
-    { type: "magicDamage", value: .14, label: "+14% magic damage" }
+  item("Cinderwinter Paradox", "weapon", { str: 17, mag: 17, stam: 7 }, "Frost and ember share one edge without agreeing which of them is real.", [
+    { type: "physicalDamage", value: .25, label: "Frostfire Confluence: +25% physical damage", artifactUnique: true },
+    { type: "magicDamage", value: .25, label: "+25% magic damage" },
+    { type: "weaknessDamage", value: .2, label: "+20% weakness damage" }
   ]),
-  item("Clockless Carapace", "armour", { stam: 14, agi: 8, echo: 4 }, "Its wearer arrives before the mechanism decides the battle has begun.", [
-    { type: "openingTurnProgress", value: .18, label: "+18% opening turn progress", artifactUnique: true },
-    { type: "allStatusResistance", value: .16, label: "+16% resistance to all statuses" }
+  item("Clockless Carapace", "armour", { stam: 20, agi: 11, echo: 6 }, "Its wearer arrives before the mechanism decides the battle has begun.", [
+    { type: "openingTurnProgress", value: .35, label: "Outside the Clock: +35% opening turn progress", artifactUnique: true },
+    { type: "allStatusResistance", value: .3, label: "+30% resistance to all statuses" },
+    { type: "statusDurationReduction", value: 1, label: "Negative statuses last -1 turn" }
   ]),
-  item("Mantle of the Second Heart", "armour", { stam: 13, mag: 7, str: 5 }, "A quiet pulse answers every successful strike and keeps protective magic alive.", [
-    { type: "hpOnHit", value: 6, label: "Restore 6 HP after dealing damage", artifactUnique: true },
-    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+  item("Mantle of the Second Heart", "armour", { stam: 19, mag: 11, str: 7 }, "A quiet pulse answers every successful strike and keeps protective magic alive.", [
+    { type: "hpOnHit", value: 12, label: "Second Pulse: restore 12 HP after dealing damage", artifactUnique: true },
+    { type: "buffDuration", value: 2, label: "Buffs last +2 turns" },
+    { type: "blockPower", value: .3, label: "30% stronger personal guard" }
   ]),
-  item("Oath Without Witness", "ring", { str: 8, mag: 8, stam: 5 }, "A promise that lengthens every blessing and every curse without asking who spoke it.", [
-    { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn", artifactUnique: true },
-    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+  item("Oath Without Witness", "ring", { str: 11, mag: 11, stam: 8 }, "A promise that lengthens every blessing and every curse without asking who spoke it.", [
+    { type: "statusDuration", value: 2, label: "Unending Oath: inflicted statuses last +2 turns", artifactUnique: true },
+    { type: "buffDuration", value: 2, label: "Buffs last +2 turns" },
+    { type: "statusChance", value: .2, label: "+20% status application chance" }
   ]),
-  item("Riotglass Loop", "ring", { agi: 10, str: 6, mag: 6 }, "The loop catches a decisive instant and throws it back into the turn order.", [
-    { type: "echoing", value: .08, label: "8% skill Echo turn progress", artifactUnique: true },
-    { type: "critChance", value: .1, label: "+10% critical chance" }
+  item("Riotglass Loop", "ring", { agi: 14, str: 8, mag: 8 }, "The loop catches a decisive instant and throws it back into the turn order.", [
+    { type: "echoing", value: .15, label: "Riotglass Reprise: 15% skill Echo turn progress", artifactUnique: true },
+    { type: "critChance", value: .18, label: "+18% critical chance" },
+    { type: "openingTurnProgress", value: .2, label: "+20% opening turn progress" }
   ]),
-  item("Choir of One", "necklace", { mag: 10, echo: 8, stam: 5 }, "One voice becomes an opening chorus, then feeds on every note that lands.", [
-    { type: "openingResonance", value: 22, label: "+22 Resonance at battle start", artifactUnique: true },
-    { type: "mpOnHit", value: 5, label: "Restore 5 MP after dealing damage" }
+  item("Choir of One", "necklace", { mag: 14, echo: 10, stam: 7 }, "One voice becomes an opening chorus, then feeds on every note that lands.", [
+    { type: "openingResonance", value: 40, label: "Opening Chorus: +40 Resonance at battle start", artifactUnique: true },
+    { type: "mpOnHit", value: 8, label: "Restore 8 MP after dealing damage" },
+    { type: "echoing", value: .1, label: "10% skill Echo turn progress" }
   ]),
-  item("Worldroot's Loose Stone", "necklace", { stam: 11, str: 8, mag: 4 }, "A fragment that makes guarded blows feel heavier at the enemy's foundation.", [
-    { type: "stagger", value: 2, label: "+2 stagger on weakness hits", artifactUnique: true },
-    { type: "blockPower", value: .24, label: "24% stronger personal guard" }
+  item("Worldroot's Loose Stone", "necklace", { stam: 15, str: 11, mag: 6 }, "A fragment that makes guarded blows feel heavier at the enemy's foundation.", [
+    { type: "stagger", value: 4, label: "Worldroot Fracture: +4 Break on weakness hits", artifactUnique: true },
+    { type: "blockPower", value: .4, label: "40% stronger personal guard" },
+    { type: "hpOnHit", value: 8, label: "Restore 8 HP after dealing damage" }
   ]),
-  item("Lens Beyond Dawn", "helmet", { mag: 10, agi: 10, echo: 5 }, "It sees the weakness inside a wound and the wound inside a weakness.", [
-    { type: "weaknessDamage", value: .24, label: "+24% weakness damage", artifactUnique: true },
-    { type: "afflictedDamage", value: .18, label: "+18% damage against afflicted targets" }
+  item("Lens Beyond Dawn", "helmet", { mag: 14, agi: 14, echo: 7 }, "It sees the weakness inside a wound and the wound inside a weakness.", [
+    { type: "weaknessDamage", value: .4, label: "Dawnless Sight: +40% weakness damage", artifactUnique: true },
+    { type: "afflictedDamage", value: .3, label: "+30% damage against afflicted targets" },
+    { type: "statusChance", value: .15, label: "+15% status application chance" }
   ]),
-  item("Crown of the Last Door", "helmet", { stam: 10, mag: 9, agi: 6 }, "The final threshold protects its bearer while opening the battle on their terms.", [
-    { type: "allStatusResistance", value: .2, label: "+20% resistance to all statuses", artifactUnique: true },
-    { type: "openingTurnProgress", value: .15, label: "+15% opening turn progress" },
-    { type: "openingResonance", value: 18, label: "+18 Resonance at battle start" }
+  item("Crown of the Last Door", "helmet", { stam: 14, mag: 13, agi: 9 }, "The final threshold protects its bearer while opening the battle on their terms.", [
+    { type: "allStatusResistance", value: .35, label: "Final Threshold: +35% resistance to all statuses", artifactUnique: true },
+    { type: "openingTurnProgress", value: .25, label: "+25% opening turn progress" },
+    { type: "openingResonance", value: 30, label: "+30 Resonance at battle start" }
   ])
 ];
 const artifactGearNames = new Set(HALL_ARTIFACT_GEAR.map(gear => gear.name));
@@ -2268,8 +2276,8 @@ const WEAPON_BASIC_ATTACK_EFFECTS = {
   "Red Memory Halberd": { type: "status", status: "burn", duration: 4, label: "BASIC ATTACK: inflicts Burn" },
   "Unwritten Quillblade": { type: "status", status: "magicVulnerability", value: .2, duration: 3, label: "BASIC ATTACK: applies 20% Magic Vulnerability" },
   "Solinar's Frostfire Greatsword": { type: "status", status: "burn", duration: 5, coefficient: .32, label: "BASIC ATTACK: inflicts strong Frostfire Burn" },
-  "The Unwritten Door": { type: "status", status: "resonanceLocked", duration: 1, label: "ARTIFACT BASIC ATTACK: locks enemy Resonance for 1 turn" },
-  "Cinderwinter Paradox": { type: "status", status: "burn", duration: 4, label: "ARTIFACT BASIC ATTACK: inflicts Burn" }
+  "The Unwritten Door": { type: "status", status: "resonanceLocked", duration: 2, label: "ARTIFACT BASIC ATTACK: locks enemy Resonance for 2 turns" },
+  "Cinderwinter Paradox": { type: "status", status: "burn", duration: 5, coefficient: .4, label: "ARTIFACT BASIC ATTACK: inflicts strong Frostfire Burn" }
 };
 
 function weaponBasicAttackEffect(gear) {
@@ -2313,7 +2321,7 @@ function gearEffectHtml(gear, className = "rare-effect") {
   return `${effectHtml}${setHtml}`;
 }
 
-const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 };
+const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5 };
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
 const GEAR_DISPLAY_RARITIES = [...RARITY_ORDER, "Artifact"];
 
@@ -2464,11 +2472,12 @@ function topUpGearAffixes(name, rarity = gearRarity(name), theme = "dragon") {
 
 function upgradeOwnedLegendaryGear() {
   const equipped = Object.values(baseJobs).flatMap(hero => Object.values(hero.gear || {})).filter(Boolean);
+  const instances = Object.values(gearInstances).map(instance => instance?.id).filter(Boolean);
   const owned = (state.ownedGear || []).flatMap(name => {
     const refs = echoForgeGearNames.has(name) ? echoGearInstanceRefs(name) : [];
     return refs.length ? refs : [name];
   });
-  [...new Set([...owned, ...equipped])].forEach(ref => {
+  [...new Set([...owned, ...equipped, ...instances])].forEach(ref => {
     if (!gearByName(ref)) return;
     const name = gearBaseName(ref);
     if (postgameGearNames.has(name)) state.gearRarities[name] = "Legendary";
@@ -2481,7 +2490,7 @@ function upgradeOwnedLegendaryGear() {
       else state.gearRarities[name] = rarity;
     }
     const rarity = gearRarity(ref);
-    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || RARITY_ORDER.indexOf(rarity) >= RARITY_ORDER.indexOf("Legendary")) topUpGearAffixes(ref, rarity, "dragon");
+    if (postgameGearNames.has(name) || echoForgeGearNames.has(name) || gearRarityRank(rarity) >= gearRarityRank("Legendary")) topUpGearAffixes(ref, rarity, "dragon");
   });
 }
 
@@ -11755,6 +11764,7 @@ function renderVendor() {
     const generatedAffixes = gear ? RARITY_AFFIX_COUNTS[displayedRarity] || 0 : 0;
     const rollText = repeatableEcho
       ? ` Every separate copy rolls a fresh, fully random set of ${generatedAffixes} affixes.`
+      : displayedRarity === "Artifact" ? ` Rolls ${generatedAffixes} random affixes when purchased.`
       : gear && zoneStarterGear.includes(gear) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
     const details = gear ? `${displayedRarity}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
     const rarityBadge = displayedRarity === "Artifact" ? `<small class="gear-rarity rarity-artifact">ARTIFACT</small>` : "";
@@ -12357,7 +12367,7 @@ function runQaChecks() {
 
     const affixCounts = RARITY_ORDER.map(rarity => [rarity, rollGearAffixes(gearByName("Ashrunner Knife"), rarity, "mountain").length]);
     check("affix-counts", affixCounts.every(([rarity, count]) => count === RARITY_AFFIX_COUNTS[rarity]), JSON.stringify(affixCounts));
-    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 }));
+    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5 }));
     const rangedAffixes = Array.from({ length: 20 }, () => rollGearAffixes(gearByName("Ashrunner Knife"), "Epic", "mountain")).flat();
     check("affix-ranges", rangedAffixes.every(entry => entry.value >= entry.min && entry.value <= entry.max));
     check("early-status-gear", zoneStarterGear.filter(gear => gear.slot === "weapon").every(gear => gearEffects(gear).some(effect => effect.type === "statusOnHit")) && zoneStarterGear.some(gear => gear.slot === "armour" && gearEffects(gear).some(effect => effect.type === "statusOnHit")));
