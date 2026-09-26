@@ -1397,6 +1397,7 @@ canvas:focus {
 .rarity-epic { color: #cf9bf2 !important; border-color: #76518d; }
 .rarity-legendary { color: #ffd27d !important; border-color: #a87932; }
 .rarity-mythic { color: #f5fcff !important; border-color: #69dff1; background: #11272d; text-shadow: 0 0 6px #65e6ffcc, 0 0 10px #e8b95d88; }
+.rarity-artifact { color: #fff3b5 !important; border-color: #f1bd57; background: #2b132d; text-shadow: 0 0 6px #ff80d8cc, 0 0 10px #ffd76eaa; }
 
 .gear-affixes {
   display: grid !important;

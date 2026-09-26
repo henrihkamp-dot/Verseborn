@@ -1829,7 +1829,7 @@ const MYTHIC_SETS = {
 
 const HALL_MYTHIC_THEMES = { 41: "mountain", 42: "ruins", 43: "mountain", 44: "ruins", 45: "dragon", 46: "ruins", 47: "dragon", 48: "ruins", 49: "mountain", 50: "dragon" };
 const HALL_LEGENDARY_STAGE = 20;
-const HALL_MYTHIC_STAGE = 40;
+const HALL_MYTHIC_STAGE = 41;
 const HALL_RARITY_UPGRADE_CHANCE = .08;
 
 const HALL_RARE_GEAR_POOL = [
@@ -1871,7 +1871,52 @@ const HALL_LEGENDARY_GEAR_POOL = [
   item("Helm of the Worldroot", "helmet", { stam: 11, str: 7, agi: 3 }, "A legendary Stonekin helm said to carry the patience of the mountain.", [{ type: "statusResistance", status: "stun", value: .5, label: "+50% Stun resistance" }, { type: "blockPower", value: .22, label: "22% stronger personal guard" }])
 ];
 
-[...HALL_RARE_GEAR_POOL, ...HALL_EPIC_GEAR_POOL, ...HALL_LEGENDARY_GEAR_POOL].forEach(gear => gearDb[gear.slot].push(gear));
+const HALL_ARTIFACT_GEAR = [
+  item("The Unwritten Door", "weapon", { mag: 14, agi: 8, echo: 5 }, "A key-shaped focus that closes the route between hostile intent and gathered Resonance.", [
+    { type: "statusChance", value: .18, label: "+18% status application chance", artifactUnique: true },
+    { type: "mpOnHit", value: 5, label: "Restore 5 MP after dealing damage" }
+  ]),
+  item("Cinderwinter Paradox", "weapon", { str: 12, mag: 12, stam: 5 }, "Frost and ember share one edge without agreeing which of them is real.", [
+    { type: "physicalDamage", value: .14, label: "+14% physical damage", artifactUnique: true },
+    { type: "magicDamage", value: .14, label: "+14% magic damage" }
+  ]),
+  item("Clockless Carapace", "armour", { stam: 14, agi: 8, echo: 4 }, "Its wearer arrives before the mechanism decides the battle has begun.", [
+    { type: "openingTurnProgress", value: .18, label: "+18% opening turn progress", artifactUnique: true },
+    { type: "allStatusResistance", value: .16, label: "+16% resistance to all statuses" }
+  ]),
+  item("Mantle of the Second Heart", "armour", { stam: 13, mag: 7, str: 5 }, "A quiet pulse answers every successful strike and keeps protective magic alive.", [
+    { type: "hpOnHit", value: 6, label: "Restore 6 HP after dealing damage", artifactUnique: true },
+    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+  ]),
+  item("Oath Without Witness", "ring", { str: 8, mag: 8, stam: 5 }, "A promise that lengthens every blessing and every curse without asking who spoke it.", [
+    { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn", artifactUnique: true },
+    { type: "buffDuration", value: 1, label: "Buffs last +1 turn" }
+  ]),
+  item("Riotglass Loop", "ring", { agi: 10, str: 6, mag: 6 }, "The loop catches a decisive instant and throws it back into the turn order.", [
+    { type: "echoing", value: .08, label: "8% skill Echo turn progress", artifactUnique: true },
+    { type: "critChance", value: .1, label: "+10% critical chance" }
+  ]),
+  item("Choir of One", "necklace", { mag: 10, echo: 8, stam: 5 }, "One voice becomes an opening chorus, then feeds on every note that lands.", [
+    { type: "openingResonance", value: 22, label: "+22 Resonance at battle start", artifactUnique: true },
+    { type: "mpOnHit", value: 5, label: "Restore 5 MP after dealing damage" }
+  ]),
+  item("Worldroot's Loose Stone", "necklace", { stam: 11, str: 8, mag: 4 }, "A fragment that makes guarded blows feel heavier at the enemy's foundation.", [
+    { type: "stagger", value: 2, label: "+2 stagger on weakness hits", artifactUnique: true },
+    { type: "blockPower", value: .24, label: "24% stronger personal guard" }
+  ]),
+  item("Lens Beyond Dawn", "helmet", { mag: 10, agi: 10, echo: 5 }, "It sees the weakness inside a wound and the wound inside a weakness.", [
+    { type: "weaknessDamage", value: .24, label: "+24% weakness damage", artifactUnique: true },
+    { type: "afflictedDamage", value: .18, label: "+18% damage against afflicted targets" }
+  ]),
+  item("Crown of the Last Door", "helmet", { stam: 10, mag: 9, agi: 6 }, "The final threshold protects its bearer while opening the battle on their terms.", [
+    { type: "allStatusResistance", value: .2, label: "+20% resistance to all statuses", artifactUnique: true },
+    { type: "openingTurnProgress", value: .15, label: "+15% opening turn progress" },
+    { type: "openingResonance", value: 18, label: "+18 Resonance at battle start" }
+  ])
+];
+const artifactGearNames = new Set(HALL_ARTIFACT_GEAR.map(gear => gear.name));
+
+[...HALL_RARE_GEAR_POOL, ...HALL_EPIC_GEAR_POOL, ...HALL_LEGENDARY_GEAR_POOL, ...HALL_ARTIFACT_GEAR].forEach(gear => gearDb[gear.slot].push(gear));
 
 const generalDropGear = new Set([
   ...rareGear.filter(gear => gear.name !== "Echo-Thread Lute"),
@@ -2222,7 +2267,9 @@ const WEAPON_BASIC_ATTACK_EFFECTS = {
   "Cindralis Edictblade": { type: "status", status: "physicalVulnerability", value: .18, duration: 3, label: "BASIC ATTACK: applies 18% Physical Vulnerability" },
   "Red Memory Halberd": { type: "status", status: "burn", duration: 4, label: "BASIC ATTACK: inflicts Burn" },
   "Unwritten Quillblade": { type: "status", status: "magicVulnerability", value: .2, duration: 3, label: "BASIC ATTACK: applies 20% Magic Vulnerability" },
-  "Solinar's Frostfire Greatsword": { type: "status", status: "burn", duration: 5, coefficient: .32, label: "BASIC ATTACK: inflicts strong Frostfire Burn" }
+  "Solinar's Frostfire Greatsword": { type: "status", status: "burn", duration: 5, coefficient: .32, label: "BASIC ATTACK: inflicts strong Frostfire Burn" },
+  "The Unwritten Door": { type: "status", status: "resonanceLocked", duration: 1, label: "ARTIFACT BASIC ATTACK: locks enemy Resonance for 1 turn" },
+  "Cinderwinter Paradox": { type: "status", status: "burn", duration: 4, label: "ARTIFACT BASIC ATTACK: inflicts Burn" }
 };
 
 function weaponBasicAttackEffect(gear) {
@@ -2233,6 +2280,7 @@ function weaponBasicAttackEffect(gear) {
 function gearEffectLabel(effect) {
   if (!effect?.label) return "";
   if (effect.type === "mpOnHit") return `Restore at least ${effect.value} MP after dealing damage; scales modestly with Max MP`;
+  if (effect.artifactUnique) return `ARTIFACT EFFECT: ${effect.label.replace(/^ARTIFACT(?: EFFECT)?:\s*/i, "")}`;
   return effect.echoUnique ? `ECHO EFFECT: ${effect.label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : effect.label;
 }
 
@@ -2267,6 +2315,11 @@ function gearEffectHtml(gear, className = "rare-effect") {
 
 const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 };
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
+const GEAR_DISPLAY_RARITIES = [...RARITY_ORDER, "Artifact"];
+
+function gearRarityRank(rarity) {
+  return rarity === "Artifact" ? RARITY_ORDER.length : RARITY_ORDER.indexOf(rarity);
+}
 
 function affix(key, label, type, min, max, options = {}) {
   return { key, label, type, min, max, ...options };
@@ -2339,6 +2392,7 @@ function defaultGearRarity(name) {
   const baseName = gearBaseName(name);
   const gear = gearByName(baseName);
   if (!gear) return "Common";
+  if (artifactGearNames.has(baseName)) return "Artifact";
   if (mythicGearNames.has(baseName)) return "Mythic";
   if (ngPlusSignatureNames.has(baseName) || postgameGearNames.has(baseName)) return "Legendary";
   if (echoForgeGearNames.has(baseName)) return gear.echoRarity || "Legendary";
@@ -2575,7 +2629,7 @@ function gearItemPower(ref) {
   const baseStats = Object.values(gear?.stats || {}).reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
   const fixedPower = gearEffects(gear).reduce((sum, effect) => sum + (Math.abs(Number(effect.value) || 0) <= 1 ? Math.abs(Number(effect.value) || 0) * 100 : Math.abs(Number(effect.value) || 0)), 0);
   const affixPower = gearAffixes(ref).reduce((sum, entry) => sum + (Math.abs(Number(entry.value) || 0) <= 1 ? Math.abs(Number(entry.value) || 0) * 100 : Math.abs(Number(entry.value) || 0)), 0);
-  return baseStats + fixedPower + affixPower + RARITY_ORDER.indexOf(gearRarity(ref)) * 10;
+  return baseStats + fixedPower + affixPower + gearRarityRank(gearRarity(ref)) * 10;
 }
 
 function gearSortValue(ref, field) {
@@ -2583,7 +2637,7 @@ function gearSortValue(ref, field) {
   const stats = gear?.stats || {};
   if (field.startsWith("affix:")) return gearAffixFacetValue(ref, field.slice(6));
   if (field === "itemPower") return gearItemPower(ref);
-  if (field === "rarity") return RARITY_ORDER.indexOf(gearRarity(ref));
+  if (field === "rarity") return gearRarityRank(gearRarity(ref));
   if (field === "affixCount") return gearAffixes(ref).length;
   if (field === "newest") return gearInstance(ref)?.serial || state.ownedGear.indexOf(gearBaseName(ref)) + 1;
   if (field === "crit") {
@@ -2691,7 +2745,7 @@ function gearBrowserToolbarHtml(visibleCount, totalCount) {
       <details data-gear-filter-panel ${gearBrowser.filterOpen ? "open" : ""}><summary>Filter${filterCount ? ` (${filterCount})` : ""}</summary>
         <div class="gear-browser-panel gear-filter-grid">
           <label>Type<select data-gear-filter="slot"><option value="all">All slots</option>${["weapon", "armour", "ring", "necklace", "helmet"].map(slot => `<option value="${slot}" ${gearBrowser.slot === slot ? "selected" : ""}>${gearSlotLabel(slot)}</option>`).join("")}</select></label>
-          <label>Rarity<select data-gear-filter="rarity"><option value="all">All rarities</option>${RARITY_ORDER.map(rarity => `<option value="${rarity}" ${gearBrowser.rarity === rarity ? "selected" : ""}>${rarity}</option>`).join("")}</select></label>
+          <label>Rarity<select data-gear-filter="rarity"><option value="all">All rarities</option>${GEAR_DISPLAY_RARITIES.map(rarity => `<option value="${rarity}" ${gearBrowser.rarity === rarity ? "selected" : ""}>${rarity}</option>`).join("")}</select></label>
           <label>Usability<select data-gear-filter="usability"><option value="all">All characters</option><option value="selected" ${gearBrowser.usability === "selected" ? "selected" : ""}>Selected hero</option>${heroOptions}</select></label>
           <label>Equipment<select data-gear-filter="equipped"><option value="all">Equipped + unequipped</option><option value="equipped" ${gearBrowser.equipped === "equipped" ? "selected" : ""}>Equipped only</option><option value="unequipped" ${gearBrowser.equipped === "unequipped" ? "selected" : ""}>Unequipped only</option></select></label>
           <fieldset><legend>Fixed stats</legend><div class="gear-match-mode"><button type="button" data-gear-stat-match="any" class="${gearBrowser.statMatch === "any" ? "is-active" : ""}">ANY</button><button type="button" data-gear-stat-match="all" class="${gearBrowser.statMatch === "all" ? "is-active" : ""}">ALL</button></div><div class="gear-affix-options">${statChecks}</div></fieldset>
@@ -4492,7 +4546,7 @@ function autoEquipGearScore(id, slot, ref) {
   const current = hero.gear[slot];
   try {
     hero.gear[slot] = ref || null;
-    const rarity = ref ? RARITY_ORDER.indexOf(gearRarity(ref)) : 0;
+    const rarity = ref ? gearRarityRank(gearRarity(ref)) : 0;
     return autoEquipLoadoutScore(id) + rarity * .001 + (ref ? gearItemPower(ref) : 0) * .00001;
   } finally {
     hero.gear[slot] = current;
@@ -10502,6 +10556,12 @@ function hallNormalGearRarity(stage = 1) {
   return "Rare";
 }
 
+function hallShopGearRarity(stage = 1) {
+  const value = Math.max(1, Number(stage) || 1);
+  if (value >= 41) return "Artifact";
+  return hallNormalGearRarity(value);
+}
+
 function rollHallGearRarity(stage = 1) {
   const normal = hallNormalGearRarity(stage);
   if (normal === "Mythic" || Math.random() >= HALL_RARITY_UPGRADE_CHANCE) return normal;
@@ -10518,6 +10578,7 @@ function hallGearPoolForRarity(rarity, stage = 1) {
 
 function hallGearRewardCandidates(stage, rarity = rollHallGearRarity(stage)) {
   const pool = hallGearPoolForRarity(rarity, stage).filter(gear => !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name));
+  if (stage >= HALL_MYTHIC_STAGE && rarity === "Mythic") return pool;
   const unownedCandidates = pool.filter(gear => gearCopyCount(gear.name) === 0);
   return unownedCandidates.length ? unownedCandidates : leastOwnedGearCandidates(pool);
 }
@@ -11543,6 +11604,11 @@ function beginNewGamePlus() {
 function openVendor(id) {
   const vendor = vendors[id];
   if (!vendor) return;
+  if (id === "workshop" && state.gameMode === "hallBattles") {
+    const progress = hallBattleProgress();
+    hallShopOffersThrough(Math.max(progress.unlockedStage, progress.shopStage, 1));
+    saveGame(hallSaveKey());
+  }
   activeVendor = id;
   vendorTab = "buy";
   rerollNotice = "";
@@ -11567,21 +11633,33 @@ function hallShopPrice(stage, rarity = hallNormalGearRarity(stage)) {
   if (rarity === "Rare") return 195 + value * 7;
   if (rarity === "Epic") return 450 + Math.max(0, value - 10) * 24;
   if (rarity === "Legendary") return 1300 + Math.max(0, value - 20) * 55;
-  return 3500 + Math.max(0, value - 40) * 120;
+  if (rarity === "Artifact") return 5000 + Math.max(0, value - 41) * 250;
+  return 3500 + Math.max(0, value - 41) * 120;
+}
+
+function hallShopGearPool(rarity, stage) {
+  return rarity === "Artifact" ? HALL_ARTIFACT_GEAR : hallGearPoolForRarity(rarity, stage);
 }
 
 function ensureHallShopOffer(stage) {
   const value = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(stage) || 1));
   const progress = hallBattleProgress();
-  const rarity = hallNormalGearRarity(value);
+  const rarity = hallShopGearRarity(value);
   const existing = progress.shopOffers[value];
-  const validExisting = existing && existing.rarity === rarity && hallGearPoolForRarity(rarity, value).some(gear => gear.name === existing.name);
+  const availablePool = hallShopGearPool(rarity, value);
+  const duplicateArtifact = rarity === "Artifact" && existing && Object.entries(progress.shopOffers)
+    .some(([offerStage, offer]) => Number(offerStage) !== value && offer?.rarity === "Artifact" && offer.name === existing.name);
+  const validExisting = existing && !duplicateArtifact && existing.rarity === rarity && availablePool.some(gear => gear.name === existing.name);
   if (!validExisting) {
     const startingNames = new Set(Object.values(STARTING_HERO_GEAR).flatMap(slots => Object.values(slots)));
     const previousName = progress.shopOffers[value - 1]?.name;
-    const pool = hallGearPoolForRarity(rarity, value).filter(gear => !startingNames.has(gear.name)
-      && !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name) && gear.name !== previousName);
-    const candidates = pool.length ? pool : hallGearPoolForRarity(rarity, value);
+    const usedArtifactNames = rarity === "Artifact"
+      ? new Set(Object.entries(progress.shopOffers).filter(([offerStage]) => Number(offerStage) !== value).map(([, offer]) => offer?.name).filter(Boolean))
+      : new Set();
+    const pool = availablePool.filter(gear => !startingNames.has(gear.name)
+      && !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name) && gear.name !== previousName
+      && (rarity !== "Artifact" || !usedArtifactNames.has(gear.name)));
+    const candidates = pool.length ? pool : availablePool;
     const gear = candidates[Math.floor(Math.random() * candidates.length)];
     if (!gear) return null;
     progress.shopOffers[value] = { name: gear.name, rarity, price: hallShopPrice(value, rarity) };
@@ -11591,13 +11669,17 @@ function ensureHallShopOffer(stage) {
   return { kind: "gear", ...offer, hallStage: value };
 }
 
+function hallShopOffersThrough(stage) {
+  const limit = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(stage) || 1));
+  return Array.from({ length: limit }, (_, index) => ensureHallShopOffer(index + 1)).filter(Boolean);
+}
+
 function vendorWares(id) {
   const vendor = vendors[id];
   if (!vendor) return [];
   if (id === "workshop" && state.gameMode === "hallBattles") {
     const progress = hallBattleProgress();
-    const offer = ensureHallShopOffer(progress.shopStage || progress.unlockedStage || 1);
-    return offer ? [offer] : [];
+    return hallShopOffersThrough(Math.max(progress.unlockedStage, progress.shopStage, 1));
   }
   const wares = [...vendor.wares];
   if (id !== "workshop") return wares;
@@ -11675,11 +11757,12 @@ function renderVendor() {
       ? ` Every separate copy rolls a fresh, fully random set of ${generatedAffixes} affixes.`
       : gear && zoneStarterGear.includes(gear) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
     const details = gear ? `${displayedRarity}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
+    const rarityBadge = displayedRarity === "Artifact" ? `<small class="gear-rarity rarity-artifact">ARTIFACT</small>` : "";
     const icon = gear
       ? gearIconHtml(gear, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
       : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
     const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
-    return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong><small>${details}</small></div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
+    return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${rarityBadge}<small>${details}</small></div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
   }).join("")}</div>${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
@@ -11697,7 +11780,7 @@ function renderVendor() {
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop" && state.gameMode === "hallBattles"
-    ? `Stage ${hallBattleProgress().shopStage || 1} offer. One ${hallNormalGearRarity(hallBattleProgress().shopStage || 1)} item, fixed for this stage.`
+    ? `${wares.length} stage offer${wares.length === 1 ? "" : "s"} available. One fixed item per unlocked stage through Stage ${Math.max(hallBattleProgress().unlockedStage, hallBattleProgress().shopStage, 1)}.`
     : activeVendor === "workshop"
     ? `Echo Forge rank ${forgeRank}/40. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";

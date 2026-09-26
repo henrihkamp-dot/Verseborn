@@ -53,10 +53,10 @@ test('Hall rarity bands and the tunable +1 roll never skip a tier', `(() => {
   const random=Math.random;
   try {
     Math.random=()=>.99;
-    const normal=[rollHallGearRarity(1),rollHallGearRarity(9),rollHallGearRarity(10),rollHallGearRarity(19),rollHallGearRarity(20),rollHallGearRarity(39),rollHallGearRarity(40),rollHallGearRarity(50)];
+    const normal=[rollHallGearRarity(1),rollHallGearRarity(9),rollHallGearRarity(10),rollHallGearRarity(19),rollHallGearRarity(20),rollHallGearRarity(40),rollHallGearRarity(41),rollHallGearRarity(50)];
     Math.random=()=>0;
-    const upgraded=[rollHallGearRarity(1),rollHallGearRarity(10),rollHallGearRarity(20),rollHallGearRarity(40)];
-    return HALL_RARITY_UPGRADE_CHANCE>0&&HALL_RARITY_UPGRADE_CHANCE<=.1&&normal.join(',')==='Rare,Rare,Epic,Epic,Legendary,Legendary,Mythic,Mythic'&&upgraded.join(',')==='Epic,Legendary,Mythic,Mythic';
+    const upgraded=[rollHallGearRarity(1),rollHallGearRarity(10),rollHallGearRarity(20),rollHallGearRarity(40),rollHallGearRarity(41)];
+    return HALL_RARITY_UPGRADE_CHANCE>0&&HALL_RARITY_UPGRADE_CHANCE<=.1&&normal.join(',')==='Rare,Rare,Epic,Epic,Legendary,Legendary,Mythic,Mythic'&&upgraded.join(',')==='Epic,Legendary,Mythic,Mythic,Mythic';
   } finally { Math.random=random; }
 })()`);
 
@@ -65,19 +65,39 @@ test('Every Hall reward pool matches its naming tier and excludes Echo gear', `(
   return pools.every(([rarity,pool])=>pool.length>=5&&pool.every(gear=>gearByName(gear.name)&&!echoForgeGearNames.has(gear.name)&&!/^Echo(?:-|\\s)/i.test(gear.name)))&&HALL_RARE_GEAR_POOL.some(gear=>gear.name==='Ironwood Staff')&&HALL_LEGENDARY_GEAR_POOL.some(gear=>gear.name==='Oathblade of the First Flame');
 })()`);
 
-test('Glimmer shows exactly one stable exact-rarity Hall offer and advances it per started stage', `(() => {
+test('Stages 41-50 keep Mythic battle rewards repeatable and never include Artifacts', `(() => {
+  const artifactNames=new Set(HALL_ARTIFACT_GEAR.map(gear=>gear.name));
+  return Array.from({length:10},(_,index)=>41+index).every(stage=>hallNormalGearRarity(stage)==='Mythic'&&hallGearRewardCandidates(stage,'Mythic').length===HALL_MYTHIC_LOOT_TABLES[stage].length&&hallGearRewardCandidates(stage,'Mythic').every(gear=>!artifactNames.has(gear.name)));
+})()`);
+
+test('Glimmer keeps one stable exact-rarity Hall offer for every unlocked stage', `(() => {
   resetHallBattleRun(); state.gameMode='hallBattles';
   const random=Math.random; Math.random=()=>.2;
   try {
     const first=ensureHallShopOffer(5); const reopened=vendorWares('workshop'); const same=ensureHallShopOffer(5); const next=ensureHallShopOffer(14); const nextWares=vendorWares('workshop');
-    return reopened.length===1&&reopened[0].name===first.name&&same.name===first.name&&first.rarity==='Rare'&&nextWares.length===1&&nextWares[0].name===next.name&&next.rarity==='Epic'&&next.name!==first.name;
+    return reopened.length===5&&reopened[4].name===first.name&&same.name===first.name&&first.rarity==='Rare'&&nextWares.length===14&&nextWares[13].name===next.name&&next.rarity==='Epic'&&next.name!==first.name;
   } finally { Math.random=random; }
+})()`);
+
+test('An existing Stage 50 run backfills all fifty shop offers without losing purchase history', `(() => {
+  resetHallBattleRun(); state.gameMode='hallBattles';
+  state.hallBattles.unlockedStage=50; state.hallBattles.shopStage=50; state.hallBattles.purchasedShopStages=[7,23];
+  ensureHallShopOffer(50);
+  const wares=vendorWares('workshop');
+  const artifacts=wares.filter(ware=>ware.hallStage>=41);
+  return wares.length===50&&wares.every((ware,index)=>ware.hallStage===index+1&&ware.rarity===hallShopGearRarity(index+1))&&artifacts.length===10&&new Set(artifacts.map(ware=>ware.name)).size===10&&state.hallBattles.purchasedShopStages.join(',')==='7,23';
 })()`);
 
 test('Hall shop offers exclude starter and Echo gear and early Rare pricing is useful', `(() => {
   resetHallBattleRun(); state.gameMode='hallBattles';
   const starting=new Set(Object.values(STARTING_HERO_GEAR).flatMap(slots=>Object.values(slots)));
-  return [1,9,10,19,20,39,40,50].every(stage=>{const offer=ensureHallShopOffer(stage);return offer&&!starting.has(offer.name)&&!echoForgeGearNames.has(offer.name)&&!/^Echo(?:-|\\s)/i.test(offer.name)&&offer.rarity===hallNormalGearRarity(stage);})&&hallShopPrice(1,'Rare')>180&&hallShopPrice(1,'Rare')<=220&&hallShopPrice(40,'Mythic')>hallShopPrice(20,'Legendary');
+  return [1,9,10,19,20,39,40,41,50].every(stage=>{const offer=ensureHallShopOffer(stage);return offer&&!starting.has(offer.name)&&!echoForgeGearNames.has(offer.name)&&!/^Echo(?:-|\\s)/i.test(offer.name)&&offer.rarity===hallShopGearRarity(stage)&&(stage<41||artifactGearNames.has(offer.name));})&&hallShopPrice(1,'Rare')>180&&hallShopPrice(1,'Rare')<=220&&hallShopPrice(41,'Artifact')>hallShopPrice(20,'Legendary');
+})()`);
+
+test('Artifact offers are shop-only, fixed, and stay stable when Glimmer is reopened', `(() => {
+  resetHallBattleRun(); state.gameMode='hallBattles'; state.hallBattles.unlockedStage=50;
+  const first=vendorWares('workshop'),again=vendorWares('workshop'),artifacts=first.filter(ware=>ware.hallStage>=41);
+  return HALL_ARTIFACT_GEAR.length===10&&artifacts.length===10&&artifacts.every(ware=>ware.rarity==='Artifact'&&artifactGearNames.has(ware.name)&&!mythicGearNames.has(ware.name)&&!echoForgeGearNames.has(ware.name))&&first.map(ware=>ware.name).join('|')===again.map(ware=>ware.name).join('|');
 })()`);
 
 test('Story workshop and Echo Hunt inventory remain on their existing route', `(() => {
