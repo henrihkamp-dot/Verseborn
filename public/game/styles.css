@@ -985,6 +985,11 @@ canvas:focus {
   line-height: 1.25;
 }
 
+.status-gear-row .status-gear-base {
+  margin-bottom: 4px;
+  color: #ead8b5;
+}
+
 .status-gear-row .is-fixed {
   color: #7bd4c6;
 }
@@ -1873,6 +1878,11 @@ canvas:focus {
 .shop-row strong,
 .shop-row small {
   display: block;
+}
+
+.shop-row .shop-gear-metadata {
+  color: #ead8b5;
+  font-weight: 700;
 }
 
 .shop-row small {

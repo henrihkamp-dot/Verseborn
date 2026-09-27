@@ -500,9 +500,10 @@ const enemyAbilityProfiles = {
     melee: em("Audit Stamp", "melee", "Physical", 0, { coefficient: .8, status: { type: "disrupted", chance: .25, duration: 3, value: .15 } }),
     magic: em("Tech Pulse", "magic", "Tech", 20, { coefficient: .92, status: { type: "stun", chance: .35 } }),
     buff: em("Administrative Order", "buff", "Tech", 22, { targetRole: "caster", buffs: [{ type: "magicUp", duration: 3, value: .25 }] }),
+    dispel: em("Null Mandate", "dispel", "Tech", 24, { dispel: true }),
     utility: em("Audit Lock", "utility", "Tech", 24, { status: { type: "silence", chance: .65, duration: 2 } }),
     ultimate: em("Final Audit", "ultimate", "Tech", 0, { coefficient: 1.16, allTargets: true, status: { type: "disrupted", chance: .7, duration: 3, value: .15 } })
-  }, ["magic", "buff", "utility", "melee"], { element: "Tech", affixes: { statusPotency: .18, buffDuration: 1 } }),
+  }, ["magic", "buff", "dispel", "utility", "melee"], { element: "Tech", affixes: { statusPotency: .18, buffDuration: 1 } }),
   "Inkbound Auditor": enemyCombatProfile("dps", .16, { hp: 94, mp: 106, str: 96, mag: 128, stam: 84, agi: 112 }, {
     melee: em("Quill Rend", "melee", "Physical", 0, { coefficient: .9, status: { type: "bleed", chance: .2, duration: 3 } }),
     magic: em("Red Ink Edict", "magic", "Shadow", 21, { coefficient: 1, status: { type: "poison", chance: .65, duration: 4 }, extraStatuses: [{ type: "marked", chance: .5, duration: 4, value: .12 }] }),
@@ -621,16 +622,18 @@ const enemyAbilityProfiles = {
     melee: em("Margin Snap", "melee", "Shadow", 0, { coefficient: .78, status: { type: "shadowExposed", chance: .3, duration: 2 } }),
     magic: em("Quiet Index", "magic", "Shadow", 22, { coefficient: .72, status: { type: "sleep", chance: .58, duration: 3 } }),
     utility: em("Gravebind", "utility", "Shadow", 24, { status: { type: "silence", chance: .7, duration: 2 }, extraStatuses: [{ type: "agilityDown", chance: .7, duration: 3, value: .15 }] }),
+    dispel: em("Unwrite Boon", "dispel", "Shadow", 24, { dispel: true }),
     buff: em("Veil of Nyx", "buff", "Shadow", 25, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "evasion", duration: 2, value: .2 }] }),
     ultimate: em("Final Index", "ultimate", "Shadow", 0, { coefficient: 1.08, allTargets: true, status: { type: "sleep", chance: .5, duration: 2 } })
-  }, ["magic", "buff", "utility", "melee"], { row: 1, element: "Shadow", affixes: { statusPotency: .2, buffDuration: 1 } }),
+  }, ["magic", "buff", "dispel", "utility", "melee"], { row: 1, element: "Shadow", affixes: { statusPotency: .2, buffDuration: 1 } }),
   "Jory Bellwick": enemyCombatProfile("utility", .1, { hp: 90, mp: 136, str: 68, mag: 134, stam: 88, agi: 112 }, {
     melee: em("Lute Crack", "melee", "Physical", 0, { coefficient: .76, status: { type: "disrupted", chance: .2, duration: 3, value: .15 } }),
     magic: em("Star Note", "magic", "Sound", 18, { coefficient: .96 }),
     utility: em("Discordant Chord", "utility", "Sound", 22, { status: { type: "magicVulnerability", chance: .75, duration: 3, value: .18 } }),
+    dispel: em("Dissonant Purge", "dispel", "Sound", 22, { dispel: true }),
     buff: em("Battle Hymn", "buff", "Sound", 34, { allAllies: true, buffs: [{ type: "damageUp", duration: 3, value: .15 }] }),
     ultimate: em("Grand Chord", "ultimate", "Sound", 0, { coefficient: 1.1, allTargets: true, teamBuffs: [{ type: "damageUp", duration: 2, value: .15 }] })
-  }, ["buff", "magic", "utility", "melee"], { row: 0, element: "Sound", affixes: { elementDamage: .12, buffDuration: 1 } }),
+  }, ["buff", "dispel", "magic", "utility", "melee"], { row: 0, element: "Sound", affixes: { elementDamage: .12, buffDuration: 1 } }),
   Rava: enemyCombatProfile("dps", .18, { hp: 104, mp: 112, str: 128, mag: 140, stam: 100, agi: 114 }, {
     melee: em("Cinder Spear", "melee", "Ancient Fire", 0, { coefficient: .94, status: { type: "burn", chance: .25, duration: 4 } }),
     magic: em("Ember Javelin", "magic", "Ancient Fire", 20, { coefficient: 1.04, status: { type: "burn", chance: .55, duration: 4 } }),
@@ -649,9 +652,10 @@ const enemyAbilityProfiles = {
     melee: em("Sceptre Judgment", "melee", "Physical", 0, { coefficient: .9, status: { type: "marked", chance: .25, duration: 4, value: .12 } }),
     magic: em("Lion Seal", "magic", "Holy Fire", 21, { coefficient: .94 }),
     buff: em("Royal Command", "buff", "Holy Fire", 38, { allAllies: true, buffs: [{ type: "defenseUp", duration: 3, value: .25 }, { type: "strengthUp", duration: 3, value: .2 }] }),
+    dispel: em("Royal Repeal", "dispel", "Holy Fire", 26, { dispel: true }),
     heal: em("Royal Bulwark", "heal", "Holy Fire", 26, { healing: true, healCoefficient: 1.15 }),
     ultimate: em("Crown of Cindervale", "ultimate", "Holy Fire", 0, { coefficient: 1.1, allTargets: true, teamBuffs: [{ type: "defenseUp", duration: 3, value: .25 }, { type: "strengthUp", duration: 3, value: .2 }] })
-  }, ["buff", "melee", "magic", "heal"], { element: "Holy Fire", affixes: { physicalResistance: .16, buffDuration: 1 } }),
+  }, ["buff", "dispel", "melee", "magic", "heal"], { element: "Holy Fire", affixes: { physicalResistance: .16, buffDuration: 1 } }),
   "Angry Gnome Mob": enemyCombatProfile("dps", .14, { hp: 112, mp: 84, str: 132, mag: 72, stam: 102, agi: 126 }, {
     melee: em("Mob Rush", "melee", "Physical", 0, { coefficient: 1, breakPower: 1, multiHit: 2 }),
     magic: em("Flying Crockery", "magic", "Physical", 19, { coefficient: 1, scaling: "str", status: { type: "stun", chance: .3 } }),
@@ -2412,8 +2416,8 @@ function defaultGearRarity(name) {
   return "Common";
 }
 
-function rollGearAffixes(gear, rarity, theme = "") {
-  const count = RARITY_AFFIX_COUNTS[rarity] || 0;
+function rollGearAffixes(gear, rarity, theme = "", countOverride = null) {
+  const count = Number.isInteger(countOverride) ? Math.max(0, countOverride) : RARITY_AFFIX_COUNTS[rarity] || 0;
   if (!count) return [];
   const base = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
   const weighted = [...base, ...base.filter(entry => entry.theme && entry.theme === theme), ...base.filter(entry => entry.theme && entry.theme === theme)];
@@ -2989,6 +2993,7 @@ const baseJobs = {
     skill("Cinder Guard", "block", "Holy Fire", -26, 7, "Blocks and heals weakest ally."),
     skill("Starflame Cut", "magic", "Holy Fire", 34, 7, "Holy fire arc."),
     skill("Oathbreak", "magic", "Holy Fire", 22, 8, "Clears all enemy Resonance.", { enemyResonanceClear: true }),
+    skill("Radiant Purge", "magic", "Holy Fire", 0, 7, "Remove one positive buff from one enemy.", { targetSide: "enemy", dispel: true }),
     skill("ULT: The Woman in the Door", "ultimate", "Holy Fire", 70, 100, "Party-wide shield and counterfire.")
   ]),
   Kael: character("Kael", "Silent Oath", "Sigil", "#ece0c6", "#d6c4ab", "#9a7a50", { str: 6, agi: 8, mag: 17, stam: 11, echo: 13 }, ["Staff & Sigil", "Ashcloak", "Promise Ring", "Cinder Star", "Stone Brow Guard"], [
@@ -3115,7 +3120,7 @@ const lateGameTalentChoices = {
   ],
   Kael: [
     talent(25, "Blessing of Insight", "newSkill", skill("Blessing of Insight", "magic", "Sigil", 0, 8, "Party Magic Up.", { targetSide: "party", partyWide: true, buffs: [{ type: "magicUp" }] })),
-    talent(25, "Purify", "newSkill", skill("Purify", "magic", "Sigil", 0, 7, "Removes negative statuses from the party.", { targetSide: "party", partyWide: true, cleanse: true })),
+    talent(25, "Purify", "newSkill", skill("Purify", "magic", "Sigil", 0, 7, "Removes one negative status from one ally.", { targetSide: "ally", cleanse: true })),
     talent(30, "Greater Rite", "newSkill", skill("Greater Rite", "magic", "Sigil", -48, 12, "Restores HP to every living ally.", { targetSide: "party", partyWide: true })),
     talent(30, "Consecrated Focus", "buffDuration", 1, "Kael's timed buffs last 1 additional turn."),
     talent(35, "Merciful Return", "newSkill", skill("Merciful Return", "magic", "Sigil", -36, 16, "Revives and heals the party.", { targetSide: "party", partyWide: true, revive: .35 })),
@@ -3275,7 +3280,7 @@ const compactTalentTrees = {
     talentNode(1, "Sacred Flame", "holyFireDamage", .1, "Holy Fire attacks gain 10% potency."),
     talentNode(1, "Protector", "woundedProtection", .15, "Protection effects are 15% stronger on critically wounded allies."),
     talentNode(2, "Guardian's Oath", "newSkill", skill("Guardian's Oath", "block", "Holy Fire", 0, 7, "Reduce incoming party damage by 18% for 3 actions.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp", value: .18, duration: 3 }] })),
-    talentNode(2, "Radiant Strike", "newSkill", skill("Radiant Strike", "melee", "Holy Fire", 0, 6, "1.15x STR and apply Holy Vulnerability.", { coefficient: 1.15, status: { type: "holyVulnerability", chance: 1, duration: 2, value: .2 } })),
+    talentNode(2, "Radiant Strike", "newSkill", skill("Radiant Strike", "melee", "Holy Fire", 0, 6, "1.15x STR + 0.575x MAG and apply Holy Vulnerability.", { coefficient: 1.15, status: { type: "holyVulnerability", chance: 1, duration: 2, value: .2 } })),
     talentNode(2, "Cinder Sanctuary", "partyHeal", "Cinder Guard", "Cinder Guard heals every living ally. Their next damaging action adds 10% Holy damage."),
     talentNode(3, "Intercept", "intercept", .35, "35% chance to intercept attacks aimed at allies below 35% HP."),
     talentNode(3, "Cleansing Flame", "selfCleanse", 1, "Holy abilities remove one negative status from Seerin."),
@@ -3283,7 +3288,7 @@ const compactTalentTrees = {
     talentNode(4, "Unbroken Line", "wardBoost", .15, "Party protection effects reduce 15% additional damage."),
     talentNode(4, "Retribution", "guardCounter", .35, "A personally Guarded hit retaliates for 35% Basic Attack damage."),
     talentNode(4, "Burning Aegis", "thorns", .25, "Guarding reflects 25% of melee damage taken."),
-    talentNode(5, "Flameguard Charge", "newSkill", skill("ULT II: Flameguard Charge", "ultimate", "Holy Fire", 0, 100, "2.7x STR with massive Break; Seerin remains Guarded.", { coefficient: 2.7, scaling: "str", ultimateIndex: 2, staggerPower: 5, selfGuard: true })),
+    talentNode(5, "Flameguard Charge", "newSkill", skill("ULT II: Flameguard Charge", "ultimate", "Holy Fire", 0, 100, "2.7x STR + 1.35x MAG with massive Break; Seerin remains Guarded.", { coefficient: 2.7, scaling: "str", ultimateIndex: 2, staggerPower: 5, selfGuard: true })),
     talentNode(5, "Cinder Star Aegis", "newSkill", skill("ULT II: Cinder Star Aegis", "ultimate", "Holy Fire", 0, 100, "Grant a powerful party barrier and damage reduction.", { targetSide: "party", partyWide: true, ultimateIndex: 2, grantsWard: true, buffs: [{ type: "barrier", value: .35, duration: 4 }, { type: "defenseUp", value: .2, duration: 4 }] })),
     talentNode(5, "Last Bastion", "lastBastion", 1, "Once per battle, prevent an ally from being knocked out and leave them at 1 HP."),
   ],
@@ -3326,7 +3331,7 @@ const compactTalentTrees = {
     talentNode(1, "Sacred Barrier", "barrierBoost", .2, "Kael's barriers are 20% stronger."),
     talentNode(1, "Dark Whisper", "shadowpriestDamage", .1, "Shadowpriest offensive spells deal 10% more damage."),
     talentNode(2, "Communal Rite", "partyHeal", "Quiet Rite", "Quiet Rite heals every living ally and grants them 12% Damage Reduction for 2 actions."),
-    talentNode(2, "Purification", "newSkill", skill("Purification", "magic", "Sigil", 0, 7, "Remove negative statuses from the party.", { targetSide: "party", partyWide: true, cleanse: true })),
+    talentNode(2, "Purification", "newSkill", skill("Purification", "magic", "Sigil", 0, 7, "Remove one negative status from one ally.", { targetSide: "ally", cleanse: true })),
     talentNode(2, "Void Lance", "shadowSkillUnlock", "Void Lance", "Shadowpriest unlocks the strong single-target Void Lance spell."),
     talentNode(3, "Guardian Saint", "buffDuration", 1, "Kael's party defensive buffs last 1 additional action."),
     talentNode(3, "Umbral Wave", "shadowSkillUnlock", "Umbral Wave", "Shadowpriest unlocks strong area Shadow magic."),
@@ -3976,46 +3981,46 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["Dormitory Scribes", "reverieDorm", ["scribe", "seal"]],
   ["Saint Justin", "reverieSeal", ["sigil", "scribe"]],
   ["Clergy Lockdown", "reverieDorm", ["seal", "scribe", "seal"]],
-  ["The Archive Custodian", "reverieArchive", ["custodian"], true],
+  ["The Archive Custodian", "reverieArchive", ["custodian"], true, [["seal", "scribe"]]],
   ["Crown Step Construct", "guildSteps", ["construct"]],
-  ["Registry Faultline", "guildRegistry", ["pillar", "construct"]],
+  ["Registry Faultline", "guildRegistry", ["pillar", "construct"], false, [["construct", "pillar"]]],
   ["The Unbreakable", "guildHall", ["grumm"]],
   ["Spellbinder Trial", "guildCouncil", ["lyrsa", "seal"]],
-  ["The Ex-Rank", "guildCouncil", ["kaeldrin", "grumm"], true],
+  ["The Ex-Rank", "guildCouncil", ["kaeldrin", "grumm"], true, [["seal", "lyrsa"]]],
   ["Buried Hall Memory", "emberYard", ["construct", "pillar"]],
-  ["Armory Collapse", "emberArmory", ["pillar", "construct", "pillar"]],
+  ["Armory Collapse", "emberArmory", ["pillar", "construct", "pillar"], false, [["construct", "pillar"]]],
   ["Elder Plumpin", "emberRoof", ["memory"]],
   ["Resonance Breach", "emberCellar", ["wyrm", "pillar"]],
-  ["The Red Dragon Lord", "emberRoof", ["wyrm"], true],
-  ["Clock Goblin Patrol", "dawnCauseway", ["bell"]],
-  ["Calibration Locks", "dawnStation", ["lock", "bell"]],
+  ["The Red Dragon Lord", "emberRoof", ["wyrm"], true, [["wyrm", "seal"]]],
+  ["Clock Goblin Patrol", "dawnCauseway", ["bell"], false, [["bell", "lock"]]],
+  ["Calibration Locks", "dawnStation", ["lock", "bell"], false, [["bell", "lock", "construct"]]],
   ["Baron Revus Veln", "dawnStation", ["null", "bell"]],
-  ["Seal at the Gate", "dawnGate", ["sentinel", "lock"]],
-  ["Last Gate Protocol", "dawnGate", ["sentinel"], true],
+  ["Seal at the Gate", "dawnGate", ["sentinel", "lock"], false, [["sentinel", "lock", "bell"]]],
+  ["Last Gate Protocol", "dawnGate", ["sentinel"], true, [["lock", "sentinel"]]],
   ["The Shadow's Edge", "reverieArchive", ["shade"]],
-  ["Stone and Shadow", "guildHall", ["grumm", "shade"]],
-  ["Quiet Refrain", "reverieDorm", ["nyx", "jory"]],
+  ["Stone and Shadow", "guildHall", ["grumm", "shade"], false, [["grumm", "shade", "lyrsa"]]],
+  ["Quiet Refrain", "reverieDorm", ["nyx", "jory"], false, [["nyx", "jory", "scribe"]]],
   ["Cinderhorn Convergence", "emberYard", ["rava", "lyrsa"]],
-  ["Full-Rank Company", "guildCouncil", ["kaeldrin", "shade", "grumm"], true],
-  ["Audit of the Forbidden", "reverieArchive", ["auditor", "custodian"]],
+  ["Full-Rank Company", "guildCouncil", ["kaeldrin", "shade", "grumm"], true, [["nyx", "jory", "lyrsa"]]],
+  ["Audit of the Forbidden", "reverieArchive", ["auditor", "custodian"], false, [["auditor", "custodian", "scribe"]]],
   ["Cinderhorn Hunt", "emberRoof", ["rava", "wyrm"]],
-  ["The Quiet Archive", "reverieArchive", ["nyx", "custodian"]],
-  ["Winter Spellbinders", "guildHall", ["tja", "lyrsa"]],
-  ["Crown of Cindervale", "guildCouncil", ["king"], true],
-  ["Three Unwritten Names", "reverieSeal", ["shade", "nyx", "jory"]],
-  ["Stonewake Rebellion", "emberYard", ["grumm", "rava", "kaeldrin"]],
-  ["Royal Winter", "dawnCauseway", ["tja", "king"]],
-  ["The Final Archive", "alarm", ["custodian", "sentinel", "wyrm"]],
-  ["Hall of Forty Echoes", "alarm", ["king", "kaeldrin", "sentinel"], true],
+  ["The Quiet Archive", "reverieArchive", ["nyx", "custodian"], false, [["nyx", "custodian", "shade"]]],
+  ["Winter Spellbinders", "guildHall", ["tja", "lyrsa"], false, [["tja", "lyrsa", "jory"]]],
+  ["Crown of Cindervale", "guildCouncil", ["king"], true, [["king", "sentinel", "kaeldrin"]]],
+  ["Three Unwritten Names", "reverieSeal", ["shade", "nyx", "jory"], false, [["nyx", "jory", "custodian"]]],
+  ["Stonewake Rebellion", "emberYard", ["grumm", "rava", "kaeldrin"], false, [["rava", "kaeldrin", "lyrsa"]]],
+  ["Royal Winter", "dawnCauseway", ["tja", "king"], false, [["tja", "king", "sentinel"]]],
+  ["The Final Archive", "alarm", ["custodian", "sentinel", "wyrm"], false, [["sentinel", "lock", "bell"]]],
+  ["Hall of Forty Echoes", "alarm", ["king", "kaeldrin", "sentinel"], true, [["king", "grumm", "tja"]]],
   ["Sootline Uprising", "ashLane", ["mob", "thugg"], true, [["ledger", "chain"], ["bell", "lock", "thugg"]]],
-  ["Reverie Interdict", "reverieSeal", ["seal", "sigil"], true, [["scribe", "custodian"], ["shade", "nyx"]]],
-  ["Stonewake Last Trial", "guildHall", ["grumm", "construct"], true, [["kaeldrin", "lyrsa"], ["sigil", "king"]]],
+  ["Reverie Interdict", "reverieSeal", ["seal", "sigil"], true, [["scribe", "custodian"], ["shade", "nyx", "scribe"]]],
+  ["Stonewake Last Trial", "guildHall", ["grumm", "construct"], true, [["kaeldrin", "lyrsa"], ["sigil", "king", "kaeldrin"]]],
   ["Clockwork Riot", "dawnStation", ["bell", "lock"], true, [["tibby", "thugg"], ["construct", "lock", "bell"]]],
   ["Tavern Refrain", "lantern", ["mob", "tibby"], true, [["berend", "jory"], ["marla", "berend", "mob"]]],
-  ["Noble Decree", "guildCouncil", ["null", "sigil"], true, [["prince", "king"], ["prince", "wyrm"]]],
-  ["Ember Old Guard", "emberRoof", ["memory", "tja"], true, [["wyrm", "chain"], ["sentinel", "wyrm"]]],
-  ["Names in the Archive", "reverieArchive", ["nyx", "scribe"], true, [["custodian", "prince"], ["sigil", "null"]]],
-  ["Company Reprise", "emberYard", ["shade", "grumm", "tja"], true, [["kaeldrin", "lyrsa", "jory"], ["king", "marla", "rava"]]],
+  ["Noble Decree", "guildCouncil", ["null", "sigil"], true, [["prince", "king"], ["prince", "wyrm", "king"]]],
+  ["Ember Old Guard", "emberRoof", ["memory", "tja"], true, [["wyrm", "chain"], ["sentinel", "wyrm", "tja"]]],
+  ["Names in the Archive", "reverieArchive", ["nyx", "scribe"], true, [["custodian", "prince"], ["sigil", "null", "nyx"]]],
+  ["Company Reprise", "emberYard", ["shade", "grumm", "tja"], true, [["kaeldrin", "lyrsa"], ["king", "marla", "rava"]]],
   ["Solinar's Final Sunrise", "alarm", ["frostmile"], true, [["leviathan"], ["solinar"], ["solinarEnraged"]]]
 ].map(([name, mapId, enemies, boss, waves = []], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss), waves }));
 
@@ -4966,10 +4971,40 @@ function applyStatus(target, type, source, options = {}) {
   return { applied: true, message: def.label };
 }
 
+const CLEANSE_PRIORITY = {
+  stun: 100, sleep: 95, silence: 90, physicalVulnerability: 80, magicVulnerability: 80,
+  holyVulnerability: 80, marked: 78, critExposed: 74, poison: 60, burn: 60, bleed: 60,
+  defenseDown: 45, magicDefenseDown: 45, agilityDown: 40, disrupted: 40, shadowExposed: 40
+};
+
+const DISPEL_PRIORITY = {
+  barrier: 100, evasion: 95, damageUp: 90, strengthUp: 85, magicUp: 85,
+  defenseUp: 85, critUp: 80, agilityUp: 78, shadowUp: 75, echoPower: 75,
+  vampiric: 72, holyFollowUp: 68, stunFocus: 60
+};
+
+function removableStatus(unit, priorities) {
+  return ensureStatuses(unit)
+    .filter(status => priorities[status.type] && status.remaining > 0)
+    .sort((a, b) => {
+      const aScore = priorities[a.type] + Math.min(5, a.remaining) * 3 - (a.remaining === 1 ? 12 : 0);
+      const bScore = priorities[b.type] + Math.min(5, b.remaining) * 3 - (b.remaining === 1 ? 12 : 0);
+      return bScore - aScore;
+    })[0] || null;
+}
+
 function cleanseStatuses(target) {
-  const before = ensureStatuses(target).length;
-  target.statuses = target.statuses.filter(status => !STATUS_DEFS[status.type]?.negative);
-  return before - target.statuses.length;
+  const status = removableStatus(target, CLEANSE_PRIORITY);
+  if (!status) return 0;
+  target.statuses = ensureStatuses(target).filter(entry => entry !== status);
+  return 1;
+}
+
+function dispelStatus(target) {
+  const status = removableStatus(target, DISPEL_PRIORITY);
+  if (!status) return null;
+  target.statuses = ensureStatuses(target).filter(entry => entry !== status);
+  return STATUS_DEFS[status.type]?.label || status.type;
 }
 
 function cleanseWithTalent(source, target) {
@@ -5163,12 +5198,16 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
   if (id === "Torren" && statKey === "str" && skillTargetsEnemies(sk)) {
     return primary + stats.stam * transformedStatMultiplier(unit, "stam") * .5;
   }
+  if (id === "Seerin" && statKey === "str" && skillTargetsEnemies(sk) && !sk.dispel) {
+    return primary + stats.mag * transformedStatMultiplier(unit, "mag") * .5;
+  }
   return Math.round(primary + agility);
 }
 
 function skillScalingLabel(id, sk) {
   const primary = skillScaling(sk).toUpperCase();
   if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return "STR + 0.5 STAM";
+  if (id === "Seerin" && primary === "STR" && skillTargetsEnemies(sk) && !sk.dispel) return "STR + 0.5 MAG";
   return id === "Mira" && skillTargetsEnemies(sk) ? `${primary} + 0.5 AGI` : primary;
 }
 
@@ -5261,7 +5300,7 @@ function skillHitsAll(id, sk) {
 }
 
 function skillTargetsEnemies(sk) {
-  return !["ally", "party", "self"].includes(sk.targetSide) && sk.power >= 0 && sk.anim !== "block";
+  return sk.targetSide === "enemy" || (!["ally", "party", "self"].includes(sk.targetSide) && sk.power >= 0 && sk.anim !== "block");
 }
 
 function partyCanSeeWeaknesses() {
@@ -9118,6 +9157,7 @@ function skillPreview(u, sk, target = null) {
   const mpCost = skillMpCost(u.id, sk, u);
   const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% Max MP" : `${mpCost} MP`;
   const targetLabel = battleSkillTargetLabel(u.id, sk);
+  if (sk.dispel) return `Remove one positive buff | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (sk.power < 0) return `Heal ${heal} HP | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (!skillTargetsEnemies(sk)) {
     const kind = sk.transform ? `Transform ${(TRANSFORMATION_CONFIG[sk.transform]?.duration || 4) + typedTalentValue(u.id, "transformDuration")} turns` : "Support";
@@ -9622,6 +9662,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       if (buffNotes.length) log += ` ${buffNotes.join(" ")}.`;
       if (sk.immediateTurn) log += ` ${grantImmediateTurn(u, sk)}`;
       state.resonance = Math.min(100, state.resonance + (sk.anim === "block" ? 12 : 6));
+    } else if (sk.dispel && target) {
+      const removed = dispelStatus(target);
+      log += removed ? ` ${target.name} loses ${removed}.` : ` ${target.name} has no removable buff.`;
+      state.resonance = Math.min(100, state.resonance + 6);
+      playSfx("magic");
     } else if (target) {
       const live = battle.enemies.filter(e => e.hp > 0);
       const t = totals(u.id);
@@ -10044,16 +10089,12 @@ function enemyTargetsForAction(unit, action, target) {
     : [target].filter(member => member?.hp > 0);
 }
 
-const ENEMY_CLEANSE_PRIORITY = {
-  stun: 100, sleep: 95, silence: 90, physicalVulnerability: 80, magicVulnerability: 80,
-  holyVulnerability: 80, marked: 78, critExposed: 74, poison: 60, burn: 60, bleed: 60,
-  defenseDown: 45, magicDefenseDown: 45, agilityDown: 40, disrupted: 40, shadowExposed: 40
-};
-
 function enemyCleanseStatus(unit) {
-  return ensureStatuses(unit)
-    .filter(status => STATUS_DEFS[status.type]?.negative && ENEMY_CLEANSE_PRIORITY[status.type] && (status.remaining > 1 || ["stun", "sleep", "silence"].includes(status.type)))
-    .sort((a, b) => (ENEMY_CLEANSE_PRIORITY[b.type] || 0) - (ENEMY_CLEANSE_PRIORITY[a.type] || 0))[0] || null;
+  return removableStatus(unit, CLEANSE_PRIORITY);
+}
+
+function enemyDispelStatus(unit) {
+  return removableStatus(unit, DISPEL_PRIORITY);
 }
 
 function chooseEnemyHealTarget() {
@@ -10063,7 +10104,12 @@ function chooseEnemyHealTarget() {
 
 function chooseEnemyCleanseTarget() {
   return battle.enemies.filter(ally => ally.hp > 0 && enemyCleanseStatus(ally))
-    .sort((a, b) => (ENEMY_CLEANSE_PRIORITY[enemyCleanseStatus(b)?.type] || 0) - (ENEMY_CLEANSE_PRIORITY[enemyCleanseStatus(a)?.type] || 0))[0] || null;
+    .sort((a, b) => (CLEANSE_PRIORITY[enemyCleanseStatus(b)?.type] || 0) - (CLEANSE_PRIORITY[enemyCleanseStatus(a)?.type] || 0))[0] || null;
+}
+
+function chooseEnemyDispelTarget() {
+  return battle.party.filter(hero => hero.hp > 0 && enemyDispelStatus(hero))
+    .sort((a, b) => (DISPEL_PRIORITY[enemyDispelStatus(b)?.type] || 0) - (DISPEL_PRIORITY[enemyDispelStatus(a)?.type] || 0))[0] || null;
 }
 
 function enemyBuffTarget(unit, action) {
@@ -10093,6 +10139,10 @@ function enemyActionUseful(unit, action) {
   }
   if (action.cleanse && action.kind === "cleanse") {
     action.target = chooseEnemyCleanseTarget();
+    return Boolean(action.target);
+  }
+  if (action.dispel && action.kind === "dispel") {
+    action.target = chooseEnemyDispelTarget();
     return Boolean(action.target);
   }
   if (action.kind === "buff") {
@@ -10229,6 +10279,10 @@ function enemyCleanseOne(target) {
   return STATUS_DEFS[status.type]?.label || status.type;
 }
 
+function enemyDispelOne(target) {
+  return dispelStatus(target);
+}
+
 function enemyApplyActionStatuses(source, target, action) {
   const applications = [];
   let statuses = [action.status, ...(action.extraStatuses || [])].filter(Boolean);
@@ -10246,7 +10300,7 @@ function enemyApplyActionStatuses(source, target, action) {
 
 function enemyResonanceGainForAction(unit, action) {
   if (unit.role === "boss") return 20;
-  if (action.healing || ["buff", "cleanse", "utility"].includes(action.kind)) return 13;
+  if (action.healing || ["buff", "cleanse", "dispel", "utility"].includes(action.kind)) return 13;
   return action.kind === "magic" ? 14 : 11;
 }
 
@@ -10318,6 +10372,10 @@ function resolveEnemyTurn(turn, prev) {
       const removed = enemyCleanseOne(target);
       actionLog += removed ? ` ${target.name} is cleansed of ${removed}.` : " No removable condition remains.";
       playSfx("item");
+    } else if (action.kind === "dispel") {
+      const removed = enemyDispelOne(target);
+      actionLog += removed ? ` ${target.name} loses ${removed}.` : " No removable buff remains.";
+      playSfx("magic");
     } else if (!enemyActionDealsDamage(action)) {
       const notes = enemyApplyActionStatuses(e, target, action);
       if (action.partyResonanceDrain) {
@@ -10870,6 +10928,7 @@ const statusStatHelp = [
 
 function skillFormula(sk, id = null) {
   if (sk.power < 0) return `${Math.abs(sk.power)} + ${sk.healScaling ?? .3} x MAG healing`;
+  if (sk.dispel) return "Dispel / no damage scaling";
   if (!skillTargetsEnemies(sk)) return "Support / no damage scaling";
   const scaling = skillScalingLabel(id, sk);
   return sk.coefficient ? `${sk.coefficient} x (${scaling}) + 0-5` : `${sk.power} + ${scaling} + 0-5`;
@@ -10877,6 +10936,7 @@ function skillFormula(sk, id = null) {
 
 function skillExpectedOutput(id, sk, unit = { id, statuses: [] }, afflicted = false) {
   if (sk.power < 0) return healingAmount(id, sk, unit);
+  if (sk.dispel) return 0;
   if (!skillTargetsEnemies(sk)) return 0;
   const statKey = skillScaling(sk);
   const stat = skillOffensiveStat(id, sk, unit);
@@ -10896,6 +10956,7 @@ function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
   if (sk.power < 0) {
     return { kind: "healing", scaling: "MAG", healing: healingAmount(id, sk, unit) };
   }
+  if (sk.dispel) return { kind: "support", scaling: "NONE" };
   if (!skillTargetsEnemies(sk)) return { kind: "support", scaling: "NONE" };
   const statKey = skillScaling(sk);
   const stat = skillOffensiveStat(id, sk, unit);
@@ -11029,15 +11090,15 @@ function equippedProcChances(id) {
 function statusEquipmentHtml(id) {
   return Object.entries(baseJobs[id].gear).map(([slot, name]) => {
     const gear = gearByName(name);
-    if (!gear) return "";
+    if (!gear) return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>Empty</strong></span><div><small>No equipment.</small></div></div>`;
     const basic = weaponBasicAttackEffect(gear);
     const fixed = [...(basic ? [{ ...basic, basicAttackUnique: true }] : []), ...gearEffects(gear)].map(effect => {
       const label = gearEffectLabel(effect);
-      return `<small class="${effect.echoUnique ? "is-echo" : effect.basicAttackUnique ? "is-basic-attack" : "is-fixed"}">${label}</small>`;
+      return `<small class="${effect.echoUnique ? "is-echo" : effect.basicAttackUnique ? "is-basic-attack" : "is-fixed"}"><b>Special:</b> ${label}</small>`;
     });
-    const random = gearAffixes(name).map(entry => `<small class="is-affix">${formatAffix(entry)}</small>`);
+    const random = gearAffixes(name).map(entry => `<small class="is-affix"><b>Affix:</b> ${formatAffix(entry)}</small>`);
     const details = [...fixed, ...random];
-    return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${gearDisplayName(name)}</strong>${gearRarityHtml(name)}</span><div>${details.length ? details.join("") : `<small>No fixed effect or random affix.</small>`}</div></div>`;
+    return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${gearDisplayName(name)}</strong>${gearRarityHtml(name)}</span><div><small class="status-gear-base"><b>Base stats:</b> ${statLine(gear.stats)}</small>${details.length ? details.join("") : `<small>No special effect or affix.</small>`}</div></div>`;
   }).join("");
 }
 
@@ -11650,6 +11711,26 @@ function hallShopGearPool(rarity, stage) {
   return rarity === "Artifact" ? HALL_ARTIFACT_GEAR : hallGearPoolForRarity(rarity, stage);
 }
 
+const HALL_SHOP_AFFIX_COUNTS = { Rare: 1, Epic: 2, Legendary: 3, Mythic: 4, Artifact: RARITY_AFFIX_COUNTS.Artifact };
+
+function hallShopAffixTheme(stage) {
+  return HALL_MYTHIC_THEMES[stage] || ["swamp", "ruins", "mountain", "dragon"][(Math.max(1, stage) - 1) % 4];
+}
+
+function ensureHallShopOfferAffixes(offer, gear, stage) {
+  if (!offer || !gear) return [];
+  const wanted = HALL_SHOP_AFFIX_COUNTS[offer.rarity] || 0;
+  const existing = Array.isArray(offer.affixes) ? offer.affixes.map(entry => ({ ...entry })) : [];
+  let attempts = 0;
+  while (existing.length < wanted && attempts++ < 24) {
+    const rolls = rollGearAffixes(gear, offer.rarity, hallShopAffixTheme(stage), wanted);
+    const next = rolls.find(candidate => !existing.some(entry => entry.key === candidate.key));
+    if (next) existing.push(next);
+  }
+  offer.affixes = existing;
+  return offer.affixes;
+}
+
 function ensureHallShopOffer(stage) {
   const value = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(stage) || 1));
   const progress = hallBattleProgress();
@@ -11671,10 +11752,11 @@ function ensureHallShopOffer(stage) {
     const candidates = pool.length ? pool : availablePool;
     const gear = candidates[Math.floor(Math.random() * candidates.length)];
     if (!gear) return null;
-    progress.shopOffers[value] = { name: gear.name, rarity, price: hallShopPrice(value, rarity) };
+    progress.shopOffers[value] = { name: gear.name, rarity, price: hallShopPrice(value, rarity), affixes: [] };
   }
   progress.shopStage = value;
   const offer = progress.shopOffers[value];
+  ensureHallShopOfferAffixes(offer, gearByName(offer.name), value);
   return { kind: "gear", ...offer, hallStage: value };
 }
 
@@ -11761,18 +11843,22 @@ function renderVendor() {
     const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
     const effects = gear ? gearEffectLabels(gear) : [];
     const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
-    const generatedAffixes = gear ? RARITY_AFFIX_COUNTS[displayedRarity] || 0 : 0;
+    const generatedAffixes = gear ? (ware.hallStage ? HALL_SHOP_AFFIX_COUNTS[displayedRarity] : RARITY_AFFIX_COUNTS[displayedRarity]) || 0 : 0;
     const rollText = repeatableEcho
       ? ` Every separate copy rolls a fresh, fully random set of ${generatedAffixes} affixes.`
-      : displayedRarity === "Artifact" ? ` Rolls ${generatedAffixes} random affixes when purchased.`
+      : displayedRarity === "Artifact" && !ware.hallStage ? ` Rolls ${generatedAffixes} random affixes when purchased.`
       : gear && zoneStarterGear.includes(gear) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
+    const hallAffixes = gear && ware.hallStage && Array.isArray(ware.affixes) ? ware.affixes : [];
+    const hallMetadata = gear && ware.hallStage
+      ? `<small class="shop-gear-metadata">${gearSlotLabel(gear.slot).toUpperCase()} &bull; ${displayedRarity.toUpperCase()} &bull; UNLOCKED STAGE ${ware.hallStage}</small><small><b>Base stats:</b> ${statLine(gear.stats)}</small>${effects.length ? `<small><b>Special:</b> ${effects.join(" / ")}</small>` : ""}<span class="gear-affixes"><b>Affixes:</b>${hallAffixes.map(entry => `<small>${formatAffix(entry)}</small>`).join("") || `<small>None</small>`}</span>`
+      : "";
     const details = gear ? `${displayedRarity}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
     const rarityBadge = displayedRarity === "Artifact" ? `<small class="gear-rarity rarity-artifact">ARTIFACT</small>` : "";
     const icon = gear
       ? gearIconHtml(gear, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
       : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
     const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
-    return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${rarityBadge}<small>${details}</small></div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
+    return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${rarityBadge}${hallMetadata || `<small>${details}</small>`}</div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
   }).join("")}</div>${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
@@ -11897,7 +11983,9 @@ function buyWare(index) {
   state.gold -= price;
   if (ware.kind === "gear") {
     const gear = gearByName(ware.name);
-    const refs = addOwnedGear(ware.name, 1, { rarity: ware.rarity || defaultGearRarity(ware.name), rollAffixes: true, theme: repeatableEcho ? "" : activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp", separateCopy: hallOffer });
+    const gearOptions = { rarity: ware.rarity || defaultGearRarity(ware.name), rollAffixes: !hallOffer, theme: repeatableEcho ? "" : activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp", separateCopy: hallOffer };
+    if (hallOffer) gearOptions.affixes = (ware.affixes || []).map(entry => ({ ...entry }));
+    const refs = addOwnedGear(ware.name, 1, gearOptions);
     const ref = refs[0] || gear?.name;
     if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(ref, gearRarity(ref), repeatableEcho ? "" : "dragon");
     if (hallOffer) hallBattleProgress().purchasedShopStages.push(ware.hallStage);
