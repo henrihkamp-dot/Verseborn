@@ -803,6 +803,7 @@ let stageSelectorImage = null;
 let chestSheet = null;
 let echoProjectileSheet = null;
 let breakIconSheet = null;
+let combatRoleIconSheet = null;
 let spriteLoadProgress = 0;
 let runtimeAssetsReady = false;
 
@@ -873,6 +874,18 @@ function loadBreakIconSheet() {
     };
     image.onerror = resolve;
     image.src = "assets/ui/break-icons.png";
+  });
+}
+
+function loadCombatRoleIconSheet() {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      combatRoleIconSheet = { image, cellWidth: image.naturalWidth / 5, cellHeight: image.naturalHeight };
+      resolve();
+    };
+    image.onerror = resolve;
+    image.src = "assets/ui/combat-role-icons.png";
   });
 }
 
@@ -1289,6 +1302,7 @@ Promise.all([
   loadStatusIcons(),
   loadCharacterVfxSheets(),
   loadBreakIconSheet(),
+  loadCombatRoleIconSheet(),
   loadBattleAnimationSheets(),
   ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
   ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
@@ -1377,7 +1391,7 @@ zoneStarterGear.forEach(gear => gearDb[gear.slot].push(gear));
 const rareGear = [
   item("Echo-Thread Lute", "weapon", { mag: 7, agi: 2 }, "A stolen name still hums in its strings.", { type: "openingResonance", value: 12, label: "+12 Resonance at battle start" }),
   item("Sealbreak Vestment", "armour", { mag: 3, stam: 6 }, "Clergy cloth with the command burned out.", { type: "blockPower", value: .18, label: "18% stronger personal guard" }),
-  item("Faultline Signet", "ring", { str: 4, stam: 3 }, "The crack points toward the weakest joint.", { type: "stagger", value: 1, label: "+1 stagger on weakness hits" }),
+  item("Faultline Signet", "ring", { str: 4, stam: 3 }, "The crack points toward the weakest joint.", { type: "weaknessDamage", value: .12, label: "+12% weakness damage" }),
   item("Local Truth Lens", "helmet", { mag: 5, agi: 3 }, "Glimmer taught it to distrust central instructions.", { type: "weaknessDamage", value: .2, label: "+20% weakness damage" }),
   item("Wyrmheart Ember", "necklace", { mag: 5, stam: 4 }, "A warm memory the tower could not erase.", { type: "battleRegen", value: 12, label: "Restore 12 HP after victory" })
 ];
@@ -1416,7 +1430,7 @@ const postgameGear = [
     { type: "buffDuration", value: 1, label: "Buffs last +1 turn", echoUnique: true }
   ]),
   item("Loopbreaker Ring", "ring", { str: 8, agi: 8, stam: 4 }, "Its broken circle refuses to repeat a losing turn.", [
-    { type: "stagger", value: 2, label: "+2 stagger on weakness hits" },
+    { type: "critChance", value: .08, label: "+8% critical chance" },
     { type: "statusChance", value: .2, label: "+20% status application chance" },
     { type: "openingTurnProgress", value: .15, label: "+15% opening turn progress", echoUnique: true }
   ]),
@@ -1684,7 +1698,7 @@ const HALL_MYTHIC_LOOT_TABLES = {
   43: [
     mythicItem("Worldsplitter Axe", "weapon", { str: 18, stam: 9, agi: 5 }, "Grumm's trial-force and Kaeldrin's verdict meet in one mountain-breaking edge.", [
       { type: "physicalDamage", value: .21, label: "+21% physical damage" },
-      { type: "stagger", value: 2, label: "+2 stagger on weakness hits" }
+      { type: "critChance", value: .08, label: "+8% critical chance" }
     ], "stonewakeCrown"),
     mythicItem("Stonewake Crownplate", "armour", { stam: 18, str: 8, echo: 4 }, "Royal plate remade to carry Stonewake weight without bowing beneath it.", [
       { type: "blockPower", value: .32, label: "32% stronger personal guard" },
@@ -1834,7 +1848,7 @@ MYTHIC_GEAR.forEach(gear => gearDb[gear.slot].push(gear));
 const MYTHIC_SETS = {
   ashenInsurrection: { name: "Ashen Insurrection", pieces: ["Riotbrand Maul", "Ash Quarter Bulwark", "Gnomefire Seal"], bonus: { type: "statusOnHit", status: "stun", value: .1, label: "10% additional chance to Stun on hit" } },
   forbiddenMargin: { name: "Forbidden Margin", pieces: ["Interdict Crozier", "Margin of Silence", "Custodian's Last Circlet"], bonus: { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" } },
-  stonewakeCrown: { name: "Stonewake Crown", pieces: ["Worldsplitter Axe", "Stonewake Crownplate", "King's Faultline Torque"], bonus: { type: "stagger", value: 2, label: "+2 stagger on weakness hits" } },
+  stonewakeCrown: { name: "Stonewake Crown", pieces: ["Worldsplitter Axe", "Stonewake Crownplate", "King's Faultline Torque"], bonus: { type: "physicalDamage", value: .12, label: "+12% physical damage" } },
   clockworkRiot: { name: "Clockwork Riot", pieces: ["Midnight Chime Cannon", "Riot Clockwork Band", "Tibby's Grandmaster Goggles"], bonus: { type: "openingTurnProgress", value: .2, label: "+20% opening turn progress" } },
   tavernRefrain: { name: "Tavern Refrain", pieces: ["Blimpstone Banquet Coat", "Bellwick Encore Locket", "Marla's Lantern Crown"], bonus: { type: "openingResonance", value: 25, label: "+25 Resonance at battle start" } },
   royalDecree: { name: "Royal Decree", pieces: ["Cindralis Edictblade", "Prince's Unbroken Seal", "Crown Decree Chain"], bonus: { type: "statusChance", value: .22, label: "+22% status application chance" } },
@@ -1868,7 +1882,7 @@ const HALL_EPIC_GEAR_POOL = [
   item("Emberguard Mantle", "armour", { stam: 8, str: 3, mag: 2 }, "Layered Hall armour carrying a controlled inner warmth.", { type: "blockPower", value: .16, label: "16% stronger personal guard" }),
   item("Riftstitch Coat", "armour", { stam: 6, mag: 5, agi: 3 }, "Reverie thread closes around impacts before the tear can spread.", { type: "allStatusResistance", value: .1, label: "+10% resistance to all statuses" }),
   item("Moonfire Signet", "ring", { mag: 5, agi: 5, stam: 2 }, "A silver signet whose pale flame brightens near a weakness.", { type: "weaknessDamage", value: .16, label: "+16% weakness damage" }),
-  item("Faultspark Ring", "ring", { str: 5, stam: 4, agi: 3 }, "A Stonewake spark sealed inside a precisely cracked band.", { type: "stagger", value: 1, label: "+1 stagger on weakness hits" }),
+  item("Faultspark Ring", "ring", { str: 5, stam: 4, agi: 3 }, "A Stonewake spark sealed inside a precisely cracked band.", { type: "weaknessDamage", value: .12, label: "+12% weakness damage" }),
   item("Stormglass Torque", "necklace", { mag: 6, agi: 5, stam: 2 }, "Charged glass stores a little momentum from every clean strike.", { type: "mpOnHit", value: 3, label: "Restore 3 MP after dealing damage" }),
   item("Hearthsong Locket", "necklace", { mag: 5, stam: 5, echo: 2 }, "A warm refrain answers after the trial falls quiet.", { type: "battleRegen", value: 14, label: "Restore 14 HP after victory" }),
   item("Dawnwatch Circlet", "helmet", { mag: 6, agi: 5, stam: 2 }, "A bright Hall circlet tuned to the first opening in a fight.", { type: "openingTurnProgress", value: .1, label: "+10% opening turn progress" }),
@@ -1880,7 +1894,7 @@ const HALL_LEGENDARY_GEAR_POOL = [
   item("Star-Scribe's Crozier", "weapon", { mag: 13, agi: 5, echo: 3 }, "A celebrated Reverie relic whose constellations rewrite hostile magic.", [{ type: "magicDamage", value: .16, label: "+16% magic damage" }, { type: "statusChance", value: .14, label: "+14% status application chance" }]),
   item("Bastion of Cinderhall", "armour", { stam: 14, str: 5, mag: 3 }, "The ceremonial plate that held the Hall's western gate through the Long Ash.", [{ type: "blockPower", value: .26, label: "26% stronger personal guard" }, { type: "allStatusResistance", value: .16, label: "+16% resistance to all statuses" }]),
   item("Veil of the Last Archivist", "armour", { stam: 11, mag: 8, agi: 4 }, "A prestigious archive mantle preserved after its final keeper vanished.", [{ type: "buffDuration", value: 1, label: "Buffs last +1 turn" }, { type: "statusResistance", status: "sleep", value: .4, label: "+40% Sleep resistance" }]),
-  item("Rava's Crownless Signet", "ring", { str: 8, agi: 8, stam: 4 }, "A famous rebel seal awarded only to those who hold without kneeling.", [{ type: "critChance", value: .1, label: "+10% critical chance" }, { type: "stagger", value: 2, label: "+2 stagger on weakness hits" }]),
+  item("Rava's Crownless Signet", "ring", { str: 8, agi: 8, stam: 4 }, "A famous rebel seal awarded only to those who hold without kneeling.", [{ type: "critChance", value: .1, label: "+10% critical chance" }, { type: "statusChance", value: .16, label: "+16% status application chance" }]),
   item("Nyx's Unwritten Seal", "ring", { mag: 9, agi: 7, echo: 4 }, "A named black seal omitted from every obedient version of the archive.", [{ type: "afflictedDamage", value: .2, label: "+20% damage against afflicted targets" }, { type: "statusDuration", value: 1, label: "Inflicted statuses last +1 turn" }]),
   item("Chain of Seven Lanterns", "necklace", { mag: 8, stam: 8, agi: 4 }, "Seven honoured Hall lanterns burn in miniature along this storied chain.", [{ type: "openingResonance", value: 22, label: "+22 Resonance at battle start" }, { type: "battleRegen", value: 22, label: "Restore 22 HP after victory" }]),
   item("Stonewake King's Torque", "necklace", { str: 8, stam: 10, mag: 3 }, "A royal Stonewake torque whose weight became a symbol of earned command.", [{ type: "hpOnHit", value: 6, label: "Restore 6 HP after dealing damage" }, { type: "weaknessDamage", value: .22, label: "+22% weakness damage" }]),
@@ -1924,7 +1938,7 @@ const HALL_ARTIFACT_GEAR = [
     { type: "echoing", value: .1, label: "10% skill Echo turn progress" }
   ]),
   item("Worldroot's Loose Stone", "necklace", { stam: 15, str: 11, mag: 6 }, "A fragment that makes guarded blows feel heavier at the enemy's foundation.", [
-    { type: "stagger", value: 4, label: "Worldroot Fracture: +4 Break on weakness hits", artifactUnique: true },
+    { type: "physicalDamage", value: .2, label: "Worldroot Fracture: +20% physical damage", artifactUnique: true },
     { type: "blockPower", value: .4, label: "40% stronger personal guard" },
     { type: "hpOnHit", value: 8, label: "Restore 8 HP after dealing damage" }
   ]),
@@ -2283,11 +2297,11 @@ const WEAPON_BASIC_ATTACK_EFFECTS = {
   "Elderflame Claws": { type: "status", status: "burn", duration: 5, coefficient: .32, label: "BASIC ATTACK: inflicts strong Elder Burn" },
   "Loopglass Sabre": { type: "status", status: "physicalVulnerability", value: .16, duration: 3, label: "BASIC ATTACK: applies 16% Physical Vulnerability" },
   "Reverie Hexrod": { type: "status", status: "magicVulnerability", value: .2, duration: 3, label: "BASIC ATTACK: applies 20% Magic Vulnerability" },
-  "Stonewake Maul": { type: "break", value: 2, label: "BASIC ATTACK: deals +2 Break" },
+  "Stonewake Maul": { type: "status", status: "physicalVulnerability", value: .14, duration: 3, label: "BASIC ATTACK: applies 14% Physical Vulnerability" },
   "Cinder Repeater": { type: "status", status: "critExposed", value: .12, duration: 2, label: "BASIC ATTACK: exposes target to +12% CRIT" },
   "Riotbrand Maul": { type: "status", status: "stun", duration: 1, label: "BASIC ATTACK: inflicts Stun" },
   "Interdict Crozier": { type: "status", status: "sleep", duration: 2, label: "BASIC ATTACK: inflicts Sleep" },
-  "Worldsplitter Axe": { type: "break", value: 3, label: "BASIC ATTACK: deals +3 Break" },
+  "Worldsplitter Axe": { type: "status", status: "physicalVulnerability", value: .2, duration: 3, label: "BASIC ATTACK: applies 20% Physical Vulnerability" },
   "Midnight Chime Cannon": { type: "status", status: "stun", duration: 1, label: "BASIC ATTACK: inflicts Stun" },
   "Cindralis Edictblade": { type: "status", status: "physicalVulnerability", value: .18, duration: 3, label: "BASIC ATTACK: applies 18% Physical Vulnerability" },
   "Red Memory Halberd": { type: "status", status: "burn", duration: 4, label: "BASIC ATTACK: inflicts Burn" },
@@ -2432,7 +2446,7 @@ function formatAffix(entry) {
 
 function gearAffixPool(gear) {
   const pool = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
-  return pool.filter(entry => state.gameMode === "hallBattles" || !entry.hallOnly);
+  return pool.filter(entry => !isGenericBreakGearAffix(entry) && (state.gameMode === "hallBattles" || !entry.hallOnly));
 }
 
 function defaultGearRarity(name) {
@@ -2534,6 +2548,54 @@ function migrateHallSustainAffixes() {
   Object.values(state.gearInstances || {}).forEach(instance => { instance.affixes = migrateEntries(instance.affixes) || []; });
   Object.values(state.hallBattles?.shopOffers || {}).forEach(offer => { offer.affixes = migrateEntries(offer.affixes) || []; });
   state.flags.hallSustainAffixesV1 = true;
+  return true;
+}
+
+function isGenericBreakGearAffix(entry) {
+  if (!entry) return false;
+  if (["stagger", "break"].includes(String(entry.type || "").toLowerCase())) return true;
+  return /\b(?:stagger|break)\b/i.test(`${entry.label || ""} ${entry.text || ""}`);
+}
+
+function stableAffixHash(value) {
+  return Array.from(String(value)).reduce((hash, character) => Math.imul(hash ^ character.charCodeAt(0), 16777619) >>> 0, 2166136261);
+}
+
+function deterministicAffixValue(entry, seed) {
+  if (entry.min === entry.max) return entry.min;
+  const fraction = (stableAffixHash(seed) % 1001) / 1000;
+  const step = entry.max <= 1 ? .01 : 1;
+  return Math.round((entry.min + fraction * (entry.max - entry.min)) / step) * step;
+}
+
+function migrateGenericBreakAffixEntries(gear, entries, seed) {
+  if (!Array.isArray(entries) || !gear) return entries;
+  const retainedKeys = new Set(entries.filter(entry => !isGenericBreakGearAffix(entry)).map(entry => entry.key));
+  return entries.map((entry, index) => {
+    if (!isGenericBreakGearAffix(entry)) return entry;
+    const candidates = gearAffixPool(gear).filter(candidate => !retainedKeys.has(candidate.key));
+    if (!candidates.length) return null;
+    const replacement = { ...candidates[stableAffixHash(`${seed}:${index}:${entry.key || entry.type}`) % candidates.length] };
+    replacement.value = deterministicAffixValue(replacement, `${seed}:${index}:value`);
+    replacement.text = formatAffix(replacement);
+    retainedKeys.add(replacement.key);
+    return replacement;
+  }).filter(Boolean);
+}
+
+function migrateGenericBreakGearAffixes() {
+  state.flags ||= {};
+  if (state.flags.breakGearAffixesV1) return false;
+  Object.entries(state.gearAffixes || {}).forEach(([ref, entries]) => {
+    state.gearAffixes[ref] = migrateGenericBreakAffixEntries(gearByName(ref), entries, `owned:${ref}`) || [];
+  });
+  Object.entries(state.gearInstances || {}).forEach(([ref, instance]) => {
+    instance.affixes = migrateGenericBreakAffixEntries(gearByName(instance.name), instance.affixes, `instance:${ref}`) || [];
+  });
+  Object.entries(state.hallBattles?.shopOffers || {}).forEach(([stage, offer]) => {
+    offer.affixes = migrateGenericBreakAffixEntries(gearByName(offer.name), offer.affixes, `offer:${stage}:${offer.name}`) || [];
+  });
+  state.flags.breakGearAffixesV1 = true;
   return true;
 }
 
@@ -3068,7 +3130,7 @@ const baseJobs = {
   ]),
   Torren: character("Torren", "Stoneheart", "Earth", "#70472c", "#8a4d25", "#d87536", { str: 17, agi: 5, mag: 5, stam: 21, echo: 8 }, ["Earth Shield", "Stonewake Mantle", "Red Ember Band", "Cinder Star", "Stone Brow Guard"], [
     skill("Attack", "melee", "Neutral", 18, 0, "Shield bash."),
-    skill("Foundation Break", "melee", "Earth", 40, 6, "Huge stagger damage."),
+    skill("Foundation Break", "melee", "Earth", 40, 6, "Heavy Break buildup."),
     skill("Hold the Door", "block", "Earth", -18, 5, "Self heal and guard."),
     skill("Hearty Red Stew", "magic", "Heart", 0, 9, "Grant the whole party 20% Vampiric for 3 turns.", { targetSide: "party", partyWide: true, buffs: [{ type: "vampiric", duration: 3, value: .2 }] }),
     skill("ULT: Stone Does Not Stand Alone", "ultimate", "Earth", 85, 100, "Earthquake wall-breaker.")
@@ -3097,6 +3159,34 @@ const FLAMEGUARD_BASE_EVASION = {
   Glimmer: .08,
   Sparky: .08
 };
+
+const FLAMEGUARD_COMBAT_ROLES = {
+  Verseborn: "utility",
+  Mira: "dps",
+  Seerin: "tank",
+  Torren: "tank",
+  Glimmer: "dps",
+  Kael: "healer",
+  Sparky: "hybrid"
+};
+
+const COMBAT_ROLE_ICON_INDEX = { dps: 0, tank: 1, healer: 2, utility: 3, hybrid: 4 };
+
+function combatRoleKey(unit, enemySide = false) {
+  if (!enemySide && unit?.id && FLAMEGUARD_COMBAT_ROLES[unit.id]) return FLAMEGUARD_COMBAT_ROLES[unit.id];
+  const role = String(unit?.role || "hybrid").toLowerCase();
+  if (["tank", "bruiser"].includes(role)) return "tank";
+  if (["dps", "assassin"].includes(role)) return "dps";
+  if (role === "healer") return "healer";
+  if (["utility", "controller"].includes(role)) return "utility";
+  return "hybrid";
+}
+
+function canGenerateBreak(unit) {
+  if (!unit) return false;
+  if (unit.id) return FLAMEGUARD_COMBAT_ROLES[unit.id] === "tank";
+  return combatRoleKey(unit, true) === "tank";
+}
 
 const MAX_LEVEL = 40;
 const MAX_BATTLE_ROUNDS = 20;
@@ -3510,7 +3600,7 @@ const TRANSFORMATION_CONFIG = {
 
 const TRANSFORMED_SKILLS = {
   mech: [
-    skill("Piston Impact", "melee", "Tech", 0, 0, "1.35x STR Tech strike with heavy stagger.", { coefficient: 1.35, staggerPower: 3, multiHit: 2, basicAttack: true }),
+    skill("Piston Impact", "melee", "Tech", 0, 0, "1.35x STR Tech multi-hit strike.", { coefficient: 1.35, multiHit: 2, basicAttack: true }),
     skill("Gearstorm Barrage", "magic", "Tech", 0, 10, "1.9x MAG multi-hit barrage.", { coefficient: 1.9, multiHit: 4 }),
     skill("Arc Reactor Burst", "magic", "Tech", 0, 12, "1.5x MAG to all enemies with reduced Defense.", { coefficient: 1.5, allEnemies: true, status: { type: "defenseDown", chance: .6, duration: 3, value: .2 } }),
     skill("Reinforced Chassis", "block", "Tech", 0, 8, "Reduce incoming damage by 25% for two actions.", { targetSide: "self", buffs: [{ type: "mechGuard", duration: 2, value: .25 }] }),
@@ -3709,6 +3799,7 @@ function loadGame(saveKey = activeSaveKey()) {
   migrateEchoForgeInstances();
   migratePlatinumGear();
   migrateHallSustainAffixes();
+  migrateGenericBreakGearAffixes();
   upgradeOwnedLegendaryGear();
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
@@ -4906,6 +4997,7 @@ function currentBreakStrength(source) {
 }
 
 function addBreakProgress(source, target, amount) {
+  if (!canGenerateBreak(source)) return { gain: 0, breaks: 0, remainder: target?.stagger || 0, bonusDamage: 0 };
   const gain = Math.max(0, Math.round(amount || 0));
   const total = Math.max(0, target?.stagger || 0) + gain;
   const breaks = Math.floor(total / BREAK_THRESHOLD);
@@ -5093,11 +5185,15 @@ function removableStatus(unit, priorities) {
     })[0] || null;
 }
 
-function cleanseStatuses(target) {
+function removeCleanseStatus(target) {
   const status = removableStatus(target, CLEANSE_PRIORITY);
-  if (!status) return 0;
+  if (!status) return null;
   target.statuses = ensureStatuses(target).filter(entry => entry !== status);
-  return 1;
+  return STATUS_DEFS[status.type]?.label || status.type;
+}
+
+function cleanseStatuses(target) {
+  return removeCleanseStatus(target) ? 1 : 0;
 }
 
 function dispelStatus(target) {
@@ -5108,7 +5204,9 @@ function dispelStatus(target) {
 }
 
 function cleanseWithTalent(source, target) {
-  const removed = cleanseStatuses(target);
+  const removedStatus = removeCleanseStatus(target);
+  const removed = removedStatus ? 1 : 0;
+  if (removedStatus) addBattleFloater(target, 0, { kind: "cleanse", text: `CLEANSED: ${removedStatus.toUpperCase()}` });
   const bonus = source?.id ? typedTalentValue(source.id, "cleanseHeal") : 0;
   if (removed && bonus) {
     const restored = Math.min(Math.round(target.max * bonus), target.max - target.hp);
@@ -7137,8 +7235,9 @@ function drawBattleFloaters() {
     const alpha = Math.min(1, (BATTLE_FLOATER_LIFETIME - age) / 30);
     const healing = floater.kind === "heal";
     const evaded = floater.kind === "evade";
+    const feedback = evaded || ["cleanse", "dispel", "broken"].includes(floater.kind);
     const main = floater.text || `${floater.crit ? "CRIT! " : ""}${healing ? "+" : ""}${floater.amount}`;
-    const mainSize = evaded ? 13 : floater.crit ? 15 : 10;
+    const mainSize = evaded || floater.kind === "broken" ? 13 : feedback ? 9 : floater.crit ? 15 : 10;
     const [laneX, laneY] = battleFloaterLaneOffsets[floater.lane] || battleFloaterLaneOffsets[0];
     const mainY = floater.y - rise + laneY;
     ctx.save();
@@ -7146,23 +7245,23 @@ function drawBattleFloaters() {
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.lineJoin = "round";
-    ctx.font = `${floater.crit || evaded ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
+    ctx.font = `${floater.crit || feedback ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
     const halfWidth = Math.ceil(ctx.measureText(main).width / 2) + 4;
     const mainX = Math.max(halfWidth, Math.min(LOGICAL_WIDTH - halfWidth, floater.x + laneX));
-    ctx.lineWidth = floater.crit || evaded ? 5 : 2;
+    ctx.lineWidth = floater.crit || feedback ? 5 : 2;
     ctx.strokeStyle = "#160d13";
     ctx.strokeText(main, mainX, mainY);
-    if (floater.crit || evaded) {
+    if (floater.crit || feedback) {
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = "#ffd45c";
       ctx.strokeText(main, mainX, mainY);
     }
-    ctx.fillStyle = evaded ? "#79ddff" : healing ? "#65e88a" : "#ff5b55";
+    ctx.fillStyle = evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : floater.kind === "broken" ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
     ctx.fillText(main, mainX, mainY);
     ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#160d13";
-    const label = evaded ? "" : healing ? "HEAL" : floater.damageType.toUpperCase();
+    const label = feedback ? "" : healing ? "HEAL" : floater.damageType.toUpperCase();
     if (label) {
       ctx.strokeText(label, mainX, mainY + 7);
       ctx.fillText(label, mainX, mainY + 7);
@@ -7373,6 +7472,61 @@ function drawBattleTurnRail() {
   });
 }
 
+function drawCombatRoleIcon(role, x, y, size = 8) {
+  const index = COMBAT_ROLE_ICON_INDEX[role] ?? COMBAT_ROLE_ICON_INDEX.hybrid;
+  if (!combatRoleIconSheet) {
+    drawRect(x, y, size, size, "#34273f");
+    return;
+  }
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(
+    combatRoleIconSheet.image,
+    index * combatRoleIconSheet.cellWidth,
+    0,
+    combatRoleIconSheet.cellWidth,
+    combatRoleIconSheet.cellHeight,
+    x,
+    y,
+    size,
+    size
+  );
+  ctx.restore();
+}
+
+function drawCompactRosterName(name, x, y, maxWidth) {
+  let size = 4;
+  ctx.font = `${size}px monospace`;
+  while (size > 3 && ctx.measureText(name).width > maxWidth) {
+    size--;
+    ctx.font = `${size}px monospace`;
+  }
+  drawText(name, x, y, "#f7e5bf", size);
+}
+
+function drawBattleRoleRoster(units, enemySide = false) {
+  const width = 69;
+  const rowHeight = 9;
+  const x = enemySide ? LOGICAL_WIDTH - width - 3 : 3;
+  const y = 22;
+  const height = 4 + units.length * rowHeight;
+  drawRect(x, y, width, height, "#090a11df");
+  drawRect(x, y, width, 1, enemySide ? "#a15446" : "#d8b06b");
+  units.forEach((unit, index) => {
+    const rowY = y + 3 + index * rowHeight;
+    drawCombatRoleIcon(combatRoleKey(unit, enemySide), x + 2, rowY, 7);
+    drawCompactRosterName(unit.name || unit.id, x + 11, rowY + 6, 28);
+    drawText(String(Math.max(0, Math.round(unit.hp || 0))), x + 55, rowY + 6, enemySide ? "#ef7867" : "#f0b354", 4, "right");
+    drawText(String(Math.max(0, Math.round(unit.mp || 0))), x + 67, rowY + 6, enemySide ? "#70a8d6" : "#a98ee8", 4, "right");
+  });
+}
+
+function drawBattleRoleRosters() {
+  if (!battle) return;
+  drawBattleRoleRoster(battle.party, false);
+  drawBattleRoleRoster(battle.enemies, true);
+}
+
 function drawBattleScene() {
   statusHoverAreas = [];
   const map = currentMap();
@@ -7432,6 +7586,7 @@ function drawBattleScene() {
   drawEffect();
   drawBattleFloaters();
   drawBattleTurnRail();
+  drawBattleRoleRosters();
   updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
     const phase = battle.phaseTransition;
@@ -7439,11 +7594,13 @@ function drawBattleScene() {
     drawRect(28, 48, LOGICAL_WIDTH - 56, 100, "#17121fef");
     drawRect(28, 48, LOGICAL_WIDTH - 56, 2, "#d9ae65");
     drawText(`PHASE ${phase.number}/${phase.total}`, LOGICAL_WIDTH / 2, 69, "#f4c776", 8, "center");
-    phase.names.forEach((name, index) => {
-      const size = Math.max(5, Math.min(8, Math.floor(390 / name.length)));
-      drawText(name, LOGICAL_WIDTH / 2, 90 + index * 11, "#fff0da", size, "center");
+    phase.enemies.forEach((unit, index) => {
+      const name = unit.finalState === "enraged" ? `${unit.name} / Enraged` : unit.name;
+      const rowY = 80 + index * 17;
+      drawCombatRoleIcon(combatRoleKey(unit, true), LOGICAL_WIDTH / 2 - 43, rowY, 13);
+      drawCompactRosterName(name, LOGICAL_WIDTH / 2 - 26, rowY + 9, 66);
     });
-    drawText("THE BATTLE CONTINUES", LOGICAL_WIDTH / 2, 136, "#bcb0ca", 5, "center");
+    drawText("CLICK TO CONTINUE", LOGICAL_WIDTH / 2, 138, "#f1d8a0", 5, "center");
   }
 }
 
@@ -9807,6 +9964,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       state.resonance = Math.min(100, state.resonance + (sk.anim === "block" ? 12 : 6));
     } else if (sk.dispel && target) {
       const removed = dispelStatus(target);
+      if (removed) addBattleFloater(target, 0, { kind: "dispel", text: `DISPELLED: ${removed.toUpperCase()}` });
       log += removed ? ` ${target.name} loses ${removed}.` : ` ${target.name} has no removable buff.`;
       state.resonance = Math.min(100, state.resonance + 6);
       playSfx("magic");
@@ -9837,12 +9995,9 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           delete u.nextSongBoost;
         }
         const weaknessHit = skillHitsElementWeakness(hitTarget, sk);
-        const weaponBreak = sk.basicAttack ? weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon)) : null;
-        const breakGain = (sk.staggerPower || (weaknessHit ? 2 : 1))
-          + (weaknessHit ? effectValue(u.id, "stagger") : 0)
+        const breakGain = canGenerateBreak(u) ? (sk.staggerPower || (weaknessHit ? 2 : 1))
           + typedTalentValue(u.id, "staggerBonus")
-          + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0)
-          + (weaponBreak?.type === "break" ? weaponBreak.value : 0);
+          + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0) : 0;
         const breakResult = addBreakProgress(u, hitTarget, breakGain);
         if (weaknessHit) {
           if (hitTarget.weak === sk.element && rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
@@ -9874,8 +10029,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (brokenAtHitStart) dmg = Math.max(1, Math.round(dmg * brokenPhysicalDamageMultiplier(u, statKey, hitTarget)));
         if (breakResult.breaks) {
           dmg += breakResult.bonusDamage;
-          applyStatus(hitTarget, "broken", u, { duration: 1, force: true });
-          log += ` ${hitTarget.name}: BROKEN! +${breakResult.bonusDamage} Break damage; ${breakResult.remainder}/${BREAK_THRESHOLD} Break remains.`;
+          if (!brokenAtHitStart) {
+            applyStatus(hitTarget, "broken", u, { duration: 1, force: true });
+            addBattleFloater(hitTarget, 0, { kind: "broken", text: "BROKEN!" });
+            log += ` ${hitTarget.name}: BROKEN! +${breakResult.bonusDamage} Break damage; ${breakResult.remainder}/${BREAK_THRESHOLD} Break remains.`;
+          }
         }
         const sleepBreak = breakSleepFromDamage(hitTarget);
         if (sleepBreak) log += ` ${hitTarget.name}: ${sleepBreak}`;
@@ -10430,11 +10588,15 @@ function enemyCleanseOne(target) {
   const status = enemyCleanseStatus(target);
   if (!status) return null;
   target.statuses = ensureStatuses(target).filter(entry => entry !== status);
-  return STATUS_DEFS[status.type]?.label || status.type;
+  const removed = STATUS_DEFS[status.type]?.label || status.type;
+  addBattleFloater(target, 0, { kind: "cleanse", text: `CLEANSED: ${removed.toUpperCase()}` });
+  return removed;
 }
 
 function enemyDispelOne(target) {
-  return dispelStatus(target);
+  const removed = dispelStatus(target);
+  if (removed) addBattleFloater(target, 0, { kind: "dispel", text: `DISPELLED: ${removed.toUpperCase()}` });
+  return removed;
 }
 
 function enemyApplyActionStatuses(source, target, action) {
@@ -10580,8 +10742,11 @@ function resolveEnemyTurn(turn, prev) {
         const breakResult = breakPower ? addBreakProgress(e, defender, breakPower) : null;
         if (breakResult?.breaks) {
           dmg += breakResult.bonusDamage;
-          applyStatus(defender, "broken", e, { duration: 1, force: true });
-          defenseText += ` ${defender.name} is BROKEN; ${breakResult.remainder}/${BREAK_THRESHOLD} Break remains.`;
+          if (!brokenAtHitStart) {
+            applyStatus(defender, "broken", e, { duration: 1, force: true });
+            addBattleFloater(defender, 0, { kind: "broken", text: "BROKEN!" });
+            defenseText += ` ${defender.name} is BROKEN; ${breakResult.remainder}/${BREAK_THRESHOLD} Break remains.`;
+          }
         } else if (breakResult?.gain) {
           defenseText += ` Break ${defender.stagger}/${BREAK_THRESHOLD}.`;
         }
@@ -10640,6 +10805,7 @@ function winBattle(log) {
   battle.defeated.push(...battle.enemies);
   if (battle.waves.length) {
     if (battleRoundLimitReached()) return endBattleDraw(log);
+    const total = battle.phaseTotal || battle.waves.length + 1;
     const nextWave = battle.waves.shift();
     const activeBattle = battle;
     const advanceWave = () => {
@@ -10655,30 +10821,29 @@ function winBattle(log) {
       buildTurnOrder();
       runCurrentTurn(`${log} The next wave enters.`);
     };
-    if (Number(battle.hallStage) >= HALL_MYTHIC_STAGE) {
-      const total = hallBattleInfo(battle.hallStage).waves.length + 1;
-      battle.enemies.forEach(unit => {
-        unit.anim = "death";
-        if (!Number.isFinite(unit.deathTick)) unit.deathTick = tick;
-        unit.defeatUntil = Math.max(unit.defeatUntil || 0, tick + 60);
-      });
-      battle.phaseTransition = {
-        step: "fallen",
-        number: total - battle.waves.length,
-        total,
-        names: nextWave.enemies.map(unit => unit.finalState === "enraged" ? `${unit.name} / Enraged` : unit.name)
-      };
-      battle.resolving = true;
-      renderBattle(`${log} The defeated wave falls.`);
-      setTimeout(() => {
-        if (battle !== activeBattle || mode !== "battle") return;
-        battle.phaseTransition.step = "incoming";
-        renderBattle(`Phase ${battle.phaseTransition.number}/${total} approaches.`);
-        setTimeout(advanceWave, 850);
-      }, 900);
-    } else {
+    if (!battle.hallStage) {
       advanceWave();
+      return;
     }
+    battle.enemies.forEach(unit => {
+      unit.anim = "death";
+      if (!Number.isFinite(unit.deathTick)) unit.deathTick = tick;
+      unit.defeatUntil = Math.max(unit.defeatUntil || 0, tick + 60);
+    });
+    battle.phaseTransition = {
+      step: "fallen",
+      number: total - battle.waves.length,
+      total,
+      enemies: nextWave.enemies,
+      advance: advanceWave
+    };
+    battle.resolving = true;
+    renderBattle(`${log} The defeated phase falls.`);
+    setTimeout(() => {
+      if (battle !== activeBattle || mode !== "battle" || battle.phaseTransition?.step !== "fallen") return;
+      battle.phaseTransition.step = "incoming";
+      renderBattle(`Phase ${battle.phaseTransition.number}/${total} approaches.`);
+    }, 900);
     return;
   }
   const hallStage = Number(battle.hallStage) || 0;
@@ -10754,6 +10919,14 @@ function winBattle(log) {
     if (hallStage) returnToHallAfterBattle();
     if (hallStage && hallProgress.pendingRecruit) openHallRecruitment();
   });
+}
+
+function confirmPhaseTransition() {
+  if (!battle || mode !== "battle" || battle.phaseTransition?.step !== "incoming") return false;
+  const advance = battle.phaseTransition.advance;
+  if (typeof advance !== "function") return false;
+  advance();
+  return true;
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
@@ -11055,7 +11228,7 @@ const characterSpecialties = {
   Mira: ["Fast physical damage", "Status setup", "Afflicted execution"],
   Seerin: ["Paladin guard", "Defensive support", "Stun control"],
   Kael: ["Dedicated healing", "Cleanse", "Magic support"],
-  Torren: ["Front-line tank", "Stagger damage", "Retaliation"],
+  Torren: ["Front-line tank", "Break control", "Retaliation"],
   Glimmer: ["Tech magic", "Speed manipulation", "Stun support"],
   Sparky: ["Magic burst", "Ancient fire", "Area damage"]
 };
@@ -11065,7 +11238,7 @@ const characterBios = {
   Mira: "The Whispering Arrow of House Veln is a swift shadow operative who marks weaknesses before exploiting them. Her dry precision hides a fierce loyalty to the people she has chosen.",
   Seerin: "Once shaped to be an obedient shield, Seerin now places people before doctrine. She anchors the front line with sword, shield and Holy Fire, protecting allies while opening paths for their counterattack.",
   Kael: "A quiet sigil healer bound by the Silent Oath. Kael turns disciplined faith into restoration and wards, while the Shadowpriest within him offers a more dangerous answer to the same promise.",
-  Torren: "The Stoneheart is a veteran guardian who meets every blow head-on. Torren controls the front line through endurance, stagger and retaliation, carrying old losses without allowing them to define the living.",
+  Torren: "The Stoneheart is a veteran guardian who meets every blow head-on. Torren controls the front line through endurance, Break pressure and retaliation, carrying old losses without allowing them to define the living.",
   Glimmer: "The Gearmind engineer treats every impossible problem as an unfinished prototype. Her wrenchwork, drones and Mech form combine technical magic with fast battlefield support.",
   Sparky: "A tiny Emberborn carrying an ancient dragon memory. Sparky looks playful until that remembered flame awakens, turning concentrated magic into burns, bursts and sweeping Ancient Fire.",
 };
@@ -11153,7 +11326,7 @@ function skillCatalogueHtml(id) {
   const form = id === "Glimmer" ? "mech" : id === "Kael" ? "shadowpriest" : null;
   const sections = [{ title: "Current skills", skills: normal, unit: { id, statuses: [] } }];
   if (form && normal.some(sk => sk.transform === form)) sections.push({ title: form === "mech" ? "Mech Form skills" : "Shadowpriest skills", skills: TRANSFORMED_SKILLS[form], unit: { id, form, statuses: [] } });
-  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(id)}` : sk.basicAttack ? "0 MP / restores 6% Max MP" : `${skillMpCost(id, sk, section.unit)} fixed MP`} / ${sk.element} / ${skillFormula(sk, id)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents, ECHO, Ultimate rank and form stats, but no enemy defense, weakness, stagger bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
+  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(id)}` : sk.basicAttack ? "0 MP / restores 6% Max MP" : `${skillMpCost(id, sk, section.unit)} fixed MP`} / ${sk.element} / ${skillFormula(sk, id)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents, ECHO, Ultimate rank and form stats, but no enemy defense, weakness, Break bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
 }
 
 function estimatedHeroOutput(id) {
@@ -11344,7 +11517,79 @@ function capsHtml(id) {
   return `<div class="combat-caps"><strong>${id} / Combat limits</strong><span>CRIT ${Math.round(crit.total * 100)}% / 65% max</span><span>AGI CRIT +${(crit.agilityBonus * 100).toFixed(1)}% (0.10 percentage point per AGI)</span><span>Status application: 95% max after resistance</span><span>Normal Attack: restores 6% Max MP</span><span>Extra actions: 2 per battle (shared by party)</span><span>Boss Poison: 1.5% max HP per tick; refreshes, never stacks</span></div>`;
 }
 
-function gearComparisonHtml(id, slot, ref) {
+let gearHoverRegistry = [];
+let gearHoverTooltip = null;
+
+function gearHoverAttribute(context) {
+  const index = gearHoverRegistry.push(context) - 1;
+  return `data-gear-hover="${index}"`;
+}
+
+function gearComparisonHero(gear, preferred = selectedGearHero) {
+  if (preferred && state.party.includes(preferred) && canEquip(preferred, gear)) return preferred;
+  return state.activeParty.find(id => canEquip(id, gear)) || state.party.find(id => canEquip(id, gear)) || state.activeParty[0] || state.party[0];
+}
+
+function withTemporaryGearMetadata(ref, options, callback) {
+  const hasAffixes = Object.prototype.hasOwnProperty.call(state.gearAffixes, ref);
+  const hasRarity = Object.prototype.hasOwnProperty.call(state.gearRarities, ref);
+  const previousAffixes = state.gearAffixes[ref];
+  const previousRarity = state.gearRarities[ref];
+  try {
+    if (Array.isArray(options?.affixes) && !gearInstance(ref)) state.gearAffixes[ref] = options.affixes.map(entry => ({ ...entry }));
+    if (options?.rarity && !gearInstance(ref)) state.gearRarities[ref] = options.rarity;
+    return callback();
+  } finally {
+    if (hasAffixes) state.gearAffixes[ref] = previousAffixes;
+    else delete state.gearAffixes[ref];
+    if (hasRarity) state.gearRarities[ref] = previousRarity;
+    else delete state.gearRarities[ref];
+  }
+}
+
+function comparisonNumber(value, percent = false, forceSign = true) {
+  const amount = percent ? Math.round(value * 1000) / 10 : Math.round(value * 100) / 100;
+  return `${forceSign && amount > 0 ? "+" : ""}${amount}${percent ? "%" : ""}`;
+}
+
+function affixComparisonKey(entry) {
+  return `${entry.type}:${entry.stat || ""}:${entry.status || ""}:${entry.key || ""}`;
+}
+
+function affixComparisonValue(entry, value = entry?.value || 0) {
+  const percent = ["statPct", "hpPct", "statusOnHit", "statusResistance", "critChance", "afflictedDamage", "physicalDamage", "magicDamage", "poisonReduction", "statusChance", "allStatusResistance", "echoing", "openingTurnProgress", "leeching", "siphoning"].includes(entry?.type);
+  const turns = ["statusDuration", "statusDurationReduction", "buffDuration"].includes(entry?.type);
+  return turns ? `${comparisonNumber(value)} turn${Math.abs(value) === 1 ? "" : "s"}` : comparisonNumber(value, percent);
+}
+
+function gearComparisonContentHtml(id, slot, ref, options = {}) {
+  const gear = gearByName(ref);
+  if (!gear || !baseJobs[id]) return "<p>Comparison unavailable.</p>";
+  const equippedRef = baseJobs[id].gear[slot];
+  const equippedGear = gearByName(equippedRef);
+  const hoveredAffixes = Array.isArray(options.affixes) ? options.affixes : gearAffixes(ref);
+  const equippedAffixes = equippedRef ? gearAffixes(equippedRef) : [];
+  const statOrder = ["str", "mag", "stam", "agi", "echo", "hp", "mp"];
+  const statKeys = [...new Set([...statOrder, ...Object.keys(gear.stats || {}), ...Object.keys(equippedGear?.stats || {})])]
+    .filter(key => (gear.stats?.[key] || 0) !== 0 || (equippedGear?.stats?.[key] || 0) !== 0);
+  const statRows = statKeys.map(key => {
+    const value = gear.stats?.[key] || 0;
+    const difference = value - (equippedGear?.stats?.[key] || 0);
+    return `<tr><th>${key.toUpperCase()}</th><td>${comparisonNumber(value)}</td><td class="comparison-delta ${difference > 0 ? "is-positive" : difference < 0 ? "is-negative" : ""}">${comparisonNumber(difference)}</td></tr>`;
+  }).join("");
+
+  const hoveredByKey = new Map(hoveredAffixes.filter(entry => !isGenericBreakGearAffix(entry)).map(entry => [affixComparisonKey(entry), entry]));
+  const equippedByKey = new Map(equippedAffixes.filter(entry => !isGenericBreakGearAffix(entry)).map(entry => [affixComparisonKey(entry), entry]));
+  const affixKeys = [...new Set([...hoveredByKey.keys(), ...equippedByKey.keys()])];
+  const affixRows = affixKeys.map(key => {
+    const hovered = hoveredByKey.get(key);
+    const equipped = equippedByKey.get(key);
+    const definition = hovered || equipped;
+    const value = hovered?.value || 0;
+    const difference = value - (equipped?.value || 0);
+    return `<tr><th>${definition.label || definition.type}</th><td>${affixComparisonValue(definition, value)}</td><td class="comparison-delta ${difference > 0 ? "is-positive" : difference < 0 ? "is-negative" : ""}">${affixComparisonValue(definition, difference)}</td></tr>`;
+  }).join("");
+
   const unit = { id, statuses: [] };
   const commands = battleSkills(id, unit).map(sk => ({ sk, unit }));
   commands.filter(({ sk }) => sk.transform).forEach(({ sk }) => {
@@ -11354,20 +11599,75 @@ function gearComparisonHtml(id, slot, ref) {
   const before = meaningful.map(({ sk, unit: source }) => [skillExpectedOutput(id, sk, source), skillExpectedOutput(id, sk, source, true)]);
   const original = baseJobs[id].gear[slot];
   let rows;
+  let nextValues;
   let nextCrit;
   try {
-    baseJobs[id].gear[slot] = ref;
-    nextCrit = Math.round(heroCritBreakdown(id).total * 100);
-    rows = meaningful.map(({ sk, unit: source }, index) => {
-      const next = Math.round(skillExpectedOutput(id, sk, source));
-      const old = Math.round(before[index][0]);
-      const afflicted = Math.round(skillExpectedOutput(id, sk, source, true));
-      return `<tr><th>${sk.name}<small>${source.form || skillFormula(sk, id)}</small></th><td>${old}</td><td>${next}<small>${next - old >= 0 ? "+" : ""}${next - old}</small></td><td>${sk.power < 0 ? "Heal / ally" : `${Math.round(before[index][1])} to ${afflicted}`}</td></tr>`;
-    }).join("");
+    withTemporaryGearMetadata(ref, options, () => {
+      baseJobs[id].gear[slot] = ref;
+      nextCrit = Math.round(heroCritBreakdown(id).total * 100);
+      nextValues = meaningful.map(({ sk, unit: source }) => [skillExpectedOutput(id, sk, source), skillExpectedOutput(id, sk, source, true)]);
+      rows = meaningful.map(({ sk, unit: source }, index) => {
+        const next = Math.round(nextValues[index][0]);
+        const old = Math.round(before[index][0]);
+        const afflicted = Math.round(nextValues[index][1]);
+        return `<tr><th>${sk.name}<small>${source.form || skillFormula(sk, id)}</small></th><td>${next}</td><td class="comparison-delta ${next > old ? "is-positive" : next < old ? "is-negative" : ""}">${next - old >= 0 ? "+" : ""}${next - old}</td><td>${sk.power < 0 ? "Heal / ally" : `${afflicted} vs afflicted`}</td></tr>`;
+      }).join("");
+    });
   } finally {
     baseJobs[id].gear[slot] = original;
   }
-  return `<summary>Compare every skill</summary><p>CRIT: ${Math.round(heroCritBreakdown(id).total * 100)}% to ${nextCrit}% (cap 65%). Average damage per target or healing per ally. Includes gear, talents and form stats; excludes enemy defenses, weaknesses and temporary buffs.</p><div class="comparison-scroll"><table><thead><tr><th>Skill / scaling</th><th>Current</th><th>This item</th><th>Vs afflicted</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const damageIndexes = meaningful.map(({ sk }, index) => skillTargetsEnemies(sk) ? index : -1).filter(index => index >= 0);
+  const average = (values, afflicted = false) => damageIndexes.length ? damageIndexes.reduce((sum, index) => sum + values[index][afflicted ? 1 : 0], 0) / damageIndexes.length : 0;
+  const percentDelta = (next, previous) => previous ? (next / previous - 1) * 100 : 0;
+  const normalImpact = percentDelta(average(nextValues), average(before));
+  const afflictedImpact = percentDelta(average(nextValues, true), average(before, true));
+  const uniqueEffects = gearEffectLabels(gear);
+  const set = mythicSetDefinition(gear);
+  if (set) uniqueEffects.push(`${set.name} 3-piece: ${set.bonus.label}`);
+  const currentUnique = equippedGear ? gearEffectLabels(equippedGear) : [];
+  return `<div class="gear-compare-head"><strong>${gearDisplayName(ref)}</strong><small>Compared with ${equippedRef ? gearDisplayName(equippedRef) : "empty slot"} on ${id}</small></div><div class="comparison-scroll"><table class="gear-value-comparison"><thead><tr><th>Base stat</th><th>Hovered item</th><th>Difference</th></tr></thead><tbody>${statRows || `<tr><td colspan="3">No base stat difference.</td></tr>`}</tbody></table>${affixRows ? `<table class="gear-value-comparison"><thead><tr><th>Affix</th><th>Hovered item</th><th>Difference</th></tr></thead><tbody>${affixRows}</tbody></table>` : ""}</div><div class="gear-unique-comparison"><strong>Unique effects</strong>${uniqueEffects.length ? uniqueEffects.map(label => `<small>${label}</small>`).join("") : "<small>None</small>"}${currentUnique.length ? `<em>Equipped item: ${currentUnique.join(" / ")}</em>` : ""}</div><div class="gear-impact-summary"><strong>Estimated combat impact</strong><span>Crit-adjusted direct damage <b class="${normalImpact > 0 ? "is-positive" : normalImpact < 0 ? "is-negative" : ""}">${comparisonNumber(normalImpact / 100, true)}</b></span><span>Vs afflicted <b class="${afflictedImpact > 0 ? "is-positive" : afflictedImpact < 0 ? "is-negative" : ""}">${comparisonNumber(afflictedImpact / 100, true)}</b></span><span>CRIT <b>${Math.round(heroCritBreakdown(id).total * 100)}% to ${nextCrit}%</b></span></div><details class="gear-skill-impact"><summary>Skill-by-skill formula impact</summary><div class="comparison-scroll"><table><thead><tr><th>Skill / scaling</th><th>Hovered</th><th>Difference</th><th>Conditional</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+}
+
+function gearComparisonHtml(id, slot, ref, options = {}) {
+  return `<summary>Detailed comparison</summary>${gearComparisonContentHtml(id, slot, ref, options)}`;
+}
+
+function gearHoverPopupHtml(context) {
+  const gear = gearByName(context.ref);
+  if (!gear) return "";
+  return gearComparisonContentHtml(context.heroId, gear.slot, context.ref, context);
+}
+
+function hideGearHoverTooltip() {
+  if (gearHoverTooltip) gearHoverTooltip.hidden = true;
+}
+
+function showGearHoverTooltip(element, context) {
+  if (!context || !gearByName(context.ref)) return;
+  if (!gearHoverTooltip) {
+    gearHoverTooltip = document.createElement("div");
+    gearHoverTooltip.className = "gear-hover-tooltip";
+    gearHoverTooltip.setAttribute("role", "tooltip");
+    document.body.appendChild(gearHoverTooltip);
+  }
+  gearHoverTooltip.innerHTML = gearHoverPopupHtml(context);
+  gearHoverTooltip.hidden = false;
+  const anchor = element.getBoundingClientRect();
+  const box = gearHoverTooltip.getBoundingClientRect();
+  const left = Math.max(8, Math.min(innerWidth - box.width - 8, anchor.right + 10));
+  const fallbackLeft = Math.max(8, anchor.left - box.width - 10);
+  gearHoverTooltip.style.left = `${left + box.width > innerWidth - 8 ? fallbackLeft : left}px`;
+  gearHoverTooltip.style.top = `${Math.max(8, Math.min(innerHeight - box.height - 8, anchor.top))}px`;
+}
+
+function bindGearHoverTooltips(root = el.menuBody) {
+  root.querySelectorAll("[data-gear-hover]").forEach(element => {
+    const context = gearHoverRegistry[Number(element.dataset.gearHover)];
+    element.addEventListener("pointerenter", () => showGearHoverTooltip(element, context));
+    element.addEventListener("pointerleave", hideGearHoverTooltip);
+    element.addEventListener("focusin", () => showGearHoverTooltip(element, context));
+    element.addEventListener("focusout", hideGearHoverTooltip);
+  });
 }
 
 function favoriteGearButton(ref) {
@@ -11375,6 +11675,8 @@ function favoriteGearButton(ref) {
 }
 
 function renderMenu() {
+  gearHoverRegistry = [];
+  hideGearHoverTooltip();
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
     if (!state.party.includes(selectedStatusHero)) selectedStatusHero = state.party[0];
@@ -11474,7 +11776,7 @@ function renderMenu() {
       const copies = gearCopyCount(ref);
       const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
       const rowIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
-      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}">${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} / ${gearSlotLabel(gear.slot)} / ${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
+      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}" ${gearHoverAttribute({ heroId: id, ref })}>${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small><small>${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
     }).join("") || `<p class="selection-list-empty">No gear matches these filters.</p>`}${gearBrowser.slot === "all" ? "" : `<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`}`;
     const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
     const selectedSlot = selectedGear?.slot || selectedGearSlot;
@@ -11550,7 +11852,8 @@ function renderMenu() {
         const holders = equippedGearUsers(entry.ref);
         const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[entry.gear.slot];
         const iconHero = holders[0] || gearOwners[entry.gear.name]?.[0] || state.activeParty[0];
-        return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${gearIconHtml(entry.gear, iconHero, iconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} / ${gearSlotLabel(entry.gear.slot)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
+        const comparisonHero = gearComparisonHero(entry.gear, selectedGearHero);
+        return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}" ${gearHoverAttribute({ heroId: comparisonHero, ref: entry.ref })}>${gearIconHtml(entry.gear, iconHero, iconIndex, "selection-row-icon")}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} &bull; ${gearSlotLabel(entry.gear.slot)} &bull; ${statLine(entry.gear.stats)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
       }
       if (entry.kind === "skill") return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}"><span class="selection-letter-icon">S</span><span><strong>${entry.sk.name}</strong><small>${entry.casterId} / ${entry.sk.cost} MP</small></span></button>`;
       const icon = inventoryIcon(entry.name);
@@ -11652,6 +11955,7 @@ function renderMenu() {
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
   }
+  bindGearHoverTooltips();
 }
 
 function canUseFieldItem(name, id) {
@@ -11988,37 +12292,42 @@ function rerollPanelHtml() {
   return `<section class="forge-reroll"><h3>Reforge one affix</h3><p>${AFFIX_REROLL_COST} G per roll. Select one affix to replace with a random different affix. All other affixes, rarity and fixed Echo effects stay unchanged.</p><p role="status">${rerollNotice}</p>${refs.map((ref, index) => `<div class="reroll-row"><strong>${gearDisplayName(ref)}</strong>${canRerollGear(ref) ? `<label>Replace<select data-reroll-slot="${index}">${gearAffixes(ref).map((entry, slot) => `<option value="${slot}">${formatAffix(entry)}</option>`).join("")}</select></label><button type="button" data-reroll-ref="${ref}" data-reroll-index="${index}" ${state.gold < AFFIX_REROLL_COST ? "disabled" : ""}>Reforge / ${AFFIX_REROLL_COST} G</button>` : `<small>${state.favoriteGear[ref] ? "Favorite locked. Unlock in Gear before reforging." : "Legacy stack shares its affixes. Reforging requires a single item or a separate Echo-Forge copy."}</small>`}</div>`).join("") || "<p>No items with random affixes owned.</p>"}</section>`;
 }
 
+function shopWareRowHtml(ware, index, purchased = false) {
+  const gear = ware.kind === "gear" ? gearByName(ware.name) : null;
+  const repeatableEcho = gear && echoForgeGearNames.has(gear.name);
+  const hallOfferPurchased = Number.isInteger(ware.hallStage) && hallBattleProgress().purchasedShopStages.includes(ware.hallStage);
+  const owned = purchased || ware.kind === "gear" && (hallOfferPurchased || (state.ownedGear.includes(ware.name) && !repeatableEcho && !ware.hallStage));
+  const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
+  const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
+  const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
+  const icon = gear
+    ? gearIconHtml(gear, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
+    : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
+  const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
+  const comparisonHero = gear ? gearComparisonHero(gear, selectedGearHero) : null;
+  const hover = gear ? gearHoverAttribute({ heroId: comparisonHero, ref: gear.name, rarity: displayedRarity, affixes: ware.hallStage ? (ware.affixes || []).map(entry => ({ ...entry })) : null }) : "";
+  const metadata = gear
+    ? `<small class="shop-gear-metadata">${displayedRarity.toUpperCase()} &bull; ${gearSlotLabel(gear.slot).toUpperCase()}${ware.hallStage ? ` &bull; STAGE ${ware.hallStage}` : ""}</small><small>${statLine(gear.stats)}</small>`
+    : `<small>${ware.desc}</small>`;
+  const buttonLabel = purchased ? "Purchased" : owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy";
+  return `<div class="shop-row ${gear ? "is-gear-row" : ""}" ${hover}>${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${metadata}</div><span>${price} G</span><button type="button" ${purchased ? "" : `data-buy="${index}"`} ${owned || full || state.gold < price ? "disabled" : ""}>${buttonLabel}</button></div>`;
+}
+
 function renderVendor() {
   const vendor = vendors[activeVendor];
   if (!vendor) return closeVendor();
+  gearHoverRegistry = [];
+  hideGearHoverTooltip();
   const wares = vendorWares(activeVendor);
   const stashEntries = Object.entries(state.stash).filter(([, amount]) => amount > 0);
-  const buyList = `<div class="shop-list">${wares.map((ware, index) => {
-    const gear = ware.kind === "gear" ? gearByName(ware.name) : null;
-    const repeatableEcho = gear && echoForgeGearNames.has(gear.name);
-    const hallOfferPurchased = Number.isInteger(ware.hallStage) && hallBattleProgress().purchasedShopStages.includes(ware.hallStage);
-    const owned = ware.kind === "gear" && (hallOfferPurchased || (state.ownedGear.includes(ware.name) && !repeatableEcho && !ware.hallStage));
-    const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
-    const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
-    const effects = gear ? gearEffectLabels(gear) : [];
-    const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
-    const generatedAffixes = gear ? (ware.hallStage ? HALL_SHOP_AFFIX_COUNTS[displayedRarity] : RARITY_AFFIX_COUNTS[displayedRarity]) || 0 : 0;
-    const rollText = repeatableEcho
-      ? ` Every separate copy rolls a fresh, fully random set of ${generatedAffixes} affixes.`
-      : displayedRarity === "Artifact" && !ware.hallStage ? ` Rolls ${generatedAffixes} random affixes when purchased.`
-      : gear && zoneStarterGear.includes(gear) ? ` Rolls ${generatedAffixes} random affix${generatedAffixes === 1 ? "" : "es"} when purchased.` : "";
-    const hallAffixes = gear && ware.hallStage && Array.isArray(ware.affixes) ? ware.affixes : [];
-    const hallMetadata = gear && ware.hallStage
-      ? `<small class="shop-gear-metadata">${gearSlotLabel(gear.slot).toUpperCase()} &bull; ${displayedRarity.toUpperCase()} &bull; UNLOCKED STAGE ${ware.hallStage}</small><small><b>Base stats:</b> ${statLine(gear.stats)}</small>${effects.length ? `<small><b>Special:</b> ${effects.join(" / ")}</small>` : ""}<span class="gear-affixes"><b>Affixes:</b>${hallAffixes.map(entry => `<small>${formatAffix(entry)}</small>`).join("") || `<small>None</small>`}</span>`
-      : "";
-    const details = gear ? `${displayedRarity}. ${statLine(gear.stats)}. ${gear.desc}${effects.length ? ` Special: ${effects.join(" / ")}.` : ""}${rollText}` : ware.desc;
-    const rarityBadge = displayedRarity === "Artifact" ? `<small class="gear-rarity rarity-artifact">ARTIFACT</small>` : "";
-    const icon = gear
-      ? gearIconHtml(gear, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
-      : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
-    const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
-    return `<div class="shop-row">${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${rarityBadge}${hallMetadata || `<small>${details}</small>`}</div><span>${price} G</span><button type="button" data-buy="${index}" ${owned || full || state.gold < price ? "disabled" : ""}>${owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy"}</button></div>`;
-  }).join("")}</div>${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
+  const indexedWares = wares.map((ware, index) => ({ ware, index }));
+  const hallShop = activeVendor === "workshop" && state.gameMode === "hallBattles";
+  const availableWares = hallShop ? indexedWares.filter(({ ware }) => !hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : indexedWares;
+  const purchasedWares = hallShop ? indexedWares.filter(({ ware }) => hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : [];
+  const shopSections = hallShop
+    ? `<section class="shop-offer-section"><h3>Available</h3><div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("") || `<div class="shop-empty"><strong>No offers available</strong><p>New persistent offers unlock with Ember Hall stages.</p></div>`}</div></section><details class="shop-purchased"><summary>Purchased (${purchasedWares.length})</summary><div class="shop-list">${purchasedWares.map(({ ware, index }) => shopWareRowHtml(ware, index, true)).join("") || `<div class="shop-empty"><p>No purchased offers yet.</p></div>`}</div></details>`
+    : `<div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("")}</div>`;
+  const buyList = `${shopSections}${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
   }).join("")}</div>` : ""}`;
@@ -12031,7 +12340,8 @@ function renderVendor() {
   }).join("")}${sellGear.map(({ ref, gear }) => {
     const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
     const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
-    return `<div class="shop-row">${gearIconHtml(gear, state.party[0], iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)}. ${statLine(gear.stats)}. ${gear.desc}</small>${gearAffixHtml(ref)}</div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
+    const comparisonHero = gearComparisonHero(gear, selectedGearHero);
+    return `<div class="shop-row is-gear-row" ${gearHoverAttribute({ heroId: comparisonHero, ref })}>${gearIconHtml(gear, state.party[0], iconIndex, "shop-icon")}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small></div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop" && state.gameMode === "hallBattles"
@@ -12062,6 +12372,7 @@ function renderVendor() {
   el.menuBody.querySelectorAll("[data-buy]").forEach(button => button.onclick = () => buyWare(Number(button.dataset.buy)));
   el.menuBody.querySelectorAll("[data-sell-kind]").forEach(button => button.onclick = () => sellVendorItem(button.dataset.sellKind, button.dataset.sellName));
   el.menuBody.querySelectorAll("[data-take-stash]").forEach(button => button.onclick = () => takeFromStash(stashEntries[Number(button.dataset.takeStash)]?.[0]));
+  bindGearHoverTooltips();
 }
 
 function inventorySellPrice(name) {
@@ -12199,6 +12510,7 @@ function handleControl(control) {
   if (control === "music") return toggleMusic();
   if (control === "fullscreen") return toggleMobileFullscreen();
   unlockMusic();
+  if (mode === "battle" && battle?.phaseTransition?.step === "incoming" && control === "confirm") return confirmPhaseTransition();
   if (mode === "battleResult") {
     if (control === "confirm" || control === "cancel") completeBattleResult();
     return;
@@ -12434,6 +12746,10 @@ canvas.addEventListener("click", event => {
   }
   if (mode === "battle") {
     const { x, y } = canvasLogicalPoint(event);
+    if (battle?.phaseTransition?.step === "incoming") {
+      confirmPhaseTransition();
+      return;
+    }
     if (x >= 4 && x <= 98 && y >= 168 && y <= 218) {
       const index = Math.floor((y - 168) / 9);
       if (index >= 0 && index < el.actions.children.length) {
