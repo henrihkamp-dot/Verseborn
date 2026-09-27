@@ -465,10 +465,23 @@ function enemyMove(name, kind, element, mpCost = 0, options = {}) {
   return { name, kind, element, mpCost, ...options };
 }
 
+const ENEMY_ROLE_BASE_EVASION = {
+  tank: .02,
+  bruiser: .04,
+  healer: .04,
+  boss: .04,
+  hybrid: .05,
+  controller: .06,
+  dps: .07,
+  utility: .07,
+  assassin: .12
+};
+
 function enemyCombatProfile(role, crit, identity, moves, pattern, options = {}) {
   return {
     role,
     crit,
+    baseEvasion: options.baseEvasion ?? ENEMY_ROLE_BASE_EVASION[role] ?? .05,
     identity,
     maxMp: identity.mp,
     moves,
@@ -550,13 +563,13 @@ const enemyAbilityProfiles = {
     magic: em("Faultline", "magic", "Earth", 22, { coefficient: 1, scaling: "str", breakPower: 2, status: { type: "stun", chance: .32 } }),
     buff: em("Stone Guard", "buff", "Earth", 27, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .28 }, { type: "barrier", duration: 2, value: .18 }] }),
     ultimate: em("Armory Collapse", "ultimate", "Earth", 0, { coefficient: 1.04, allTargets: true, breakPower: 3 })
-  }, ["melee", "buff", "magic"], { element: "Earth", affixes: { physicalResistance: .15, breakPower: 1 } }),
+  }, ["melee", "buff", "magic"], { element: "Earth", baseEvasion: 0, affixes: { physicalResistance: .15, breakPower: 1 } }),
   Grumm: enemyCombatProfile("tank", .09, { hp: 150, mp: 78, str: 138, mag: 58, stam: 155, agi: 60 }, {
     melee: em("Granite Cleave", "melee", "Physical", 0, { coefficient: .94, breakPower: 2 }),
     magic: em("Boulder Toss", "magic", "Earth", 20, { coefficient: 1, scaling: "str", breakPower: 1 }),
     buff: em("Mountain Stance", "buff", "Earth", 28, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .28 }, { type: "barrier", duration: 2, value: .2 }] }),
     ultimate: em("Mountain Breaker", "ultimate", "Earth", 0, { coefficient: 1.68, scaling: "str", breakPower: 3, payoff: "broken", payoffMultiplier: 1.22 })
-  }, ["melee", "buff", "magic"], { row: 3, element: "Earth", affixes: { physicalResistance: .15, breakPower: 1 } }),
+  }, ["melee", "buff", "magic"], { row: 3, element: "Earth", baseEvasion: .02, affixes: { physicalResistance: .15, breakPower: 1 } }),
   Lysra: enemyCombatProfile("healer", .08, { hp: 86, mp: 150, str: 58, mag: 152, stam: 82, agi: 100 }, {
     melee: em("Spellstaff Sweep", "melee", "Physical", 0, { coefficient: .72 }),
     magic: em("Arcane Missile", "magic", "Arcane", 18, { coefficient: 1 }),
@@ -590,7 +603,7 @@ const enemyAbilityProfiles = {
     utility: em("Tempo Jam", "utility", "Sound", 21, { status: { type: "agilityDown", chance: .75, duration: 3, value: .15 } }),
     buff: em("Tempo Boost", "buff", "Sound", 20, { targetRole: "fast", buffs: [{ type: "agilityUp", duration: 3, value: .25 }] }),
     ultimate: em("Resonant Rupture", "ultimate", "Sound", 0, { coefficient: 1.08, allTargets: true })
-  }, ["utility", "buff", "magic", "melee"], { element: "Sound", affixes: { resonanceGeneration: .25 } }),
+  }, ["utility", "buff", "magic", "melee"], { element: "Sound", baseEvasion: .1, affixes: { resonanceGeneration: .25 } }),
   "Lord Sprocket": enemyCombatProfile("utility", .1, { hp: 100, mp: 124, str: 78, mag: 124, stam: 102, agi: 110 }, {
     melee: em("Gear Wrench", "melee", "Physical", 0, { coefficient: .8, status: { type: "defenseDown", chance: .2, duration: 3, value: .2 } }),
     magic: em("Boiler Bolt", "magic", "Tech", 19, { coefficient: .96, extraStatuses: [{ type: "burn", chance: .3, duration: 4 }] }),
@@ -617,7 +630,7 @@ const enemyAbilityProfiles = {
     magic: em("Throwing Daggers", "magic", "Shadow", 20, { coefficient: 1.02, scaling: "str", status: { type: "poison", chance: .45, duration: 4 } }),
     buff: em("Predator's Focus", "buff", "Shadow", 25, { targetSide: "self", buffs: [{ type: "critUp", duration: 3, value: .15 }, { type: "agilityUp", duration: 3, value: .25 }] }),
     ultimate: em("Shadow Storm", "ultimate", "Shadow", 0, { coefficient: 1.65, payoff: "afflictedOrBroken", payoffMultiplier: 1.3, critBonus: .15 })
-  }, ["buff", "magic", "melee"], { row: 6, element: "Shadow", affixes: { critDamage: .25, damageAfflicted: .15 } }),
+  }, ["buff", "magic", "melee"], { row: 6, element: "Shadow", baseEvasion: .15, affixes: { critDamage: .25, damageAfflicted: .15 } }),
   "Nyx Vael": enemyCombatProfile("controller", .12, { hp: 86, mp: 148, str: 64, mag: 148, stam: 78, agi: 138 }, {
     melee: em("Margin Snap", "melee", "Shadow", 0, { coefficient: .78, status: { type: "shadowExposed", chance: .3, duration: 2 } }),
     magic: em("Quiet Index", "magic", "Shadow", 22, { coefficient: .72, status: { type: "sleep", chance: .58, duration: 3 } }),
@@ -625,7 +638,7 @@ const enemyAbilityProfiles = {
     dispel: em("Unwrite Boon", "dispel", "Shadow", 24, { dispel: true }),
     buff: em("Veil of Nyx", "buff", "Shadow", 25, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "evasion", duration: 2, value: .2 }] }),
     ultimate: em("Final Index", "ultimate", "Shadow", 0, { coefficient: 1.08, allTargets: true, status: { type: "sleep", chance: .5, duration: 2 } })
-  }, ["magic", "buff", "dispel", "utility", "melee"], { row: 1, element: "Shadow", affixes: { statusPotency: .2, buffDuration: 1 } }),
+  }, ["magic", "buff", "dispel", "utility", "melee"], { row: 1, element: "Shadow", baseEvasion: .09, affixes: { statusPotency: .2, buffDuration: 1 } }),
   "Jory Bellwick": enemyCombatProfile("utility", .1, { hp: 90, mp: 136, str: 68, mag: 134, stam: 88, agi: 112 }, {
     melee: em("Lute Crack", "melee", "Physical", 0, { coefficient: .76, status: { type: "disrupted", chance: .2, duration: 3, value: .15 } }),
     magic: em("Star Note", "magic", "Sound", 18, { coefficient: .96 }),
@@ -647,7 +660,7 @@ const enemyAbilityProfiles = {
     heavy: em("Ice Lance", "magic", "Ice", 25, { coefficient: 1.12, status: { type: "agilityDown", chance: .65, duration: 3, value: .15 } }),
     buff: em("Winter Rhythm", "buff", "Ice", 24, { targetSide: "self", buffs: [{ type: "magicUp", duration: 3, value: .25 }, { type: "critUp", duration: 2, value: .1 }] }),
     ultimate: em("Winter Encore", "ultimate", "Ice", 0, { coefficient: 1.12, allTargets: true, status: { type: "sleep", chance: .35, duration: 2 } })
-  }, ["magic", "buff", "heavy", "melee"], { element: "Ice", affixes: { elementDamage: .12, statusPotency: .18 } }),
+  }, ["magic", "buff", "heavy", "melee"], { element: "Ice", baseEvasion: .09, affixes: { elementDamage: .12, statusPotency: .18 } }),
   "King Maeric": enemyCombatProfile("tank", .11, { hp: 158, mp: 118, str: 122, mag: 106, stam: 164, agi: 64 }, {
     melee: em("Sceptre Judgment", "melee", "Physical", 0, { coefficient: .9, status: { type: "marked", chance: .25, duration: 4, value: .12 } }),
     magic: em("Lion Seal", "magic", "Holy Fire", 21, { coefficient: .94 }),
@@ -2291,9 +2304,18 @@ function weaponBasicAttackEffect(gear) {
 
 function gearEffectLabel(effect) {
   if (!effect?.label) return "";
-  if (effect.type === "mpOnHit") return `Restore at least ${effect.value} MP after dealing damage; scales modestly with Max MP`;
-  if (effect.artifactUnique) return `ARTIFACT EFFECT: ${effect.label.replace(/^ARTIFACT(?: EFFECT)?:\s*/i, "")}`;
-  return effect.echoUnique ? `ECHO EFFECT: ${effect.label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : effect.label;
+  let label = effect.type === "mpOnHit"
+    ? `Restore at least ${effect.value} MP after dealing damage; scales modestly with Max MP`
+    : effect.label;
+  if (state.gameMode === "hallBattles" && ["hpOnHit", "mpOnHit", "battleRegen"].includes(effect.type)) {
+    const type = effect.type === "mpOnHit" ? "Siphoning" : "Leeching";
+    const rate = Math.round(legacyHallSustainRate(effect.type, effect.value) * 100);
+    label = type === "Siphoning"
+      ? `${type}: after a damaging skill, restore MP equal to ${rate}% of its STR or MAG scaling stat`
+      : `${type}: heal ${rate}% of direct damage dealt by this action`;
+  }
+  if (effect.artifactUnique) return `ARTIFACT EFFECT: ${label.replace(/^ARTIFACT(?: EFFECT)?:\s*/i, "")}`;
+  return effect.echoUnique ? `ECHO EFFECT: ${label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : label;
 }
 
 function gearEffectLabels(gear) {
@@ -2349,7 +2371,9 @@ const affixPools = {
     affix("stormbreaking", "Stormbreaking", "statusOnHit", .05, .12, { status: "stun", theme: "mountain" }),
     affix("executioner", "Executioner", "afflictedDamage", .1, .22),
     affix("physical", "Forceful", "physicalDamage", .06, .14),
-    affix("arcane", "Arcane", "magicDamage", .06, .14)
+    affix("arcane", "Arcane", "magicDamage", .06, .14),
+    affix("leeching", "Leeching", "leeching", .04, .1, { hallOnly: true }),
+    affix("siphoning", "Siphoning", "siphoning", .05, .1, { hallOnly: true })
   ],
   armour: [
     affix("stout", "Stout", "statPct", .06, .16, { stat: "stam", theme: "mountain" }),
@@ -2362,7 +2386,9 @@ const affixPools = {
     affix("unyielding", "Unyielding", "statusResistance", .1, .3, { status: "stun", theme: "mountain" }),
     affix("poisonward", "Poisonward", "poisonReduction", .12, .3, { theme: "swamp" }),
     affix("steadfast", "Steadfast", "statusDurationReduction", 1, 1),
-    affix("lasting", "Lasting Guard", "buffDuration", 1, 1)
+    affix("lasting", "Lasting Guard", "buffDuration", 1, 1),
+    affix("leeching", "Leeching", "leeching", .04, .08, { hallOnly: true }),
+    affix("siphoning", "Siphoning", "siphoning", .05, .08, { hallOnly: true })
   ],
   accessory: [
     affix("fleet", "Fleet", "statPct", .05, .15, { stat: "agi", theme: "dragon" }),
@@ -2376,7 +2402,9 @@ const affixPools = {
     affix("prolonging", "Prolonging", "buffDuration", 1, 1),
     affix("cruel", "Cruel", "statusDuration", 1, 1),
     affix("quickstart", "Quickstart", "openingTurnProgress", .1, .25, { theme: "dragon" }),
-    affix("keen", "Keen", "critChance", .04, .09)
+    affix("keen", "Keen", "critChance", .04, .09),
+    affix("leeching", "Leeching", "leeching", .04, .1, { hallOnly: true }),
+    affix("siphoning", "Siphoning", "siphoning", .05, .1, { hallOnly: true })
   ]
 };
 
@@ -2388,6 +2416,8 @@ function randomAffixValue(entry) {
 
 function formatAffix(entry) {
   const value = entry.value;
+  if (entry.type === "leeching") return `${entry.label}: Heal ${Math.round(value * 100)}% of direct damage dealt by this action`;
+  if (entry.type === "siphoning") return `${entry.label}: After a damaging skill, restore MP equal to ${Math.round(value * 100)}% of its STR or MAG scaling stat`;
   if (entry.type === "echoing") return `${entry.label}: ${Math.round(value * 100)}% chance after an action to grant an immediate ally action; once per wearer per battle, shares the 2-action cap`;
   if (entry.type === "openingTurnProgress") return `${entry.label}: +${Math.round(value * 100)}% initiative in round 1 only (no extra action or CRIT)`;
   if (entry.type === "statPct") return `${entry.label}: ${entry.stat.toUpperCase()} +${Math.round(value * 100)}%`;
@@ -2398,6 +2428,11 @@ function formatAffix(entry) {
     return `${entry.label}: +${Math.round(value * 100)}% ${entry.type.replace(/([A-Z])/g, " $1").toLowerCase()}`;
   }
   return `${entry.label}: +${value} ${entry.type.replace(/([A-Z])/g, " $1").toLowerCase()}`;
+}
+
+function gearAffixPool(gear) {
+  const pool = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
+  return pool.filter(entry => state.gameMode === "hallBattles" || !entry.hallOnly);
 }
 
 function defaultGearRarity(name) {
@@ -2419,7 +2454,7 @@ function defaultGearRarity(name) {
 function rollGearAffixes(gear, rarity, theme = "", countOverride = null) {
   const count = Number.isInteger(countOverride) ? Math.max(0, countOverride) : RARITY_AFFIX_COUNTS[rarity] || 0;
   if (!count) return [];
-  const base = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
+  const base = gearAffixPool(gear);
   const weighted = [...base, ...base.filter(entry => entry.theme && entry.theme === theme), ...base.filter(entry => entry.theme && entry.theme === theme)];
   const chosen = [];
   while (chosen.length < count && chosen.length < base.length) {
@@ -2461,7 +2496,7 @@ function topUpGearAffixes(name, rarity = gearRarity(name), theme = "dragon") {
     existing.push(next);
   }
   if (existing.length < wanted) {
-    const pool = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
+    const pool = gearAffixPool(gear);
     pool.filter(entry => !existing.some(current => current.key === entry.key)).slice(0, wanted - existing.length).forEach(entry => {
       const rolled = { ...entry, value: randomAffixValue(entry) };
       rolled.text = formatAffix(rolled);
@@ -2472,6 +2507,34 @@ function topUpGearAffixes(name, rarity = gearRarity(name), theme = "dragon") {
   if (instance) instance.affixes = existing;
   else state.gearAffixes[name] = existing;
   return existing;
+}
+
+function legacyHallSustainRate(type, value) {
+  const amount = Math.max(0, Number(value) || 0);
+  if (type === "mpOnHit") return Math.max(.05, Math.min(.1, amount * .0125));
+  if (type === "battleRegen") return Math.max(.04, Math.min(.1, amount / 400));
+  return Math.max(.04, Math.min(.1, amount * .01));
+}
+
+function migrateHallSustainEntry(entry) {
+  if (!entry || !["hpOnHit", "mpOnHit", "battleRegen"].includes(entry.type)) return entry;
+  const type = entry.type === "mpOnHit" ? "siphoning" : "leeching";
+  const value = legacyHallSustainRate(entry.type, entry.value);
+  const migrated = { ...entry, key: type, label: type === "siphoning" ? "Siphoning" : "Leeching", type, value, min: value, max: value, hallOnly: true };
+  migrated.text = formatAffix(migrated);
+  return migrated;
+}
+
+function migrateHallSustainAffixes() {
+  if (state.gameMode !== "hallBattles") return false;
+  state.flags ||= {};
+  if (state.flags.hallSustainAffixesV1) return false;
+  const migrateEntries = entries => Array.isArray(entries) ? entries.map(migrateHallSustainEntry) : entries;
+  Object.keys(state.gearAffixes || {}).forEach(name => { state.gearAffixes[name] = migrateEntries(state.gearAffixes[name]); });
+  Object.values(state.gearInstances || {}).forEach(instance => { instance.affixes = migrateEntries(instance.affixes) || []; });
+  Object.values(state.hallBattles?.shopOffers || {}).forEach(offer => { offer.affixes = migrateEntries(offer.affixes) || []; });
+  state.flags.hallSustainAffixesV1 = true;
+  return true;
 }
 
 function upgradeOwnedLegendaryGear() {
@@ -3025,6 +3088,16 @@ const baseJobs = {
   ])
 };
 
+const FLAMEGUARD_BASE_EVASION = {
+  Verseborn: .05,
+  Mira: .12,
+  Seerin: .03,
+  Kael: .05,
+  Torren: .02,
+  Glimmer: .08,
+  Sparky: .08
+};
+
 const MAX_LEVEL = 40;
 const MAX_BATTLE_ROUNDS = 20;
 const BREAK_THRESHOLD = 3;
@@ -3270,7 +3343,7 @@ const compactTalentTrees = {
     talentNode(3, "Void Weakness", "shadowResistanceDown", .15, "Shadow attacks can reduce magical resistance for 2 actions."),
     talentNode(4, "Predator's Rhythm", "critCostReduction", .25, "A critical hit reduces the MP cost of Mira's next skill by 25%."),
     talentNode(4, "Perfect Opening", "markedCritDamage", .35, "Critical hits against Marked enemies deal 35% additional critical damage."),
-    talentNode(4, "Fade Into Shadow", "killEvasion", .35, "After defeating an enemy, gain 35% Evasion for 2 actions."),
+    talentNode(4, "Fade Into Shadow", "killEvasion", .35, "After defeating an enemy, gain +35% Evasion for the next 2 incoming direct attacks."),
     talentNode(5, "Assassination", "ultimateBoost", .4, "Ultimate I gains 40% potency against a single target, with stronger execution damage."),
     talentNode(5, "Queen of Knives", "assassinSynergy", .3, "Mark, Bleed and critical interactions gain 30% potency."),
     talentNode(5, "Voidwalker", "newSkill", skill("ULT II: Voidwalker", "ultimate", "Shadow", 0, 100, "Enter a 4-action Void state with major AGI, CRIT and Shadow damage.", { targetSide: "self", ultimateIndex: 2, buffs: [{ type: "agilityUp", value: .4, duration: 4 }, { type: "critUp", value: .18, duration: 4 }, { type: "shadowUp", value: .3, duration: 4 }] })),
@@ -3352,7 +3425,7 @@ const compactTalentTrees = {
     talentNode(2, "Ancient Spark", "ultimateGain", .25, "Ancient Fire attacks generate 25% more Resonance."),
     talentNode(3, "Dragon Memory", "elderDamage", .18, "Spectral Elder Dragon attacks gain 18% potency."),
     talentNode(3, "Hungry Flame", "burningDamage", .25, "Deal 25% more damage to Burning enemies."),
-    talentNode(3, "Smoke Trail", "fireEvasion", .2, "Fire attacks have a 20% chance to grant temporary Evasion."),
+    talentNode(3, "Smoke Trail", "fireEvasion", .25, "Ancient Fire and Holy Fire actions have a 25% chance to grant +25% Evasion for the next 2 incoming direct attacks."),
     talentNode(4, "Elder Blood", "echoEffectiveness", .5, "ECHO is 50% more effective on Sparky's Ultimates."),
     talentNode(4, "Inferno Heart", "burnDamage", .5, "Burn damage gains another 50% potency."),
     talentNode(4, "Little Apocalypse", "aoeDamage", .2, "Ancient Fire area attacks deal 20% more damage."),
@@ -3635,6 +3708,7 @@ function loadGame(saveKey = activeSaveKey()) {
   });
   migrateEchoForgeInstances();
   migratePlatinumGear();
+  migrateHallSustainAffixes();
   upgradeOwnedLegendaryGear();
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
@@ -4538,9 +4612,11 @@ function autoEquipLoadoutScore(id) {
     + effectValue(id, "echoing") * 260
     + effectValue(id, "openingTurnProgress") * 45 * (profile.agi + .4)
     + effectValue(id, "openingResonance") * .35
-    + effectValue(id, "hpOnHit") * .7
-    + effectValue(id, "mpOnHit") * 1.2
-    + effectValue(id, "battleRegen") * .16
+    + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "hpOnHit") * .7)
+    + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "mpOnHit") * 1.2)
+    + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "battleRegen") * .16)
+    + combatSustainRate(id, "leeching") * 90 * (profile.damage + .25)
+    + combatSustainRate(id, "siphoning") * 110 * (profile.damage + profile.support * .35)
     + effectValue(id, "weaknessDamage") * 55 * profile.damage
     + effectValue(id, "poisonDamage") * 55 * (id === "Mira" ? 1 : .25);
   return output.dps * profile.damage
@@ -4847,14 +4923,37 @@ function brokenPhysicalDamageMultiplier(source, statKey, target) {
   return 1 + typedTalentValue(source.id, "brokenDamage");
 }
 
-function tryEvadeAttack(defender) {
-  const evasion = statusValue(defender, "evasion");
-  if (!evasion || Math.random() >= evasion) return false;
-  defender.statuses = defender.statuses.filter(status => status.type !== "evasion");
-  if (defender.id === "Mira" && typedTalentValue(defender.id, "evasionAfterDodge")) {
+const EVASION_CAP = .6;
+
+function baseEvasionValue(defender) {
+  if (Number.isFinite(defender?.baseEvasion)) return Math.max(0, defender.baseEvasion);
+  if (defender?.id && Number.isFinite(FLAMEGUARD_BASE_EVASION[defender.id])) return FLAMEGUARD_BASE_EVASION[defender.id];
+  return .05;
+}
+
+function combatEvasionChance(defender) {
+  if (!defender) return 0;
+  const heroBonus = defender.id ? effectValue(defender.id, "evasion") + typedTalentValue(defender.id, "baseEvasion") : 0;
+  const enemyBonus = defender.id ? 0 : defender.affixes?.evasion || 0;
+  return Math.max(0, Math.min(EVASION_CAP, baseEvasionValue(defender) + statusValue(defender, "evasion") + heroBonus + enemyBonus));
+}
+
+function consumeEvasionCharge(defender) {
+  const temporary = statusOf(defender, "evasion");
+  if (!temporary) return;
+  const charges = Number.isFinite(temporary.incomingCharges) ? temporary.incomingCharges : temporary.remaining;
+  temporary.incomingCharges = Math.max(0, charges - 1);
+  temporary.remaining = temporary.incomingCharges;
+  if (!temporary.incomingCharges) defender.statuses = ensureStatuses(defender).filter(status => status !== temporary);
+}
+
+function tryEvadeAttack(defender, roll = Math.random()) {
+  const evaded = roll < combatEvasionChance(defender);
+  consumeEvasionCharge(defender);
+  if (evaded && defender.id === "Mira" && typedTalentValue(defender.id, "evasionAfterDodge")) {
     applyStatus(defender, "critUp", defender, { duration: 2, value: typedTalentValue(defender.id, "evasionAfterDodge"), force: true });
   }
-  return true;
+  return evaded;
 }
 
 function statusApplicationChance(target, type, baseChance = 1, source = null) {
@@ -4963,6 +5062,7 @@ function applyStatus(target, type, source, options = {}) {
     appliedRound: battle?.round || 0,
     appliedTurn: combatantKey(source)
   };
+  if (type === "evasion") data.incomingCharges = Math.max(1, Number(options.incomingCharges) || duration);
   if (existing) {
     if (type === "poison") data.remaining = Math.max(existing.remaining || 0, duration);
     Object.assign(existing, data);
@@ -5145,6 +5245,7 @@ function processTurnStart(unit) {
 function processTurnEnd(unit) {
   const notes = [];
   ensureStatuses(unit).forEach(status => {
+    if (status.type === "evasion" && Number.isFinite(status.incomingCharges)) return;
     if (status.appliedRound === battle?.round && status.appliedTurn === combatantKey(unit)) return;
     status.remaining--;
   });
@@ -5463,6 +5564,40 @@ function skillMpCost(id, sk, unit = null) {
 function scaledMpOnHitRecovery(unit, flat) {
   const rate = flat <= 2 ? .04 : flat <= 3 ? .05 : flat <= 5 ? .07 : .09;
   return Math.max(flat, Math.round(unit.maxmp * rate));
+}
+
+function legacyHallSustainValue(id, type) {
+  if (state.gameMode !== "hallBattles") return 0;
+  return Object.values(baseJobs[id]?.gear || {}).reduce((total, ref) => {
+    return total + gearEffects(gearByName(ref)).reduce((sum, effect) => {
+      const mappedType = effect.type === "mpOnHit" ? "siphoning" : ["hpOnHit", "battleRegen"].includes(effect.type) ? "leeching" : null;
+      return sum + (mappedType === type ? legacyHallSustainRate(effect.type, effect.value) : 0);
+    }, 0);
+  }, 0);
+}
+
+function combatSustainRate(id, type) {
+  return Math.min(.15, Math.max(0, effectValue(id, type) + legacyHallSustainValue(id, type)));
+}
+
+function siphoningOffensiveStat(unit, sk) {
+  const stats = totals(unit.id);
+  return skillScaling(sk) === "str" ? stats.str : stats.mag;
+}
+
+function resolveActionSustain(unit, sk, directDamage) {
+  if (!unit?.id || !sk || directDamage <= 0) return { hp: 0, mp: 0 };
+  const leeching = combatSustainRate(unit.id, "leeching");
+  const eligibleDamage = Math.min(directDamage, unit.max * 2);
+  const hp = leeching ? Math.min(Math.max(1, Math.round(eligibleDamage * leeching)), unit.max - unit.hp) : 0;
+  if (hp > 0) {
+    unit.hp += hp;
+    addBattleFloater(unit, hp, { kind: "heal" });
+  }
+  const siphoning = sk.basicAttack ? 0 : combatSustainRate(unit.id, "siphoning");
+  const mp = siphoning ? Math.min(Math.max(1, Math.round(siphoningOffensiveStat(unit, sk) * siphoning)), unit.maxmp - unit.mp) : 0;
+  if (mp > 0) unit.mp += mp;
+  return { hp, mp };
 }
 
 function refreshHeroVitals() {
@@ -6973,7 +7108,7 @@ function battleFloaterPosition(target) {
 }
 
 function addBattleFloater(target, amount, options = {}) {
-  if (!battle || !amount) return;
+  if (!battle || (!amount && !options.text)) return;
   const [x, y] = battleFloaterPosition(target);
   const occupiedLanes = new Set(battleFloaters.filter(floater => floater.target === target && tick - floater.born < BATTLE_FLOATER_LIFETIME).map(floater => floater.lane));
   const lane = battleFloaterLaneOffsets.findIndex((_, index) => !occupiedLanes.has(index));
@@ -6985,6 +7120,7 @@ function addBattleFloater(target, amount, options = {}) {
     amount: Math.abs(Math.round(amount)),
     kind: options.kind || "damage",
     damageType: options.damageType || (options.kind === "heal" ? "HEAL" : "PHYSICAL"),
+    text: options.text || "",
     crit: Boolean(options.crit),
     born: tick + (options.delayTicks || 0)
   });
@@ -7000,8 +7136,9 @@ function drawBattleFloaters() {
     const rise = Math.round(Math.min(age, 40) * .16);
     const alpha = Math.min(1, (BATTLE_FLOATER_LIFETIME - age) / 30);
     const healing = floater.kind === "heal";
-    const main = `${floater.crit ? "CRIT! " : ""}${healing ? "+" : ""}${floater.amount}`;
-    const mainSize = floater.crit ? 15 : 10;
+    const evaded = floater.kind === "evade";
+    const main = floater.text || `${floater.crit ? "CRIT! " : ""}${healing ? "+" : ""}${floater.amount}`;
+    const mainSize = evaded ? 13 : floater.crit ? 15 : 10;
     const [laneX, laneY] = battleFloaterLaneOffsets[floater.lane] || battleFloaterLaneOffsets[0];
     const mainY = floater.y - rise + laneY;
     ctx.save();
@@ -7009,25 +7146,27 @@ function drawBattleFloaters() {
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.lineJoin = "round";
-    ctx.font = `${floater.crit ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
+    ctx.font = `${floater.crit || evaded ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
     const halfWidth = Math.ceil(ctx.measureText(main).width / 2) + 4;
     const mainX = Math.max(halfWidth, Math.min(LOGICAL_WIDTH - halfWidth, floater.x + laneX));
-    ctx.lineWidth = floater.crit ? 5 : 2;
+    ctx.lineWidth = floater.crit || evaded ? 5 : 2;
     ctx.strokeStyle = "#160d13";
     ctx.strokeText(main, mainX, mainY);
-    if (floater.crit) {
+    if (floater.crit || evaded) {
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = "#ffd45c";
       ctx.strokeText(main, mainX, mainY);
     }
-    ctx.fillStyle = healing ? "#65e88a" : "#ff5b55";
+    ctx.fillStyle = evaded ? "#79ddff" : healing ? "#65e88a" : "#ff5b55";
     ctx.fillText(main, mainX, mainY);
     ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#160d13";
-    const label = healing ? "HEAL" : floater.damageType.toUpperCase();
-    ctx.strokeText(label, mainX, mainY + 7);
-    ctx.fillText(label, mainX, mainY + 7);
+    const label = evaded ? "" : healing ? "HEAL" : floater.damageType.toUpperCase();
+    if (label) {
+      ctx.strokeText(label, mainX, mainY + 7);
+      ctx.fillText(label, mainX, mainY + 7);
+    }
     ctx.restore();
   });
 }
@@ -7137,7 +7276,7 @@ function statusDisplayData(unit, status) {
     defenseUp: `Reduces incoming damage by ${percent}; combines with other defenses.`, damageUp: `Direct damage +${percent}.`,
     agilityUp: `Initiative AGI +${percent}; does not grant an extra action.`, critUp: `Attack critical chance +${percent}, subject to the total cap.`,
     shadowUp: `Direct attack damage +${percent} in the current combat implementation.`, echoPower: `Adds ${value.toFixed(2)} to the Ultimate ECHO multiplier.`,
-    evasion: `${percent} chance to evade an eligible attack. Removed after a successful dodge.`, barrier: `${percent} damage reduction, not a separate HP shield.`,
+    evasion: `Evasion +${percent}. Each incoming direct attack consumes one charge whether it hits or is Evaded.`, barrier: `${percent} damage reduction, not a separate HP shield.`,
     mechGuard: `Reduces incoming damage by ${percent}.`, holyFollowUp: `Next damaging action adds ${percent} Holy follow-up damage.`,
     combatDrone: `Drone follows damaging actions. Applied power: ${percent}; source talents can add further damage.`,
     vampiric: `Heal ${percent} of direct damage dealt.`, stunFocus: 'Doubles Mira\'s existing gear-based Stun chance; does not create a chance by itself.',
@@ -7153,15 +7292,18 @@ function statusDisplayData(unit, status) {
   };
   const potency = Number.isFinite(status.value ?? def.value);
   return { name: def.label || status.type, kind: def.negative ? 'Debuff' : 'Buff', remaining: status.remaining,
+    timing: status.type === 'evasion' ? `${status.incomingCharges ?? status.remaining} incoming attacks remaining` : `${status.remaining} actions remaining`,
     compact: def.buff && potency ? (status.type === 'echoPower' ? `+${value.toFixed(2)}` : percent) : `${status.remaining}t`,
     description: descriptions[status.type] || 'Active combat status.' };
 }
 
 function statusTooltipHtml(unit) {
   const escape = text => String(text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  return `<strong>${escape(unit.name || unit.id)}</strong>` + (unit.statuses || []).map(status => {
+  const baseEvasion = Math.round(baseEvasionValue(unit) * 1000) / 10;
+  const currentEvasion = Math.round(combatEvasionChance(unit) * 1000) / 10;
+  return `<strong>${escape(unit.name || unit.id)}</strong><small>Base Evasion ${baseEvasion}% · Current Evasion ${currentEvasion}%</small>` + (unit.statuses || []).map(status => {
     const data = statusDisplayData(unit, status);
-    return `<section><b>${escape(data.name)}</b><small>${data.kind} · ${escape(data.remaining)} actions remaining</small><p>${escape(data.description)}</p></section>`;
+    return `<section><b>${escape(data.name)}</b><small>${data.kind} · ${escape(data.timing)}</small><p>${escape(data.description)}</p></section>`;
   }).join('');
 }
 
@@ -7170,7 +7312,7 @@ function updateStatusTooltip() {
   const x = statusPointer ? (statusPointer.x - rect.left) * LOGICAL_WIDTH / rect.width : -1;
   const y = statusPointer ? (statusPointer.y - rect.top) * LOGICAL_HEIGHT / rect.height : -1;
   const area = mode === 'battle' && statusHoverAreas.find(a => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h);
-  if (!area || !area.unit.statuses?.length) { if (statusTooltip) statusTooltip.hidden = true; return; }
+  if (!area) { if (statusTooltip) statusTooltip.hidden = true; return; }
   if (!statusTooltip) {
     statusTooltip = document.createElement('div');
     statusTooltip.className = 'battle-status-tooltip';
@@ -8414,6 +8556,7 @@ function prepareEnemyForBattle(source, mapId = state.map) {
     mp: maxmp,
     maxmp,
     crit: profile?.crit || .08,
+    baseEvasion: Math.max(0, source.baseEvasion ?? profile?.baseEvasion ?? .05),
     role: profile?.role || "fighter",
     affixes: { ...(profile?.affixes || {}) },
     stagger: 0,
@@ -8427,7 +8570,7 @@ function prepareEnemyForBattle(source, mapId = state.map) {
 
 function battleUnit(id) {
   const h = baseJobs[id], t = totals(id);
-  return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, statuses: [], down: h.hp <= 0, deathTick: h.hp <= 0 ? tick : null, row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: h.hp <= 0 ? "death" : "idle" };
+  return { id, name: h.name, hp: h.hp, max: t.max, mp: h.mp, maxmp: t.mp, baseEvasion: FLAMEGUARD_BASE_EVASION[id] ?? .05, statuses: [], down: h.hp <= 0, deathTick: h.hp <= 0 ? tick : null, row: id === "Mira" || id === "Glimmer" || id === "Kael" || id === "Sparky" ? 1 : 0, anim: h.hp <= 0 ? "death" : "idle" };
 }
 
 function normalizeHallBattleProgress(progress) {
@@ -9676,6 +9819,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const holyFollowUpPower = statusValue(u, "holyFollowUp");
       let holyFollowUpTriggered = false;
       hitTargets.forEach(hitTarget => {
+        if (tryEvadeAttack(hitTarget)) {
+          addBattleFloater(hitTarget, 0, { kind: "evade", text: "EVADE!" });
+          log += ` ${hitTarget.name}: EVADE!`;
+          return;
+        }
         const brokenAtHitStart = Boolean(statusOf(hitTarget, "broken"));
         const afflicted = hasNegativeStatus(hitTarget);
         const critChance = Math.min(.65, heroCritChance(u.id, afflicted) + statusValue(u, "critUp") + statusValue(hitTarget, "marked") + statusValue(hitTarget, "critExposed"));
@@ -9771,7 +9919,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           hitTarget.anim = "death";
           hitTarget.deathTick = tick;
           hitTarget.defeatUntil = tick + (enemyAnimationSheetFor(hitTarget) ? 30 : 12);
-          if (typedTalentValue(u.id, "killEvasion")) applyStatus(u, "evasion", u, { duration: 2, value: typedTalentValue(u.id, "killEvasion"), force: true });
+          if (typedTalentValue(u.id, "killEvasion")) applyStatus(u, "evasion", u, { duration: 2, incomingCharges: 2, value: typedTalentValue(u.id, "killEvasion"), force: true });
         }
         log += ` ${hitTarget.name} takes ${dmg}${holyDamage ? ` + ${holyDamage} Holy` : ""}.`;
       });
@@ -9826,8 +9974,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
       }
       if (["Holy Fire", "Ancient Fire"].includes(sk.element) && typedTalentValue(u.id, "fireEvasion") && Math.random() < typedTalentValue(u.id, "fireEvasion")) {
-        applyStatus(u, "evasion", u, { duration: 2, value: .2, force: true });
-        log += ` ${u.name} gains Evasion.`;
+        applyStatus(u, "evasion", u, { duration: 2, incomingCharges: 2, value: typedTalentValue(u.id, "fireEvasion"), force: true });
+        log += ` ${u.name} gains +${Math.round(typedTalentValue(u.id, "fireEvasion") * 100)}% Evasion for 2 incoming attacks.`;
       }
       if (sk.element === "Ancient Fire" && typedTalentValue(u.id, "ultimateGain")) {
         state.resonance = Math.min(100, state.resonance + 3);
@@ -9868,18 +10016,24 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
       }
       playSfx("hit");
-      const hpOnHit = effectValue(u.id, "hpOnHit");
-      const mpOnHit = effectValue(u.id, "mpOnHit");
-      if (hpOnHit) {
-        const restored = Math.min(hpOnHit, u.max - u.hp);
-        u.hp += restored;
-        addBattleFloater(u, restored, { kind: "heal" });
-        if (restored) log += ` ${u.name} restores ${restored} HP.`;
-      }
-      if (mpOnHit) {
-        const restored = Math.min(scaledMpOnHitRecovery(u, mpOnHit), u.maxmp - u.mp);
-        u.mp += restored;
-        if (restored) log += ` ${u.name} restores ${restored} MP.`;
+      if (state.gameMode === "hallBattles") {
+        const sustain = resolveActionSustain(u, sk, directDamageDealt);
+        if (sustain.hp) log += ` Leeching restores ${sustain.hp} HP to ${u.name}.`;
+        if (sustain.mp) log += ` Siphoning restores ${sustain.mp} MP to ${u.name}.`;
+      } else {
+        const hpOnHit = effectValue(u.id, "hpOnHit");
+        const mpOnHit = effectValue(u.id, "mpOnHit");
+        if (hpOnHit) {
+          const restored = Math.min(hpOnHit, u.max - u.hp);
+          u.hp += restored;
+          addBattleFloater(u, restored, { kind: "heal" });
+          if (restored) log += ` ${u.name} restores ${restored} HP.`;
+        }
+        if (mpOnHit) {
+          const restored = Math.min(scaledMpOnHitRecovery(u, mpOnHit), u.maxmp - u.mp);
+          u.mp += restored;
+          if (restored) log += ` ${u.name} restores ${restored} MP.`;
+        }
       }
     }
 
@@ -10390,7 +10544,8 @@ function resolveEnemyTurn(turn, prev) {
       const hitTargets = enemyTargetsForAction(e, action, target);
       hitTargets.forEach(defender => {
         if (tryEvadeAttack(defender)) {
-          actionLog += ` ${defender.name} evades the attack.`;
+          addBattleFloater(defender, 0, { kind: "evade", text: "EVADE!" });
+          actionLog += ` ${defender.name}: EVADE!`;
           return;
         }
         const rolled = enemyDamageRoll(e, action, defender);
@@ -10535,7 +10690,8 @@ function winBattle(log) {
   const resonanceEarned = state.resonance - resonanceBeforeVictory;
   battle.party.forEach(u => {
     const h = baseJobs[u.id];
-    h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + effectValue(u.id, "battleRegen") + talentValue(u.id, "battleRegenTalent")));
+    const gearVictoryRegen = state.gameMode === "hallBattles" ? 0 : effectValue(u.id, "battleRegen");
+    h.hp = Math.max(1, Math.min(totals(u.id).max, u.hp + 10 + gearVictoryRegen + talentValue(u.id, "battleRegenTalent")));
     h.mp = u.mp;
   });
   const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
@@ -11145,8 +11301,11 @@ function statusCardHtml(id) {
   const agiCrit = (output.critInfo.agilityBonus * 100).toFixed(1);
   const afflictedText = output.afflictedCrit > output.crit ? ` / ${Math.round(output.afflictedCrit * 100)}% vs afflicted` : "";
   const combatUnit = battle?.party?.find(unit => unit.id === id);
-  const activeEvasion = statusValue(combatUnit, "evasion");
-  const evasionHtml = activeEvasion ? `<span><small>ACTIVE EVASION</small><strong>${Math.round(activeEvasion * 100)}%</strong><em>Applies to enemy attacks and is consumed on a successful dodge.</em></span>` : "";
+  const evasionUnit = combatUnit || { id, baseEvasion: FLAMEGUARD_BASE_EVASION[id] ?? .05, statuses: [] };
+  const activeEvasion = statusValue(evasionUnit, "evasion");
+  const currentEvasion = combatEvasionChance(evasionUnit);
+  const evasionCharges = statusOf(evasionUnit, "evasion")?.incomingCharges || 0;
+  const evasionHtml = `<span><small>EVASION</small><strong>${Math.round(currentEvasion * 100)}%</strong><em>${Math.round(baseEvasionValue(evasionUnit) * 100)}% base${activeEvasion ? ` + ${Math.round(activeEvasion * 100)}% temporary / ${evasionCharges} incoming attacks` : ""}</em></span>`;
   return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span>${evasionHtml}</div>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
 }
 
@@ -11806,7 +11965,7 @@ function rerollGearAffix(ref, index) {
   const entries = gearAffixes(ref);
   if (!Number.isInteger(index) || !entries[index]) return false;
   const gear = gearByName(ref);
-  const pool = gear.slot === "weapon" ? affixPools.weapon : gear.slot === "armour" ? affixPools.armour : affixPools.accessory;
+  const pool = gearAffixPool(gear);
   const candidates = pool.filter(candidate => !entries.some(entry => entry.key === candidate.key));
   if (!candidates.length) return false;
   const chosen = candidates[Math.floor(Math.random() * candidates.length)];
