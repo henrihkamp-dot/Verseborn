@@ -7442,9 +7442,8 @@ function updateStatusTooltip() {
   statusTooltip.hidden = false;
   const html = statusTooltipHtml(area.unit);
   if (statusTooltip.innerHTML !== html) statusTooltip.innerHTML = html;
-  const box = statusTooltip.getBoundingClientRect();
-  statusTooltip.style.left = `${Math.max(8, Math.min(innerWidth - box.width - 8, statusPointer.x + 14))}px`;
-  statusTooltip.style.top = `${Math.max(8, Math.min(innerHeight - box.height - 8, statusPointer.y + 16))}px`;
+  statusTooltip.style.left = '50%';
+  statusTooltip.style.top = '50%';
 }
 
 canvas.addEventListener('pointermove', event => { statusPointer = { x: event.clientX, y: event.clientY }; updateStatusTooltip(); });
@@ -11720,6 +11719,7 @@ function capsHtml(id) {
 
 let gearHoverRegistry = [];
 let gearHoverTooltip = null;
+let gearHoverHideTimer = 0;
 
 function gearHoverAttribute(context) {
   const index = gearHoverRegistry.push(context) - 1;
@@ -11902,25 +11902,32 @@ function gearHoverPopupHtml(context) {
 }
 
 function hideGearHoverTooltip() {
-  if (gearHoverTooltip) gearHoverTooltip.hidden = true;
+  clearTimeout(gearHoverHideTimer);
+  gearHoverHideTimer = window.setTimeout(() => {
+    if (gearHoverTooltip) gearHoverTooltip.hidden = true;
+  }, 140);
+}
+
+function keepGearHoverTooltipOpen() {
+  clearTimeout(gearHoverHideTimer);
 }
 
 function showGearHoverTooltip(element, context) {
   if (!context || !gearByName(context.ref)) return;
+  keepGearHoverTooltipOpen();
   if (!gearHoverTooltip) {
     gearHoverTooltip = document.createElement("div");
     gearHoverTooltip.className = "gear-hover-tooltip";
     gearHoverTooltip.setAttribute("role", "tooltip");
+    gearHoverTooltip.addEventListener("pointerenter", keepGearHoverTooltipOpen);
+    gearHoverTooltip.addEventListener("pointerleave", hideGearHoverTooltip);
     document.body.appendChild(gearHoverTooltip);
   }
   gearHoverTooltip.innerHTML = gearHoverPopupHtml(context);
   gearHoverTooltip.hidden = false;
-  const anchor = element.getBoundingClientRect();
-  const box = gearHoverTooltip.getBoundingClientRect();
-  const left = Math.max(8, Math.min(innerWidth - box.width - 8, anchor.right + 10));
-  const fallbackLeft = Math.max(8, anchor.left - box.width - 10);
-  gearHoverTooltip.style.left = `${left + box.width > innerWidth - 8 ? fallbackLeft : left}px`;
-  gearHoverTooltip.style.top = `${Math.max(8, Math.min(innerHeight - box.height - 8, anchor.top))}px`;
+  gearHoverTooltip.style.left = "50%";
+  gearHoverTooltip.style.top = "50%";
+  gearHoverTooltip.scrollTop = 0;
 }
 
 function bindGearHoverTooltips(root = el.menuBody) {
