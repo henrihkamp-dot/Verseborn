@@ -204,6 +204,18 @@ const portraitSources = {
   Kaeldrin: "assets/portraits/kaeldrin.png",
   Lyrsa: "assets/portraits/lyrsa.png"
 };
+const menuPortraitSources = {
+  Verseborn: "assets/menu/portrait-verseborn.webp",
+  Mira: "assets/menu/portrait-mira.webp",
+  Seerin: "assets/menu/portrait-seerin.webp",
+  Kael: "assets/menu/portrait-kael.webp",
+  Torren: "assets/menu/portrait-torren.webp",
+  Glimmer: "assets/menu/portrait-glimmer.webp",
+  Sparky: "assets/menu/portrait-sparky.webp"
+};
+function menuPortraitSource(id) {
+  return menuPortraitSources[id] || portraitSources[id];
+}
 const bossPortraitSources = {
   "Archive Custodian": "assets/portraits/enemies/archive-custodian.png",
   "Dawn Gate Sentinel": "assets/portraits/enemies/dawn-gate-sentinel.png",
@@ -8844,6 +8856,7 @@ function hallEncounterDetails(info) {
 }
 
 function renderHallBattleMap() {
+  el.menu.dataset.menuView = "hall-records";
   const progress = hallBattleProgress();
   const cleared = new Set(progress.clearedStages);
   const stages = HALL_BATTLE_BLUEPRINTS.map(info => {
@@ -8852,7 +8865,8 @@ function renderHallBattleMap() {
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
     const lootLabel = `${hallNormalGearRarity(info.stage)} gear`;
-    return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
+    const thumbnail = (info.stage - 1) % 8;
+    return `<button type="button" class="hall-stage hall-thumb-${thumbnail} ${info.boss ? "is-boss" : ""} ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
   el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/${HALL_BATTLE_BLUEPRINTS.length} cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
   el.menuBody.querySelector("[data-close-hall]")?.addEventListener("click", closeHallOverlay);
@@ -8897,7 +8911,7 @@ function openHallStartingPartySelection() {
   const cards = HALL_RECRUITS.map(id => {
     const hero = baseJobs[id];
     const selected = hallStartingSelection.includes(id);
-    return `<button type="button" class="hall-recruit ${selected ? "is-selected" : ""}" data-hall-start-recruit="${id}" aria-pressed="${selected}"><img src="${portraitSources[id]}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><em>${(characterSpecialties[id] || []).join(" / ")}</em></span></button>`;
+    return `<button type="button" class="hall-recruit ${selected ? "is-selected" : ""}" data-hall-start-recruit="${id}" aria-pressed="${selected}"><img src="${menuPortraitSource(id)}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><em>${(characterSpecialties[id] || []).join(" / ")}</em></span></button>`;
   }).join("");
   el.menuBody.innerHTML = `<section class="hall-recruitment"><header><div><strong>Choose Two Starting Companions</strong><p>Verseborn is ready. Select exactly two Flameguard to begin Ember Hall at level 1.</p></div></header><div class="hall-recruit-grid">${cards}</div><footer><span>${hallStartingSelection.length}/2 selected</span><button type="button" data-confirm-hall-start ${hallStartingSelection.length === 2 ? "" : "disabled"}>Confirm Starting Party</button></footer></section>`;
   el.menuBody.querySelectorAll("[data-hall-start-recruit]").forEach(button => button.addEventListener("click", () => {
@@ -8979,7 +8993,7 @@ function openHallRecruitment() {
   el.menu.classList.remove("hidden");
   const cards = candidates.map(id => {
     const hero = baseJobs[id];
-    return `<button type="button" class="hall-recruit" data-hall-recruit="${id}"><img src="${portraitSources[id]}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><em>${(characterSpecialties[id] || []).join(" / ")}</em></span></button>`;
+    return `<button type="button" class="hall-recruit" data-hall-recruit="${id}"><img src="${menuPortraitSource(id)}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><em>${(characterSpecialties[id] || []).join(" / ")}</em></span></button>`;
   }).join("");
   el.menuBody.innerHTML = `<section class="hall-recruitment"><header><div><strong>Choose a Flameguard Recruit</strong><p>Stage ${progress.pendingRecruit} cleared / the chosen hero joins at the roster's current level.</p></div></header><div class="hall-recruit-grid">${cards}</div></section>`;
   el.menuBody.querySelectorAll("[data-hall-recruit]").forEach(button => button.addEventListener("click", () => chooseHallRecruit(button.dataset.hallRecruit)));
@@ -9108,14 +9122,14 @@ function sceneMemoriesHtml() {
     return `<button type="button" data-play-arrival-scene="${welcome.id}">${recruit}: ${welcome.title}</button>`;
   })].filter(Boolean);
   const introGroup = intro && history.seen.includes(intro.id)
-    ? `<section class="scene-memory-group"><strong>Ember Hall</strong><div><button type="button" data-replay-scene="${intro.id}">${intro.title}</button></div></section>`
+    ? `<section class="scene-memory-group scene-memory-hall"><strong>Ember Hall</strong><div><button type="button" data-replay-scene="${intro.id}">${intro.title}</button></div></section>`
     : "";
   const groups = introGroup + HALL_RECRUITS.map(recruit => {
     if (!state.party.includes(recruit)) return "";
     const scenes = RECRUIT_SCENES.filter(scene => scene.recruit === recruit && history.seen.includes(scene.id));
     if (!scenes.length) return "";
     const buttons = scenes.map(scene => `<button type="button" data-replay-scene="${scene.id}">${scene.title} / ${scene.variant}</button>`).join("");
-    return `<section class="scene-memory-group"><strong>${recruit}</strong><div>${buttons}</div></section>`;
+    return `<section class="scene-memory-group scene-memory-character"><img src="${menuPortraitSource(recruit)}" alt=""><strong>${recruit}</strong><div>${buttons}</div></section>`;
   }).join("");
   const arrivals = unseenArrivals.length ? `<section class="scene-memory-group"><strong>Unseen Arrivals</strong><p>These recruits joined before scenes were added. Play their first welcome whenever you are ready.</p><div>${unseenArrivals.join("")}</div></section>` : "";
   const memories = groups ? `<div class="scene-memory-grid">${groups}</div>` : `<div class="menu-card"><p>No recruitment scenes have been seen yet.</p></div>`;
@@ -11668,7 +11682,7 @@ function statusCardHtml(id) {
   const output = estimatedHeroOutput(id);
   const procs = equippedProcChances(id);
   const activeLabel = state.activeParty.includes(id) ? `ACTIVE SLOT ${state.activeParty.indexOf(id) + 1}` : "RESERVE";
-  const portrait = portraitSources[id];
+  const portrait = menuPortraitSource(id);
   const specialties = characterSpecialties[id] || [h.title];
   const biography = characterBios[id] || `${h.name} serves the Flameguard as ${h.title}.`;
   const procHtml = procs.length ? procs.map(entry => `<span><b>${entry.type.toUpperCase()}</b><strong>${Math.round(entry.raw * 100)}%</strong><small>${Math.round(entry.normalChance * 100)}% vs normal foes</small></span>`).join("") : `<p class="status-empty">No Poison, Sleep or Stun proc equipped.</p>`;
@@ -11949,6 +11963,7 @@ function favoriteGearButton(ref) {
 function renderMenu() {
   gearHoverRegistry = [];
   hideGearHoverTooltip();
+  el.menu.dataset.menuView = menuTab;
   document.querySelectorAll(".menu-tabs button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.tab === menuTab));
   if (menuTab === "status") {
     if (!state.party.includes(selectedStatusHero)) selectedStatusHero = state.party[0];
@@ -11957,7 +11972,7 @@ function renderMenu() {
     const roster = state.party.map(heroId => {
       const hero = baseJobs[heroId];
       const activeIndex = state.activeParty.indexOf(heroId);
-      return `<button type="button" class="status-hero ${heroId === id ? "is-selected" : ""}" data-status-hero="${heroId}"><img src="${portraitSources[heroId]}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / Level ${progressFor(heroId).level}</small></span><b>${activeIndex >= 0 ? `ACTIVE ${activeIndex + 1}` : "RESERVE"}</b></button>`;
+      return `<button type="button" class="status-hero ${heroId === id ? "is-selected" : ""}" data-status-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><span><strong>${hero.name}</strong><small>${hero.title} / Level ${progressFor(heroId).level}</small></span><b>${activeIndex >= 0 ? `ACTIVE ${activeIndex + 1}` : "RESERVE"}</b></button>`;
     }).join("");
     el.menuBody.innerHTML = `<nav class="status-roster" aria-label="Choose character">${roster}</nav><div class="status-menu-grid">${statusCardHtml(id)}</div><details class="status-reference" open><summary>Stat guide and combat limits</summary>${capsHtml(id)}<div class="status-glossary">${glossary}</div><p class="status-estimate-note">AGI changes turn order and critical chance, but does not create extra normal turns. Damage/action uses the average random roll and total CRIT, including damage gear; it excludes enemy defense, weakness, temporary buffs, afflicted bonuses and extra area targets. Proc rates show the equipped chance and the expected rate against a normal enemy.</p></details>`;
     el.menuBody.querySelectorAll("[data-status-hero]").forEach(button => button.onclick = () => {
@@ -11971,12 +11986,12 @@ function renderMenu() {
       const id = state.activeParty[index];
       if (!id) return `<div class="party-slot ${selectedPartySlot === index ? "is-selected" : ""}"><button type="button" data-party-slot="${index}"><span>Slot ${index + 1}</span><strong>Empty</strong><small>Choose a reserve member below.</small></button></div>`;
       const h = baseJobs[id], t = totals(id);
-      return `<div class="party-slot ${selectedPartySlot === index ? "is-selected" : ""}"><button type="button" data-party-slot="${index}"><span>Slot ${index + 1}</span><strong>${h.name}</strong><small>${h.title} / AGI ${t.agi} / HP ${h.hp}/${t.max}</small></button><button type="button" class="party-remove" data-party-remove="${index}" ${state.activeParty.length <= 1 ? "disabled" : ""}>Remove</button></div>`;
+      return `<div class="party-slot ${selectedPartySlot === index ? "is-selected" : ""}"><button type="button" class="party-slot-main" data-party-slot="${index}"><img src="${menuPortraitSource(id)}" alt=""><span>Slot ${index + 1}</span><strong>${h.name}</strong><small>${h.title} / AGI ${t.agi} / HP ${h.hp}/${t.max}</small></button><button type="button" class="party-remove" data-party-remove="${index}" ${state.activeParty.length <= 1 ? "disabled" : ""}>Remove</button></div>`;
     }).join("");
     const roster = state.party.map(id => {
       const h = baseJobs[id], t = totals(id);
       const activeIndex = state.activeParty.indexOf(id);
-      return `<button type="button" class="party-member ${activeIndex >= 0 ? "is-active" : ""}" ${activeIndex >= 0 ? `data-party-focus="${activeIndex}"` : `data-party-add="${id}"`}><span class="dot" style="background:${h.color}"></span><strong>${h.name}</strong><small>${h.title}</small><b>${activeIndex >= 0 ? `ACTIVE ${activeIndex + 1}` : "ADD"}</b><span>AGI ${t.agi}</span></button>`;
+      return `<button type="button" class="party-member ${activeIndex >= 0 ? "is-active" : ""}" ${activeIndex >= 0 ? `data-party-focus="${activeIndex}"` : `data-party-add="${id}"`}><img src="${menuPortraitSource(id)}" alt=""><strong>${h.name}</strong><small>${h.title}</small><b>${activeIndex >= 0 ? `ACTIVE ${activeIndex + 1}` : "ADD"}</b><span>AGI ${t.agi}</span></button>`;
     }).join("");
     el.menuBody.innerHTML = `<div class="party-head"><strong>Active Battle Party</strong><span>Maximum 3 members. Select a slot, then choose a reserve.</span></div><div class="party-active-slots">${activeSlots}</div><h3>Flameguard Roster</h3><div class="party-roster">${roster}</div>`;
     el.menuBody.querySelectorAll("[data-party-slot]").forEach(button => button.onclick = () => {
@@ -12000,7 +12015,7 @@ function renderMenu() {
       const current = progressFor(heroId);
       const available = talentPointsEarned(current.level) - current.talents.length;
       const ready = available ? ` / ${available} READY` : "";
-      return `<button type="button" class="skill-hero ${heroId === id ? "is-selected" : ""}" data-skill-hero="${heroId}"><span class="dot" style="background:${baseJobs[heroId].color}"></span><strong>${heroId}</strong><small>Level ${current.level} / ${current.talents.length}/${talentPointsEarned(current.level)} spent${ready}</small></button>`;
+      return `<button type="button" class="skill-hero ${heroId === id ? "is-selected" : ""}" data-skill-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><strong>${heroId}</strong><small>Level ${current.level} / ${current.talents.length}/${talentPointsEarned(current.level)} spent${ready}</small></button>`;
     }).join("");
     const earned = talentPointsEarned(progress.level);
     const available = earned - progress.talents.length;
@@ -12015,7 +12030,7 @@ function renderMenu() {
       return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" aria-pressed="${selected}" ${locked ? "disabled" : ""}><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p>${entry.type === "newSkill" ? `<small>${skillFormula(entry.value, id)} / ${entry.value.anim === "ultimate" ? "100 Resonance" : `${entry.value.cost} fixed MP`}</small>` : ""}<small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : capstoneChosen ? "SWAP" : "+"}</b></button>`;
       }).join("")}</div></section>`;
     }).join("");
-    el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Flameguard Talents</strong><p>Gain 1 point at levels 4, 8, 12, 16, 20, 24, 28, 32, 36 and 40. Spend 2 points to open each next tier; choose only one Tier 5 capstone.</p></div><span>${hero.name} / ${progress.talents.length} spent / ${available} ready</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><button type="button" class="talent-reset" data-reset-talents="${id}" ${progress.talents.length ? "" : "disabled"}>Reset talents</button></div>${xpProgressHtml(id)}</header><div class="talent-tiers">${choices}</div></section>${skillCatalogueHtml(id)}`;
+    el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Flameguard Talents</strong><p>Gain 1 point at levels 4, 8, 12, 16, 20, 24, 28, 32, 36 and 40. Spend 2 points to open each next tier; choose only one Tier 5 capstone.</p></div><span>${hero.name} / ${progress.talents.length} spent / ${available} ready</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><img class="skill-profile-portrait" src="${menuPortraitSource(id)}" alt=""><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small><button type="button" class="talent-reset" data-reset-talents="${id}" ${progress.talents.length ? "" : "disabled"}>Reset talents</button></div>${xpProgressHtml(id)}</header><div class="talent-tiers">${choices}</div></section>${skillCatalogueHtml(id)}`;
     el.menuBody.querySelectorAll("[data-skill-hero]").forEach(button => button.onclick = () => {
       selectedSkillHero = button.dataset.skillHero;
       renderMenu();
@@ -12031,7 +12046,7 @@ function renderMenu() {
     const roster = state.party.map(heroId => {
       const hero = baseJobs[heroId];
       const heroTotals = totals(heroId);
-      return `<button type="button" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><span class="dot" style="background:${hero.color}"></span><strong>${hero.name}</strong><small>${hero.title}</small><span>HP ${hero.hp}/${heroTotals.max}</span></button>`;
+      return `<button type="button" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><strong>${hero.name}</strong><small>${hero.title}</small><span>HP ${hero.hp}/${heroTotals.max}</span></button>`;
     }).join("");
     const allGearChoices = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
     const slotChoices = filteredSortedGear(allGearChoices);
@@ -12058,7 +12073,7 @@ function renderMenu() {
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
     const detailIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedSlot];
     const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon")}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearBrowser.slot === "all" ? "Gear results" : gearSlotLabel(selectedGearSlot)}</small><strong>${slotChoices.length ? "Select gear" : "No matching gear"}</strong></header><p>${slotChoices.length ? "Choose an item to inspect its stats, effects and affixes." : "Adjust the search or clear the active filters."}</p></article>`;
-    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section>${autoEquipToolbarHtml(id)}${gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length)}<div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearBrowser.slot === "all" ? "All Gear" : gearSlotLabel(gearBrowser.slot)}</strong><small>${slotChoices.length} matching</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
+    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><section class="gear-summary gear-summary-strip"><img class="gear-profile-portrait" src="${menuPortraitSource(id)}" alt=""><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section>${autoEquipToolbarHtml(id)}${gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length)}<div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearBrowser.slot === "all" ? "All Gear" : gearSlotLabel(gearBrowser.slot)}</strong><small>${slotChoices.length} matching</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div>`;
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
       selectedGearHero = btn.dataset.gearHero;
       selectedGearRef = null;
@@ -12142,7 +12157,7 @@ function renderMenu() {
         const hero = baseJobs[id], total = totals(id);
         const canUse = canUseFieldItem(name, id);
         const value = info.field === "hp" ? `${hero.hp}/${total.max} HP` : info.field === "mp" ? `${hero.mp}/${total.mp} MP` : state.fieldWard ? "Ward ready" : "Prepare ward";
-        return `<button type="button" data-field-item="${name}:${id}" ${canUse ? "" : "disabled"}>${hero.name}<small>${value}</small></button>`;
+        return `<button type="button" class="field-target" data-field-item="${name}:${id}" ${canUse ? "" : "disabled"}><img src="${menuPortraitSource(id)}" alt=""><span>${hero.name}<small>${value}</small></span></button>`;
       }).join("")}</div>` : "";
       const trade = selectedEntry.kind === "stash" ? "Stored safely with Marla." : selectedItemCategory === "treasure" ? `Sell value: ${inventorySellPrice(name)} G each at a vendor.` : selectedItemCategory === "quest" ? "Protected quest item. Cannot be sold." : info.short || "";
       detail = `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(icon.sheet, icon.index, "selection-detail-icon")}<div><small>${category}</small><strong>${name}</strong><span>x${amount}</span></div></header><p>${info.desc}</p>${trade ? `<p class="selection-location">${trade}</p>` : ""}${targets}</article>`;
@@ -12165,7 +12180,7 @@ function renderMenu() {
         const target = baseJobs[targetId], targetTotal = totals(targetId);
         const anyoneNeedsHealing = state.party.some(heroId => baseJobs[heroId].hp > 0 && baseJobs[heroId].hp < totals(heroId).max);
         const canUse = caster.mp >= sk.cost && (sk.anim === "block" && !state.fieldWard || heal > 0 && (partyHeal ? anyoneNeedsHealing : target.hp < targetTotal.max));
-        return `<button type="button" data-field-skill="${casterId}:${skillIndex}:${targetId}" ${canUse ? "" : "disabled"}>${partyHeal && heal ? "All allies" : target.name}<small>${partyHeal && heal ? "Party heal" : `${target.hp}/${targetTotal.max} HP`}</small></button>`;
+        return `<button type="button" class="field-target" data-field-skill="${casterId}:${skillIndex}:${targetId}" ${canUse ? "" : "disabled"}><img src="${menuPortraitSource(targetId)}" alt=""><span>${partyHeal && heal ? "All allies" : target.name}<small>${partyHeal && heal ? "Party heal" : `${target.hp}/${targetTotal.max} HP`}</small></span></button>`;
       }).join("")}</div></article>`;
     }
     const gearTools = selectedItemCategory === "gear" ? gearBrowserToolbarHtml(equipment.length, allEquipment.length) : "";
@@ -12218,13 +12233,13 @@ function renderMenu() {
   if (menuTab === "lore") {
     const fieldNotes = Object.values(maps).flatMap(field => field.spawns || []).filter(spawnPoint => spawnPoint.rare || spawnPoint.boss);
     const knownIssues = quests.slice(0, Math.max(0, state.quest + 1));
-    el.menuBody.innerHTML = `<h3>Issue Chronicle</h3><div class="menu-grid">${knownIssues.length ? knownIssues.map((q, i) => `<div class="menu-card"><strong>Issue ${i + 1}: ${q[0]}</strong><p>${q[2]}</p><p>${q[1]}</p></div>`).join("") : `<div class="menu-card"><strong>No issue recorded</strong><p>Your chronicle begins when someone entrusts you with a quest.</p></div>`}</div><h3>Rare & Miniboss Field Notes</h3><div class="menu-grid">${fieldNotes.map(spawnPoint => `<div class="menu-card"><strong>${spawnPoint.name}</strong><small>${spawnPoint.rare ? "RARE SPAWN" : "ONE-TIME MINIBOSS"} / ${state.flags[`spawn:${spawnPoint.id}`] ? "DEFEATED" : spawnPoint.available ? "ACTIVE" : "DORMANT"}</small><p>${spawnPoint.lore}</p><p>${spawnPoint.boss ? "Does not respawn." : `Rare return window: roughly ${spawnPoint.respawn}-${spawnPoint.respawn + 30}s.`}</p></div>`).join("")}</div>`;
+    el.menuBody.innerHTML = `${sceneMemoriesHtml()}<h3>Issue Chronicle</h3><div class="menu-grid">${knownIssues.length ? knownIssues.map((q, i) => `<div class="menu-card"><strong>Issue ${i + 1}: ${q[0]}</strong><p>${q[2]}</p><p>${q[1]}</p></div>`).join("") : `<div class="menu-card"><strong>No issue recorded</strong><p>Your chronicle begins when someone entrusts you with a quest.</p></div>`}</div><h3>Rare & Miniboss Field Notes</h3><div class="menu-grid">${fieldNotes.map(spawnPoint => `<div class="menu-card"><strong>${spawnPoint.name}</strong><small>${spawnPoint.rare ? "RARE SPAWN" : "ONE-TIME MINIBOSS"} / ${state.flags[`spawn:${spawnPoint.id}`] ? "DEFEATED" : spawnPoint.available ? "ACTIVE" : "DORMANT"}</small><p>${spawnPoint.lore}</p><p>${spawnPoint.boss ? "Does not respawn." : `Rare return window: roughly ${spawnPoint.respawn}-${spawnPoint.respawn + 30}s.`}</p></div>`).join("")}</div>`;
+    el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
+    el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
   }
   if (menuTab === "system") {
     const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear and guarantee at least one Legendary gear drop with four affixes. New Game Plus carries levels, talent builds, companions, equipment, items and gold into zones that scale toward level 40, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
-    el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>Normal Attack triggers the equipped weapon's unique setup effect and restores 6% Max MP. Skills use fixed MP costs; AGI controls initiative and contributes CRIT.</p></div><div class="menu-card"><strong>Levels & Talents</strong><p>The level cap is 40. Gain 10 talent points from level 4 through 40, unlock five tiers, and choose one capstone. Respec is free outside combat.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Each weapon changes Normal Attack as well as stats. Dropped equipment can also gain readable rarity-based affixes.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${sceneMemoriesHtml()}${postgame}`;
-    el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
-    el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
+    el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>Normal Attack triggers the equipped weapon's unique setup effect and restores 6% Max MP. Skills use fixed MP costs; AGI controls initiative and contributes CRIT.</p></div><div class="menu-card"><strong>Levels & Talents</strong><p>The level cap is 40. Gain 10 talent points from level 4 through 40, unlock five tiers, and choose one capstone. Respec is free outside combat.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Each weapon changes Normal Attack as well as stats. Dropped equipment can also gain readable rarity-based affixes.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${postgame}`;
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
   }
@@ -12603,6 +12618,7 @@ function renderVendor() {
   if (!vendor) return closeVendor();
   gearHoverRegistry = [];
   hideGearHoverTooltip();
+  el.menu.dataset.menuView = activeVendor === "workshop" ? "glimmer-shop" : "shop";
   const wares = vendorWares(activeVendor);
   const stashEntries = Object.entries(state.stash).filter(([, amount]) => amount > 0);
   const indexedWares = wares.map((ware, index) => ({ ware, index }));
@@ -12614,7 +12630,7 @@ function renderVendor() {
     ? `<section class="shop-offer-section"><h3>Available</h3><div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("") || `<div class="shop-empty"><strong>No offers available</strong><p>New persistent offers unlock with Ember Hall stages.</p></div>`}</div></section><details class="shop-purchased"><summary>Purchased (${purchasedWares.length})</summary><div class="shop-list">${purchasedWares.map(({ ware, index }) => shopWareRowHtml(ware, index, true)).join("") || `<div class="shop-empty"><p>No purchased offers yet.</p></div>`}</div></details>`
     : `<div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("")}</div>`;
   const comparisonSelector = hallShop
-    ? `<nav class="shop-character-selector" aria-label="Comparison character"><span>Compare for</span>${state.party.map(id => `<button type="button" data-shop-hero="${id}" class="${selectedShopHero === id ? "is-active" : ""}">${id}</button>`).join("")}</nav>`
+    ? `<nav class="shop-character-selector" aria-label="Comparison character"><span>Compare for</span>${state.party.map(id => `<button type="button" data-shop-hero="${id}" class="${selectedShopHero === id ? "is-active" : ""}"><img src="${menuPortraitSource(id)}" alt=""><b>${id}</b></button>`).join("")}</nav>`
     : "";
   const buyList = `${shopSections}${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
@@ -12638,7 +12654,7 @@ function renderVendor() {
     : activeVendor === "workshop"
     ? `Echo Forge rank ${forgeRank}/40. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
-  el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div>${comparisonSelector}<div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
+  el.menuBody.innerHTML = `<div class="shop-head">${activeVendor === "workshop" ? `<img class="shopkeeper-portrait" src="${menuPortraitSource("Glimmer")}" alt="">` : ""}<div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div>${comparisonSelector}<div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
   if (activeVendor === "workshop" && state.gameMode !== "hallBattles") {
     el.menuBody.querySelector(".shop-mode-tabs").insertAdjacentHTML("beforeend", `<button type="button" data-shop-tab="reforge" class="${vendorTab === "reforge" ? "is-active" : ""}">Reforge</button>`);
