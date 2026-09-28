@@ -955,6 +955,14 @@ canvas:focus {
   border-bottom: 1px solid #33262d;
 }
 
+.status-gear-row.is-hoverable {
+  cursor: help;
+}
+
+.status-gear-row.is-hoverable:hover {
+  background: #251b25;
+}
+
 .status-gear-row > span {
   min-width: 0;
 }
@@ -1010,6 +1018,37 @@ canvas:focus {
   color: #8f806b;
   font-size: 9px;
 }
+
+.status-gear-totals {
+  display: grid;
+  gap: 8px;
+}
+
+.status-gear-stat-total {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.status-gear-stat-total span {
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid #483542;
+  background: #18121b;
+  text-align: center;
+}
+
+.status-gear-stat-total small { color: #a98b62; font-size: 8px; }
+.status-gear-stat-total strong { color: #f4dfad; font-size: 13px; }
+.status-gear-affix-total,
+.status-gear-special-total { display: grid; gap: 4px; }
+.status-gear-affix-total h5,
+.status-gear-special-total h5 { margin: 0; color: #d8b06b; }
+.status-gear-special-total > span { display: grid; gap: 1px; padding: 5px 7px; border-left: 2px solid #a87932; background: #18121b; }
+.status-gear-special-total b { color: #f0d296; font-size: 9px; }
+.status-gear-special-total small { color: #c7b89c; font-size: 8px; }
+.status-combat-detail { margin-top: 8px; }
 
 .status-talents p {
   margin: 0;
@@ -1850,6 +1889,7 @@ canvas:focus {
 .shop-head button,
 .shop-row button,
 .shop-mode-tabs button,
+.shop-character-selector button,
 .field-targets button {
   border: 2px solid #d8b06b;
   background: #3a2234;
@@ -1912,6 +1952,36 @@ canvas:focus {
   cursor: pointer;
 }
 
+.shop-character-selector {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 2px;
+  padding: 6px;
+  border: 1px solid #5b4438;
+  background: #17111a;
+  overflow-x: auto;
+}
+
+.shop-character-selector > span {
+  flex: 0 0 auto;
+  color: #d8b06b;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.shop-character-selector button {
+  min-width: 70px;
+  padding: 4px 7px;
+  font-size: 9px;
+}
+
+.shop-character-selector button.is-active {
+  background: #8a5d35;
+  color: #fff3c8;
+}
+
 .gear-hover-tooltip {
   position: fixed;
   z-index: 10000;
@@ -1927,7 +1997,7 @@ canvas:focus {
 }
 
 .gear-hover-tooltip[hidden] { display: none; }
-.gear-compare-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin-bottom: 8px; }
+.gear-compare-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; margin-bottom: 8px; }
 .gear-compare-head strong { color: #f7d994; }
 .gear-compare-head small { color: #a8dcd3; text-align: right; }
 .gear-value-comparison { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
@@ -1945,6 +2015,61 @@ canvas:focus {
 .gear-impact-summary span { display: contents; }
 .gear-skill-impact { margin-top: 8px; }
 .gear-skill-impact summary { color: #d9b872; cursor: pointer; }
+
+.gear-affix-details,
+.gear-affix-changes,
+.gear-affix-changes section {
+  display: grid;
+  gap: 4px;
+}
+
+.gear-affix-details,
+.gear-affix-changes {
+  margin-top: 9px;
+  padding-top: 7px;
+  border-top: 1px solid #4b3c48;
+}
+
+.gear-affix-details > strong,
+.gear-affix-changes section > b {
+  color: #f2ce85;
+  font-size: 10px;
+}
+
+.affix-detail {
+  display: grid;
+  grid-template-columns: 30px minmax(90px, .7fr) auto minmax(160px, 1.5fr);
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #1c1520;
+}
+
+.affix-detail b { color: #dec58f; font-size: 10px; }
+.affix-detail strong { color: #8be1c4; font-size: 10px; }
+.affix-detail small { color: #c7b8cc; font-size: 9px; line-height: 1.25; }
+.gear-affix-changes .is-lost .affix-detail b,
+.gear-affix-changes .is-lost .affix-detail strong { color: #ff9b91; }
+
+.affix-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 22px;
+  border: 1px solid #8c6a43;
+  background: #302136;
+  color: #ffe5ad;
+  font: 700 8px/1 monospace;
+  font-style: normal;
+}
+
+.affix-statusOnHit { border-color: #a75566; background: #3a1826; }
+.affix-statPct,
+.affix-openingTurnProgress { border-color: #4d9189; background: #173432; }
+.affix-critChance,
+.affix-afflictedDamage,
+.affix-physicalDamage,
+.affix-magicDamage { border-color: #b56b4a; background: #3a211c; }
 
 .shop-mode-tabs {
   display: grid;

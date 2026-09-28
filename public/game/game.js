@@ -81,8 +81,10 @@ let mode = "title";
 let menuTab = "status";
 let selectedStatusHero = "Verseborn";
 let selectedGearHero = "Verseborn";
+let selectedShopHero = "Verseborn";
 let selectedGearSlot = "weapon";
 let selectedGearRef = null;
+const temporaryGearStats = new Map();
 const gearBrowser = {
   search: "",
   stats: [],
@@ -1861,7 +1863,6 @@ const MYTHIC_SETS = {
 const HALL_MYTHIC_THEMES = { 41: "mountain", 42: "ruins", 43: "mountain", 44: "ruins", 45: "dragon", 46: "ruins", 47: "dragon", 48: "ruins", 49: "mountain", 50: "dragon" };
 const HALL_LEGENDARY_STAGE = 20;
 const HALL_MYTHIC_STAGE = 41;
-const HALL_RARITY_UPGRADE_CHANCE = .08;
 
 const HALL_RARE_GEAR_POOL = [
   item("Ironwood Staff", "weapon", { mag: 4, stam: 2 }, "A dependable ashwood focus reinforced with iron bands."),
@@ -2018,7 +2019,15 @@ function createEchoGearInstance(name, options = {}) {
       if (!existingSignatures.has(gearAffixSignature(affixes))) break;
     }
   }
-  gearInstances[id] = { id, serial, copyNumber, name: baseName, rarity, affixes };
+  gearInstances[id] = {
+    id,
+    serial,
+    copyNumber,
+    name: baseName,
+    rarity,
+    affixes,
+    ...(options.stats && typeof options.stats === "object" ? { stats: { ...options.stats } } : {})
+  };
   state.gearInstances = gearInstances;
   return id;
 }
@@ -3800,6 +3809,7 @@ function loadGame(saveKey = activeSaveKey()) {
   migratePlatinumGear();
   migrateHallSustainAffixes();
   migrateGenericBreakGearAffixes();
+  const migratedHallBaseStats = migrateHallBaseStatsV1();
   upgradeOwnedLegendaryGear();
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
@@ -3819,6 +3829,14 @@ function loadGame(saveKey = activeSaveKey()) {
     });
   });
   sanitizeWorldSpawns();
+  if (migratedHallBaseStats) {
+    const heroes = Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, {
+      hp: hero.hp,
+      mp: hero.mp,
+      gear: { ...hero.gear }
+    }]));
+    try { localStorage.setItem(saveKey, JSON.stringify({ ...data, state, heroes })); } catch {}
+  }
   Object.keys(baseJobs).forEach(id => {
     progressFor(id);
     clampHeroVitals(id);
@@ -4632,7 +4650,10 @@ const npc = {
 
 function gearByName(name) {
   const baseName = gearBaseName(name);
-  return Object.values(gearDb).flat().find(g => g.name === baseName);
+  const gear = Object.values(gearDb).flat().find(g => g.name === baseName);
+  if (!gear) return gear;
+  const rolledStats = gearInstance(name)?.stats || temporaryGearStats.get(name);
+  return rolledStats ? { ...gear, stats: { ...rolledStats } } : gear;
 }
 
 function talentNode(tier, name, type, value, desc) {
@@ -6503,7 +6524,7 @@ function resetHallBattleRun() {
     discoveredMaps: ["emberHallBattles"],
     escort: null,
     fieldWard: false,
-    flags: {},
+    flags: { hallBaseStatsV1: true },
     hallBattles: { unlockedStage: 1, clearedStages: [], recruitStages: [], pendingRecruit: 0, startingCompanions: [], startingWelcomeComplete: false, shopStage: 0, shopOffers: {}, purchasedShopStages: [] }
   });
 }
@@ -8829,7 +8850,7 @@ function renderHallBattleMap() {
     const isCleared = cleared.has(info.stage);
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
-    const lootLabel = `${hallNormalGearRarity(info.stage)} gear${info.stage < HALL_MYTHIC_STAGE ? " / low +1 rarity chance" : ""}`;
+    const lootLabel = `${hallNormalGearRarity(info.stage)} gear`;
     return `<button type="button" class="hall-stage ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
   el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/${HALL_BATTLE_BLUEPRINTS.length} cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
@@ -10930,7 +10951,14 @@ function confirmPhaseTransition() {
 }
 
 function awardGearDrop(name, requestedRarity, drops, options = {}) {
-  const ref = addOwnedGear(name, 1, { rarity: requestedRarity, rollAffixes: true, theme: options.theme || lootThemeForMap(), separateCopy: options.separateCopy })[0] || name;
+  const ref = addOwnedGear(name, 1, {
+    rarity: requestedRarity,
+    rollAffixes: !Array.isArray(options.affixes),
+    theme: options.theme || lootThemeForMap(),
+    separateCopy: options.separateCopy,
+    affixes: options.affixes,
+    stats: options.stats
+  })[0] || name;
   const currentRarity = gearRarity(ref);
   if (RARITY_ORDER.indexOf(requestedRarity) > RARITY_ORDER.indexOf(currentRarity)) {
     const instance = gearInstance(ref);
@@ -10938,30 +10966,183 @@ function awardGearDrop(name, requestedRarity, drops, options = {}) {
     else state.gearRarities[name] = requestedRarity;
   }
   const rarity = gearRarity(ref);
-  topUpGearAffixes(ref, rarity, options.theme || "dragon");
+  if (!Array.isArray(options.affixes)) topUpGearAffixes(ref, rarity, options.theme || "dragon");
   const gear = gearByName(ref);
   drops.push({ kind: "gear", name: gearDisplayName(ref), baseName: name, rarity, type: gearSlotLabel(gear?.slot), amount: 1, stored: true });
   return { name, rarity, ref };
 }
 
+const HALL_BASE_STAT_RULES = Object.freeze({
+  Rare: { min: 2, max: 5, budget: 12 },
+  Epic: { min: 6, max: 10, budget: 24 },
+  Legendary: { min: 11, max: 15, budget: 39 },
+  Mythic: { min: 16, max: 20, budget: 54 },
+  Artifact: { min: 21, max: 30, budget: 78 }
+});
+const HALL_GENERATED_AFFIX_COUNTS = Object.freeze({ Rare: 1, Epic: 2, Legendary: 3, Mythic: 4, Artifact: RARITY_AFFIX_COUNTS.Artifact });
+const HALL_BASE_STATS = ["str", "stam", "mag", "agi", "echo"];
+const HALL_GEAR_NAMES = new Set([
+  ...HALL_RARE_GEAR_POOL,
+  ...HALL_EPIC_GEAR_POOL,
+  ...HALL_LEGENDARY_GEAR_POOL,
+  ...MYTHIC_GEAR,
+  ...HALL_ARTIFACT_GEAR
+].map(gear => gear.name));
+
+function hallRandomInt(min, max, random = Math.random) {
+  return min + Math.floor(random() * (max - min + 1));
+}
+
+function shuffledHallStats(random = Math.random) {
+  const stats = [...HALL_BASE_STATS];
+  for (let index = stats.length - 1; index > 0; index--) {
+    const swap = Math.floor(random() * (index + 1));
+    [stats[index], stats[swap]] = [stats[swap], stats[index]];
+  }
+  return stats;
+}
+
+function hallBaseStatCount(random = Math.random) {
+  const roll = random();
+  if (roll < .05) return 1;
+  if (roll < .1) return 2;
+  if (roll < .9) return 3;
+  if (roll < .95) return 4;
+  return 5;
+}
+
+function rollHallBaseStatProfile(rarity, random = Math.random) {
+  const rule = HALL_BASE_STAT_RULES[rarity];
+  if (!rule) return { stats: {}, statCount: 0, outlier: null, total: 0 };
+  const statCount = hallBaseStatCount(random);
+  const chosen = shuffledHallStats(random).slice(0, statCount);
+  if (!chosen.includes("str") && !chosen.includes("mag")) {
+    chosen[chosen.length - 1] = random() < .5 ? "str" : "mag";
+  }
+  const uniqueStats = [...new Set(chosen)];
+  while (uniqueStats.length < statCount) {
+    const replacement = HALL_BASE_STATS.find(stat => !uniqueStats.includes(stat));
+    if (!replacement) break;
+    uniqueStats.push(replacement);
+  }
+
+  const broad = statCount >= 4;
+  const hasOutlier = random() < .5;
+  const outlierIndex = hasOutlier ? Math.floor(random() * statCount) : -1;
+  const direction = hasOutlier ? (random() < .5 ? "high" : "low") : null;
+  const lower = uniqueStats.map(() => broad ? 1 : rule.min);
+  const upper = uniqueStats.map(() => rule.max);
+  if (hasOutlier && direction === "high") {
+    lower[outlierIndex] = rule.max + 1;
+    upper[outlierIndex] = rule.max + 5;
+  } else if (hasOutlier) {
+    const low = hallRandomInt(Math.max(1, rule.min - 5), Math.max(1, rule.min - 1), random);
+    lower[outlierIndex] = low;
+    upper[outlierIndex] = low;
+  }
+
+  const minimum = lower.reduce((sum, value) => sum + value, 0);
+  const maximum = Math.min(rule.budget, upper.reduce((sum, value) => sum + value, 0));
+  const preferredMinimum = Math.min(maximum, Math.max(minimum, Math.floor(rule.budget * .8)));
+  const target = hallRandomInt(preferredMinimum, maximum, random);
+  const values = [...lower];
+  let remaining = target - minimum;
+  while (remaining > 0) {
+    const available = values.map((value, index) => value < upper[index] ? index : -1).filter(index => index >= 0);
+    if (!available.length) break;
+    const index = available[Math.floor(random() * available.length)];
+    values[index]++;
+    remaining--;
+  }
+  const stats = Object.fromEntries(uniqueStats.map((stat, index) => [stat, values[index]]));
+  return {
+    stats,
+    statCount,
+    outlier: hasOutlier ? { stat: uniqueStats[outlierIndex], direction } : null,
+    total: values.reduce((sum, value) => sum + value, 0)
+  };
+}
+
+function rollHallBaseStats(rarity, random = Math.random) {
+  return rollHallBaseStatProfile(rarity, random).stats;
+}
+
+function hallSeededRandom(seed) {
+  let value = 2166136261;
+  for (const character of String(seed)) {
+    value ^= character.charCodeAt(0);
+    value = Math.imul(value, 16777619);
+  }
+  return () => {
+    value += 0x6d2b79f5;
+    let result = value;
+    result = Math.imul(result ^ result >>> 15, result | 1);
+    result ^= result + Math.imul(result ^ result >>> 7, result | 61);
+    return ((result ^ result >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function migrateHallBaseStatsV1() {
+  state.flags ||= {};
+  if (state.flags.hallBaseStatsV1) return false;
+  if (state.gameMode === "hallBattles") {
+    const equippedLegacy = Object.values(baseJobs).flatMap(hero => Object.entries(hero.gear || {})
+      .filter(([, ref]) => ref && !gearInstance(ref) && HALL_GEAR_NAMES.has(gearBaseName(ref)))
+      .map(([slot, ref]) => ({ hero, slot, name: gearBaseName(ref) })));
+    const legacyNames = new Set([
+      ...state.ownedGear.filter(ref => !gearInstance(ref) && HALL_GEAR_NAMES.has(gearBaseName(ref))).map(gearBaseName),
+      ...equippedLegacy.map(entry => entry.name)
+    ]);
+    legacyNames.forEach(name => {
+      let refs = echoGearInstanceRefs(name);
+      const directEquipped = equippedLegacy.filter(entry => entry.name === name);
+      const wanted = Math.max(1, Number(state.gearCopies[name]) || 0, refs.length + directEquipped.length);
+      const rarity = state.gearRarities[name] || defaultGearRarity(name);
+      const affixes = Array.isArray(state.gearAffixes[name]) ? state.gearAffixes[name].map(entry => ({ ...entry })) : [];
+      while (refs.length < wanted) {
+        createEchoGearInstance(name, { allowAny: true, rarity, affixes, rollAffixes: false });
+        refs = echoGearInstanceRefs(name);
+      }
+      const used = new Set(Object.values(baseJobs).flatMap(hero => Object.values(hero.gear || {})).filter(ref => gearInstance(ref)?.name === name));
+      directEquipped.forEach(entry => {
+        const ref = refs.find(candidate => !used.has(candidate)) || refs[0];
+        entry.hero.gear[entry.slot] = ref;
+        used.add(ref);
+      });
+      syncEchoForgeCopies(name);
+    });
+  }
+  Object.entries(gearInstances).forEach(([ref, instance]) => {
+    if (!ref.startsWith("hall_") || !HALL_BASE_STAT_RULES[instance?.rarity]) return;
+    instance.stats = rollHallBaseStats(instance.rarity, hallSeededRandom(`instance:${ref}:${instance.name}:${instance.rarity}`));
+  });
+  Object.entries(state.hallBattles?.shopOffers || {}).forEach(([stage, offer]) => {
+    if (!offer?.name || !HALL_BASE_STAT_RULES[offer.rarity]) return;
+    offer.stats = rollHallBaseStats(offer.rarity, hallSeededRandom(`offer:${stage}:${offer.name}:${offer.rarity}`));
+  });
+  state.flags.hallBaseStatsV1 = true;
+  return true;
+}
+
 function hallNormalGearRarity(stage = 1) {
   const value = Math.max(1, Number(stage) || 1);
-  if (value >= HALL_MYTHIC_STAGE) return "Mythic";
-  if (value >= HALL_LEGENDARY_STAGE) return "Legendary";
-  if (value >= 10) return "Epic";
+  if (value >= 31) return "Mythic";
+  if (value >= 21) return "Legendary";
+  if (value >= 11) return "Epic";
   return "Rare";
 }
 
 function hallShopGearRarity(stage = 1) {
   const value = Math.max(1, Number(stage) || 1);
   if (value >= 41) return "Artifact";
-  return hallNormalGearRarity(value);
+  if (value >= 31) return "Mythic";
+  if (value >= 21) return "Legendary";
+  if (value >= 11) return "Epic";
+  return "Rare";
 }
 
 function rollHallGearRarity(stage = 1) {
-  const normal = hallNormalGearRarity(stage);
-  if (normal === "Mythic" || Math.random() >= HALL_RARITY_UPGRADE_CHANCE) return normal;
-  return RARITY_ORDER[RARITY_ORDER.indexOf(normal) + 1];
+  return hallNormalGearRarity(stage);
 }
 
 function hallGearPoolForRarity(rarity, stage = 1) {
@@ -10973,10 +11154,7 @@ function hallGearPoolForRarity(rarity, stage = 1) {
 }
 
 function hallGearRewardCandidates(stage, rarity = rollHallGearRarity(stage)) {
-  const pool = hallGearPoolForRarity(rarity, stage).filter(gear => !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name));
-  if (stage >= HALL_MYTHIC_STAGE && rarity === "Mythic") return pool;
-  const unownedCandidates = pool.filter(gear => gearCopyCount(gear.name) === 0);
-  return unownedCandidates.length ? unownedCandidates : leastOwnedGearCandidates(pool);
+  return hallGearPoolForRarity(rarity, stage).filter(gear => !echoForgeGearNames.has(gear.name) && !/^Echo(?:-|\s)/i.test(gear.name));
 }
 
 function guaranteeHallBattleGearReward(rewards, stage = 1) {
@@ -10988,7 +11166,13 @@ function guaranteeHallBattleGearReward(rewards, stage = 1) {
   if (!gear) return null;
   const themes = ["swamp", "ruins", "mountain", "dragon"];
   const theme = HALL_MYTHIC_THEMES[stage] || themes[Math.floor(Math.random() * themes.length)];
-  const awarded = awardGearDrop(gear.name, rarity, rewards.drops, { theme, separateCopy: true });
+  const affixes = rollGearAffixes(gear, rarity, theme, HALL_GENERATED_AFFIX_COUNTS[rarity]);
+  const awarded = awardGearDrop(gear.name, rarity, rewards.drops, {
+    theme,
+    separateCopy: true,
+    affixes,
+    stats: rollHallBaseStats(rarity)
+  });
   rewards.gearDrops.push(awarded);
   return awarded;
 }
@@ -11420,15 +11604,32 @@ function statusEquipmentHtml(id) {
   return Object.entries(baseJobs[id].gear).map(([slot, name]) => {
     const gear = gearByName(name);
     if (!gear) return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>Empty</strong></span><div><small>No equipment.</small></div></div>`;
-    const basic = weaponBasicAttackEffect(gear);
-    const fixed = [...(basic ? [{ ...basic, basicAttackUnique: true }] : []), ...gearEffects(gear)].map(effect => {
-      const label = gearEffectLabel(effect);
-      return `<small class="${effect.echoUnique ? "is-echo" : effect.basicAttackUnique ? "is-basic-attack" : "is-fixed"}"><b>Special:</b> ${label}</small>`;
-    });
-    const random = gearAffixes(name).map(entry => `<small class="is-affix"><b>Affix:</b> ${formatAffix(entry)}</small>`);
-    const details = [...fixed, ...random];
-    return `<div class="status-gear-row"><span><b>${slot.toUpperCase()}</b><strong>${gearDisplayName(name)}</strong>${gearRarityHtml(name)}</span><div><small class="status-gear-base"><b>Base stats:</b> ${statLine(gear.stats)}</small>${details.length ? details.join("") : `<small>No special effect or affix.</small>`}</div></div>`;
+    return `<div class="status-gear-row is-hoverable" ${gearHoverAttribute({ heroId: id, ref: name })}><span><b>${slot.toUpperCase()}</b><strong>${gearDisplayName(name)}</strong>${gearRarityHtml(name)}</span><div><small class="status-gear-base"><b>Base stats:</b> ${statLine(gear.stats)}</small><small>Hover for exact affixes, Specials and formula impact.</small></div></div>`;
   }).join("");
+}
+
+function statusGearOverviewHtml(id) {
+  const refs = Object.values(baseJobs[id].gear).filter(Boolean);
+  const stats = Object.fromEntries(HALL_BASE_STATS.map(stat => [stat, 0]));
+  const affixes = new Map();
+  const specials = [];
+  refs.forEach(ref => {
+    const gear = gearByName(ref);
+    Object.entries(gear?.stats || {}).forEach(([stat, value]) => {
+      if (stat in stats) stats[stat] += Number(value) || 0;
+    });
+    gearAffixes(ref).filter(entry => !isGenericBreakGearAffix(entry)).forEach(entry => {
+      const key = affixComparisonKey(entry);
+      const current = affixes.get(key);
+      if (current) current.value += Number(entry.value) || 0;
+      else affixes.set(key, { ...entry, value: Number(entry.value) || 0 });
+    });
+    gearEffectLabels(gear).forEach(label => specials.push({ item: gearDisplayName(ref), label }));
+  });
+  const statHtml = HALL_BASE_STATS.map(stat => `<span><small>${stat.toUpperCase()}</small><strong>+${stats[stat]}</strong></span>`).join("");
+  const affixHtml = [...affixes.values()].map(entry => affixDetailHtml(entry)).join("") || `<p class="status-empty">No random affix contributions equipped.</p>`;
+  const specialHtml = specials.map(entry => `<span><b>${entry.item}</b><small>${entry.label}</small></span>`).join("") || `<p class="status-empty">No unique Specials equipped.</p>`;
+  return `<div class="status-gear-totals"><div class="status-gear-stat-total">${statHtml}</div><div class="status-gear-affix-total"><h5>Combined affixes</h5>${affixHtml}</div><div class="status-gear-special-total"><h5>Unique Specials</h5>${specialHtml}</div></div>`;
 }
 
 function abilityUnlockLabel(id, sk) {
@@ -11479,7 +11680,7 @@ function statusCardHtml(id) {
   const currentEvasion = combatEvasionChance(evasionUnit);
   const evasionCharges = statusOf(evasionUnit, "evasion")?.incomingCharges || 0;
   const evasionHtml = `<span><small>EVASION</small><strong>${Math.round(currentEvasion * 100)}%</strong><em>${Math.round(baseEvasionValue(evasionUnit) * 100)}% base${activeEvasion ? ` + ${Math.round(activeEvasion * 100)}% temporary / ${evasionCharges} incoming attacks` : ""}</em></span>`;
-  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span>${evasionHtml}</div>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section><section class="status-detail-section"><h4>Equipment specialties and affixes</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section></article>`;
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span>${evasionHtml}</div><section class="status-detail-section"><h4>Equipment slots</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section"><h4>Total equipped gear contribution</h4>${statusGearOverviewHtml(id)}</section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section><details class="status-reference status-combat-detail"><summary>Abilities and combat detail</summary>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section></details></article>`;
 }
 
 function toggleTalent(value) {
@@ -11533,17 +11734,22 @@ function gearComparisonHero(gear, preferred = selectedGearHero) {
 function withTemporaryGearMetadata(ref, options, callback) {
   const hasAffixes = Object.prototype.hasOwnProperty.call(state.gearAffixes, ref);
   const hasRarity = Object.prototype.hasOwnProperty.call(state.gearRarities, ref);
+  const hasStats = temporaryGearStats.has(ref);
   const previousAffixes = state.gearAffixes[ref];
   const previousRarity = state.gearRarities[ref];
+  const previousStats = temporaryGearStats.get(ref);
   try {
     if (Array.isArray(options?.affixes) && !gearInstance(ref)) state.gearAffixes[ref] = options.affixes.map(entry => ({ ...entry }));
     if (options?.rarity && !gearInstance(ref)) state.gearRarities[ref] = options.rarity;
+    if (options?.stats && !gearInstance(ref)) temporaryGearStats.set(ref, { ...options.stats });
     return callback();
   } finally {
     if (hasAffixes) state.gearAffixes[ref] = previousAffixes;
     else delete state.gearAffixes[ref];
     if (hasRarity) state.gearRarities[ref] = previousRarity;
     else delete state.gearRarities[ref];
+    if (hasStats) temporaryGearStats.set(ref, previousStats);
+    else temporaryGearStats.delete(ref);
   }
 }
 
@@ -11562,8 +11768,60 @@ function affixComparisonValue(entry, value = entry?.value || 0) {
   return turns ? `${comparisonNumber(value)} turn${Math.abs(value) === 1 ? "" : "s"}` : comparisonNumber(value, percent);
 }
 
+function affixIconHtml(entry) {
+  const labels = {
+    statPct: entry?.stat?.toUpperCase() || "STAT",
+    hpPct: "HP",
+    statusOnHit: (entry?.status || "PROC").slice(0, 3).toUpperCase(),
+    statusResistance: "RES",
+    allStatusResistance: "RES",
+    critChance: "CRT",
+    afflictedDamage: "DMG",
+    physicalDamage: "PHY",
+    magicDamage: "MAG",
+    statusChance: "FX",
+    poisonReduction: "PSN",
+    statusDurationReduction: "DUR",
+    buffDuration: "BUF",
+    statusDuration: "HEX",
+    echoing: "ECH",
+    openingTurnProgress: "AGI",
+    leeching: "HP",
+    siphoning: "MP"
+  };
+  return `<i class="affix-icon affix-${entry?.type || "other"}" aria-hidden="true">${labels[entry?.type] || "FX"}</i>`;
+}
+
+function affixDescription(entry) {
+  const percent = Math.round((Number(entry?.value) || 0) * 100);
+  if (entry?.type === "statPct") return `Increases ${entry.stat.toUpperCase()} by ${percent}%.`;
+  if (entry?.type === "hpPct") return `Increases maximum HP by ${percent}%.`;
+  if (entry?.type === "statusOnHit") return `${percent}% chance to inflict ${(entry.status || "a status").toUpperCase()} on an eligible hit.`;
+  if (entry?.type === "statusResistance") return `Increases ${(entry.status || "status").toUpperCase()} resistance by ${percent}%.`;
+  if (entry?.type === "allStatusResistance") return `Increases resistance to all eligible statuses by ${percent}%.`;
+  if (entry?.type === "critChance") return `Increases Crit chance by ${percent} percentage points.`;
+  if (entry?.type === "afflictedDamage") return `Increases damage against afflicted targets by ${percent}%.`;
+  if (entry?.type === "physicalDamage") return `Increases physical damage by ${percent}%.`;
+  if (entry?.type === "magicDamage") return `Increases magical damage by ${percent}%.`;
+  if (entry?.type === "statusChance") return `Increases eligible status application chance by ${percent}%.`;
+  if (entry?.type === "poisonReduction") return `Reduces Poison damage taken by ${percent}%.`;
+  if (entry?.type === "statusDurationReduction") return `Shortens eligible negative statuses received by ${entry.value} turn.`;
+  if (entry?.type === "buffDuration") return `Buffs you apply last ${entry.value} additional turn.`;
+  if (entry?.type === "statusDuration") return `Negative statuses you inflict last ${entry.value} additional turn.`;
+  if (entry?.type === "echoing") return `${percent}% chance after acting to grant an immediate ally action; once per wearer per battle and subject to the party cap.`;
+  if (entry?.type === "openingTurnProgress") return `Adds ${percent}% initiative during round 1 only.`;
+  if (entry?.type === "leeching") return `Heals ${percent}% of direct damage dealt by the action.`;
+  if (entry?.type === "siphoning") return `After a damaging skill, restores MP equal to ${percent}% of its STR or MAG scaling stat.`;
+  return formatAffix(entry);
+}
+
+function affixDetailHtml(entry, prefix = "") {
+  return `<span class="affix-detail">${affixIconHtml(entry)}<b>${prefix}${entry.label || entry.type}</b><strong>${affixComparisonValue(entry)}</strong><small>${affixDescription(entry)}</small></span>`;
+}
+
 function gearComparisonContentHtml(id, slot, ref, options = {}) {
-  const gear = gearByName(ref);
+  const baseGear = gearByName(ref);
+  const gear = baseGear && options.stats ? { ...baseGear, stats: { ...options.stats } } : baseGear;
   if (!gear || !baseJobs[id]) return "<p>Comparison unavailable.</p>";
   const equippedRef = baseJobs[id].gear[slot];
   const equippedGear = gearByName(equippedRef);
@@ -11580,8 +11838,8 @@ function gearComparisonContentHtml(id, slot, ref, options = {}) {
 
   const hoveredByKey = new Map(hoveredAffixes.filter(entry => !isGenericBreakGearAffix(entry)).map(entry => [affixComparisonKey(entry), entry]));
   const equippedByKey = new Map(equippedAffixes.filter(entry => !isGenericBreakGearAffix(entry)).map(entry => [affixComparisonKey(entry), entry]));
-  const affixKeys = [...new Set([...hoveredByKey.keys(), ...equippedByKey.keys()])];
-  const affixRows = affixKeys.map(key => {
+  const sharedAffixKeys = [...hoveredByKey.keys()].filter(key => equippedByKey.has(key));
+  const affixRows = sharedAffixKeys.map(key => {
     const hovered = hoveredByKey.get(key);
     const equipped = equippedByKey.get(key);
     const definition = hovered || equipped;
@@ -11589,6 +11847,10 @@ function gearComparisonContentHtml(id, slot, ref, options = {}) {
     const difference = value - (equipped?.value || 0);
     return `<tr><th>${definition.label || definition.type}</th><td>${affixComparisonValue(definition, value)}</td><td class="comparison-delta ${difference > 0 ? "is-positive" : difference < 0 ? "is-negative" : ""}">${affixComparisonValue(definition, difference)}</td></tr>`;
   }).join("");
+  const gainedAffixes = [...hoveredByKey.entries()].filter(([key]) => !equippedByKey.has(key)).map(([, entry]) => entry);
+  const lostAffixes = [...equippedByKey.entries()].filter(([key]) => !hoveredByKey.has(key)).map(([, entry]) => entry);
+  const affixDetails = hoveredAffixes.filter(entry => !isGenericBreakGearAffix(entry)).map(entry => affixDetailHtml(entry)).join("");
+  const affixChanges = `${gainedAffixes.length ? `<section><b>Gained affixes</b>${gainedAffixes.map(entry => affixDetailHtml(entry, "+ ")).join("")}</section>` : ""}${lostAffixes.length ? `<section class="is-lost"><b>Lost affixes</b>${lostAffixes.map(entry => affixDetailHtml(entry, "- ")).join("")}</section>` : ""}`;
 
   const unit = { id, statuses: [] };
   const commands = battleSkills(id, unit).map(sk => ({ sk, unit }));
@@ -11625,7 +11887,8 @@ function gearComparisonContentHtml(id, slot, ref, options = {}) {
   const set = mythicSetDefinition(gear);
   if (set) uniqueEffects.push(`${set.name} 3-piece: ${set.bonus.label}`);
   const currentUnique = equippedGear ? gearEffectLabels(equippedGear) : [];
-  return `<div class="gear-compare-head"><strong>${gearDisplayName(ref)}</strong><small>Compared with ${equippedRef ? gearDisplayName(equippedRef) : "empty slot"} on ${id}</small></div><div class="comparison-scroll"><table class="gear-value-comparison"><thead><tr><th>Base stat</th><th>Hovered item</th><th>Difference</th></tr></thead><tbody>${statRows || `<tr><td colspan="3">No base stat difference.</td></tr>`}</tbody></table>${affixRows ? `<table class="gear-value-comparison"><thead><tr><th>Affix</th><th>Hovered item</th><th>Difference</th></tr></thead><tbody>${affixRows}</tbody></table>` : ""}</div><div class="gear-unique-comparison"><strong>Unique effects</strong>${uniqueEffects.length ? uniqueEffects.map(label => `<small>${label}</small>`).join("") : "<small>None</small>"}${currentUnique.length ? `<em>Equipped item: ${currentUnique.join(" / ")}</em>` : ""}</div><div class="gear-impact-summary"><strong>Estimated combat impact</strong><span>Crit-adjusted direct damage <b class="${normalImpact > 0 ? "is-positive" : normalImpact < 0 ? "is-negative" : ""}">${comparisonNumber(normalImpact / 100, true)}</b></span><span>Vs afflicted <b class="${afflictedImpact > 0 ? "is-positive" : afflictedImpact < 0 ? "is-negative" : ""}">${comparisonNumber(afflictedImpact / 100, true)}</b></span><span>CRIT <b>${Math.round(heroCritBreakdown(id).total * 100)}% to ${nextCrit}%</b></span></div><details class="gear-skill-impact"><summary>Skill-by-skill formula impact</summary><div class="comparison-scroll"><table><thead><tr><th>Skill / scaling</th><th>Hovered</th><th>Difference</th><th>Conditional</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
+  const rarity = options.rarity || gearRarity(ref);
+  return `<div class="gear-compare-head"><strong>${gearDisplayName(ref)}</strong><small>${rarity.toUpperCase()} &bull; ${gearSlotLabel(gear.slot).toUpperCase()}</small><small>Compared with ${equippedRef ? gearDisplayName(equippedRef) : "empty slot"} on ${id}</small></div><div class="comparison-scroll"><table class="gear-value-comparison"><thead><tr><th>Base stat</th><th>Hovered item</th><th>Difference</th></tr></thead><tbody>${statRows || `<tr><td colspan="3">No base stat difference.</td></tr>`}</tbody></table>${affixRows ? `<table class="gear-value-comparison"><thead><tr><th>Matching affix</th><th>Hovered item</th><th>Difference</th></tr></thead><tbody>${affixRows}</tbody></table>` : ""}</div>${affixDetails ? `<div class="gear-affix-details"><strong>Affixes</strong>${affixDetails}</div>` : ""}${affixChanges ? `<div class="gear-affix-changes">${affixChanges}</div>` : ""}<div class="gear-unique-comparison"><strong>Unique effects</strong>${uniqueEffects.length ? uniqueEffects.map(label => `<small>${label}</small>`).join("") : "<small>None</small>"}${currentUnique.length ? `<em>Equipped item: ${currentUnique.join(" / ")}</em>` : ""}</div><div class="gear-impact-summary"><strong>Estimated combat impact</strong><span>Crit-adjusted direct damage <b class="${normalImpact > 0 ? "is-positive" : normalImpact < 0 ? "is-negative" : ""}">${comparisonNumber(normalImpact / 100, true)}</b></span><span>Vs afflicted <b class="${afflictedImpact > 0 ? "is-positive" : afflictedImpact < 0 ? "is-negative" : ""}">${comparisonNumber(afflictedImpact / 100, true)}</b></span><span>CRIT <b>${Math.round(heroCritBreakdown(id).total * 100)}% to ${nextCrit}%</b></span></div><details class="gear-skill-impact"><summary>Skill-by-skill formula impact</summary><div class="comparison-scroll"><table><thead><tr><th>Skill / scaling</th><th>Hovered</th><th>Difference</th><th>Conditional</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
 }
 
 function gearComparisonHtml(id, slot, ref, options = {}) {
@@ -11692,6 +11955,7 @@ function renderMenu() {
       selectedStatusHero = button.dataset.statusHero;
       renderMenu();
     });
+    bindGearHoverTooltips();
   }
   if (menuTab === "party") {
     const activeSlots = Array.from({ length: 3 }, (_, index) => {
@@ -12174,7 +12438,7 @@ function hallShopGearPool(rarity, stage) {
   return rarity === "Artifact" ? HALL_ARTIFACT_GEAR : hallGearPoolForRarity(rarity, stage);
 }
 
-const HALL_SHOP_AFFIX_COUNTS = { Rare: 1, Epic: 2, Legendary: 3, Mythic: 4, Artifact: RARITY_AFFIX_COUNTS.Artifact };
+const HALL_SHOP_AFFIX_COUNTS = HALL_GENERATED_AFFIX_COUNTS;
 
 function hallShopAffixTheme(stage) {
   return HALL_MYTHIC_THEMES[stage] || ["swamp", "ruins", "mountain", "dragon"][(Math.max(1, stage) - 1) % 4];
@@ -12200,10 +12464,8 @@ function ensureHallShopOffer(stage) {
   const rarity = hallShopGearRarity(value);
   const existing = progress.shopOffers[value];
   const availablePool = hallShopGearPool(rarity, value);
-  const duplicateArtifact = rarity === "Artifact" && existing && Object.entries(progress.shopOffers)
-    .some(([offerStage, offer]) => Number(offerStage) !== value && offer?.rarity === "Artifact" && offer.name === existing.name);
-  const validExisting = existing && !duplicateArtifact && existing.rarity === rarity && availablePool.some(gear => gear.name === existing.name);
-  if (!validExisting) {
+  let created = false;
+  if (!existing || !gearByName(existing.name)) {
     const startingNames = new Set(Object.values(STARTING_HERO_GEAR).flatMap(slots => Object.values(slots)));
     const previousName = progress.shopOffers[value - 1]?.name;
     const usedArtifactNames = rarity === "Artifact"
@@ -12215,11 +12477,18 @@ function ensureHallShopOffer(stage) {
     const candidates = pool.length ? pool : availablePool;
     const gear = candidates[Math.floor(Math.random() * candidates.length)];
     if (!gear) return null;
-    progress.shopOffers[value] = { name: gear.name, rarity, price: hallShopPrice(value, rarity), affixes: [] };
+    progress.shopOffers[value] = {
+      name: gear.name,
+      rarity,
+      price: hallShopPrice(value, rarity),
+      affixes: rollGearAffixes(gear, rarity, hallShopAffixTheme(value), HALL_SHOP_AFFIX_COUNTS[rarity]),
+      stats: rollHallBaseStats(rarity)
+    };
+    created = true;
   }
   progress.shopStage = value;
   const offer = progress.shopOffers[value];
-  ensureHallShopOfferAffixes(offer, gearByName(offer.name), value);
+  if (created && !offer.affixes.length) ensureHallShopOfferAffixes(offer, gearByName(offer.name), value);
   return { kind: "gear", ...offer, hallStage: value };
 }
 
@@ -12304,10 +12573,17 @@ function shopWareRowHtml(ware, index, purchased = false) {
     ? gearIconHtml(gear, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
     : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
   const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
-  const comparisonHero = gear ? gearComparisonHero(gear, selectedGearHero) : null;
-  const hover = gear ? gearHoverAttribute({ heroId: comparisonHero, ref: gear.name, rarity: displayedRarity, affixes: ware.hallStage ? (ware.affixes || []).map(entry => ({ ...entry })) : null }) : "";
+  const displayedStats = ware.stats && typeof ware.stats === "object" ? ware.stats : gear?.stats;
+  const comparisonHero = gear ? gearComparisonHero(gear, ware.hallStage ? selectedShopHero : selectedGearHero) : null;
+  const hover = gear ? gearHoverAttribute({
+    heroId: comparisonHero,
+    ref: gear.name,
+    rarity: displayedRarity,
+    affixes: ware.hallStage ? (ware.affixes || []).map(entry => ({ ...entry })) : null,
+    stats: displayedStats ? { ...displayedStats } : null
+  }) : "";
   const metadata = gear
-    ? `<small class="shop-gear-metadata">${displayedRarity.toUpperCase()} &bull; ${gearSlotLabel(gear.slot).toUpperCase()}${ware.hallStage ? ` &bull; STAGE ${ware.hallStage}` : ""}</small><small>${statLine(gear.stats)}</small>`
+    ? `<small class="shop-gear-metadata">${displayedRarity.toUpperCase()} &bull; ${gearSlotLabel(gear.slot).toUpperCase()}${ware.hallStage ? ` &bull; STAGE ${ware.hallStage}` : ""}</small><small>${statLine(displayedStats)}</small>`
     : `<small>${ware.desc}</small>`;
   const buttonLabel = purchased ? "Purchased" : owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy";
   return `<div class="shop-row ${gear ? "is-gear-row" : ""}" ${hover}>${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${metadata}</div><span>${price} G</span><button type="button" ${purchased ? "" : `data-buy="${index}"`} ${owned || full || state.gold < price ? "disabled" : ""}>${buttonLabel}</button></div>`;
@@ -12322,11 +12598,15 @@ function renderVendor() {
   const stashEntries = Object.entries(state.stash).filter(([, amount]) => amount > 0);
   const indexedWares = wares.map((ware, index) => ({ ware, index }));
   const hallShop = activeVendor === "workshop" && state.gameMode === "hallBattles";
+  if (hallShop && !state.party.includes(selectedShopHero)) selectedShopHero = state.party[0];
   const availableWares = hallShop ? indexedWares.filter(({ ware }) => !hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : indexedWares;
   const purchasedWares = hallShop ? indexedWares.filter(({ ware }) => hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : [];
   const shopSections = hallShop
     ? `<section class="shop-offer-section"><h3>Available</h3><div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("") || `<div class="shop-empty"><strong>No offers available</strong><p>New persistent offers unlock with Ember Hall stages.</p></div>`}</div></section><details class="shop-purchased"><summary>Purchased (${purchasedWares.length})</summary><div class="shop-list">${purchasedWares.map(({ ware, index }) => shopWareRowHtml(ware, index, true)).join("") || `<div class="shop-empty"><p>No purchased offers yet.</p></div>`}</div></details>`
     : `<div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("")}</div>`;
+  const comparisonSelector = hallShop
+    ? `<nav class="shop-character-selector" aria-label="Comparison character"><span>Compare for</span>${state.party.map(id => `<button type="button" data-shop-hero="${id}" class="${selectedShopHero === id ? "is-active" : ""}">${id}</button>`).join("")}</nav>`
+    : "";
   const buyList = `${shopSections}${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
@@ -12349,7 +12629,7 @@ function renderVendor() {
     : activeVendor === "workshop"
     ? `Echo Forge rank ${forgeRank}/40. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
-  el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div><div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
+  el.menuBody.innerHTML = `<div class="shop-head"><div><strong>${vendor.name}</strong><p>${vendor.blurb}</p></div><div class="shop-wallet">${state.gold} G / BAG ${inventoryUsed()}/${state.inventorySlots}</div><button type="button" data-close-shop aria-label="Close shop">X</button></div>${comparisonSelector}<div class="shop-mode-tabs"><button type="button" data-shop-tab="buy" class="${vendorTab === "buy" ? "is-active" : ""}">Buy</button><button type="button" data-shop-tab="sell" class="${vendorTab === "sell" ? "is-active" : ""}">Sell</button></div>${vendorTab === "buy" ? buyList : sellList}<p class="shop-note">${shopNote}</p>`;
   el.menuBody.querySelector("[data-close-shop]").onclick = closeVendor;
   if (activeVendor === "workshop" && state.gameMode !== "hallBattles") {
     el.menuBody.querySelector(".shop-mode-tabs").insertAdjacentHTML("beforeend", `<button type="button" data-shop-tab="reforge" class="${vendorTab === "reforge" ? "is-active" : ""}">Reforge</button>`);
@@ -12367,6 +12647,10 @@ function renderVendor() {
   }
   el.menuBody.querySelectorAll("[data-shop-tab]").forEach(button => button.onclick = () => {
     vendorTab = button.dataset.shopTab;
+    renderVendor();
+  });
+  el.menuBody.querySelectorAll("[data-shop-hero]").forEach(button => button.onclick = () => {
+    selectedShopHero = button.dataset.shopHero;
     renderVendor();
   });
   el.menuBody.querySelectorAll("[data-buy]").forEach(button => button.onclick = () => buyWare(Number(button.dataset.buy)));
@@ -12454,7 +12738,10 @@ function buyWare(index) {
   if (ware.kind === "gear") {
     const gear = gearByName(ware.name);
     const gearOptions = { rarity: ware.rarity || defaultGearRarity(ware.name), rollAffixes: !hallOffer, theme: repeatableEcho ? "" : activeVendor === "shelter" ? "ruins" : activeVendor === "workshop" ? "dragon" : activeVendor === "guild" ? "mountain" : "swamp", separateCopy: hallOffer };
-    if (hallOffer) gearOptions.affixes = (ware.affixes || []).map(entry => ({ ...entry }));
+    if (hallOffer) {
+      gearOptions.affixes = (ware.affixes || []).map(entry => ({ ...entry }));
+      if (ware.stats && typeof ware.stats === "object") gearOptions.stats = { ...ware.stats };
+    }
     const refs = addOwnedGear(ware.name, 1, gearOptions);
     const ref = refs[0] || gear?.name;
     if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(ref, gearRarity(ref), repeatableEcho ? "" : "dragon");
@@ -12870,6 +13157,13 @@ if (new URLSearchParams(location.search).has("qa")) {
     applyBuff: (side, index, type, duration = 3) => {
       const target = side === "party" ? battle.party[index] : battle.enemies[index];
       return applyStatus(target, type, target, { duration, force: true });
+    },
+    hallGear: {
+      dropRarity: hallNormalGearRarity,
+      shopRarity: hallShopGearRarity,
+      rollBaseStats: (rarity, seed = "qa") => rollHallBaseStatProfile(rarity, hallSeededRandom(seed)),
+      migrateBaseStats: migrateHallBaseStatsV1,
+      rules: HALL_BASE_STAT_RULES
     },
     rollAffixes: (name, rarity = "Epic", theme = "mountain") => rollGearAffixes(gearByName(name), rarity, theme),
     heroStats: id => ({ totals: totals(id), crit: heroCritBreakdown(id), output: estimatedHeroOutput(id) }),
