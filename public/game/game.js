@@ -7215,13 +7215,15 @@ function battleFloaterPosition(target) {
   const partyIndex = battle?.party?.indexOf(target) ?? -1;
   if (partyIndex >= 0) {
     const [x, baseline] = partyBattlePosition(partyIndex, battle.party.length);
-    return [x + 2, baseline - 55];
+    const topRowInset = baseline <= 106 ? 12 : 0;
+    return [x + 2, baseline - 55 + topRowInset];
   }
   const enemyIndex = battle?.enemies?.indexOf(target) ?? -1;
   if (enemyIndex >= 0) {
     const [x, baseline] = enemyBattlePosition(enemyIndex, battle.enemies.length);
     const key = enemyAnimationKey(target);
-    return [x - 2, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) * enemyBattleScale(key) + 8)];
+    const topRowInset = baseline <= 106 ? 12 : 0;
+    return [x - 2, baseline - Math.max(38, (enemyAnimationHeights[key] || 44) * enemyBattleScale(key) + 8) + topRowInset];
   }
   return [LOGICAL_WIDTH / 2, 80];
 }
