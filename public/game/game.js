@@ -11928,6 +11928,20 @@ function keepGearHoverTooltipOpen() {
   clearTimeout(gearHoverHideTimer);
 }
 
+function fitGearHoverTooltipToViewport() {
+  if (!gearHoverTooltip || gearHoverTooltip.hidden) return;
+  gearHoverTooltip.style.setProperty("--gear-tooltip-scale", "1");
+  const margin = window.innerWidth < 700 ? 8 : 20;
+  const availableWidth = Math.max(1, window.innerWidth - margin * 2);
+  const availableHeight = Math.max(1, window.innerHeight - margin * 2);
+  const scale = Math.min(
+    1,
+    availableWidth / Math.max(1, gearHoverTooltip.scrollWidth),
+    availableHeight / Math.max(1, gearHoverTooltip.scrollHeight)
+  );
+  gearHoverTooltip.style.setProperty("--gear-tooltip-scale", Math.max(.1, scale).toFixed(3));
+}
+
 function showGearHoverTooltip(element, context) {
   if (!context || !gearByName(context.ref)) return;
   keepGearHoverTooltipOpen();
@@ -11937,13 +11951,14 @@ function showGearHoverTooltip(element, context) {
     gearHoverTooltip.setAttribute("role", "tooltip");
     gearHoverTooltip.addEventListener("pointerenter", keepGearHoverTooltipOpen);
     gearHoverTooltip.addEventListener("pointerleave", hideGearHoverTooltip);
+    window.addEventListener("resize", fitGearHoverTooltipToViewport);
     document.body.appendChild(gearHoverTooltip);
   }
   gearHoverTooltip.innerHTML = gearHoverPopupHtml(context);
   gearHoverTooltip.hidden = false;
   gearHoverTooltip.style.left = "50%";
   gearHoverTooltip.style.top = "50%";
-  gearHoverTooltip.scrollTop = 0;
+  fitGearHoverTooltipToViewport();
 }
 
 function bindGearHoverTooltips(root = el.menuBody) {
