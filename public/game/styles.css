@@ -6383,3 +6383,871 @@ html:not(.touch-layout) .menu {
   font-size: 9px;
   line-height: 1.18;
 }
+
+/* Release 99 review pass: richer menu hierarchy using the compact Ember Hall kit. */
+:root {
+  --eh-copper: #a76735;
+  --eh-card-edge: #9a6b38;
+  --eh-card-shadow: #050309d9;
+  --eh-inset: #0e0a15e8;
+  --eh-rune: #6bf1df;
+}
+
+.menu:not(.hidden) {
+  border-color: #efbd61;
+  background:
+    linear-gradient(90deg, #f4c2680e, transparent 7% 93%, #f4c2680e),
+    linear-gradient(180deg, #21142cf7, #0a0811fa 56%, #16101ff7);
+  box-shadow:
+    inset 0 0 0 1px #ffe19955,
+    inset 0 0 0 7px #09060e,
+    inset 0 0 58px #9c4d202e,
+    0 18px 48px #000e;
+}
+
+.menu:not(.hidden)::before,
+.menu:not(.hidden)::after {
+  width: 76px;
+  height: 76px;
+  background-size: 640px auto;
+  opacity: .95;
+  filter: drop-shadow(0 0 5px #e0a04455);
+}
+
+.menu-body {
+  background:
+    radial-gradient(circle at 50% 0, #8c4e2520, transparent 32%),
+    linear-gradient(90deg, #120b18e8, #110c19ba 50%, #120b18e8),
+    var(--eh-menu-bg) center / cover no-repeat;
+}
+
+.menu-body::before {
+  position: sticky;
+  z-index: 5;
+  top: -10px;
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d9a64a88 18%, #ffe09a 50%, #d9a64a88 82%, transparent);
+  box-shadow: 0 0 9px #d9a64a66;
+  content: "";
+  pointer-events: none;
+}
+
+.menu-tabs {
+  border-top: 1px solid #6f482c;
+  border-bottom-color: #c1883e;
+  background:
+    linear-gradient(90deg, transparent, #8a4c2424 50%, transparent),
+    linear-gradient(180deg, #171020fa, #0b0812fa);
+  box-shadow: inset 0 -8px 18px #0008, 0 6px 18px #0008;
+}
+
+.menu-tabs button,
+.menu .selection-actions > button,
+.menu .talent-reset,
+.menu .party-remove,
+.menu .shop-head button,
+.menu .shop-row button,
+.menu .shop-mode-tabs button,
+.menu .field-targets button,
+.menu .postgame-panel button,
+.menu .hall-map > header button {
+  border-color: #b77d3e;
+  background:
+    linear-gradient(90deg, #f8d78412, transparent 18% 82%, #f8d78412),
+    linear-gradient(180deg, #4a2947, #1a1022 52%, #100b17);
+  box-shadow:
+    inset 0 0 0 1px #160c1e,
+    inset 0 1px #ffe2a044,
+    inset 0 -3px #05030988,
+    0 2px 7px #0008;
+  text-shadow: 0 1px 2px #000;
+}
+
+.menu-tabs button:hover,
+.menu-tabs button:focus-visible,
+.menu .selection-actions > button:hover:not(:disabled),
+.menu .talent-reset:hover:not(:disabled),
+.menu .party-remove:hover:not(:disabled),
+.menu .shop-row button:hover:not(:disabled),
+.menu .shop-mode-tabs button:hover,
+.menu .field-targets button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #ffe09a;
+  background:
+    linear-gradient(180deg, #75494f, #321b39 55%, #1a1022);
+  box-shadow: inset 0 1px #fff0bf66, inset 0 -3px #130917aa, 0 0 12px #dca54d6b;
+}
+
+.menu-tabs button.is-active,
+.menu .shop-mode-tabs button.is-active {
+  border-color: #ffe09a;
+  background:
+    linear-gradient(90deg, #ffdb7e22, transparent 20% 80%, #ffdb7e22),
+    linear-gradient(180deg, #85533b, #4b263e 55%, #28162d);
+  box-shadow: inset 0 0 0 1px #ffd97a66, inset 0 -3px #f1bd5c, 0 0 13px #d9903f99;
+}
+
+.menu h3,
+.menu .party-head > strong,
+.menu .skill-head strong,
+.menu .shop-offer-section > h3,
+.menu .scene-memory-panel > header strong {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #ffe9b0;
+  text-shadow: 0 2px 2px #000, 0 0 14px #df983c5c;
+}
+
+.menu h3::after,
+.menu .party-head > strong::after,
+.menu .skill-head strong::after,
+.menu .shop-offer-section > h3::after,
+.menu .scene-memory-panel > header strong::after {
+  min-width: 56px;
+  height: 7px;
+  flex: 1;
+  background:
+    radial-gradient(circle, #ffe5a0 0 2px, transparent 3px) right center / 10px 10px no-repeat,
+    linear-gradient(90deg, #e4ad57, #8f5e34 68%, transparent) left center / calc(100% - 5px) 1px no-repeat;
+  content: "";
+  opacity: .85;
+}
+
+.menu-card,
+.menu .selection-list-panel,
+.menu .selection-detail,
+.menu .skill-tree-panel,
+.menu .gear-summary,
+.menu .gear-picker,
+.menu .scene-memory-group,
+.menu .postgame-panel {
+  border-color: var(--eh-card-edge);
+  background:
+    linear-gradient(135deg, #c77b3220, transparent 16% 82%, #67392918),
+    radial-gradient(circle at 50% 0, #70422826, transparent 48%),
+    linear-gradient(180deg, #21152bf4, #0e0a16f8);
+  box-shadow:
+    inset 0 0 0 1px #09060e,
+    inset 0 0 0 3px #d4a25017,
+    inset 0 0 28px #6f3b201c,
+    0 7px 18px var(--eh-card-shadow);
+}
+
+.menu-card::after,
+.menu .selection-detail::after,
+.menu .skill-tree-panel::after,
+.menu .scene-memory-group::after {
+  right: -1px;
+  bottom: -1px;
+  width: 38px;
+  height: 38px;
+  background-image: var(--eh-ornaments);
+  background-position: 0 0;
+  background-size: 390px auto;
+  opacity: .72;
+  filter: drop-shadow(0 0 3px #dca44f44);
+}
+
+/* Portrait selectors share one compact framed language. */
+.menu .status-hero,
+.menu .skill-hero,
+.menu .gear-hero {
+  position: relative;
+  overflow: hidden;
+  border-color: #8c6138;
+  background:
+    linear-gradient(90deg, #8b4d241a, transparent 28%),
+    linear-gradient(145deg, #27172e, #0d0a14);
+  box-shadow: inset 0 0 0 1px #09060d, inset 0 -9px 18px #0005;
+}
+
+.menu .status-hero::after,
+.menu .skill-hero::after,
+.menu .gear-hero::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  border-top: 1px solid #d8a755;
+  border-right: 1px solid #d8a755;
+  content: "";
+  opacity: .65;
+  pointer-events: none;
+}
+
+.menu .status-hero img,
+.menu .skill-hero img,
+.menu .gear-hero img,
+.menu .party-member img,
+.menu .field-target img,
+.menu .shop-character-selector img,
+.menu .scene-memory-character > img,
+.menu .skill-profile-portrait,
+.menu .gear-profile-portrait {
+  outline: 1px solid #3d251b;
+  outline-offset: 2px;
+  box-shadow: inset 0 0 0 1px #fff0ba33, 0 0 10px #c8883d30;
+}
+
+.menu .status-hero.is-selected,
+.menu .skill-hero.is-selected,
+.menu .gear-hero.is-selected {
+  border-color: #87ffef;
+  background:
+    radial-gradient(circle at 18% 45%, #4be2d34a, transparent 35%),
+    linear-gradient(135deg, #153f40, #12101f 72%);
+  box-shadow: inset 0 0 0 1px #6df4e855, inset 0 -3px #46d9cc, 0 0 13px #48d9ce88;
+}
+
+/* Party cards. */
+.menu .party-slot,
+.menu .party-member {
+  position: relative;
+  border-color: #a06f3a;
+  background:
+    linear-gradient(145deg, #4f2b3926, transparent 42%),
+    linear-gradient(180deg, #21142a, #0d0a13);
+  box-shadow: inset 0 0 0 1px #08060c, inset 0 0 20px #7d411b1c, 0 5px 14px #0008;
+}
+
+.menu .party-slot::before,
+.menu .party-member::before {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  border-top: 2px solid #e1ad58;
+  border-left: 2px solid #e1ad58;
+  content: "";
+  pointer-events: none;
+}
+
+.menu .party-slot::after,
+.menu .party-member::after {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  color: #dca64f66;
+  font-size: 15px;
+  content: "✦";
+  pointer-events: none;
+}
+
+.menu .party-slot.is-selected {
+  border-color: #ffe39a;
+  box-shadow: inset 0 0 0 2px #d9a64a55, 0 0 16px #e3a24670;
+}
+
+.menu .party-slot-main img {
+  border: 2px solid #d6a34f;
+  outline: 1px solid #2b1918;
+  outline-offset: 2px;
+  box-shadow: inset 0 0 18px #0005, 0 0 14px #d68e3a42;
+}
+
+.menu .party-slot-main span {
+  width: fit-content;
+  padding: 2px 8px;
+  border: 1px solid #8d5d34;
+  background: #120c18cc;
+  color: #ffd982;
+  font-weight: 700;
+}
+
+.menu .party-remove {
+  background: linear-gradient(180deg, #522337, #27121f) !important;
+  color: #ffc1ae !important;
+}
+
+.menu .party-member.is-active {
+  border-color: #62e2d3;
+  background:
+    radial-gradient(circle at 18% 50%, #55dfd04d, transparent 32%),
+    linear-gradient(135deg, #123a3a, #0f0d18);
+  box-shadow: inset 0 0 0 1px #52d7ca55, inset 0 -3px #3fcdbc, 0 0 11px #3bd3c76b;
+}
+
+.menu .party-member b {
+  border-color: #c99546;
+  background: #130d19cc;
+  color: #ffe39a;
+  box-shadow: inset 0 0 8px #9a5a2926;
+}
+
+.menu .party-member.is-active b {
+  border-color: #55ddcf;
+  color: #a8fff3;
+}
+
+/* Status hero and information panels. */
+.menu .status-card {
+  position: relative;
+  border-width: 2px;
+}
+
+.menu .status-card::before {
+  position: absolute;
+  z-index: 3;
+  top: -2px;
+  left: -2px;
+  width: 72px;
+  height: 72px;
+  background: var(--eh-ornaments) 0 0 / 520px auto no-repeat;
+  content: "";
+  filter: drop-shadow(0 0 4px #dfa34b66);
+  pointer-events: none;
+}
+
+.menu .status-card-head img {
+  border-color: #f0bd61;
+  outline: 1px solid #6d482c;
+  outline-offset: 4px;
+  box-shadow: inset 0 0 36px #0008, 0 0 22px #d98d354d;
+}
+
+.menu .status-card-head > div {
+  background: linear-gradient(90deg, #3e223122, transparent 75%);
+}
+
+.menu .status-biography,
+.menu .status-detail-section,
+.menu .status-reference {
+  border: 1px solid #80603d;
+  background:
+    linear-gradient(90deg, #d6a14b10, transparent 18% 82%, #d6a14b0c),
+    #120d19df;
+  box-shadow: inset 0 0 0 2px #08060c, inset 0 0 16px #7a45221a;
+}
+
+.menu .status-biography h4,
+.menu .status-detail-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: #f5cf7c;
+}
+
+.menu .status-biography h4::after,
+.menu .status-detail-section h4::after {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, #d8a557, transparent);
+  content: "";
+}
+
+.menu .status-core-stats span,
+.menu .status-output span,
+.menu .status-gear-stat-total span {
+  position: relative;
+  overflow: hidden;
+  border-color: #8a6038;
+  background:
+    linear-gradient(180deg, #4a2a3a1f, transparent 42%),
+    linear-gradient(145deg, #28182f, #110d18);
+  box-shadow: inset 0 0 0 1px #0a0710, inset 0 -4px 8px #0005;
+}
+
+.menu .status-core-stats span::before,
+.menu .status-output span::before {
+  position: absolute;
+  top: 0;
+  right: 18%;
+  left: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #f1c56f, transparent);
+  content: "";
+}
+
+/* Talents use banners, distinct states and restrained rune light. */
+.menu .skill-tree-panel {
+  border-width: 2px;
+}
+
+.menu .skill-tree-panel > header {
+  border-bottom: 1px solid #a16f3c;
+  background:
+    radial-gradient(circle at 8% 45%, #d69b3d24, transparent 22%),
+    linear-gradient(90deg, #321b342e, transparent 74%);
+}
+
+.menu .talent-tier {
+  position: relative;
+  border: 1px solid #8c6138;
+  border-left-width: 1px;
+  background:
+    linear-gradient(90deg, #6f3e2726, transparent 22% 78%, #6f3e2716),
+    linear-gradient(180deg, #24152c, #0e0b15);
+  box-shadow: inset 0 0 0 1px #09060d, 0 5px 14px #0006;
+}
+
+.menu .talent-tier > header {
+  position: relative;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid #8f6137;
+  background: linear-gradient(90deg, #4d2a3a, #251529 60%, #120d18);
+  box-shadow: inset 0 1px #f3c86a33, inset 0 -3px #08050c77;
+}
+
+.menu .talent-tier > header::before,
+.menu .talent-tier > header::after {
+  color: #e9ba61;
+  content: "✦";
+}
+
+.menu .talent-choice {
+  position: relative;
+  overflow: hidden;
+  border-color: #825a36;
+  background:
+    linear-gradient(145deg, #542f3920, transparent 36%),
+    linear-gradient(180deg, #25162c, #0e0b15);
+  box-shadow: inset 0 0 0 1px #09060d, inset 0 -5px 12px #0005;
+}
+
+.menu .talent-choice::after {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  color: #dca55055;
+  content: "✦";
+}
+
+.menu .talent-choice.is-active {
+  border-color: #72f1df;
+  background:
+    radial-gradient(circle at 88% 12%, #6ef3e052, transparent 23%),
+    linear-gradient(145deg, #124444, #10101d 72%);
+  box-shadow: inset 0 0 0 1px #63e9dc55, inset 0 -3px #38cdbd, 0 0 12px #43d0c27d;
+}
+
+.menu .talent-choice.is-active::after {
+  color: #a3fff4;
+  text-shadow: 0 0 10px #5ff5e8;
+}
+
+.menu .talent-choice.is-locked {
+  filter: saturate(.45) brightness(.72);
+  opacity: .78;
+}
+
+/* Gear and item workspaces. */
+.menu .gear-summary-strip,
+.menu .wallet-line,
+.menu .gear-auto-equip,
+.menu .gear-browser {
+  border-color: #9a693a;
+  background:
+    linear-gradient(90deg, #a85f2a1c, transparent 28% 72%, #a85f2a10),
+    linear-gradient(180deg, #26172eeb, #100c18f2);
+  box-shadow: inset 0 0 0 1px #08060c, inset 0 1px #efc7742b, 0 4px 12px #0006;
+}
+
+.menu .selection-list-panel,
+.menu .selection-detail {
+  border-width: 2px;
+}
+
+.menu .selection-tabs {
+  background: linear-gradient(180deg, #1d1225, #0d0913);
+  box-shadow: inset 0 -7px 14px #0007;
+}
+
+.menu .selection-tab,
+.menu .selection-row {
+  position: relative;
+  border-color: #57402f;
+  background:
+    linear-gradient(90deg, #5f35201a, transparent 20%),
+    linear-gradient(180deg, #1e1426, #0e0b15);
+}
+
+.menu .selection-tab:hover,
+.menu .selection-tab:focus-visible,
+.menu .selection-tab.is-active,
+.menu .selection-row:hover,
+.menu .selection-row:focus-visible,
+.menu .selection-row.is-selected {
+  border-color: #e1ad58;
+  background:
+    linear-gradient(90deg, #79502f4d, transparent 48%),
+    linear-gradient(180deg, #3d2338, #16101f);
+  box-shadow: inset 4px 0 #efbd61, inset 0 0 0 1px #d7a34d22, 0 0 9px #dba24838;
+}
+
+.menu .selection-row.is-equipped {
+  border-color: #55d9ca;
+  box-shadow: inset 4px 0 var(--eh-teal), inset 0 0 9px #43d2c22c;
+}
+
+.menu .selection-detail-head {
+  position: relative;
+  padding-bottom: 14px;
+  border-bottom-color: #b47d40;
+}
+
+.menu .selection-detail-head::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 7px;
+  background: radial-gradient(circle, #ffe1a0 0 2px, transparent 3px) center / 12px 12px no-repeat;
+  content: "";
+}
+
+.menu .selection-stat-line {
+  border: 1px solid #477b75;
+  border-left: 4px solid var(--eh-teal);
+  background: linear-gradient(90deg, #17423f, #15222b 62%, #11101b);
+  box-shadow: inset 0 0 10px #48d6c61c;
+}
+
+.menu .gear-rarity {
+  padding: 2px 7px;
+  border-width: 1px;
+  background: #100b17cc;
+  box-shadow: inset 0 0 7px currentColor;
+}
+
+/* Slot-aware sprite fitting keeps complete gear silhouettes visible. */
+.gear-art-icon {
+  background-origin: content-box;
+  background-clip: content-box;
+}
+
+.gear-art-weapon { padding: 5px; }
+.gear-art-armour { padding: 3px; }
+.gear-art-helmet { padding: 5px 4px 3px; }
+.gear-art-ring,
+.gear-art-necklace { padding: 2px; }
+
+.selection-detail-icon.gear-art-weapon { padding: 13px; }
+.selection-detail-icon.gear-art-armour { padding: 8px; }
+.selection-detail-icon.gear-art-helmet { padding: 13px 10px 8px; }
+.selection-detail-icon.gear-art-ring,
+.selection-detail-icon.gear-art-necklace { padding: 6px; }
+
+.menu .field-target {
+  border: 1px solid #825a36;
+  background: linear-gradient(145deg, #24162b, #0f0c17);
+  box-shadow: inset 0 0 0 1px #09060d, 0 3px 9px #0006;
+}
+
+.menu .field-target:hover:not(:disabled),
+.menu .field-target:focus-visible {
+  border-color: #ffe09a;
+  background: linear-gradient(145deg, #4b2c43, #17101f);
+}
+
+/* Lore cards use portraits and the existing hall atmosphere as structural imagery. */
+.menu .scene-memory-panel {
+  border: 1px solid #94663a;
+  box-shadow: inset 0 0 0 2px #08060c, inset 0 0 32px #5d311b24;
+}
+
+.menu .scene-memory-group {
+  border-width: 1px;
+  background:
+    linear-gradient(90deg, #17101ef2 0 48%, #17101ea8 76%, #17101eea),
+    var(--eh-menu-bg) center 70% / cover no-repeat;
+}
+
+.menu .scene-memory-character > img {
+  border: 2px solid #dca753;
+  outline-offset: 3px;
+}
+
+.menu .scene-memory-group button {
+  border: 1px solid #a8753c;
+  background:
+    linear-gradient(90deg, #75432d45, transparent 35%),
+    linear-gradient(180deg, #352037, #15101d);
+  box-shadow: inset 0 1px #f4cf7e2e, inset 0 -3px #09060d88;
+}
+
+.menu .scene-memory-group button:hover,
+.menu .scene-memory-group button:focus-visible {
+  border-color: #ffe09a;
+  box-shadow: inset 0 1px #ffe4a355, 0 0 11px #d99a4366;
+}
+
+.menu .scene-memory-arrivals > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.menu .scene-memory-arrival {
+  display: grid;
+  min-height: 76px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  padding: 5px 28px 5px 6px;
+  text-align: left;
+}
+
+.menu .scene-memory-arrival img {
+  width: 66px;
+  height: 66px;
+  border: 1px solid #d9a44f;
+  object-fit: cover;
+  object-position: center 18%;
+  box-shadow: inset 0 0 12px #0008, 0 0 9px #d2954238;
+}
+
+.menu .scene-memory-arrival span,
+.menu .scene-memory-arrival strong,
+.menu .scene-memory-arrival small {
+  display: block;
+}
+
+.menu .scene-memory-arrival strong {
+  color: #ffe5a0;
+  font-size: 17px;
+}
+
+.menu .scene-memory-arrival small {
+  margin-top: 3px;
+  color: #d8c5af;
+}
+
+.menu .scene-memory-arrival-hall {
+  grid-template-columns: minmax(0, 1fr);
+  background:
+    linear-gradient(90deg, #15101de8, #15101da8),
+    var(--eh-menu-bg) center 72% / cover no-repeat;
+}
+
+/* Glimmer's workshop gets the strongest themed hierarchy. */
+.menu[data-menu-view="glimmer-shop"] .shop-head {
+  border: 1px solid #b77d3e;
+  border-bottom-width: 2px;
+  box-shadow: inset 0 0 0 2px #0b0710, inset 0 -24px 40px #07040a99, 0 7px 18px #0008;
+}
+
+.menu[data-menu-view="glimmer-shop"] .shop-head::before {
+  position: absolute;
+  z-index: 3;
+  top: -2px;
+  left: -2px;
+  width: 58px;
+  height: 58px;
+  background: var(--eh-ornaments) 0 0 / 430px auto no-repeat;
+  content: "";
+  pointer-events: none;
+}
+
+.menu .shop-character-selector {
+  border-color: #9d6a39;
+  background: linear-gradient(180deg, #201329f2, #0e0a16f2);
+  box-shadow: inset 0 0 0 1px #08060d, inset 0 -7px 15px #0005;
+}
+
+.menu .shop-character-selector button.is-active {
+  border-color: #ffe09a;
+  background: linear-gradient(180deg, #8b5739, #4a293d);
+  box-shadow: inset 0 -3px #e8b052, 0 0 10px #e5aa4a77;
+}
+
+.menu .shop-offer-section > h3 {
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid #9f6d3c;
+}
+
+.menu .shop-row {
+  position: relative;
+  overflow: hidden;
+  border-color: #755133;
+  background:
+    linear-gradient(90deg, #85502a20, transparent 24% 82%, #85502a12),
+    linear-gradient(180deg, #20142a, #0e0b15);
+  box-shadow: inset 0 0 0 1px #08060d, inset 0 -4px 10px #0005;
+}
+
+.menu .shop-row::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(#ffe19a, #9d6235);
+  content: "";
+}
+
+.menu .shop-row:hover {
+  border-color: #e2ad58;
+  background:
+    linear-gradient(90deg, #9961343d, transparent 38%),
+    linear-gradient(180deg, #312039, #120e1b);
+  box-shadow: inset 0 0 0 1px #d9a64a22, 0 0 10px #d3974438;
+}
+
+.menu .shop-purchased > summary {
+  border: 1px solid #765234;
+  background: linear-gradient(180deg, #26172d, #110d19);
+  box-shadow: inset 0 0 0 1px #09060e;
+}
+
+/* Parchment reads like a compact workbench note, not an HTML table. */
+.gear-hover-tooltip {
+  border: 1px solid #69411f;
+  outline: 2px solid #d2a25b;
+  outline-offset: -8px;
+  box-shadow: 0 24px 70px #000e, inset 0 0 46px #76502b38;
+}
+
+.gear-hover-tooltip::before,
+.gear-hover-tooltip::after {
+  width: 30px;
+  height: 30px;
+  color: transparent;
+  background: var(--eh-ornaments) 0 0 / 250px auto no-repeat;
+  content: "";
+  opacity: .75;
+}
+
+.gear-hover-tooltip::after {
+  transform: rotate(180deg);
+}
+
+.gear-hover-tooltip .gear-compare-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  border-bottom: 2px solid #85552d;
+  box-shadow: 0 1px #e7c383;
+}
+
+.gear-hover-tooltip .gear-compare-head strong {
+  grid-row: 1 / 3;
+  align-self: center;
+  font-size: 22px;
+}
+
+.gear-hover-tooltip .gear-value-comparison thead,
+.gear-hover-tooltip .gear-skill-impact thead {
+  background: #7a4c2720;
+}
+
+.gear-hover-tooltip .gear-value-comparison tr:nth-child(even) {
+  background: #85552b0b;
+}
+
+.gear-hover-tooltip .gear-unique-comparison,
+.gear-hover-tooltip .gear-affix-details,
+.gear-hover-tooltip .gear-affix-changes,
+.gear-hover-tooltip .gear-impact-summary,
+.gear-hover-tooltip .gear-skill-impact {
+  border-top: 1px solid #8e6036;
+  box-shadow: 0 -1px #f4d89a66;
+}
+
+.gear-hover-tooltip .gear-impact-summary {
+  border: 1px solid #a77a48;
+  background: #f5e3bc80;
+}
+
+/* Hall Battle Records. */
+.menu .hall-map > header {
+  border: 1px solid #a9753d;
+  background:
+    radial-gradient(circle at 50% 0, #c177332b, transparent 46%),
+    linear-gradient(90deg, #321a30, #120d1a 72%);
+  box-shadow: inset 0 0 0 2px #08060c, inset 0 -12px 24px #0005;
+}
+
+.menu .hall-stage {
+  border-color: #a7793f;
+  background:
+    linear-gradient(180deg, #303b5828, transparent 43%),
+    linear-gradient(145deg, #24152b, #0c0a12);
+  box-shadow: inset 0 0 0 2px #08060c, inset 0 0 22px #67391d24, 0 5px 13px #0008;
+}
+
+.menu .hall-stage::before {
+  border-bottom-color: #c28b45;
+  box-shadow: inset 0 -18px 24px #09060f99;
+}
+
+.menu .hall-stage span {
+  margin-bottom: 3px;
+  padding: 3px 4px 5px;
+  border-bottom-color: #8b5d36;
+  background: linear-gradient(90deg, #74452c2e, transparent);
+}
+
+.menu .hall-stage.is-cleared {
+  border-color: #5be7d5;
+  box-shadow: inset 0 0 0 1px #50d7c755, inset 0 -3px #39cdbd, 0 0 10px #42d6c759;
+}
+
+.menu .hall-stage.is-cleared span::after {
+  padding: 2px 7px;
+  border-radius: 2px;
+  background: #113b38cc;
+  box-shadow: 0 0 8px #5de1d066;
+  content: "✓ CLEARED";
+}
+
+.menu .hall-stage.is-boss {
+  border-color: #ff7654;
+  background:
+    radial-gradient(circle at 50% 18%, #e44d2d35, transparent 42%),
+    linear-gradient(145deg, #3b151d, #100910);
+  box-shadow: inset 0 0 0 1px #ff9b6244, inset 0 -3px #c7422e, 0 0 12px #dd4b315c;
+}
+
+.menu .hall-stage.is-boss span {
+  color: #ffb080;
+  text-shadow: 0 0 8px #d94b31;
+}
+
+@media (max-width: 760px) {
+  .menu:not(.hidden)::before,
+  .menu:not(.hidden)::after {
+    width: 52px;
+    height: 52px;
+    background-size: 470px auto;
+  }
+
+  .menu .status-card::before,
+  .menu[data-menu-view="glimmer-shop"] .shop-head::before {
+    width: 44px;
+    height: 44px;
+    background-size: 360px auto;
+  }
+
+  .menu h3::after,
+  .menu .party-head > strong::after,
+  .menu .skill-head strong::after,
+  .menu .shop-offer-section > h3::after,
+  .menu .scene-memory-panel > header strong::after {
+    min-width: 24px;
+  }
+
+  .menu .scene-memory-arrivals > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .menu .party-slot::before,
+  .menu .party-member::before,
+  .menu .status-hero::after,
+  .menu .skill-hero::after,
+  .menu .gear-hero::after {
+    display: none;
+  }
+
+  .gear-art-weapon { padding: 4px; }
+  .gear-art-helmet { padding: 4px 3px 2px; }
+}

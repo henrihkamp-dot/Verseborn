@@ -2266,7 +2266,7 @@ function gearIconIndex(gear, fallbackIndex = 0) {
 }
 
 function gearIconHtml(gear, heroId, fallbackIndex, className = "") {
-  return pixelIconHtml(gearIconSheet(gear, heroId), gearIconIndex(gear, fallbackIndex), className);
+  return pixelIconHtml(gearIconSheet(gear, heroId), gearIconIndex(gear, fallbackIndex), `${className} gear-art-icon gear-art-${gear?.slot || "other"}`);
 }
 
 function gearAccessLabel(gear) {
@@ -9113,13 +9113,13 @@ function sceneMemoriesHtml() {
   const history = loadRecruitSceneHistory();
   const intro = RECRUIT_SCENES.find(scene => scene.id === EMBER_HALL_INTRO_ID);
   const unseenIntro = intro && !history.seen.includes(intro.id)
-    ? `<button type="button" data-play-arrival-scene="${intro.id}">${intro.title}</button>`
+    ? `<button type="button" class="scene-memory-arrival scene-memory-arrival-hall" data-play-arrival-scene="${intro.id}"><span><strong>Ember Hall</strong><small>${intro.title}</small></span></button>`
     : "";
   const unseenArrivals = [unseenIntro, ...HALL_RECRUITS.map(recruit => {
     if (!state.party.includes(recruit)) return "";
     const welcome = RECRUIT_SCENES.find(scene => scene.recruit === recruit && scene.variant === "welcome");
     if (!welcome || history.seen.includes(welcome.id)) return "";
-    return `<button type="button" data-play-arrival-scene="${welcome.id}">${recruit}: ${welcome.title}</button>`;
+    return `<button type="button" class="scene-memory-arrival" data-play-arrival-scene="${welcome.id}"><img src="${menuPortraitSource(recruit)}" alt=""><span><strong>${recruit}</strong><small>${welcome.title}</small></span></button>`;
   })].filter(Boolean);
   const introGroup = intro && history.seen.includes(intro.id)
     ? `<section class="scene-memory-group scene-memory-hall"><strong>Ember Hall</strong><div><button type="button" data-replay-scene="${intro.id}">${intro.title}</button></div></section>`
@@ -9131,7 +9131,7 @@ function sceneMemoriesHtml() {
     const buttons = scenes.map(scene => `<button type="button" data-replay-scene="${scene.id}">${scene.title} / ${scene.variant}</button>`).join("");
     return `<section class="scene-memory-group scene-memory-character"><img src="${menuPortraitSource(recruit)}" alt=""><strong>${recruit}</strong><div>${buttons}</div></section>`;
   }).join("");
-  const arrivals = unseenArrivals.length ? `<section class="scene-memory-group"><strong>Unseen Arrivals</strong><p>These recruits joined before scenes were added. Play their first welcome whenever you are ready.</p><div>${unseenArrivals.join("")}</div></section>` : "";
+  const arrivals = unseenArrivals.length ? `<section class="scene-memory-group scene-memory-arrivals"><strong>Unseen Arrivals</strong><p>These recruits joined before scenes were added. Play their first welcome whenever you are ready.</p><div>${unseenArrivals.join("")}</div></section>` : "";
   const memories = groups ? `<div class="scene-memory-grid">${groups}</div>` : `<div class="menu-card"><p>No recruitment scenes have been seen yet.</p></div>`;
   return `<section class="scene-memory-panel"><header><strong>Scene Memories</strong><p>Play missed arrivals or revisit recruitment moments from this Hall history.</p></header>${arrivals}${memories}</section>`;
 }
