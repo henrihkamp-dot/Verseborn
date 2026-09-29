@@ -7251,3 +7251,63 @@ html:not(.touch-layout) .menu {
   .gear-art-weapon { padding: 4px; }
   .gear-art-helmet { padding: 4px 3px 2px; }
 }
+
+/* Keep primary menu context visible while long collections scroll below it. */
+@media (hover: hover) and (pointer: fine) and (min-width: 794px) {
+  html:not(.touch-layout) .menu[data-menu-view="status"] .menu-body,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .menu-body,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .menu-body {
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    flex-direction: column;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="status"] .status-roster,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .gear-roster,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-head,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-character-selector,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-mode-tabs {
+    flex: 0 0 auto;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="status"] .status-scroll-region,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .gear-scroll-region,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-scroll-region {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--eh-gold) #17101f;
+    scrollbar-width: thin;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="status"] .status-scroll-region,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .gear-scroll-region {
+    padding-right: 6px;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-scroll-region {
+    padding-right: 8px;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="status"] .status-scroll-region::-webkit-scrollbar,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .gear-scroll-region::-webkit-scrollbar,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-scroll-region::-webkit-scrollbar {
+    width: 9px;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="status"] .status-scroll-region::-webkit-scrollbar-track,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .gear-scroll-region::-webkit-scrollbar-track,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-scroll-region::-webkit-scrollbar-track {
+    border-left: 1px solid #4d362a;
+    background: #130e1b;
+  }
+
+  html:not(.touch-layout) .menu[data-menu-view="status"] .status-scroll-region::-webkit-scrollbar-thumb,
+  html:not(.touch-layout) .menu[data-menu-view="gear"] .gear-scroll-region::-webkit-scrollbar-thumb,
+  html:not(.touch-layout) .menu[data-menu-view="glimmer-shop"] .shop-scroll-region::-webkit-scrollbar-thumb {
+    border: 2px solid #130e1b;
+    background: linear-gradient(180deg, #f2c467, #87552d);
+  }
+}
