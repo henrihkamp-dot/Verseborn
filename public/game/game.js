@@ -9393,10 +9393,14 @@ function endBattleDraw(log = "") {
   return true;
 }
 
-function finishAttackDamageSummary() {
+function finishAttackDamageSummary(actionLog = "") {
   const hits = battle.attackDamage || [];
   delete battle.attackDamage;
-  if (!hits.length) return;
+  if (!hits.length) {
+    const prefix = battle.turnStartMessage ? `${battle.turnStartMessage} ` : "";
+    battle.lastAttackDamage = prefix && actionLog.startsWith(prefix) ? actionLog.slice(prefix.length) : actionLog;
+    return;
+  }
   const groups = new Map();
   hits.forEach(hit => {
     const key = `${hit.type}:${hit.crit}`;
@@ -10221,7 +10225,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       log += ` ECHOING: ${grantImmediateTurn(u, { appliesOverheated: true })}`;
     }
     updatePanels();
-    finishAttackDamageSummary();
+    finishAttackDamageSummary(log);
     renderBattle(log);
     const tailDelay = Math.max(260, timing.totalMs - timing.impactMs);
     if (battle.enemies.every(e => e.hp <= 0)) {
@@ -10321,6 +10325,7 @@ function useBattleItem(u, name) {
     playSfx("block");
   }
   updatePanels();
+  finishAttackDamageSummary(log);
   finishTurn(log);
 }
 
@@ -10805,7 +10810,7 @@ function resolveEnemyTurn(turn, prev) {
       e.defeatUntil = tick + (enemyAnimationSheetFor(e) ? 30 : 12);
     }
     updatePanels();
-    finishAttackDamageSummary();
+    finishAttackDamageSummary(actionLog);
     renderBattle(actionLog);
     if (partyIsDefeated()) return triggerPartyDefeat(actionLog);
     if (battle.enemies.every(enemyUnit => enemyUnit.hp <= 0)) {
