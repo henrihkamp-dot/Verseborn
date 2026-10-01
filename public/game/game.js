@@ -7204,6 +7204,9 @@ function battleFloaterPosition(target) {
 
 function addBattleFloater(target, amount, options = {}) {
   if (!battle || (!amount && !options.text)) return;
+  if (battle.attackDamage && (!options.kind || options.kind === "damage")) {
+    battle.attackDamage.push({ amount: Math.abs(Math.round(amount)), type: options.damageType || "Physical", crit: Boolean(options.crit) });
+  }
   const [x, y] = battleFloaterPosition(target);
   const occupiedLanes = new Set(battleFloaters.filter(floater => floater.target === target && tick - floater.born < BATTLE_FLOATER_LIFETIME).map(floater => floater.lane));
   const lane = battleFloaterLaneOffsets.findIndex((_, index) => !occupiedLanes.has(index));
@@ -7580,9 +7583,9 @@ function drawBattleScene() {
     ctx.globalAlpha = 1;
   });
   drawEffect();
-  drawBattleFloaters();
   drawBattleTurnRail();
   drawBattleRoleRosters();
+  drawBattleFloaters();
   updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
     const phase = battle.phaseTransition;
@@ -9390,8 +9393,23 @@ function endBattleDraw(log = "") {
   return true;
 }
 
+function finishAttackDamageSummary() {
+  const hits = battle.attackDamage || [];
+  delete battle.attackDamage;
+  if (!hits.length) return;
+  const groups = new Map();
+  hits.forEach(hit => {
+    const key = `${hit.type}:${hit.crit}`;
+    const group = groups.get(key) || { ...hit, amount: 0 };
+    group.amount += hit.amount;
+    groups.set(key, group);
+  });
+  battle.lastAttackDamage = [...groups.values()].map(hit => `${hit.crit ? "CRIT " : ""}${hit.amount} ${hit.type}`).join(" / ");
+}
+
 function renderBattle(log) {
-  el.battleLog.textContent = log;
+  el.battleLog.textContent = battle.lastAttackDamage || "";
+  el.battleLog.title = battle.lastAttackDamage || "";
   el.battleResonance.style.width = `${Math.max(0, Math.min(100, state.resonance))}%`;
   const enemyResonance = Math.max(0, Math.min(100, battle.enemyResonance || 0));
   el.enemyBattleResonance.style.width = `${enemyResonance}%`;
@@ -9898,6 +9916,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
 
   setTimeout(() => {
     if (!battle || mode !== "battle") return;
+    battle.attackDamage = [];
     let log = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${u.name} uses ${sk.name}.`;
     const supportTargets = sk.targetSide === "self"
       ? [u]
@@ -10202,6 +10221,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       log += ` ECHOING: ${grantImmediateTurn(u, { appliesOverheated: true })}`;
     }
     updatePanels();
+    finishAttackDamageSummary();
     renderBattle(log);
     const tailDelay = Math.max(260, timing.totalMs - timing.impactMs);
     if (battle.enemies.every(e => e.hp <= 0)) {
@@ -10649,6 +10669,7 @@ function resolveEnemyTurn(turn, prev) {
 
   setTimeout(() => {
     if (!battle || mode !== "battle" || e.hp <= 0) return;
+    battle.attackDamage = [];
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
     if (action.healing) {
       const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
@@ -10784,6 +10805,7 @@ function resolveEnemyTurn(turn, prev) {
       e.defeatUntil = tick + (enemyAnimationSheetFor(e) ? 30 : 12);
     }
     updatePanels();
+    finishAttackDamageSummary();
     renderBattle(actionLog);
     if (partyIsDefeated()) return triggerPartyDefeat(actionLog);
     if (battle.enemies.every(enemyUnit => enemyUnit.hp <= 0)) {
