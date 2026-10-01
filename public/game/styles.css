@@ -1354,21 +1354,6 @@ canvas:focus {
 .icon-3 { background-position: 75% 50%; }
 .icon-4 { background-position: 100% 50%; }
 
-.gear-weapon-catalog-icon { background-image: url("assets/ui/gear-weapons-catalog.webp"); }
-.gear-armour-catalog-icon { background-image: url("assets/ui/gear-armour-catalog.webp"); }
-.gear-ring-catalog-icon { background-image: url("assets/ui/gear-rings-catalog.webp"); }
-.gear-necklace-catalog-icon { background-image: url("assets/ui/gear-necklaces-catalog.webp"); }
-.gear-helmet-catalog-icon { background-image: url("assets/ui/gear-helmets-catalog.webp"); }
-
-.gear-weapon-catalog-icon,
-.gear-armour-catalog-icon,
-.gear-ring-catalog-icon,
-.gear-necklace-catalog-icon,
-.gear-helmet-catalog-icon {
-  background-size: 580% auto;
-  background-position-y: 31%;
-}
-
 .gear-slot-icon {
   width: 42px;
   height: 42px;
