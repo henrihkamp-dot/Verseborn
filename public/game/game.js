@@ -5155,6 +5155,10 @@ function applyStatus(target, type, source, options = {}) {
     Object.assign(existing, data);
   }
   else ensureStatuses(target).push(data);
+  if (battle?.attackDamage) {
+    battle.attackStatuses ||= [];
+    battle.attackStatuses.push(`${target.name}: ${def.label}`);
+  }
   return { applied: true, message: def.label };
 }
 
@@ -9395,7 +9399,9 @@ function endBattleDraw(log = "") {
 
 function finishAttackDamageSummary(actionLog = "") {
   const hits = battle.attackDamage || [];
+  const statuses = [...new Set(battle.attackStatuses || [])];
   delete battle.attackDamage;
+  delete battle.attackStatuses;
   if (!hits.length) {
     const prefix = battle.turnStartMessage ? `${battle.turnStartMessage} ` : "";
     battle.lastAttackDamage = prefix && actionLog.startsWith(prefix) ? actionLog.slice(prefix.length) : actionLog;
@@ -9409,6 +9415,7 @@ function finishAttackDamageSummary(actionLog = "") {
     groups.set(key, group);
   });
   battle.lastAttackDamage = [...groups.values()].map(hit => `${hit.crit ? "CRIT " : ""}${hit.amount} ${hit.type}`).join(" / ");
+  if (statuses.length) battle.lastAttackDamage += ` / ${statuses.join(" / ")}`;
 }
 
 function renderBattle(log) {
