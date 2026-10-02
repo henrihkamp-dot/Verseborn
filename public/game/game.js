@@ -3086,7 +3086,7 @@ const baseJobs = {
     skill("Attack", "melee", "Neutral", 12, 0, "A clean lute strike."),
     skill("Resonant Verse", "magic", "Sound", 25, 6, "Sound magic; adds Resonance."),
     skill("Shared Warning", "block", "Sound", -28, 8, "Party heal and guard."),
-    skill("Hushed Refrain", "magic", "Sound", 18, 7, "Low Sound damage and Silence for 1 enemy action.", { status: { type: "silence", duration: 1, force: true } }),
+    skill("Hushed Refrain", "magic", "Sound", 18, 7, "Low Sound damage and Silence for 2 turns.", { status: { type: "silence", duration: 2, force: true } }),
     skill("ULT: The Name I Chose", "ultimate", "Sound", 78, 100, "Full-party songburst.")
   ]),
   Mira: character("Mira", "Whispering Arrow", "Shadow", "#12151d", "#050508", "#7e62a8", { str: 12, agi: 17, mag: 9, stam: 7, echo: 8 }, ["Twin Voidthorns", "Ashcloak", "Quiet Circuit", "Veln Crest Token", "Mira Top Hat"], [
@@ -3424,16 +3424,16 @@ const compactTalentTrees = {
   Seerin: [
     talentNode(1, "Shield Discipline", "blockTalent", .12, "Personal Defend blocks 12 percentage points more damage."),
     talentNode(1, "Sacred Flame", "holyFireDamage", .1, "Holy Fire attacks gain 10% potency."),
-    talentNode(1, "Protector", "dangerBarrier", .12, "Once per round, when another ally falls below 35% HP from a direct hit, grant them a 12% Barrier for 1 action."),
+    talentNode(1, "Protector", "woundedProtection", .15, "Protection effects are 15% stronger on critically wounded allies."),
     talentNode(2, "Guardian's Oath", "newSkill", skill("Guardian's Oath", "block", "Holy Fire", 0, 7, "Reduce incoming party damage by 18% for 3 actions.", { targetSide: "party", partyWide: true, buffs: [{ type: "defenseUp", value: .18, duration: 3 }] })),
     talentNode(2, "Radiant Strike", "newSkill", skill("Radiant Strike", "melee", "Holy Fire", 0, 6, "1.15x STR + 0.575x MAG and apply Holy Vulnerability.", { coefficient: 1.15, status: { type: "holyVulnerability", chance: 1, duration: 2, value: .2 } })),
     talentNode(2, "Cinder Sanctuary", "partyHeal", "Cinder Guard", "Cinder Guard heals every living ally. Their next damaging action adds 10% Holy damage."),
-    talentNode(3, "Intercept", "reliableIntercept", 1, "Once per round, intercept the first single-target direct attack on an ally below 35% HP. Requires Seerin to be able to act."),
-    talentNode(3, "Cleansing Flame", "selfCleanse", 1, "Holy abilities remove one valid negative status from Seerin. Successful purification grants the cleansed ally an 8% Barrier for 1 action."),
+    talentNode(3, "Intercept", "intercept", .35, "35% chance to intercept attacks aimed at allies below 35% HP."),
+    talentNode(3, "Cleansing Flame", "selfCleanse", 1, "Holy abilities remove one negative status from Seerin."),
     talentNode(3, "Shield Bash", "staggerBonus", 2, "Defensive melee attacks deal +2 Break."),
     talentNode(4, "Unbroken Line", "wardBoost", .15, "Party protection effects reduce 15% additional damage."),
-    talentNode(4, "Retribution", "holyProtectionCounter", .25, "Once per round, a Guarded or intercepted hit triggers a modest 0.25x (STR + 0.5 MAG) Holy counter."),
-    talentNode(4, "Burning Aegis", "holyGuardBurn", .1, "Once per round, a Guarded or intercepted melee hit Burns the attacker for 2 actions at 0.1x (STR + 0.5 MAG) per tick."),
+    talentNode(4, "Retribution", "guardCounter", .35, "A personally Guarded hit retaliates for 35% Basic Attack damage."),
+    talentNode(4, "Burning Aegis", "thorns", .25, "Guarding reflects 25% of melee damage taken."),
     talentNode(5, "Flameguard Charge", "newSkill", skill("ULT II: Flameguard Charge", "ultimate", "Holy Fire", 0, 100, "2.7x STR + 1.35x MAG with massive Break; Seerin remains Guarded.", { coefficient: 2.7, scaling: "str", ultimateIndex: 2, staggerPower: 5, selfGuard: true })),
     talentNode(5, "Cinder Star Aegis", "newSkill", skill("ULT II: Cinder Star Aegis", "ultimate", "Holy Fire", 0, 100, "Grant a powerful party barrier and damage reduction.", { targetSide: "party", partyWide: true, ultimateIndex: 2, grantsWard: true, buffs: [{ type: "barrier", value: .35, duration: 4 }, { type: "defenseUp", value: .2, duration: 4 }] })),
     talentNode(5, "Last Bastion", "lastBastion", 1, "Once per battle, prevent an ally from being knocked out and leave them at 1 HP."),
@@ -3443,7 +3443,7 @@ const compactTalentTrees = {
     talentNode(1, "Heavy Hands", "staggerBonus", 1, "Attacks deal +1 Break."),
     talentNode(1, "Stone Memory", "earthCostReduction", .15, "Earth abilities cost 15% less MP."),
     talentNode(2, "Earthen Guard", "newSkill", skill("Earthen Guard", "block", "Earth", 0, 6, "Gain a personal stone barrier for 4 actions.", { targetSide: "self", buffs: [{ type: "barrier", value: .3, duration: 4 }] })),
-    talentNode(2, "Concussive Blow", "guardCounter", .25, "A personally Guarded hit triggers an Earth counter at 0.25x (STR + 0.5 STAM)."),
+    talentNode(2, "Concussive Blow", "basicBreak", 2, "Normal Attack deals +2 Break."),
     talentNode(2, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break becomes an area attack that damages every living enemy."),
     talentNode(3, "Fault Line", "newSkill", skill("Fault Line", "melee", "Earth", 0, 11, "1.25x STR + 0.625x STAM to all enemies with high Break.", { coefficient: 1.25, allEnemies: true, staggerPower: 3 })),
     talentNode(3, "Rockslide", "brokenDamage", .2, "Deal 20% more physical damage to recently Broken enemies."),
@@ -3497,10 +3497,10 @@ const compactTalentTrees = {
     talentNode(2, "Memory Wildfire", "aoeSkill", "Memory Flare", "Memory Flare becomes an area spell that damages every living enemy."),
     talentNode(2, "Ancient Spark", "ultimateGain", .25, "Ancient Fire attacks generate 25% more Resonance."),
     talentNode(3, "Dragon Memory", "elderDamage", .18, "Spectral Elder Dragon attacks gain 18% potency."),
-    talentNode(3, "Hungry Flame", "burnRefresh", 1, "Once per action, Ancient Fire refreshes Sparky's existing Burn on the target by 1 action, up to 4. Does not increase tick damage."),
-    talentNode(3, "Smoke Trail", "fireEvasion", .15, "Ancient Fire actions grant +15% Evasion for 1 incoming direct attack. A successful dodge restores 3% Max MP."),
+    talentNode(3, "Hungry Flame", "burningDamage", .25, "Deal 25% more damage to Burning enemies."),
+    talentNode(3, "Smoke Trail", "fireEvasion", .25, "Ancient Fire and Holy Fire actions have a 25% chance to grant +25% Evasion for the next 2 incoming direct attacks."),
     talentNode(4, "Elder Blood", "echoEffectiveness", .5, "ECHO is 50% more effective on Sparky's Ultimates."),
-    talentNode(4, "Inferno Heart", "burnSpreadOnce", .5, "Once per battle, spread Sparky's Burn to one unburned enemy for 2 actions at half tick damage."),
+    talentNode(4, "Inferno Heart", "burnDamage", .5, "Burn damage gains another 50% potency."),
     talentNode(4, "Little Apocalypse", "aoeDamage", .2, "Ancient Fire area attacks deal 20% more damage."),
     talentNode(5, "Elder Ember Awakened", "ultimateBoost", .4, "Spectral Elder Dragon Ultimates gain 40% potency."),
     talentNode(5, "Living Wildfire", "livingWildfire", .5, "Burn damage and spreading gain 50% potency."),
@@ -3514,71 +3514,9 @@ const HEAL_CONVERSION_BUFFS = {
   Kael: { "Quiet Rite": { type: "defenseUp", value: .12, duration: 2, label: "12% Damage Reduction", description: "grants 12% Damage Reduction for 2 actions" } }
 };
 
-const signatureAbilities = {
-  Verseborn: [
-    skill("Hush", "magic", "Sound", 0, 5, "Silence one enemy for 1 enemy action; no direct damage.", { signature: true, statusOnly: true, status: { type: "silence", duration: 1, force: true } }),
-    skill("Opening Verse", "magic", "Sound", 0, 5, "Grant one ally +8% damage for 2 actions.", { signature: true, targetSide: "ally", buffs: [{ type: "damageUp", value: .08, duration: 2 }] }),
-    skill("Dissonant Note", "magic", "Sound", 0, 5, "0.7x MAG Sound damage; reduce target damage by 8% for 1 action.", { signature: true, coefficient: .7, status: { type: "disrupted", value: .08, duration: 1, chance: 1 } })
-  ],
-  Mira: [
-    skill("Hunter's Mark", "magic", "Shadow", 0, 4, "Mark one enemy for 2 actions (+8% CRIT received); no direct damage.", { signature: true, statusOnly: true, status: { type: "marked", value: .08, duration: 2, chance: 1 } }),
-    skill("Bleeding Fang", "melee", "Shadow", 0, 5, "0.7x (STR + 0.5 AGI) damage; 70% base chance of a small Bleed for 2 actions.", { signature: true, coefficient: .7, status: { type: "bleed", coefficient: .1, duration: 2, chance: .7 } }),
-    skill("Shadow Veil", "magic", "Shadow", 0, 4, "Gain +15% Evasion for 2 incoming direct attacks.", { signature: true, targetSide: "self", buffs: [{ type: "evasion", value: .15, duration: 2, incomingCharges: 2 }] })
-  ],
-  Seerin: [
-    skill("Radiant Strike", "melee", "Holy Fire", 0, 5, "0.7x (STR + 0.5 MAG) damage and 8% Holy Vulnerability for 1 action.", { signature: true, coefficient: .7, status: { type: "holyVulnerability", value: .08, duration: 1, chance: 1 } }),
-    skill("Guardian's Oath", "magic", "Holy Fire", 0, 5, "Protect one ally with 12% damage reduction for 2 actions.", { signature: true, targetSide: "ally", buffs: [{ type: "defenseUp", value: .12, duration: 2 }] }),
-    skill("Cleansing Flame", "magic", "Holy Fire", 0, 5, "Remove one valid removable negative status from one ally or Seerin.", { signature: true, targetSide: "ally", cleanse: true })
-  ],
-  Torren: [
-    skill("Concussive Blow", "melee", "Neutral", 0, 5, "0.7x (STR + 0.5 STAM) damage with +1 Break buildup.", { signature: true, coefficient: .7, staggerPower: 1 }),
-    skill("Earthen Guard", "magic", "Earth", 0, 5, "Grant one ally a 12% Barrier for 2 actions.", { signature: true, targetSide: "ally", buffs: [{ type: "barrier", value: .12, duration: 2 }] }),
-    skill("Stone Shard", "magic", "Earth", 0, 5, "0.65x (STR + 0.5 STAM) Earth projectile.", { signature: true, scaling: "str", coefficient: .65 })
-  ],
-  Glimmer: [
-    skill("Pocket Drone", "magic", "Tech", 0, 5, "Deploy a small drone to assist the next damaging action.", { signature: true, targetSide: "self", buffs: [{ type: "combatDrone", value: .1, duration: 2, assistCharges: 1 }] }),
-    skill("Static Pulse", "magic", "Tech", 0, 5, "0.6x MAG damage and 8% damage suppression for 1 action.", { signature: true, coefficient: .6, status: { type: "disrupted", value: .08, duration: 1, chance: 1 } }),
-    skill("Tool Calibration", "magic", "Tech", 0, 4, "Gain +8% MAG for 2 actions.", { signature: true, targetSide: "self", buffs: [{ type: "magicUp", value: .08, duration: 2 }] })
-  ],
-  Kael: [
-    skill("Purifying Sigil", "magic", "Sigil", 0, 5, "Remove one valid removable negative status from one ally.", { signature: true, targetSide: "ally", cleanse: true }),
-    skill("Quiet Seal", "magic", "Sigil", 0, 6, "Drain 15 enemy Resonance and suppress new gains and Ultimates for 1 enemy action; no damage.", { signature: true, statusOnly: true, enemyResonanceDrain: 15, enemyResonanceLock: 1 }),
-    skill("Gentle Rite", "magic", "Sigil", -10, 5, "A modest single-ally heal at 0.6x MAG + 10.", { signature: true, targetSide: "ally", healScaling: .6 })
-  ],
-  Sparky: [
-    skill("Ember Bite", "melee", "Ancient Fire", 0, 5, "0.7x STR damage; 70% base chance of a small Burn for 2 actions.", { signature: true, coefficient: .7, status: { type: "burn", coefficient: .1, duration: 2, chance: .7 } }),
-    skill("Smoke Trail", "magic", "Ancient Fire", 0, 4, "Gain +15% Evasion for 2 incoming direct attacks.", { signature: true, targetSide: "self", buffs: [{ type: "evasion", value: .15, duration: 2, incomingCharges: 2 }] }),
-    skill("Ancient Spark", "magic", "Ancient Fire", 0, 5, "A modest Ancient Fire projectile at 0.6x (MAG + 0.15 ECHO).", { signature: true, coefficient: .6, echoCoefficient: .15 })
-  ]
-};
-
 Object.keys(talentTrees).forEach(id => {
   talentTrees[id] = compactTalentTrees[id];
   baseJobs[id].skills[0].basicAttack = true;
-});
-
-// Preserve talent names and saved choices while routing active unlocks into the fixed kit.
-const talentKitDescriptions = {
-  Verseborn: { "Battle Hymn": "Opening Verse becomes a 10% party damage buff for 3 actions. Other Signatures add that party buff after use." },
-  Mira: { "Marked for Death": "Hunter's Mark gains light Shadow damage and a 4-action Mark. With another Signature, Voidthorn Mark applies that Mark." },
-  Seerin: {
-    "Guardian's Oath": "Guardian's Oath protects the party for 3 actions at 18%. Other Signatures add that party protection after use.",
-    "Radiant Strike": "Radiant Strike improves to 1.15x STR + 0.575x MAG with Holy Vulnerability. With another Signature, Starflame Cut gains STR/MAG scaling and Holy Vulnerability.",
-    "Cinder Sanctuary": "Your Signature also heals the living party with Cinder Guard's healing and grants a 10% Holy follow-up."
-  },
-  Torren: { "Earthen Guard": "Earthen Guard grants a personal 30% Barrier for 4 actions. Other Signatures also grant that personal Barrier.", "Fault Line": "Foundation Break becomes Fault Line: 1.25x STR + 0.625x STAM to all enemies with +3 Break." },
-  Glimmer: { "Combat Drone": "Your Signature deploys the full Combat Drone for the battle; it follows your damaging actions.", "Patch Network": "Your Signature also heals the living party with Patch Job and grants each ally Combat Drone for 2 actions." },
-  Kael: { "Purification": "Your Signature removes one valid negative status from its ally target, or from Kael when targeting an enemy. Does not add a second cleanse to a purification Signature.", "Communal Rite": "Gentle Rite heals the party and grants 12% damage reduction for 2 actions. Other Signatures add a party Quiet Rite with that protection." },
-  Sparky: { "Ember Bite": "Upgrade the Ember Bite Signature to 1.25x STR and 80% base Burn chance for 4 actions. With another Signature, Ember Nip gains that Burn setup." }
-};
-Object.entries(talentKitDescriptions).forEach(([id, descriptions]) => {
-  Object.entries(descriptions).forEach(([name, desc]) => {
-    const entry = talentTrees[id].find(talent => talent.name === name);
-    if (entry) entry.desc = entry.unlockDesc = desc;
-  });
-});
-Object.values(talentTrees).flat().filter(entry => entry.tier === 5 && entry.type === "newSkill" && entry.value.anim === "ultimate").forEach(entry => {
-  entry.desc = entry.unlockDesc = `${entry.unlockDesc} Replaces your starting Ultimate while this capstone is chosen; does not add an Ultimate slot.`;
 });
 
 // Ultimate I remains relevant throughout progression; these coefficients are
@@ -4968,7 +4906,6 @@ function progressFor(id) {
   if (!state.heroProgress[id]) state.heroProgress[id] = { level: 1, xp: 0, talents: [], pendingMilestones: [] };
   const progress = state.heroProgress[id];
   if (!Array.isArray(progress.talents)) progress.talents = [];
-  if (progress.signature && !signatureAbilities[id]?.some(entry => entry.name === progress.signature)) delete progress.signature;
   const validNames = new Set((talentTrees[id] || []).map(entry => entry.name));
   progress.talents = [...new Set(progress.talents.filter(name => validNames.has(name)))];
   const capstones = progress.talents.filter(name => talentTrees[id].some(entry => entry.name === name && entry.tier === 5));
@@ -5103,10 +5040,6 @@ function tryEvadeAttack(defender, roll = Math.random()) {
   if (evaded && defender.id === "Mira" && typedTalentValue(defender.id, "evasionAfterDodge")) {
     applyStatus(defender, "critUp", defender, { duration: 2, value: typedTalentValue(defender.id, "evasionAfterDodge"), force: true });
   }
-  if (evaded && defender.id === "Sparky" && typedTalentValue(defender.id, "fireEvasion")) {
-    const restored = Math.min(Math.max(1, Math.round(defender.maxmp * .03)), defender.maxmp - defender.mp);
-    defender.mp += restored;
-  }
   return evaded;
 }
 
@@ -5176,7 +5109,7 @@ function poisonValueFor(target, source, options = {}) {
 
 function dotValueFor(type, target, source, options = {}) {
   if (type === "poison") return poisonValueFor(target, source, options);
-  const coefficient = options.coefficient ?? (type === "burn" ? .24 : .2);
+  const coefficient = type === "burn" ? .24 : .2;
   const boostType = type === "burn" ? "burnDamage" : "bleedDamage";
   const capstone = type === "burn" && source?.id ? typedTalentValue(source.id, "livingWildfire") : 0;
   return Math.max(1, Math.round(sourceRelevantStat(source, options) * coefficient * (1 + (source?.id ? typedTalentValue(source.id, boostType) : 0) + capstone)));
@@ -5217,7 +5150,6 @@ function applyStatus(target, type, source, options = {}) {
     appliedTurn: combatantKey(source)
   };
   if (type === "evasion") data.incomingCharges = Math.max(1, Number(options.incomingCharges) || duration);
-  if (type === "combatDrone") data.assistCharges = options.assistCharges || undefined;
   if (existing) {
     if (type === "poison") data.remaining = Math.max(existing.remaining || 0, duration);
     Object.assign(existing, data);
@@ -5280,7 +5212,6 @@ function cleanseWithTalent(source, target) {
     target.hp += restored;
     if (restored) addBattleFloater(target, restored, { kind: "heal" });
   }
-  if (removed && source?.id === "Seerin" && typedTalentValue(source.id, "selfCleanse")) applyStatus(target, "barrier", source, { force: true, duration: 1, value: .08 });
   return removed;
 }
 
@@ -5309,9 +5240,7 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
 }
 
 function incomingDamageMultiplier(unit) {
-  const seerinProtection = ensureStatuses(unit).some(status => ["defenseUp", "barrier"].includes(status.type) && status.source?.id === "Seerin");
-  const wardBonus = seerinProtection ? typedTalentValue("Seerin", "wardBoost") : 0;
-  let multiplier = Math.max(.2, 1 - statusValue(unit, "defenseUp") - statusValue(unit, "barrier") - wardBonus);
+  let multiplier = Math.max(.2, 1 - statusValue(unit, "defenseUp") - statusValue(unit, "barrier"));
   if (unit?.form === "mech") multiplier *= 1 - TRANSFORMATION_CONFIG.mech.defense - typedTalentValue(unit.id, "mechDefense") - typedTalentValue(unit.id, "fortressCapstone");
   if (statusOf(unit, "combatDrone")) multiplier *= 1 - typedTalentValue(unit.id, "gadgetDefense");
   multiplier *= 1 - statusValue(unit, "mechGuard");
@@ -5357,7 +5286,7 @@ function applySkillBuffs(source, targets, sk) {
       const barrierBonus = buff.type === "barrier" && source?.id ? typedTalentValue(source.id, "barrierBoost") + (source.form === "mech" ? typedTalentValue(source.id, "fortressCapstone") : 0) : 0;
       const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 3) + (source?.id ? typedTalentValue(source.id, "buffDuration") + effectValue(source.id, "buffDuration") + (typedTalentValue(source.id, "supportPotency") ? 1 : 0) : 0);
       const value = (buff.value ?? STATUS_DEFS[buff.type]?.value) * (1 + supportBonus + barrierBonus + songBoost);
-      const result = applyStatus(target, buff.type, source, { duration, chance: 1, value, incomingCharges: buff.incomingCharges, assistCharges: buff.assistCharges });
+      const result = applyStatus(target, buff.type, source, { duration, chance: 1, value });
       if (result.message) notes.push(`${target.name}: ${result.message}`);
     });
   });
@@ -5470,14 +5399,13 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
   if (id === "Seerin" && statKey === "str" && skillTargetsEnemies(sk) && !sk.dispel) {
     return primary + stats.mag * transformedStatMultiplier(unit, "mag") * .5;
   }
-  return Math.round(primary + agility + (sk.echoCoefficient || 0) * stats.echo);
+  return Math.round(primary + agility);
 }
 
 function skillScalingLabel(id, sk) {
   const primary = skillScaling(sk).toUpperCase();
   if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return "STR + 0.5 STAM";
   if (id === "Seerin" && primary === "STR" && skillTargetsEnemies(sk) && !sk.dispel) return "STR + 0.5 MAG";
-  if (sk.echoCoefficient) return `${primary} + ${sk.echoCoefficient} ECHO`;
   return id === "Mira" && skillTargetsEnemies(sk) ? `${primary} + 0.5 AGI` : primary;
 }
 
@@ -5522,55 +5450,6 @@ function applyTalentSkillConversion(id, skillEntry) {
   };
 }
 
-function signatureSkill(id) {
-  const selected = signatureAbilities[id]?.find(entry => entry.name === progressFor(id).signature);
-  return selected ? { ...selected } : null;
-}
-
-function talentKitUpgrades(id, standard, signature) {
-  const selected = new Set(progressFor(id).talents);
-  const upgrade = name => selected.has(name) ? talentTrees[id].find(entry => entry.name === name)?.value : null;
-  const replaceSignature = (name, match) => {
-    const value = upgrade(name);
-    if (signature && signature.name === match && value && typeof value === "object") {
-      signature = { ...value, signature: true, name: signature.name };
-    }
-  };
-  if (id === "Verseborn" && signature && upgrade("Battle Hymn")) {
-    if (signature.name === "Opening Verse") signature = { ...upgrade("Battle Hymn"), signature: true, name: "Opening Verse" };
-    else signature.afterPartyBuffs = upgrade("Battle Hymn").buffs;
-  }
-  if (id === "Mira" && upgrade("Marked for Death")) {
-    if (signature?.name === "Hunter's Mark") signature = { ...upgrade("Marked for Death"), signature: true, name: "Hunter's Mark" };
-    else standard = { ...standard, extraStatuses: [...(standard.extraStatuses || []), upgrade("Marked for Death").status] };
-  }
-  if (id === "Seerin") {
-    replaceSignature("Radiant Strike", "Radiant Strike");
-    replaceSignature("Guardian's Oath", "Guardian's Oath");
-    if (upgrade("Radiant Strike") && signature?.name !== "Radiant Strike") standard = { ...standard, scaling: "str", status: upgrade("Radiant Strike").status };
-    if (signature && upgrade("Guardian's Oath") && signature.name !== "Guardian's Oath") signature.afterPartyBuffs = upgrade("Guardian's Oath").buffs;
-    if (signature && selected.has("Cinder Sanctuary")) signature.sanctuary = true;
-  }
-  if (id === "Torren") {
-    replaceSignature("Earthen Guard", "Earthen Guard");
-    if (signature && upgrade("Earthen Guard") && signature.name !== "Earthen Guard") signature.afterSelfBuffs = upgrade("Earthen Guard").buffs;
-    if (upgrade("Fault Line")) standard = { ...upgrade("Fault Line") };
-  }
-  if (id === "Glimmer") {
-    if (signature && upgrade("Combat Drone")) signature.afterSelfBuffs = upgrade("Combat Drone").buffs;
-    if (signature && selected.has("Patch Network")) signature.patchNetwork = true;
-  }
-  if (id === "Kael") {
-    if (signature && upgrade("Purification")) signature.signaturePurify = true;
-    if (signature && selected.has("Communal Rite")) {
-      if (signature.name === "Gentle Rite") signature = { ...baseJobs.Kael.skills.find(entry => entry.name === "Quiet Rite"), signature: true, name: "Gentle Rite", targetSide: "party", partyWide: true, buffs: [HEAL_CONVERSION_BUFFS.Kael["Quiet Rite"]], cleanse: signature.cleanse, signaturePurify: signature.signaturePurify };
-      else signature.communalRite = true;
-    }
-  }
-  if (id === "Sparky") replaceSignature("Ember Bite", "Ember Bite");
-  return { standard: applyTalentSkillConversion(id, standard), signature };
-}
-
 function battleSkills(id, unit = null) {
   const combatUnit = unit || battle?.party?.find(member => member.id === id);
   if (combatUnit?.form && TRANSFORMED_SKILLS[combatUnit.form]) {
@@ -5582,15 +5461,19 @@ function battleSkills(id, unit = null) {
     }
     return transformed;
   }
-  const standardName = { Verseborn: "Resonant Verse", Mira: "Voidthorn Mark", Seerin: "Starflame Cut", Torren: "Foundation Break", Glimmer: "Klik-Wrench 7", Kael: "Quiet Tithe", Sparky: "Memory Flare" }[id];
-  const weapon = { ...baseJobs[id].skills[0] };
-  if (id === "Sparky" && progressFor(id).signature !== "Ember Bite" && progressFor(id).talents.includes("Ember Bite")) weapon.status = talentTrees[id].find(entry => entry.name === "Ember Bite").value.status;
-  const kit = talentKitUpgrades(id, { ...baseJobs[id].skills.find(entry => entry.name === standardName) }, signatureSkill(id));
-  if (id === "Kael" && typedTalentValue(id, "twilightCapstone")) kit.standard = { ...TRANSFORMED_SKILLS.shadowpriest[0], name: "Twilight Lance", coefficient: 1.2, cost: 8 };
-  const capstone = activeTalents(id).find(entry => entry.tier === 5 && entry.type === "newSkill" && entry.value.anim === "ultimate");
-  const ultimate = capstone ? { ...capstone.value, talentSkill: true } : { ...baseJobs[id].skills.find(entry => entry.anim === "ultimate" && !entry.transform), ultimateIndex: 1 };
-  const transformations = baseJobs[id].skills.filter(entry => entry.transform && progressFor(id).level >= TRANSFORMATION_UNLOCK_LEVEL).map(entry => ({ ...entry }));
-  return [weapon, kit.standard, ...(kit.signature ? [kit.signature] : []), ultimate, ...transformations];
+  const extra = activeTalents(id)
+    .filter(entry => entry.type === "newSkill")
+    .map(entry => ({
+      ...entry.value,
+      talentSkill: true,
+      ultimateIndex: entry.value.ultimateIndex ?? (entry.value.anim === "ultimate" ? 2 : undefined),
+      allEnemies: entry.value.allEnemies ?? (entry.level <= 20 && entry.value.anim === "ultimate" && entry.value.power > 0)
+    }));
+  const base = baseJobs[id].skills
+    .filter(entry => !entry.transform || progressFor(id).level >= TRANSFORMATION_UNLOCK_LEVEL)
+    .map(entry => applyTalentSkillConversion(id, entry.anim === "ultimate" ? { ...entry, ultimateIndex: entry.ultimateIndex || 1 } : { ...entry }));
+  if (id === "Kael" && typedTalentValue(id, "twilightCapstone")) base.push({ ...TRANSFORMED_SKILLS.shadowpriest[0], name: "Twilight Lance", coefficient: 1.2, cost: 8 });
+  return [...base, ...extra];
 }
 
 function battleAnimationName(sk, unit = null) {
@@ -9602,7 +9485,6 @@ function skillPreview(u, sk, target = null) {
   const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% Max MP" : `${mpCost} MP`;
   const targetLabel = battleSkillTargetLabel(u.id, sk);
   if (sk.dispel) return `Remove one positive buff | ${targetLabel} | ${cost}. ${sk.desc}`;
-  if (sk.statusOnly) return `Control / no direct damage | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (sk.power < 0) return `Heal ${heal} HP | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (!skillTargetsEnemies(sk)) {
     const kind = sk.transform ? `Transform ${(TRANSFORMATION_CONFIG[sk.transform]?.duration || 4) + typedTalentValue(u.id, "transformDuration")} turns` : "Support";
@@ -10039,7 +9921,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   updatePanels();
   const livingAtStart = battle.party.filter(p => p.hp > 0);
   const woundedAtStart = livingAtStart.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
-  effect = makeBattleEffect(u, sk, sk.targetSide === "ally" ? target : sk.power < 0 ? woundedAtStart : skillTargetsEnemies(sk) ? target || u : u);
+  effect = makeBattleEffect(u, sk, sk.power < 0 ? woundedAtStart : sk.targetSide === "ally" ? target : skillTargetsEnemies(sk) ? target || u : u);
   renderBattle(`${u.name} prepares ${sk.name}...`);
   setTimeout(() => { if (u) u.anim = "idle"; }, timing.totalMs - 100);
 
@@ -10067,7 +9949,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const living = battle.party.filter(p => p.hp > 0);
       const wounded = living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
       const healing = healingAmount(u.id, sk, u);
-      const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : sk.targetSide === "self" ? [u] : sk.targetSide === "ally" ? [target] : [wounded];
+      const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : sk.targetSide === "self" ? [u] : [wounded];
       let totalRestored = 0;
       let criticalHeals = 0;
       healTargets.forEach(ally => {
@@ -10114,11 +9996,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       log += removed ? ` ${target.name} loses ${removed}.` : ` ${target.name} has no removable buff.`;
       state.resonance = Math.min(100, state.resonance + 6);
       playSfx("magic");
-    } else if (sk.statusOnly && target) {
-      const notes = applySkillStatuses(u, target, sk);
-      const control = applyEnemyResonanceControl(u, target, sk);
-      if (control) notes.push(control);
-      log += notes.length ? ` ${target.name}: ${notes.join(" / ")}.` : " No status was applied.";
     } else if (target) {
       const live = battle.enemies.filter(e => e.hp > 0);
       const t = totals(u.id);
@@ -10211,17 +10088,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           addBattleFloater(hitTarget, dmg, { damageType: sk.element, crit: critical });
         }
         if (holyDamage) addBattleFloater(hitTarget, holyDamage, { damageType: "Holy Fire", delayTicks: sk.multiHit > 1 ? sk.multiHit * 4 : 4 });
-        const existingBurn = statusOf(hitTarget, "burn");
-        const refreshBurn = existingBurn?.source?.id === "Sparky" && u.id === "Sparky" && sk.element === "Ancient Fire" && typedTalentValue(u.id, "burnRefresh");
-        const burnBefore = refreshBurn ? { remaining: existingBurn.remaining, value: existingBurn.value } : null;
         const statusNotes = hitTarget.hp > 0 ? applySkillStatuses(u, hitTarget, sk) : [];
-        if (burnBefore && hitTarget.hp > 0 && !battle.usedOnce[`burnRefresh:${u.id}:${battle.round}:${battle.turnIndex}`]) {
-          const burn = statusOf(hitTarget, "burn");
-          burn.remaining = Math.max(burn.remaining, Math.min(4, burnBefore.remaining + 1));
-          burn.value = burnBefore.value;
-          battle.usedOnce[`burnRefresh:${u.id}:${battle.round}:${battle.turnIndex}`] = true;
-          statusNotes.push("Burn refreshed");
-        }
         const resonanceControl = applyEnemyResonanceControl(u, hitTarget, sk);
         if (resonanceControl) statusNotes.push(resonanceControl);
         if (critical && hitTarget.hp > 0 && typedTalentValue(u.id, "critBleed") && Math.random() < typedTalentValue(u.id, "critBleed")) {
@@ -10285,6 +10152,17 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         u.mp += restored;
         if (restored) log += ` Normal Attack restores ${restored} MP (6% Max MP).`;
       }
+      if (sk.element === "Holy Fire" && typedTalentValue(u.id, "selfCleanse")) {
+        const negative = ensureStatuses(u).find(status => STATUS_DEFS[status.type]?.negative);
+        if (negative) {
+          u.statuses = u.statuses.filter(status => status !== negative);
+          log += ` Cleansing Flame removes ${STATUS_DEFS[negative.type]?.label || negative.type}.`;
+        }
+      }
+      if (["Holy Fire", "Ancient Fire"].includes(sk.element) && typedTalentValue(u.id, "fireEvasion") && Math.random() < typedTalentValue(u.id, "fireEvasion")) {
+        applyStatus(u, "evasion", u, { duration: 2, incomingCharges: 2, value: typedTalentValue(u.id, "fireEvasion"), force: true });
+        log += ` ${u.name} gains +${Math.round(typedTalentValue(u.id, "fireEvasion") * 100)}% Evasion for 2 incoming attacks.`;
+      }
       if (sk.element === "Ancient Fire" && typedTalentValue(u.id, "ultimateGain")) {
         state.resonance = Math.min(100, state.resonance + 3);
       }
@@ -10294,16 +10172,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       if (burningTarget && spreadTarget && spreadChance && Math.random() < spreadChance) {
         applyStatus(spreadTarget, "burn", u, { force: true, duration: 3, scaling: "mag", element: "Ancient Fire" });
         log += ` Wildfire spreads to ${spreadTarget.name}.`;
-      }
-      const ownBurnTarget = hitTargets.find(enemy => statusOf(enemy, "burn")?.source?.id === u.id);
-      const ownSpreadTarget = battle.enemies.find(enemy => enemy.hp > 0 && enemy !== ownBurnTarget && !statusOf(enemy, "burn"));
-      if (u.id === "Sparky" && ownBurnTarget && ownSpreadTarget && typedTalentValue(u.id, "burnSpreadOnce") && !battle.usedOnce[`burnSpread:${u.id}`]) {
-        const burn = statusOf(ownBurnTarget, "burn");
-        const result = applyStatus(ownSpreadTarget, "burn", u, { force: true, duration: 2, value: Math.max(1, Math.round(burn.value * .5 * (1 + typedTalentValue(u.id, "livingWildfire")))) });
-        if (result.applied) {
-          battle.usedOnce[`burnSpread:${u.id}`] = true;
-          log += ` Inferno Heart spreads a small Burn to ${ownSpreadTarget.name}.`;
-        }
       }
       const droneStatus = statusOf(u, "combatDrone");
       if (droneStatus && totalDamageDealt > 0) {
@@ -10324,7 +10192,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           }
           log += ` Combat Drone hits ${enemy.name} for ${droneDamage}.`;
         });
-        if (droneStatus.assistCharges && --droneStatus.assistCharges <= 0) u.statuses = u.statuses.filter(status => status !== droneStatus);
       }
       if (sk.selfHealRatio && totalDamageDealt > 0) {
         const restored = Math.min(Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio)), u.max - u.hp);
@@ -10356,32 +10223,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
     }
 
-    if (sk.signature) {
-      if (sk.afterPartyBuffs) log += ` ${applySkillBuffs(u, battle.party.filter(ally => ally.hp > 0), { ...sk, partyWide: true, buffs: sk.afterPartyBuffs }).join(" / ")}.`;
-      if (sk.afterSelfBuffs) log += ` ${applySkillBuffs(u, [u], { ...sk, buffs: sk.afterSelfBuffs }).join(" / ")}.`;
-      if (sk.signaturePurify && !sk.cleanse) {
-        const ally = sk.targetSide === "ally" ? target : u;
-        if (cleanseWithTalent(u, ally)) log += ` Purification cleanses ${ally.name}.`;
-      }
-      if (sk.sanctuary || sk.patchNetwork || sk.communalRite) {
-        const sourceSkillName = sk.sanctuary ? "Cinder Guard" : sk.patchNetwork ? "Patch Job" : "Quiet Rite";
-        const healSkill = baseJobs[u.id].skills.find(entry => entry.name === sourceSkillName);
-        battle.party.filter(ally => ally.hp > 0).forEach(ally => {
-          const healed = Math.min(healingAmount(u.id, healSkill, u), ally.max - ally.hp);
-          ally.hp += healed;
-          if (healed) addBattleFloater(ally, healed, { kind: "heal" });
-          applySkillBuffs(u, [ally], { ...sk, buffs: [HEAL_CONVERSION_BUFFS[u.id][sourceSkillName]] });
-        });
-        log += ` ${sourceSkillName} supports the party.`;
-      }
-    }
-    if (sk.element === "Holy Fire" && typedTalentValue(u.id, "selfCleanse") && !(sk.cleanse && supportTargets.includes(u))) {
-      if (cleanseWithTalent(u, u)) log += " Cleansing Flame purifies Seerin and grants a small Barrier.";
-    }
-    if (u.id === "Sparky" && sk.element === "Ancient Fire" && typedTalentValue(u.id, "fireEvasion")) {
-      const existing = statusOf(u, "evasion");
-      if (!existing || existing.value < .15) applyStatus(u, "evasion", u, { duration: 2, incomingCharges: 1, value: .15, force: true });
-    }
     if (sk.grantsWard) battle.ward = true;
     if (!selectedSkill.encore && !skillTargetsEnemies(sk) && sk.anim !== "ultimate") battle.lastSupport = { ...sk };
     const echoChance = effectValue(u.id, "echoing");
@@ -10660,7 +10501,7 @@ function enemyProfileAction(unit, key) {
 function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
   if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
-  if ((battle.enemyResonance || 0) >= 100 && !statusOf(unit, "resonanceLocked")) {
+  if ((battle.enemyResonance || 0) >= 100) {
     return enemyActionForKind(unit, "ultimate");
   }
   const wounded = chooseEnemyHealTarget();
@@ -10809,44 +10650,6 @@ function enemyResonanceGainForAction(unit, action) {
   return action.kind === "magic" ? 14 : 11;
 }
 
-function protectiveInterceptor(target, action, liveParty) {
-  if (!enemyActionDealsDamage(action) || !liveParty.includes(target) || target.hp / target.max >= .35 || enemyActionHitsAll(null, action)) return null;
-  const reliable = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && !statusOf(ally, "stun") && typedTalentValue(ally.id, "reliableIntercept") && ally.interceptRound !== battle.round);
-  if (reliable) {
-    reliable.interceptRound = battle.round;
-    return reliable;
-  }
-  return liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept")) || null;
-}
-
-function protectEndangeredAlly(target, beforeHp) {
-  if (target.hp <= 0 || beforeHp / target.max < .35 || target.hp / target.max >= .35) return "";
-  const protector = battle.party.find(ally => ally !== target && ally.hp > 0 && !statusOf(ally, "sleep") && !statusOf(ally, "stun") && typedTalentValue(ally.id, "dangerBarrier") && ally.protectorRound !== battle.round);
-  if (!protector) return "";
-  protector.protectorRound = battle.round;
-  applyStatus(target, "barrier", protector, { force: true, duration: 1, value: Math.max(statusValue(target, "barrier"), typedTalentValue(protector.id, "dangerBarrier")) });
-  return ` ${protector.name}'s Protector shields ${target.name}.`;
-}
-
-function holyProtectionReaction(defender, attacker, action) {
-  let note = "";
-  if (typedTalentValue(defender.id, "holyProtectionCounter") && defender.retributionRound !== battle.round && attacker.hp > 0) {
-    defender.retributionRound = battle.round;
-    const stats = totals(defender.id);
-    const amount = Math.max(1, Math.round((stats.str + stats.mag * .5) * typedTalentValue(defender.id, "holyProtectionCounter")));
-    attacker.hp = Math.max(0, attacker.hp - amount);
-    addBattleFloater(attacker, amount, { damageType: "Holy Fire" });
-    note += ` Retribution deals ${amount} Holy damage.`;
-  }
-  if (action.kind === "melee" && attacker.hp > 0 && typedTalentValue(defender.id, "holyGuardBurn") && defender.aegisRound !== battle.round) {
-    const stats = totals(defender.id);
-    const result = applyStatus(attacker, "burn", defender, { duration: 2, chance: 1, value: Math.max(1, Math.round((stats.str + stats.mag * .5) * typedTalentValue(defender.id, "holyGuardBurn"))) });
-    defender.aegisRound = battle.round;
-    if (result.applied) note += " Burning Aegis burns the attacker.";
-  }
-  return note;
-}
-
 function resolveEnemyTurn(turn, prev) {
   const liveParty = battle.party.filter(p => p.hp > 0);
   if (!liveParty.length) return triggerPartyDefeat(prev);
@@ -10861,9 +10664,10 @@ function resolveEnemyTurn(turn, prev) {
     action = enemyActionForKind(e, "melee");
     target = chooseEnemyTarget(e, action, liveParty);
   }
-  const interceptedAlly = target;
-  const interceptor = enemyActionHitsAll(e, action) ? null : protectiveInterceptor(target, action, liveParty);
-  if (interceptor) target = interceptor;
+  if (enemyActionDealsDamage(action) && liveParty.includes(target) && target.hp / target.max < .35) {
+    const interceptor = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
+    if (interceptor) target = interceptor;
+  }
   const timingKey = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
   const timing = battleActionTiming(timingKey);
   const mpCost = enemyActionMpCost(e, action);
@@ -10879,7 +10683,6 @@ function resolveEnemyTurn(turn, prev) {
     if (!battle || mode !== "battle" || e.hp <= 0) return;
     battle.attackDamage = [];
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
-    if (interceptor) actionLog += ` ${interceptor.name} intercepts for ${interceptedAlly.name}.`;
     if (action.healing) {
       const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
       let total = 0;
@@ -10941,7 +10744,6 @@ function resolveEnemyTurn(turn, prev) {
         const rolled = enemyDamageRoll(e, action, defender);
         let dmg = rolled.damage;
         let defenseText = "";
-        const protectedHit = defender.guarding || defender === interceptor;
         if (defender.guarding) {
           const reduction = defendReduction(defender);
           dmg = Math.ceil(dmg * (1 - reduction / 100));
@@ -10950,9 +10752,9 @@ function resolveEnemyTurn(turn, prev) {
           playSfx("block");
           const counter = typedTalentValue(defender.id, "guardCounter");
           if (counter && e.hp > 0) {
-            const counterDamage = Math.max(1, Math.round((defender.id === "Torren" ? totals(defender.id).str + totals(defender.id).stam * .5 : totals(defender.id).str + baseJobs[defender.id].skills[0].power) * counter));
+            const counterDamage = Math.max(1, Math.round((totals(defender.id).str + baseJobs[defender.id].skills[0].power) * counter));
             e.hp = Math.max(0, e.hp - counterDamage);
-            addBattleFloater(e, counterDamage, { damageType: defender.id === "Torren" ? "Earth" : "Counter" });
+            addBattleFloater(e, counterDamage, { damageType: "Counter" });
             defenseText += ` Counter -${counterDamage}.`;
           }
           const thorns = typedTalentValue(defender.id, "thorns");
@@ -10966,7 +10768,6 @@ function resolveEnemyTurn(turn, prev) {
           dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(defender.id, "blockPower")));
           defenseText = " Party Guard softens the hit.";
         }
-        if (protectedHit) defenseText += holyProtectionReaction(defender, e, action);
         const brokenAtHitStart = Boolean(statusOf(defender, "broken"));
         const breakPower = Math.max(0, action.breakPower || 0) + (action.kind === "ultimate" ? (e.affixes?.breakPower || 0) : 0);
         const breakResult = breakPower ? addBreakProgress(e, defender, breakPower) : null;
@@ -10988,9 +10789,7 @@ function resolveEnemyTurn(turn, prev) {
           battle.usedOnce[`lastBastion:${lastBastion.id}`] = true;
           defenseText += ` ${lastBastion.name}'s Last Bastion leaves ${defender.name} at 1 HP.`;
         }
-        const beforeHp = defender.hp;
         defender.hp = Math.max(0, defender.hp - dmg);
-        defenseText += protectEndangeredAlly(defender, beforeHp);
         const fell = markBattleUnitDown(defender);
         if (defender.hp > 0 && typedTalentValue(defender.id, "damageResonance")) state.resonance = Math.min(100, state.resonance + Math.max(1, Math.round(4 * (1 + typedTalentValue(defender.id, "damageResonance")))));
         defender.flash = 12;
@@ -11654,7 +11453,6 @@ const statusStatHelp = [
 function skillFormula(sk, id = null) {
   if (sk.power < 0) return `${Math.abs(sk.power)} + ${sk.healScaling ?? .3} x MAG healing`;
   if (sk.dispel) return "Dispel / no damage scaling";
-  if (sk.statusOnly) return "Control / no direct damage";
   if (!skillTargetsEnemies(sk)) return "Support / no damage scaling";
   const scaling = skillScalingLabel(id, sk);
   return sk.coefficient ? `${sk.coefficient} x (${scaling}) + 0-5` : `${sk.power} + ${scaling} + 0-5`;
@@ -11662,7 +11460,7 @@ function skillFormula(sk, id = null) {
 
 function skillExpectedOutput(id, sk, unit = { id, statuses: [] }, afflicted = false) {
   if (sk.power < 0) return healingAmount(id, sk, unit);
-  if (sk.dispel || sk.statusOnly) return 0;
+  if (sk.dispel) return 0;
   if (!skillTargetsEnemies(sk)) return 0;
   const statKey = skillScaling(sk);
   const stat = skillOffensiveStat(id, sk, unit);
@@ -11682,7 +11480,7 @@ function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
   if (sk.power < 0) {
     return { kind: "healing", scaling: "MAG", healing: healingAmount(id, sk, unit) };
   }
-  if (sk.dispel || sk.statusOnly) return { kind: "support", scaling: "NONE" };
+  if (sk.dispel) return { kind: "support", scaling: "NONE" };
   if (!skillTargetsEnemies(sk)) return { kind: "support", scaling: "NONE" };
   const statKey = skillScaling(sk);
   const stat = skillOffensiveStat(id, sk, unit);
@@ -11846,7 +11644,6 @@ function statusGearOverviewHtml(id) {
 }
 
 function abilityUnlockLabel(id, sk) {
-  if (sk.signature) return "Tier 0 / no point cost";
   const base = baseJobs[id].skills.find(entry => entry.name === sk.name);
   if (base) return base.transform ? `Level ${TRANSFORMATION_UNLOCK_LEVEL}` : "Level 1";
   const talentEntry = activeTalents(id).find(entry => entry.type === "newSkill" && entry.value?.name === sk.name);
@@ -11895,24 +11692,6 @@ function statusCardHtml(id) {
   const evasionCharges = statusOf(evasionUnit, "evasion")?.incomingCharges || 0;
   const evasionHtml = `<span><small>EVASION</small><strong>${Math.round(currentEvasion * 100)}%</strong><em>${Math.round(baseEvasionValue(evasionUnit) * 100)}% base${activeEvasion ? ` + ${Math.round(activeEvasion * 100)}% temporary / ${evasionCharges} incoming attacks` : ""}</em></span>`;
   return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span>${evasionHtml}</div><section class="status-detail-section"><h4>Equipment slots</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section"><h4>Total equipped gear contribution</h4>${statusGearOverviewHtml(id)}</section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section><details class="status-reference status-combat-detail"><summary>Abilities and combat detail</summary>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section></details></article>`;
-}
-
-function selectSignature(id, name) {
-  if (mode === "battle" || !state.party.includes(id) || !signatureAbilities[id]?.some(entry => entry.name === name)) return false;
-  progressFor(id).signature = name;
-  queueSave();
-  playSfx("menu");
-  updatePanels();
-  renderMenu();
-  return true;
-}
-
-function signatureChoicesHtml(id) {
-  const chosen = progressFor(id).signature;
-  return `<section class="talent-tier"><header><strong>TIER 0 / SIGNATURE ABILITY</strong><span>No talent-point cost / choose one</span></header><div class="talent-tier-grid">${signatureAbilities[id].map(entry => {
-    const selected = entry.name === chosen;
-    return `<button type="button" class="talent-choice ${selected ? "is-active" : ""}" data-signature="${entry.name}" aria-pressed="${selected}"><span><strong>${entry.name}</strong><p>${entry.desc}</p><small>${entry.cost} MP / 0 talent points</small><small>${selected ? "CHOSEN" : chosen ? "SWAP SIGNATURE" : "AVAILABLE"}</small></span><b>${selected ? "ON" : chosen ? "SWAP" : "+"}</b></button>`;
-  }).join("")}</div></section>`;
 }
 
 function toggleTalent(value) {
@@ -12251,7 +12030,7 @@ function renderMenu() {
     }).join("");
     const earned = talentPointsEarned(progress.level);
     const available = earned - progress.talents.length;
-    const choices = signatureChoicesHtml(id) + [1, 2, 3, 4, 5].map(tier => {
+    const choices = [1, 2, 3, 4, 5].map(tier => {
       const requirement = (tier - 1) * 2;
       const tierLocked = progress.talents.length < requirement;
       return `<section class="talent-tier ${tierLocked ? "is-locked" : ""}"><header><strong>Tier ${tier}${tier === 5 ? " / CAPSTONE" : ""}</strong><span>${tier === 1 ? "Open" : `Requires ${requirement} spent points`}${tier === 5 ? " / choose only one" : ""}</span></header><div class="talent-tier-grid">${talentTrees[id].filter(entry => entry.tier === tier).map(entry => {
@@ -12268,7 +12047,6 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-talent]").forEach(button => button.onclick = () => toggleTalent(button.dataset.talent));
-    el.menuBody.querySelectorAll("[data-signature]").forEach(button => button.onclick = () => selectSignature(id, button.dataset.signature));
     el.menuBody.querySelector("[data-reset-talents]").onclick = () => resetTalents(id);
   }
   if (menuTab === "gear") {
