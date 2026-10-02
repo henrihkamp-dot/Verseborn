@@ -1,12 +1,14 @@
 const canvas = document.getElementById("screen");
 const ctx = canvas.getContext("2d");
-const LOGICAL_WIDTH = 256;
+const FIELD_WORLD_WIDTH = 256;
+let LOGICAL_WIDTH = FIELD_WORLD_WIDTH;
 const LOGICAL_HEIGHT = 224;
 let renderScale = 3;
 ctx.imageSmoothingEnabled = false;
 
 function syncCanvasResolution() {
   const rect = canvas.getBoundingClientRect();
+  LOGICAL_WIDTH = rect.width && rect.height ? Math.max(FIELD_WORLD_WIDTH, Math.min(320, Math.round(LOGICAL_HEIGHT * rect.width / rect.height))) : FIELD_WORLD_WIDTH;
   const measuredScale = rect.width ? Math.ceil(rect.width / LOGICAL_WIDTH) : 3;
   const nextScale = Math.max(1, Math.min(5, measuredScale));
   const width = LOGICAL_WIDTH * nextScale;
@@ -129,7 +131,8 @@ function syncResponsiveDevice() {
     root.style.removeProperty("--desktop-game-scale");
     root.style.removeProperty("--desktop-shell-width");
   } else {
-    const baseGameWidth = 774;
+    const baseGameWidth = window.innerWidth >= 900 ? 967.5 : 774;
+    root.style.setProperty("--desktop-base-width", `${baseGameWidth}px`);
     const baseGameHeight = 708;
     const shellGutter = 20;
     const widthScale = (window.innerWidth - shellGutter) / baseGameWidth;
@@ -6047,7 +6050,7 @@ function drawExitMarkers() {
     const unlocked = !exit.needs || state.flags[exit.needs];
     const objective = exit === nextExit;
     const phase = Math.floor((tick + index * 11) / 12) % 3;
-    const centerX = exit.x * TILE + 8;
+    const centerX = fieldScreenX(exit.x * TILE + 8);
     const centerY = exit.y * TILE + 8 + offsetY;
     const color = objective ? "#fff1a3" : unlocked ? "#d5aa68aa" : "#7b667088";
     const direction = exitDirection(exit);
@@ -6083,6 +6086,7 @@ function drawObjectiveMarker() {
     if (spawnPoint) { x = spawnPoint.renderX + 8; y = spawnPoint.renderY - 11 + fieldRenderOffsetY(); }
   }
   if (x === null) return;
+  x = fieldScreenX(x);
   const settle = Math.floor(tick / 18) % 3 === 1 ? -1 : 0;
   drawRect(x - 5, y - 7 + settle, 10, 8, "#2b1b12dd");
   drawText("!", x, y - 1 + settle, "#fff1a3", 7, "center");
@@ -6772,13 +6776,13 @@ function drawRecruitScene() {
     const progress = isActing ? Math.min(1, Math.max(0, (tick - actor.actionStarted) / Math.max(1, actor.actionUntil - actor.actionStarted))) : 0;
     const pose = recruitScenePoseAt(actor, progress, isActing);
     const idleBob = pose.anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
-    const drawX = actor.x + pose.x;
+    const drawX = fieldScreenX(actor.x) + pose.x;
     const drawY = actor.baseline + pose.y;
     drawFieldShadow(drawX, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
     drawSprite(actor.id, drawX - 8, drawY - 32 + idleBob, pose.facing, pose.anim, tick);
     drawRecruitSceneEffect(actor, drawX, drawY, progress, isActing);
     if (actor.emote && actor.actionUntil > tick) {
-      drawText(actor.emote, actor.x, actor.baseline - 40, "#fff0a8", 10, "center");
+      drawText(actor.emote, fieldScreenX(actor.x), actor.baseline - 40, "#fff0a8", 10, "center");
     }
   });
   const roomName = RECRUIT_SCENE_ROOM_NAMES[scene.room] || "Ember Hall";
@@ -6917,6 +6921,10 @@ function drawRecruitSceneEffect(actor, x, baseline, progress, isActing) {
   }
 }
 
+function fieldScreenX(worldX) {
+  return worldX * LOGICAL_WIDTH / FIELD_WORLD_WIDTH;
+}
+
 function drawTileMap() {
   if (new URLSearchParams(location.search).has("qa")) {
     canvas.dataset.qaMap = state.map;
@@ -6938,15 +6946,19 @@ function drawTileMap() {
   const background = mapImages[map.background || map.set];
   if (background) drawMapBackground(map, background);
   else drawRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, p[2]);
+  ctx.save();
+  ctx.scale(LOGICAL_WIDTH / FIELD_WORLD_WIDTH, 1);
   drawAmbient(map.set, map.panorama);
+  ctx.restore();
   drawQaNavigationOverlay();
   drawExitMarkers();
   updateRenderPosition();
   const spawns = visibleSpawns();
   spawns.forEach(updateWorldEnemyRender);
   const entities = [
-    ...spawns.map(spawnPoint => ({ depth: spawnPoint.renderY + 25, draw: () => drawWorldEnemy(spawnPoint) })),
+    ...spawns.map(spawnPoint => ({ x: spawnPoint.renderX + 8, depth: spawnPoint.renderY + 25, draw: () => drawWorldEnemy(spawnPoint) })),
     ...visiblePoints().map(point => ({
+      x: point.x * TILE + 8,
       depth: point.y * TILE + (point.chest ? 18 : 25),
       draw: () => {
         if (point.chest) return drawChest(point);
@@ -6956,6 +6968,7 @@ function drawTileMap() {
       }
     })),
     ...(state.escort ? [{
+      x: state.renderX - 5,
       depth: state.renderY + 24,
       draw: () => {
         drawFieldShadow(state.renderX + 3, state.renderY + 28 + offsetY, 7);
@@ -6963,6 +6976,7 @@ function drawTileMap() {
       }
     }] : []),
     {
+      x: state.renderX + 8,
       depth: state.renderY + 25,
       player: true,
       draw: () => {
@@ -6971,7 +6985,12 @@ function drawTileMap() {
       }
     }
   ];
-  entities.sort((a, b) => a.depth - b.depth || Number(Boolean(a.player)) - Number(Boolean(b.player))).forEach(entity => entity.draw());
+  entities.sort((a, b) => a.depth - b.depth || Number(Boolean(a.player)) - Number(Boolean(b.player))).forEach(entity => {
+    ctx.save();
+    ctx.translate(fieldScreenX(entity.x) - entity.x, 0);
+    entity.draw();
+    ctx.restore();
+  });
   if (background) drawMapForeground(map, background);
   drawObjectiveMarker();
   const labelSize = map.name.length > 29 ? 7 : map.name.length > 23 ? 8 : 9;
@@ -7011,7 +7030,7 @@ function drawChest(pointData) {
 function mapSourceFrame(map, image) {
   if (!Number.isFinite(map.view)) return { x: 0, y: 0, width: image.width, height: image.height };
   const views = Math.max(2, map.views || 2);
-  const width = Math.min(image.width, Math.round(image.height * LOGICAL_WIDTH / LOGICAL_HEIGHT));
+  const width = Math.min(image.width, Math.round(image.height * FIELD_WORLD_WIDTH / LOGICAL_HEIGHT));
   const maxX = Math.max(0, image.width - width);
   return { x: Math.round(maxX * map.view / (views - 1)), y: 0, width, height: image.height };
 }
@@ -7031,11 +7050,11 @@ function drawMapForeground(map, image) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   zones.forEach(([x, y, width, height]) => {
-    const sx = Math.round(source.x + x / LOGICAL_WIDTH * source.width);
+    const sx = Math.round(source.x + x / FIELD_WORLD_WIDTH * source.width);
     const sy = Math.round(source.y + y / LOGICAL_HEIGHT * source.height);
-    const sw = Math.max(1, Math.round(width / LOGICAL_WIDTH * source.width));
+    const sw = Math.max(1, Math.round(width / FIELD_WORLD_WIDTH * source.width));
     const sh = Math.max(1, Math.round(height / LOGICAL_HEIGHT * source.height));
-    ctx.drawImage(image, sx, sy, sw, sh, x, y, width, height);
+    ctx.drawImage(image, sx, sy, sw, sh, fieldScreenX(x), y, fieldScreenX(width), height);
   });
   ctx.restore();
 }
@@ -7044,6 +7063,7 @@ function drawQaNavigationOverlay() {
   if (new URLSearchParams(location.search).get("qaGrid") !== "1") return;
   const offsetY = fieldRenderOffsetY();
   ctx.save();
+  ctx.scale(LOGICAL_WIDTH / FIELD_WORLD_WIDTH, 1);
   ctx.lineWidth = 1;
   for (let y = 1; y <= 12; y++) {
     for (let x = 1; x <= 14; x++) {
@@ -7344,7 +7364,8 @@ const battlePartyLayouts = {
 const BATTLE_ARENA_HEIGHT = 188;
 
 function partyBattlePosition(index, count = battle?.party?.length || 1) {
-  return (battlePartyLayouts[Math.min(3, count)] || battlePartyLayouts[3])[index] || [55, 122];
+  const [x, y] = (battlePartyLayouts[Math.min(3, count)] || battlePartyLayouts[3])[index] || [55, 122];
+  return [x + (LOGICAL_WIDTH - FIELD_WORLD_WIDTH) * (x / FIELD_WORLD_WIDTH), y];
 }
 
 function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
@@ -7353,7 +7374,8 @@ function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
     : count === 2
       ? [[202, 106], [166, 144]]
       : [[210, 99], [165, 131], [210, 161]];
-  return positions[index] || [190, 105];
+  const [x, y] = positions[index] || [190, 105];
+  return [x + (LOGICAL_WIDTH - FIELD_WORLD_WIDTH) * (x / FIELD_WORLD_WIDTH), y];
 }
 
 function selectedBattleEnemy() {
@@ -8502,7 +8524,7 @@ function applyRecruitSceneAction(action) {
     if (Number.isFinite(actorAction.facing)) actor.facing = actorAction.facing;
     actor.actionDx = Number.isFinite(actorAction.dx) ? actorAction.dx : 0;
     actor.actionDy = Number.isFinite(actorAction.dy) ? actorAction.dy : 0;
-    if (actor.actionDx) actor.x = Math.max(24, Math.min(LOGICAL_WIDTH - 24, actor.x + actor.actionDx));
+    if (actor.actionDx) actor.x = Math.max(24, Math.min(FIELD_WORLD_WIDTH - 24, actor.x + actor.actionDx));
     if (actor.actionDy) actor.baseline = Math.max(96, Math.min(166, actor.baseline + actor.actionDy));
     actor.anim = actorAction.anim || "idle";
     actor.emote = actorAction.emote || "";
@@ -13393,7 +13415,7 @@ canvas.addEventListener("click", event => {
   }
   if (mode === "walk") {
     const point = canvasLogicalPoint(event);
-    handleFieldTap(point.x, point.y);
+    handleFieldTap(point.x * FIELD_WORLD_WIDTH / LOGICAL_WIDTH, point.y);
     return;
   }
   if (mode === "battle") {
