@@ -3128,7 +3128,7 @@ const baseJobs = {
     skill("ULT: The Engineer Who Stayed", "ultimate", "Tech", 96, 100, "Retunes the battlefield itself.")
   ]),
   Sparky: character("Sparky", "Emberborn", "Ancient Fire", "#332846", "#7f4ad1", "#b66cff", { str: 7, agi: 13, mag: 16, stam: 8, echo: 16 }, ["Voice of Verse", "Workshop Coat", "Promise Ring", "Gearheart Charm", "Glimmer Goggles"], [
-    skill("Ember Nip", "melee", "Ancient Fire", 14, 0, "Tiny bite. Old flame."),
+    skill("Ember Nip", "melee", "Ancient Fire", 14, 0, "Tiny bite. Applies Burn for 4 actions on a successful hit.", { status: { type: "burn", chance: 1, duration: 4 } }),
     skill("Memory Flare", "magic", "Ancient Fire", 36, 7, "Burns false commands."),
     skill("Prrrp", "block", "Heart", -20, 5, "Morale heal."),
     skill("Emberblood", "magic", "Ancient Fire", 0, 8, "Grant one ally 25% Vampiric for 3 turns.", { targetSide: "ally", buffs: [{ type: "vampiric", duration: 3, value: .25 }] }),
@@ -3540,7 +3540,7 @@ compactTalentTrees.Seerin = [
   talentNode(3, "Sacred Constitution", "sacredConstitution", .5, "STAM counts as 150% for Max HP; bonus MAG equals 25% total STAM."),
   talentNode(4, "Radiant Judgment", "radiantJudgment", 25, "Radiant Purge dispels one buff, removes 25 enemy Resonance and grants Seerin Holy Follow-up 15%."),
   talentNode(4, "Burning Aegis", "thorns", .25, "Personal Guard reflects 25% received melee damage and adds +1 Break."),
-  talentNode(4, "Hold the Line", "bulwarkTaunt", 1, "Bulwark Taunts all living enemies until Seerin's next action; AoE and enemy support keep normal targeting."),
+  talentNode(4, "Hold the Line", "bulwarkTaunt", 1, "After Seerin acts, Taunt all living enemies until her next action; AoE and enemy support keep normal targeting."),
   talentNode(5, "Oathfire Ascendant", "oathfireAscendant", .3, "The Woman in the Door gains 30% potency against 0-Resonance or Holy-Vulnerable enemies, ending them at 0 Resonance. Party Guard remains."),
   talentNode(5, "Flameguard Charge", "flameguardCharge", 5, "The Woman in the Door adds +5 Break to its primary target and grants Seerin Personal Guard. Holy Fire and Party Guard remain."),
   talentNode(5, "Last Bastion", "lastBastion", 1, "Once per battle, prevent a fatal ally hit and leave them at 1 HP."),
@@ -3632,9 +3632,20 @@ function selectedRank0(id) {
   return rank0Choices[id]?.find(entry => entry.name === progressFor(id).rank0) || null;
 }
 
+function unlockedRank0(id) {
+  const progress = progressFor(id);
+  return (rank0Choices[id] || []).filter(entry => entry.name === progress.rank0 || progress.talents.includes(entry.name));
+}
+
 function selectRank0(id, name) {
   if (mode === "battle" || !state.party.includes(id) || !rank0Choices[id]?.some(entry => entry.name === name)) return false;
-  progressFor(id).rank0 = name;
+  const progress = progressFor(id);
+  if (unlockedRank0(id).some(entry => entry.name === name)) return false;
+  if (!progress.rank0) progress.rank0 = name;
+  else {
+    if (progress.talents.length >= talentPointsEarned(progress.level)) return false;
+    progress.talents.push(name);
+  }
   queueSave();
   playSfx("menu");
   updatePanels();
@@ -3644,9 +3655,10 @@ function selectRank0(id, name) {
 
 function rank0ChoicesHtml(id) {
   const chosen = selectedRank0(id)?.name;
-  return `<section class="talent-tier"><header><strong>Rank 0</strong><span>Choose one / no talent-point cost</span></header><div class="talent-tier-grid">${rank0Choices[id].map(entry => {
-    const selected = chosen === entry.name;
-    return `<button type="button" class="talent-choice ${selected ? "is-active" : ""}" data-rank0="${id}:${entry.name}" aria-pressed="${selected}"><span><strong>${entry.name}</strong><p>${entry.desc}</p><small>${entry.passive ? "Passive / no action button" : `${entry.cost} MP`} / 0 talent points</small><small>${selected ? "CHOSEN" : chosen ? "SWAP CHOICE" : "CHOOSE"}</small></span><b>${selected ? "ON" : chosen ? "SWAP" : "+"}</b></button>`;
+  const unlocked = unlockedRank0(id);
+  return `<section class="talent-tier"><header><strong>Rank 0</strong><span>First choice free / additional choices: 1 point each</span></header><div class="talent-tier-grid">${rank0Choices[id].map(entry => {
+    const selected = unlocked.some(option => option.name === entry.name);
+    return `<button type="button" class="talent-choice ${selected ? "is-active" : ""}" data-rank0="${id}:${entry.name}" aria-pressed="${selected}" ${selected || (chosen && talentPointsSpent(id) >= talentPointsEarned(progressFor(id).level)) ? "disabled" : ""}><span><strong>${entry.name}</strong><p>${entry.desc}</p><small>${entry.passive ? "Passive / no action button" : `${entry.cost} MP`} / ${entry.name === chosen || !chosen ? 0 : 1} talent points</small><small>${selected ? "UNLOCKED" : "UNLOCK"}</small></span><b>${selected ? "ON" : "+"}</b></button>`;
   }).join("")}</div></section>`;
 }
 
@@ -5026,8 +5038,9 @@ function progressFor(id) {
   const progress = state.heroProgress[id];
   if (id === "Mira" && ["Fade into Shadow", "Fade Into Shadow"].includes(progress.rank0)) progress.rank0 = "Veiled Recovery";
   if (!Array.isArray(progress.talents)) progress.talents = [];
-  const validNames = new Set((talentTrees[id] || []).map(entry => entry.name));
+  const validNames = new Set([...(talentTrees[id] || []), ...(rank0Choices[id] || [])].map(entry => entry.name));
   progress.talents = [...new Set(progress.talents.filter(name => validNames.has(name)))];
+  progress.talents = progress.talents.filter(name => name !== progress.rank0);
   const capstones = progress.talents.filter(name => talentTrees[id].some(entry => entry.name === name && entry.tier === 5));
   if (capstones.length > 1) progress.talents = progress.talents.filter(name => !capstones.slice(1).includes(name));
   if (progress.rank0 && !rank0Choices[id]?.some(entry => entry.name === progress.rank0)) delete progress.rank0;
@@ -5384,7 +5397,7 @@ function applySkillStatuses(source, target, sk) {
   const status = sk.status && sk.name === "Scramble Signal" ? { ...sk.status, duration: sk.status.duration + typedTalentValue(source.id, "scrambleDuration") } : sk.status;
   if (status) applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
   if (source?.id === "Seerin" && sk.name === "Starflame Cut" && typedTalentValue(source.id, "starflameBrand")) applications.push(applyStatus(target, "holyVulnerability", source, { duration: 2, value: .2, force: true }));
-  if (source?.id === "Sparky" && sk.name === "Ember Nip" && typedTalentValue(source.id, "emberNipBurn")) applications.push(applyStatus(target, "burn", source, { duration: 4, chance: .8, scaling: skillScaling(sk), element: sk.element }));
+  if (source?.id === "Sparky" && sk.name === "Ember Nip" && !sk.status && typedTalentValue(source.id, "emberNipBurn")) applications.push(applyStatus(target, "burn", source, { duration: 4, chance: .8, scaling: skillScaling(sk), element: sk.element }));
   (sk.extraStatuses || []).forEach(status => applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element })));
   if (source?.id && sk.element === "Tech" && !sk.statusOnly && (sk.power > 0 || sk.coefficient) && Math.random() < typedTalentValue(source.id, "techDisrupt")) {
     applications.push(applyStatus(target, "disrupted", source, { force: true, duration: 2, value: .15 }));
@@ -5467,7 +5480,7 @@ function processTurnStart(unit) {
     const dot = statusOf(unit, type);
     if (!dot || unit.hp <= 0) return;
     let amount = dot.value || 1;
-    if (type === "burn" && dot.source?.id === "Sparky" && selectedRank0("Sparky")?.passive === "doubleBurn") amount *= 2;
+    if (type === "burn" && dot.source?.id === "Sparky" && unlockedRank0("Sparky").some(entry => entry.passive === "doubleBurn")) amount *= 2;
     if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
     unit.hp = Math.max(0, unit.hp - amount);
     addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label });
@@ -5639,9 +5652,9 @@ function battleSkills(id, unit = null) {
     .filter(entry => !entry.transform || progressFor(id).level >= TRANSFORMATION_UNLOCK_LEVEL)
     .map(entry => applyTalentSkillConversion(id, entry.anim === "ultimate" ? { ...entry, ultimateIndex: entry.ultimateIndex || 1 } : { ...entry }));
   if (id === "Kael" && typedTalentValue(id, "twilightCapstone")) base.push({ ...TRANSFORMED_SKILLS.shadowpriest[0], name: "Twilight Lance", coefficient: 1.2, cost: 8 });
-  const rank0 = selectedRank0(id);
-  if (rank0 && !rank0.passive) base.push(applyTalentSkillConversion(id, { ...rank0 }));
-  if (rank0?.passive === "attackBreak") {
+  const rank0 = unlockedRank0(id);
+  rank0.filter(entry => !entry.passive).forEach(entry => base.push(applyTalentSkillConversion(id, { ...entry })));
+  if (rank0.some(entry => entry.passive === "attackBreak")) {
     const attack = base.find(entry => entry.basicAttack);
     if (attack) attack.rank0Break = 2 + (typedTalentValue(id, "shieldBash") ? 1 : 0);
   }
@@ -10226,6 +10239,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   setTimeout(() => {
     if (!battle || mode !== "battle") return;
     battle.attackDamage = [];
+    if (u.id === "Seerin" && typedTalentValue(u.id, "bulwarkTaunt")) u.holdTheLine = true;
     let feedbackUsed = false;
     let purifyingUsed = false;
     const refreshedBurns = new Set();
