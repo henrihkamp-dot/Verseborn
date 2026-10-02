@@ -3508,6 +3508,58 @@ const compactTalentTrees = {
   ]
 };
 
+compactTalentTrees.Glimmer = [
+  talentNode(1, "Field Medic", "patchHealing", .2, "Patch Job healing +20%."),
+  talentNode(1, "Overclocked Tools", "droneBaseBonus", .1, "Combat Drone base follow-up potency increases from 25% to 35%."),
+  talentNode(1, "Dirty Wrench", "scrambleDuration", 1, "Scramble Signal lasts 1 additional action."),
+  talentNode(2, "Patch Network", "partyHeal", "Patch Job", "Patch Job heals all living allies and gives each Combat Drone for 2 actions."),
+  talentNode(2, "Dual Drone Protocol", "dronePower", .5, "Drone potency +50%; a second enemy takes 50% of the normal follow-up damage."),
+  talentNode(2, "Disruptor Coil", "techDisrupt", .35, "Direct Tech hits have a 35% chance to apply Disrupted 15% for 2 actions."),
+  talentNode(3, "Emergency Plating", "patchBarrier", .2, "Patch Job gives healed allies below 50% HP a 20% Barrier for 2 actions."),
+  talentNode(3, "Reinforced Frame", "gadgetDefense", .15, "While Glimmer has Combat Drone, she takes 15% less damage."),
+  talentNode(3, "Feedback Loop", "techResonanceDrain", 10, "The first direct Tech hit against a Disrupted enemy each action removes 10 enemy Resonance."),
+  talentNode(4, "Mobile Clinic", "mechClinic", .25, "After each Mech action, heal the most wounded living ally for 0.25x MAG."),
+  talentNode(4, "Carrier Chassis", "mechCarrier", .25, "Damaging Mech actions trigger Combat Drone with 25% increased potency; Dual Drone Protocol still applies."),
+  talentNode(4, "EMP Array", "mechEmp", .2, "Damaging Mech actions apply or refresh Disrupted 20% for 2 actions on the primary target."),
+  talentNode(5, "Mobile Hospital", "mobileHospital", .4, "Mobile Clinic heals 0.40x MAG and grants 15% Barrier for 2 actions below 50% HP. Patch Job healing +15%."),
+  talentNode(5, "Swarm Intelligence", "droneSwarm", .6, "After the normal follow-up, add a 60% strike; with Dual Drone Protocol it can hit another living enemy."),
+  talentNode(5, "System Crash", "systemCrash", .15, "Disrupted enemies take 15% more Tech damage from Glimmer. Feedback Loop removes 20 Resonance."),
+];
+compactTalentTrees.Seerin = [
+  talentNode(1, "Sacred Flame", "holyFireDamage", .1, "Holy Fire damage +10%."),
+  talentNode(1, "Shield Discipline", "blockTalent", .12, "Personal Defend gains 12 percentage points of damage reduction."),
+  talentNode(1, "Protector", "woundedProtection", .15, "Healing and protection are 15% stronger on allies below 35% HP."),
+  talentNode(2, "Radiant Brand", "starflameBrand", .2, "Starflame Cut applies Holy Vulnerability 20% for 2 actions."),
+  talentNode(2, "Shield Bash", "shieldBash", .2, "With Shieldbreaker Oath, normal Attack gains another +1 Break. Attack deals 20% more damage against Broken enemies."),
+  talentNode(2, "Cinder Sanctuary", "partyHeal", "Cinder Guard", "Cinder Guard heals all living allies and grants Holy Follow-up 10% for their next damaging action."),
+  talentNode(3, "Purifying Oath", "purifyingOath", .2, "Holy Fire potency +20% at 0 enemy Resonance. The first qualifying hit each action cleanses one negative status from Seerin."),
+  talentNode(3, "Retribution", "guardCounter", .35, "A personally Guarded hit counters for 35% normal Attack damage and adds +1 Break."),
+  talentNode(3, "Sacred Constitution", "sacredConstitution", .5, "STAM counts as 150% for Max HP; bonus MAG equals 25% total STAM."),
+  talentNode(4, "Radiant Judgment", "radiantJudgment", 25, "Radiant Purge dispels one buff, removes 25 enemy Resonance and grants Seerin Holy Follow-up 15%."),
+  talentNode(4, "Burning Aegis", "thorns", .25, "Personal Guard reflects 25% received melee damage and adds +1 Break."),
+  talentNode(4, "Hold the Line", "bulwarkTaunt", 1, "Bulwark Taunts all living enemies until Seerin's next action; AoE and enemy support keep normal targeting."),
+  talentNode(5, "Oathfire Ascendant", "oathfireAscendant", .3, "The Woman in the Door gains 30% potency against 0-Resonance or Holy-Vulnerable enemies, ending them at 0 Resonance. Party Guard remains."),
+  talentNode(5, "Flameguard Charge", "flameguardCharge", 5, "The Woman in the Door adds +5 Break to its primary target and grants Seerin Personal Guard. Holy Fire and Party Guard remain."),
+  talentNode(5, "Last Bastion", "lastBastion", 1, "Once per battle, prevent a fatal ally hit and leave them at 1 HP."),
+];
+compactTalentTrees.Sparky = [
+  talentNode(1, "Warm Little Heart", "prrrpHealing", .2, "Prrrp healing +20%."),
+  talentNode(1, "Tough Little Scales", "interceptReduction", .15, "Tiny Dragon, Big Problem intercepts take another 15% less damage."),
+  talentNode(1, "Smolder", "burnDuration", 1, "Burn applied by Sparky lasts 1 additional action."),
+  talentNode(2, "Shared Warmth", "emberDefense", .1, "Emberblood also grants its target Defense Up 10% for 3 actions."),
+  talentNode(2, "Smoke Trail", "interceptEvasion", .3, "After a successful intercept, gain 30% Evasion for the next incoming direct attack."),
+  talentNode(2, "Ember Bite", "emberNipBurn", .8, "Ember Nip gains an 80% base chance to apply Burn for 4 actions."),
+  talentNode(3, "Ember Bond", "emberBond", .25, "Emberblood Vampiric healing also heals Sparky for 25% of HP actually restored."),
+  talentNode(3, "Brave Little Thing", "interceptResonance", 12, "Each successful intercept generates +12 party Resonance."),
+  talentNode(3, "Hungry Flame", "burningDamage", .25, "Direct Ancient Fire damage +25% against Burning enemies."),
+  talentNode(4, "Ancient Comfort", "prrrpBarrier", .2, "Prrrp grants 20% Barrier for 2 actions to an ally below 50% HP."),
+  talentNode(4, "Never Too Small", "interceptPrrrp", .25, "After intercepting, the next Prrrp within 2 actions costs 2 less MP and heals 25% more."),
+  talentNode(4, "Inferno Heart", "burnRefresh", 1, "A direct Ancient Fire hit refreshes existing Burn to full duration, once per enemy each action."),
+  talentNode(5, "Hearthfire", "hearthfire", .25, "Emberblood Vampiric healing heals the most wounded other living ally for 25% of restored HP."),
+  talentNode(5, "Tiny Dragon, Huge Problem", "interceptCharges", 3, "Tiny Dragon, Big Problem can intercept 3 single-target attacks during its duration."),
+  talentNode(5, "Living Wildfire", "deathBurnTransfer", .75, "When a Sparky-Burning enemy dies, transfer Burn to one living enemy with remaining duration and 75% tick potency."),
+];
+
 const HEAL_CONVERSION_BUFFS = {
   Seerin: { "Cinder Guard": { type: "holyFollowUp", value: .1, duration: 1, label: "Holy Follow-up", description: "their next damaging action adds 10% Holy damage" } },
   Glimmer: { "Patch Job": { type: "combatDrone", value: .4, duration: 2, label: "Combat Drone", description: "grants Combat Drone for 2 actions; it fires after each damaging action" } },
@@ -3544,18 +3596,18 @@ const rank0Choices = {
   ],
   Mira: [
     skill("Black Needle", "melee", "Shadow", 0, 6, "1.5x AGI Shadow damage to one enemy; critical hits deal 2.3x damage.", { coefficient: 1.5, scaling: "agi", rank0Agility: true, criticalMultiplier: 2.3 }),
-    skill("Fade into Shadow", "magic", "Shadow", -25, 6, "Heal Mira for 25 + 0.3x MAG and grant 20% Evasion for 2 incoming attacks.", { targetSide: "self", buffs: [{ type: "evasion", value: .2, duration: 2 }] })
+    skill("Veiled Recovery", "magic", "Shadow", -25, 6, "Heal Mira for 25 + 0.8x MAG and grant 20% Evasion for 2 incoming attacks.", { targetSide: "self", healScaling: .8, buffs: [{ type: "evasion", value: .2, duration: 2 }] })
   ],
   Seerin: [
     { name: "Shieldbreaker Oath", passive: "attackBreak", desc: "Normal Attack gains +2 Break buildup. No extra action button." },
-    skill("Bulwark of Faith", "magic", "Holy Fire", 0, 7, "Guard Seerin, grant 25% damage reduction for 2 actions and intercept one single-target damaging attack aimed at an ally.", { targetSide: "self", rank0Guard: true, buffs: [{ type: "defenseUp", value: .25, duration: 2 }, { type: "rankProtection", value: 1, duration: 2 }] })
+    skill("Bulwark of Faith", "magic", "Holy Fire", 0, 7, "Choose one ally: grant 25% damage reduction for 2 actions. Seerin intercepts their next single-target hostile attack.", { targetSide: "ally", protectsAlly: true, buffs: [{ type: "defenseUp", value: .25, duration: 2 }] })
   ],
   Torren: [
     skill("Faultline Smash", "melee", "Earth", 0, 7, "1.4x (STR + 0.5 STAM) damage; 30% extra damage against a Broken enemy or one with at least 2 Break buildup.", { coefficient: 1.4, rank0BreakPayoff: .3 }),
     skill("Mountain Stance", "magic", "Earth", 0, 6, "Guard Torren and grant 30% damage reduction for 3 actions.", { targetSide: "self", rank0Guard: true, buffs: [{ type: "defenseUp", value: .3, duration: 3 }] })
   ],
   Glimmer: [
-    skill("Support Drone", "magic", "Tech", 0, 9, "Grant every living ally Combat Drone for 2 actions, using Patch Network's existing Drone effect.", { targetSide: "party", partyWide: true, buffs: [{ ...HEAL_CONVERSION_BUFFS.Glimmer["Patch Job"] }] }),
+    skill("Combat Drone", "magic", "Tech", 0, 9, "Deploy a drone that follows Glimmer's attacks for the battle.", { targetSide: "self", buffs: [{ type: "combatDrone", value: .25, duration: 99 }] }),
     skill("Scramble Signal", "magic", "Tech", 0, 7, "Disrupt one enemy: reduce outgoing damage by 20% for 2 actions. Deals no direct damage.", { statusOnly: true, status: { type: "disrupted", value: .2, duration: 2, force: true } })
   ],
   Kael: [
@@ -3563,7 +3615,7 @@ const rank0Choices = {
     skill("Umbral Brand", "magic", "Shadow", 0, 7, "One enemy takes 20% more Shadow damage for 3 actions. Complements Shadow Exposed; deals no direct damage.", { statusOnly: true, status: { type: "shadowVulnerability", value: .2, duration: 3, force: true } })
   ],
   Sparky: [
-    skill("Tiny Dragon, Big Problem", "magic", "Ancient Fire", 0, 6, "Guard Sparky, grant 25% damage reduction for 2 actions and intercept one single-target damaging attack aimed at an ally.", { targetSide: "self", rank0Guard: true, buffs: [{ type: "defenseUp", value: .25, duration: 2 }, { type: "rankProtection", value: 1, duration: 2 }] }),
+    skill("Tiny Dragon, Big Problem", "magic", "Ancient Fire", 0, 6, "Sparky gains 25% damage reduction for 2 actions and intercepts the next single-target hostile attack against one chosen ally.", { targetSide: "ally", protectsAlly: true, protectorDefense: .25 }),
     { name: "Old Flame", passive: "doubleBurn", desc: "Burn ticks applied by Sparky deal double damage. Initial hits and Burn durations are unchanged. No extra action button." }
   ]
 };
@@ -4969,6 +5021,7 @@ function talentPointsSpent(id) {
 function progressFor(id) {
   if (!state.heroProgress[id]) state.heroProgress[id] = { level: 1, xp: 0, talents: [], pendingMilestones: [] };
   const progress = state.heroProgress[id];
+  if (id === "Mira" && ["Fade into Shadow", "Fade Into Shadow"].includes(progress.rank0)) progress.rank0 = "Veiled Recovery";
   if (!Array.isArray(progress.talents)) progress.talents = [];
   const validNames = new Set((talentTrees[id] || []).map(entry => entry.name));
   progress.talents = [...new Set(progress.talents.filter(name => validNames.has(name)))];
@@ -5187,7 +5240,8 @@ function statusDurationFor(source, type, requested) {
   const gearBonus = negative && source?.id ? effectValue(source.id, "statusDuration") : 0;
   if (type === "sleep") return Math.min(5, base);
   if (type === "stun") return 1;
-  return Math.max(1, base + talentBonus + gearBonus);
+  const burnBonus = type === "burn" && source?.id === "Sparky" ? typedTalentValue(source.id, "burnDuration") : 0;
+  return Math.max(1, base + talentBonus + gearBonus + burnBonus);
 }
 
 function applyStatus(target, type, source, options = {}) {
@@ -5324,10 +5378,13 @@ function effectiveAgility(unit, base) {
 
 function applySkillStatuses(source, target, sk) {
   const applications = [];
-  if (sk.status) applications.push(applyStatus(target, sk.status.type, source, { ...sk.status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
+  const status = sk.status && sk.name === "Scramble Signal" ? { ...sk.status, duration: sk.status.duration + typedTalentValue(source.id, "scrambleDuration") } : sk.status;
+  if (status) applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
+  if (source?.id === "Seerin" && sk.name === "Starflame Cut" && typedTalentValue(source.id, "starflameBrand")) applications.push(applyStatus(target, "holyVulnerability", source, { duration: 2, value: .2, force: true }));
+  if (source?.id === "Sparky" && sk.name === "Ember Nip" && typedTalentValue(source.id, "emberNipBurn")) applications.push(applyStatus(target, "burn", source, { duration: 4, chance: .8, scaling: skillScaling(sk), element: sk.element }));
   (sk.extraStatuses || []).forEach(status => applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element })));
-  if (source?.id && sk.element === "Tech" && typedTalentValue(source.id, "techDisrupt") && Math.random() < typedTalentValue(source.id, "techDisrupt")) {
-    applications.push(applyStatus(target, "disrupted", source, { chance: 1, duration: 2, value: .15 }));
+  if (source?.id && sk.element === "Tech" && !sk.statusOnly && (sk.power > 0 || sk.coefficient) && Math.random() < typedTalentValue(source.id, "techDisrupt")) {
+    applications.push(applyStatus(target, "disrupted", source, { force: true, duration: 2, value: .15 }));
   }
   if (source?.id && sk.element === "Shadow" && typedTalentValue(source.id, "shadowResistanceDown") && Math.random() < .5) {
     applications.push(applyStatus(target, "magicVulnerability", source, { chance: 1, duration: 2, value: typedTalentValue(source.id, "shadowResistanceDown") }));
@@ -5346,6 +5403,16 @@ function applySkillStatuses(source, target, sk) {
 
 function applySkillBuffs(source, targets, sk) {
   const notes = [];
+  if (sk.protectsAlly) {
+    const protectedAlly = targets[0];
+    if (protectedAlly && protectedAlly !== source) {
+      applyStatus(source, "rankProtection", source, { duration: 2, value: typedTalentValue(source.id, "interceptCharges") || 1, force: true });
+      statusOf(source, "rankProtection").protectedKey = combatantKey(protectedAlly);
+      notes.push(`${source.name} protects ${protectedAlly.name}`);
+    }
+    if (sk.protectorDefense) applyStatus(source, "defenseUp", source, { duration: 2, value: sk.protectorDefense, force: true });
+    if (source.id === "Seerin" && typedTalentValue(source.id, "bulwarkTaunt")) source.holdTheLine = true;
+  }
   if (sk.rank0Guard) {
     source.guarding = true;
     notes.push(`${source.name} is Guarded`);
@@ -5356,11 +5423,13 @@ function applySkillBuffs(source, targets, sk) {
       const supportBonus = source?.id ? typedTalentValue(source.id, "supportPotency") : 0;
       const barrierBonus = buff.type === "barrier" && source?.id ? typedTalentValue(source.id, "barrierBoost") + (source.form === "mech" ? typedTalentValue(source.id, "fortressCapstone") : 0) : 0;
       const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 3) + (source?.id ? typedTalentValue(source.id, "buffDuration") + effectValue(source.id, "buffDuration") + (typedTalentValue(source.id, "supportPotency") ? 1 : 0) : 0);
-      const value = (buff.value ?? STATUS_DEFS[buff.type]?.value) * (1 + supportBonus + barrierBonus + songBoost);
+      const woundedBonus = target.hp / target.max < .35 && ["defenseUp", "barrier"].includes(buff.type) ? typedTalentValue(source.id, "woundedProtection") : 0;
+      const value = (buff.value ?? STATUS_DEFS[buff.type]?.value) * (1 + supportBonus + barrierBonus + songBoost + woundedBonus);
       const result = applyStatus(target, buff.type, source, { duration, chance: 1, value });
       if (result.message) notes.push(`${target.name}: ${result.message}`);
     });
   });
+  if (source.id === "Sparky" && sk.name === "Emberblood" && typedTalentValue(source.id, "emberDefense")) targets.forEach(target => applyStatus(target, "defenseUp", source, { duration: 3, value: .1, force: true }));
   if (source?.id && sk.partyWide && sk.buffs?.length && typedTalentValue(source.id, "secondaryBuff")) {
     const primaryDefense = sk.buffs.some(buff => ["defenseUp", "barrier"].includes(buff.type));
     const secondary = primaryDefense ? "damageUp" : "defenseUp";
@@ -5389,6 +5458,8 @@ function statusBadgesHtml(unit) {
 
 function processTurnStart(unit) {
   const notes = [];
+  delete unit.holdTheLine;
+  delete unit.mechClinicResolved;
   ["poison", "burn", "bleed"].forEach(type => {
     const dot = statusOf(unit, type);
     if (!dot || unit.hp <= 0) return;
@@ -5399,6 +5470,7 @@ function processTurnStart(unit) {
     addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label });
     notes.push(`${STATUS_DEFS[type].label} -${amount} HP`);
   });
+  transferDeadSparkyBurns();
   if (unit.hp <= 0) return { skip: true, notes };
   if (statusOf(unit, "stun")) {
     notes.push("STUNNED!");
@@ -5413,6 +5485,7 @@ function processTurnStart(unit) {
 
 function processTurnEnd(unit) {
   const notes = [];
+  if (unit.prrrpWindow > 0) unit.prrrpWindow--;
   ensureStatuses(unit).forEach(status => {
     if (status.type === "evasion" && Number.isFinite(status.incomingCharges)) return;
     if (status.appliedRound === battle?.round && status.appliedTurn === combatantKey(unit)) return;
@@ -5487,9 +5560,11 @@ function rank0Protector(target, allTargets) {
   if (allTargets || !target || target.hp <= 0) return null;
   const protector = battle.party.find(ally => ally !== target && ally.hp > 0
     && !statusOf(ally, "sleep") && !statusOf(ally, "stun")
-    && statusOf(ally, "rankProtection"));
+    && statusOf(ally, "rankProtection")?.protectedKey === combatantKey(target));
   if (!protector) return null;
-  protector.statuses = ensureStatuses(protector).filter(status => status.type !== "rankProtection");
+  const protection = statusOf(protector, "rankProtection");
+  protection.value--;
+  if (protection.value <= 0) protector.statuses = ensureStatuses(protector).filter(status => status !== protection);
   return protector;
 }
 
@@ -5506,8 +5581,11 @@ function skillWeaknessMultiplier(id, sk, target) {
 function healingAmount(id, sk, unit = null) {
   const sacred = id === "Kael" && !unit?.form ? typedTalentValue(id, "saintCapstone") : 0;
   const ultimate = sk.anim === "ultimate" ? ultimatePotencyMultiplier(id, sk) : 1;
+  const patch = sk.name === "Patch Job" ? typedTalentValue(id, "patchHealing") + (typedTalentValue(id, "mobileHospital") ? .15 : 0) : 0;
+  const prrrp = sk.name === "Prrrp" ? typedTalentValue(id, "prrrpHealing") : 0;
+  const interceptBoost = sk.name === "Prrrp" && unit?.prrrpWindow > 0 ? 1 + typedTalentValue(id, "interceptPrrrp") : 1;
   return Math.round((Math.abs(sk.power) + totals(id).mag * (sk.healScaling ?? .3))
-    * (1 + talentValue(id, "healBoost") + sacred) * (1 + statusValue(unit, "magicUp")) * ultimate);
+    * (1 + talentValue(id, "healBoost") + sacred + patch + prrrp) * (1 + statusValue(unit, "magicUp")) * ultimate * interceptBoost);
 }
 
 function knownWeakness(unit) {
@@ -5562,7 +5640,7 @@ function battleSkills(id, unit = null) {
   if (rank0 && !rank0.passive) base.push(applyTalentSkillConversion(id, { ...rank0 }));
   if (rank0?.passive === "attackBreak") {
     const attack = base.find(entry => entry.basicAttack);
-    if (attack) attack.rank0Break = 2;
+    if (attack) attack.rank0Break = 2 + (typedTalentValue(id, "shieldBash") ? 1 : 0);
   }
   return [...base, ...extra];
 }
@@ -5684,7 +5762,9 @@ function totals(id) {
   ["str", "agi", "mag", "stam", "echo"].forEach(stat => {
     out[stat] = Math.round(out[stat] * (1 + affixValue(id, "statPct", stat)));
   });
-  const max = 30 + out.stam * (4 + typedTalentValue(id, "stamHpBonus"));
+  const constitution = typedTalentValue(id, "sacredConstitution");
+  if (constitution) out.mag += Math.round(out.stam * .25);
+  const max = 30 + out.stam * (1 + constitution) * (4 + typedTalentValue(id, "stamHpBonus"));
   const mp = 12 + Math.floor(out.mag / 2);
   return { ...out, max: Math.round(max * (1 + affixValue(id, "hpPct"))), mp };
 }
@@ -5746,7 +5826,8 @@ function skillMpCost(id, sk, unit = null) {
   if (unit?.nextSkillDiscount) multiplier -= unit.nextSkillDiscount;
   const firstSongKey = `firstSong:${id}`;
   if (sk.element === "Sound" && battle && !battle.usedOnce[firstSongKey]) multiplier -= typedTalentValue(id, "firstSongDiscount");
-  return Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)));
+  const comfortDiscount = sk.name === "Prrrp" && unit?.prrrpWindow > 0 && typedTalentValue(id, "interceptPrrrp") ? 2 : 0;
+  return Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)) - comfortDiscount);
 }
 
 function scaledMpOnHitRecovery(unit, flat) {
@@ -9448,6 +9529,9 @@ function runCurrentTurn(log) {
 }
 
 function finishTurn(log) {
+  transferDeadSparkyBurns();
+  const actor = currentTurn();
+  if (actor?.side === "party") log += finishMechTalentAction(battle.party.find(member => member.id === actor.id));
   battle.itemMode = false;
   battle.targetMode = false;
   battle.pendingSkill = null;
@@ -9967,7 +10051,7 @@ function applyEnemyResonanceControl(source, target, sk) {
   return `${sk.name} removes ${removed} Resonance${transferred ? ` and grants the party ${transferred}` : ""}${lockText}.`;
 }
 
-function skillDamageTalentMultiplier(source, sk, target) {
+function skillDamageTalentMultiplier(source, sk, target, zeroResonance = battle?.enemyResonance === 0) {
   if (!source?.id) return 1;
   let bonus = 0;
   if (sk.element === "Holy Fire") bonus += typedTalentValue(source.id, "holyFireDamage");
@@ -9976,9 +10060,107 @@ function skillDamageTalentMultiplier(source, sk, target) {
   if (source.form === "shadowpriest") bonus += typedTalentValue(source.id, "shadowpriestDamage");
   if (sk.allEnemies) bonus += typedTalentValue(source.id, "aoeDamage");
   if (!sk.allEnemies && sk.element === "Ancient Fire") bonus += typedTalentValue(source.id, "burstCapstone");
-  if (target && statusOf(target, "burn")) bonus += typedTalentValue(source.id, "burningDamage");
+  if (target && statusOf(target, "burn") && sk.element === "Ancient Fire") bonus += typedTalentValue(source.id, "burningDamage");
+  if (source.id === "Glimmer" && sk.element === "Tech" && statusOf(target, "disrupted")) bonus += typedTalentValue(source.id, "systemCrash");
+  if (source.id === "Seerin") {
+    if (sk.element === "Holy Fire" && zeroResonance) bonus += typedTalentValue(source.id, "purifyingOath");
+    if (sk.basicAttack && statusOf(target, "broken")) bonus += typedTalentValue(source.id, "shieldBash");
+    if (sk.anim === "ultimate" && !sk.transform && (zeroResonance || statusOf(target, "holyVulnerability"))) bonus += typedTalentValue(source.id, "oathfireAscendant");
+  }
   if (source.form === "mech") bonus += typedTalentValue(source.id, "mechOverload") + typedTalentValue(source.id, "mechCapstone");
   return 1 + bonus;
+}
+
+function restoreTalentHp(target, amount) {
+  if (!target || target.hp <= 0) return 0;
+  const restored = Math.min(Math.max(0, Math.round(amount)), target.max - target.hp);
+  target.hp += restored;
+  if (restored) addBattleFloater(target, restored, { kind: "heal" });
+  return restored;
+}
+
+function woundedLivingAlly(exclude = null) {
+  return battle.party.filter(ally => ally.hp > 0 && ally !== exclude).sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
+}
+
+function transferDeadSparkyBurns() {
+  if (!battle?.enemies) return;
+  const dead = battle.enemies.filter(enemy => enemy.hp <= 0 && !enemy.wildfireTransferred && statusOf(enemy, "burn")?.source?.id === "Sparky");
+  if (!dead.length || !typedTalentValue("Sparky", "deathBurnTransfer")) return;
+  dead.forEach(enemy => {
+    const burn = statusOf(enemy, "burn");
+    if (burn?.source?.id !== "Sparky" || burn.remaining <= 0) return;
+    enemy.wildfireTransferred = true;
+    const next = battle.enemies.find(target => target.hp > 0 && !statusOf(target, "burn")) || battle.enemies.find(target => target.hp > 0);
+    if (!next) return;
+    next.statuses = ensureStatuses(next).filter(status => status.type !== "burn");
+    // Copy the applied duration/potency without reapplying Smolder or Old Flame.
+    next.statuses.push({ ...burn, source: { ...burn.source }, value: Math.max(1, Math.round(burn.value * .75)) });
+    addBattleFloater(next, 0, { kind: "status", text: "BURN TRANSFERRED" });
+  });
+}
+
+function combatDroneFollowUp(source, totalDamage, targetCount) {
+  const drone = statusOf(source, "combatDrone");
+  const carrier = source.id === "Glimmer" && source.form === "mech" ? typedTalentValue(source.id, "mechCarrier") : 0;
+  if ((!drone && !carrier) || (!carrier && totalDamage <= 0)) return "";
+  const ownerId = baseJobs[drone?.source?.id] ? drone.source.id : source.id;
+  const dual = typedTalentValue(ownerId, "dronePower");
+  const base = (drone?.value ?? .25) + typedTalentValue(ownerId, "droneBaseBonus");
+  const damage = Math.max(1, Math.round((totals(ownerId).mag * base + totalDamage / Math.max(1, targetCount) * .15) * (1 + dual) * (1 + carrier)));
+  const enemies = battle.enemies.filter(enemy => enemy.hp > 0);
+  let log = "";
+  function strike(enemy, ratio) {
+    if (!enemy || enemy.hp <= 0) return;
+    const crash = ownerId === "Glimmer" && statusOf(enemy, "disrupted") ? typedTalentValue(ownerId, "systemCrash") : 0;
+    const amount = Math.max(1, Math.round(damage * ratio * (1 + crash)));
+    enemy.hp = Math.max(0, enemy.hp - amount);
+    enemy.flash = 10;
+    addBattleFloater(enemy, amount, { damageType: "Drone Tech" });
+    if (enemy.hp <= 0 && !enemy.defeatUntil) {
+      enemy.anim = "death"; enemy.deathTick = tick;
+      enemy.defeatUntil = tick + (enemyAnimationSheetFor(enemy) ? 30 : 12);
+    }
+    log += ` Combat Drone hits ${enemy.name} for ${amount}.`;
+  }
+  strike(enemies[0], 1);
+  if (dual) strike(enemies[1], .5);
+  const swarm = typedTalentValue(ownerId, "droneSwarm");
+  if (swarm) {
+    const living = battle.enemies.filter(enemy => enemy.hp > 0);
+    strike(dual ? living.find(enemy => enemy !== enemies[0]) || living[0] : living[0], swarm);
+  }
+  return log;
+}
+
+function finishMechTalentAction(unit) {
+  if (unit?.id !== "Glimmer" || unit.form !== "mech" || unit.mechClinicResolved || !typedTalentValue(unit.id, "mechClinic")) return "";
+  unit.mechClinicResolved = true;
+  const ally = woundedLivingAlly();
+  if (!ally) return "";
+  const belowHalf = ally.hp / ally.max < .5;
+  const hospital = typedTalentValue(unit.id, "mobileHospital");
+  const restored = restoreTalentHp(ally, totals(unit.id).mag * (hospital || .25));
+  if (hospital && belowHalf) applyStatus(ally, "barrier", unit, { duration: 2, value: .15, force: true });
+  return ` Mobile ${hospital ? "Hospital" : "Clinic"} heals ${ally.name} for ${restored} HP.`;
+}
+
+function successfulSparkyIntercept(unit) {
+  if (unit.id !== "Sparky") return;
+  state.resonance = Math.min(100, state.resonance + typedTalentValue(unit.id, "interceptResonance"));
+  if (unit.hp <= 0) return;
+  if (typedTalentValue(unit.id, "interceptEvasion")) applyStatus(unit, "evasion", unit, { duration: 1, incomingCharges: 1, value: .3, force: true });
+  if (typedTalentValue(unit.id, "interceptPrrrp")) unit.prrrpWindow = 2;
+}
+
+function guardedTalentBreak(source, enemy) {
+  if (source.id !== "Seerin" || enemy.hp <= 0) return;
+  const result = addBreakProgress(source, enemy, 1);
+  if (result.breaks) {
+    enemy.hp = Math.max(0, enemy.hp - result.bonusDamage);
+    applyStatus(enemy, "broken", source, { duration: 1, force: true });
+    addBattleFloater(enemy, result.bonusDamage, { damageType: "Break" });
+  }
 }
 
 function useSkill(u, selectedSkill, chosenTarget = null) {
@@ -10022,6 +10204,10 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   setTimeout(() => {
     if (!battle || mode !== "battle") return;
     battle.attackDamage = [];
+    let feedbackUsed = false;
+    let purifyingUsed = false;
+    const refreshedBurns = new Set();
+    const zeroResonanceAtStart = battle.enemyResonance === 0;
     let log = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${u.name} uses ${sk.name}.`;
     const supportTargets = sk.targetSide === "self"
       ? [u]
@@ -10047,13 +10233,18 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       let totalRestored = 0;
       let criticalHeals = 0;
       healTargets.forEach(ally => {
+        const belowHalf = ally.hp / ally.max < .5;
+        const protector = ally.hp / ally.max < .35 ? 1 + typedTalentValue(u.id, "woundedProtection") : 1;
         const critical = Math.random() < healingCritChance(u);
-        const restored = Math.min(critical ? healing * 2 : healing, ally.max - ally.hp);
+        const restored = Math.min(Math.round((critical ? healing * 2 : healing) * protector), ally.max - ally.hp);
         ally.hp += restored;
         totalRestored += restored;
         if (critical && restored) criticalHeals++;
         addBattleFloater(ally, restored, { kind: "heal", crit: critical });
+        const barrier = sk.name === "Patch Job" ? typedTalentValue(u.id, "patchBarrier") : sk.name === "Prrrp" ? typedTalentValue(u.id, "prrrpBarrier") : 0;
+        if (barrier && belowHalf) applyStatus(ally, "barrier", u, { duration: 2, value: barrier * protector, force: true });
       });
+      if (sk.name === "Prrrp") delete u.prrrpWindow;
       if (sk.cleanse || /Oath Unbound/.test(sk.name)) {
         let cleansed = 0;
         healTargets.forEach(ally => cleansed += cleanseWithTalent(u, ally));
@@ -10092,6 +10283,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const removed = dispelStatus(target);
       if (removed) addBattleFloater(target, 0, { kind: "dispel", text: `DISPELLED: ${removed.toUpperCase()}` });
       log += removed ? ` ${target.name} loses ${removed}.` : ` ${target.name} has no removable buff.`;
+      if (u.id === "Seerin" && sk.name === "Radiant Purge" && typedTalentValue(u.id, "radiantJudgment")) {
+        battle.enemyResonance = Math.max(0, battle.enemyResonance - 25);
+        applyStatus(u, "holyFollowUp", u, { duration: 1, value: .15, force: true });
+        log += " Enemy Resonance -25. Seerin gains Holy Follow-up 15%.";
+      }
       state.resonance = Math.min(100, state.resonance + 6);
       playSfx("magic");
     } else if (target) {
@@ -10109,13 +10305,19 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           return;
         }
         const brokenAtHitStart = Boolean(statusOf(hitTarget, "broken"));
+        const disruptedAtHitStart = Boolean(statusOf(hitTarget, "disrupted"));
+        if (u.id === "Seerin" && sk.element === "Holy Fire" && zeroResonanceAtStart && !purifyingUsed && typedTalentValue(u.id, "purifyingOath")) {
+          purifyingUsed = true;
+          const removed = removeCleanseStatus(u);
+          if (removed) log += ` Purifying Oath removes ${removed}.`;
+        }
         const rank0BreakPayoff = sk.rank0BreakPayoff && (brokenAtHitStart || (hitTarget.stagger || 0) >= 2) ? 1 + sk.rank0BreakPayoff : 1;
         const afflicted = hasNegativeStatus(hitTarget);
         const critChance = Math.min(.65, heroCritChance(u.id, afflicted) + statusValue(u, "critUp") + statusValue(hitTarget, "marked") + statusValue(hitTarget, "critExposed"));
         const statKey = skillScaling(sk);
         const offensiveStat = skillOffensiveStat(u.id, sk, u, t);
         let dmg = (sk.coefficient ? offensiveStat * sk.coefficient : sk.power + offensiveStat) + Math.floor(Math.random() * 6);
-        dmg *= skillDamageTalentMultiplier(u, sk, hitTarget);
+        dmg *= skillDamageTalentMultiplier(u, sk, hitTarget, zeroResonanceAtStart);
         if (sk.anim === "ultimate") dmg *= ultimatePotencyMultiplier(u.id, sk);
         if (sk.element === "Sound" && u.nextSongBoost) {
           dmg *= 1 + u.nextSongBoost;
@@ -10125,6 +10327,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const breakGain = canGenerateBreak(u) ? (sk.staggerPower || (weaknessHit ? 2 : 1))
           + typedTalentValue(u.id, "staggerBonus")
           + (sk.rank0Break || 0)
+          + (u.id === "Seerin" && sk.anim === "ultimate" && hitTarget === target ? typedTalentValue(u.id, "flameguardCharge") : 0)
           + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0) : 0;
         const breakResult = addBreakProgress(u, hitTarget, breakGain);
         if (weaknessHit) {
@@ -10191,6 +10394,17 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         if (holyDamage) addBattleFloater(hitTarget, holyDamage, { damageType: "Holy Fire", delayTicks: sk.multiHit > 1 ? sk.multiHit * 4 : 4 });
         const statusNotes = hitTarget.hp > 0 ? applySkillStatuses(u, hitTarget, sk) : [];
+        if (u.id === "Glimmer" && sk.element === "Tech" && disruptedAtHitStart && !feedbackUsed && typedTalentValue(u.id, "techResonanceDrain")) {
+          feedbackUsed = true;
+          const drain = typedTalentValue(u.id, "systemCrash") ? 20 : 10;
+          battle.enemyResonance = Math.max(0, battle.enemyResonance - drain);
+          statusNotes.push(`Feedback Loop: Resonance -${drain}`);
+        }
+        if (u.id === "Glimmer" && u.form === "mech" && hitTarget === target && typedTalentValue(u.id, "mechEmp") && hitTarget.hp > 0) applyStatus(hitTarget, "disrupted", u, { duration: 2, value: .2, force: true });
+        if (u.id === "Sparky" && sk.element === "Ancient Fire" && typedTalentValue(u.id, "burnRefresh") && !refreshedBurns.has(hitTarget)) {
+          const burn = statusOf(hitTarget, "burn");
+          if (burn) { burn.remaining = burn.initialRemaining; refreshedBurns.add(hitTarget); }
+        }
         const resonanceControl = applyEnemyResonanceControl(u, hitTarget, sk);
         if (resonanceControl) statusNotes.push(resonanceControl);
         if (critical && hitTarget.hp > 0 && typedTalentValue(u.id, "critBleed") && Math.random() < typedTalentValue(u.id, "critBleed")) {
@@ -10239,11 +10453,20 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (restored) {
           addBattleFloater(u, restored, { kind: "heal" });
           log += ` VAMPIRIC restores ${restored} HP to ${u.name}.`;
+          if (statusOf(u, "vampiric")?.source?.id === "Sparky") {
+            const sparky = battle.party.find(ally => ally.id === "Sparky" && ally.hp > 0);
+            if (sparky && typedTalentValue("Sparky", "emberBond")) restoreTalentHp(sparky, restored * .25);
+            if (sparky && typedTalentValue("Sparky", "hearthfire")) restoreTalentHp(woundedLivingAlly(u), restored * .25);
+          }
         }
       }
       if (sk.selfGuard) {
         u.guarding = true;
         log += ` ${u.name} remains Guarded.`;
+      }
+      if (u.id === "Seerin" && sk.anim === "ultimate" && !sk.transform) {
+        if (typedTalentValue(u.id, "flameguardCharge")) u.guarding = true;
+        if (typedTalentValue(u.id, "oathfireAscendant") && hitTargets.some(enemy => zeroResonanceAtStart || statusOf(enemy, "holyVulnerability"))) battle.enemyResonance = 0;
       }
       if (u.id === "Verseborn" && sk.anim === "ultimate" && sk.ultimateIndex === 1 && typedTalentValue(u.id, "ultimateBoost")) {
         battle.party.filter(ally => ally.hp > 0).forEach(ally => applyStatus(ally, "echoPower", u, { duration: 3, value: .2, force: true }));
@@ -10275,26 +10498,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         applyStatus(spreadTarget, "burn", u, { force: true, duration: 3, scaling: "mag", element: "Ancient Fire" });
         log += ` Wildfire spreads to ${spreadTarget.name}.`;
       }
-      const droneStatus = statusOf(u, "combatDrone");
-      if (droneStatus && totalDamageDealt > 0) {
-        const droneOwnerId = baseJobs[droneStatus.source?.id] ? droneStatus.source.id : u.id;
-        const droneTalentPower = typedTalentValue(droneOwnerId, "dronePower");
-        const dronePower = (droneStatus.value ?? STATUS_DEFS.combatDrone.value) * (1 + droneTalentPower + typedTalentValue(droneOwnerId, "gadgetCapstone"));
-        const actionAssist = (totalDamageDealt / Math.max(1, hitTargets.length)) * .15;
-        const droneDamage = Math.max(1, Math.round(totals(droneOwnerId).mag * dronePower + actionAssist));
-        const droneTargets = battle.enemies.filter(enemy => enemy.hp > 0).slice(0, droneTalentPower ? 2 : 1);
-        droneTargets.forEach(enemy => {
-          enemy.hp = Math.max(0, enemy.hp - droneDamage);
-          enemy.flash = 10;
-          addBattleFloater(enemy, droneDamage, { damageType: "Drone Tech" });
-          if (enemy.hp <= 0 && !enemy.defeatUntil) {
-            enemy.anim = "death";
-            enemy.deathTick = tick;
-            enemy.defeatUntil = tick + (enemyAnimationSheetFor(enemy) ? 30 : 12);
-          }
-          log += ` Combat Drone hits ${enemy.name} for ${droneDamage}.`;
-        });
-      }
+      log += combatDroneFollowUp(u, totalDamageDealt, hitTargets.length);
       if (sk.selfHealRatio && totalDamageDealt > 0) {
         const restored = Math.min(Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio)), u.max - u.hp);
         u.hp += restored;
@@ -10325,6 +10529,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
     }
 
+    log += finishMechTalentAction(u);
+    transferDeadSparkyBurns();
     if (sk.grantsWard) battle.ward = true;
     if (!selectedSkill.encore && !skillTargetsEnemies(sk) && sk.anim !== "ultimate") battle.lastSupport = { ...sk };
     const echoChance = effectValue(u.id, "echoing");
@@ -10766,7 +10972,9 @@ function resolveEnemyTurn(turn, prev) {
     action = enemyActionForKind(e, "melee");
     target = chooseEnemyTarget(e, action, liveParty);
   }
-  if (enemyActionDealsDamage(action) && liveParty.includes(target) && target.hp / target.max < .35) {
+  const taunter = liveParty.find(ally => ally.holdTheLine);
+  if (taunter && enemyActionDealsDamage(action) && !enemyActionHitsAll(e, action)) target = taunter;
+  if (!taunter && enemyActionDealsDamage(action) && liveParty.includes(target) && target.hp / target.max < .35) {
     const interceptor = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
     if (interceptor) target = interceptor;
   }
@@ -10836,9 +11044,10 @@ function resolveEnemyTurn(turn, prev) {
       playSfx("magic");
     } else {
       const allTargets = enemyActionHitsAll(e, action);
+      const intercepted = new Set();
       const hitTargets = enemyTargetsForAction(e, action, target).map(defender => {
         const protector = rank0Protector(defender, allTargets);
-        if (protector) actionLog += ` ${protector.name} protects ${defender.name}.`;
+        if (protector) { intercepted.add(protector); actionLog += ` ${protector.name} protects ${defender.name}.`; }
         return protector || defender;
       });
       hitTargets.forEach(defender => {
@@ -10849,7 +11058,9 @@ function resolveEnemyTurn(turn, prev) {
         }
         const rolled = enemyDamageRoll(e, action, defender);
         let dmg = rolled.damage;
+        if (intercepted.has(defender)) dmg = Math.ceil(dmg * (1 - typedTalentValue(defender.id, "interceptReduction")));
         let defenseText = "";
+        const personallyGuarded = Boolean(defender.guarding);
         if (defender.guarding) {
           const reduction = defendReduction(defender);
           dmg = Math.ceil(dmg * (1 - reduction / 100));
@@ -10858,17 +11069,12 @@ function resolveEnemyTurn(turn, prev) {
           playSfx("block");
           const counter = typedTalentValue(defender.id, "guardCounter");
           if (counter && e.hp > 0) {
-            const counterDamage = Math.max(1, Math.round((totals(defender.id).str + baseJobs[defender.id].skills[0].power) * counter));
+            const basic = battleSkills(defender.id, defender).find(sk => sk.basicAttack) || baseJobs[defender.id].skills[0];
+            const counterDamage = Math.max(1, Math.round((basic.power + skillOffensiveStat(defender.id, basic, defender)) * counter));
             e.hp = Math.max(0, e.hp - counterDamage);
             addBattleFloater(e, counterDamage, { damageType: "Counter" });
             defenseText += ` Counter -${counterDamage}.`;
-          }
-          const thorns = typedTalentValue(defender.id, "thorns");
-          if (thorns && action.kind === "melee" && e.hp > 0) {
-            const reflected = Math.max(1, Math.round(dmg * thorns));
-            e.hp = Math.max(0, e.hp - reflected);
-            addBattleFloater(e, reflected, { damageType: "Holy Fire" });
-            defenseText += ` Burning Aegis -${reflected}.`;
+            guardedTalentBreak(defender, e);
           }
         } else if (battle.ward) {
           dmg = Math.ceil(dmg * Math.max(.2, .5 - effectValue(defender.id, "blockPower")));
@@ -10896,6 +11102,15 @@ function resolveEnemyTurn(turn, prev) {
           defenseText += ` ${lastBastion.name}'s Last Bastion leaves ${defender.name} at 1 HP.`;
         }
         defender.hp = Math.max(0, defender.hp - dmg);
+        const thorns = personallyGuarded ? typedTalentValue(defender.id, "thorns") : 0;
+        if (thorns && action.kind === "melee" && e.hp > 0 && dmg > 0) {
+          const reflected = Math.max(1, Math.round(dmg * thorns));
+          e.hp = Math.max(0, e.hp - reflected);
+          addBattleFloater(e, reflected, { damageType: "Holy Fire" });
+          defenseText += ` Burning Aegis -${reflected}.`;
+          guardedTalentBreak(defender, e);
+        }
+        if (intercepted.has(defender)) successfulSparkyIntercept(defender);
         const fell = markBattleUnitDown(defender);
         if (defender.hp > 0 && typedTalentValue(defender.id, "damageResonance")) state.resonance = Math.min(100, state.resonance + Math.max(1, Math.round(4 * (1 + typedTalentValue(defender.id, "damageResonance")))));
         defender.flash = 12;
