@@ -5441,25 +5441,33 @@ function sourceRelevantStat(source, options = {}) {
   return Math.max(1, magicBased ? (source?.stats?.mag || source?.atk || 8) : (source?.atk || source?.stats?.str || 8));
 }
 
+function dotScalingStat(source, stat) {
+  const base = source?.id ? totals(source.id)[stat] * transformedStatMultiplier(source, stat)
+    : source?.stats?.[stat] ?? source?.[stat] ?? source?.atk ?? 8;
+  const buff = stat === "mag" ? "magicUp" : "agilityUp";
+  return Math.max(1, base * (1 + statusValue(source, buff)));
+}
+
 function poisonValueFor(target, source, options = {}) {
   if (Number.isFinite(options.value)) return Math.max(1, Math.round(options.value));
-  const coefficients = { weak: .2, normal: .3, strong: .4 };
+  const coefficients = { weak: .3, normal: .4, strong: .5 };
   const coefficient = options.coefficient ?? coefficients[options.potency || "normal"];
   const poisonBoost = source?.id ? 1 + typedTalentValue(source.id, "poisonDamage") + effectValue(source.id, "poisonDamage") : 1;
-  const scaled = sourceRelevantStat(source, options) * coefficient * poisonBoost;
+  const scaled = dotScalingStat(source, "agi") * coefficient * poisonBoost;
   const boss = target?.resistanceTier === "boss";
   const floor = (target?.max || 1) * (boss ? .005 : .01);
-  const capped = boss ? Math.min(Math.max(scaled, floor), (target?.max || 1) * .015) : Math.max(scaled, floor);
+  const capped = boss ? Math.min(Math.max(scaled, floor), (target?.max || 1) * .025) : Math.max(scaled, floor);
   return Math.max(1, Math.round(capped));
 }
 
 function dotValueFor(type, target, source, options = {}) {
   if (type === "poison") return poisonValueFor(target, source, options);
-  const coefficient = type === "burn" ? .24 : .2;
+  const coefficient = type === "burn" ? .4 : .2;
   const boostType = type === "burn" ? "burnDamage" : "bleedDamage";
   const capstone = type === "burn" && source?.id ? typedTalentValue(source.id, "livingWildfire") : 0;
   const multiplier = type === "burn" && source?.id && typedTalentValue(source.id, "doubleBurnDamage") ? 2 : 1;
-  return Math.max(1, Math.round(sourceRelevantStat(source, options) * coefficient * (1 + (source?.id ? typedTalentValue(source.id, boostType) : 0) + capstone))) * multiplier;
+  const stat = type === "burn" ? dotScalingStat(source, "mag") : sourceRelevantStat(source, options);
+  return Math.max(1, Math.round(stat * coefficient * (1 + (source?.id ? typedTalentValue(source.id, boostType) : 0) + capstone))) * multiplier;
 }
 
 function statusDurationFor(source, type, requested) {
@@ -5486,20 +5494,32 @@ function applyStatus(target, type, source, options = {}) {
   if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
   let value = ["poison", "burn", "bleed"].includes(type) ? (Number.isFinite(options.value) ? options.value : dotValueFor(type, target, source, options)) : options.value ?? def.value;
   if (def.negative && source?.id && !["poison", "burn", "bleed"].includes(type) && Number.isFinite(value)) value *= 1 + typedTalentValue(source.id, "debuffPotency");
-  const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .2, normal: .3, strong: .4 }[options.potency || "normal"]) : null;
+  const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .3, normal: .4, strong: .5 }[options.potency || "normal"]) : null;
+  const critEnabled = ["burn", "poison"].includes(type);
+  const critChance = critEnabled ? Math.max(0, Math.min(source?.id ? .65 : .75,
+    (source?.id ? heroCritChance(source.id, true) : source?.crit ?? .08) + statusValue(source, "critUp"))) : 0;
   const data = {
     type,
     source: { id: source?.id || null, name: source?.name || source?.id || "Unknown" },
     remaining: duration,
     initialRemaining: duration,
-    value: existing && type === "poison" ? Math.max(existing.value || 0, value) : value,
+    value: existing && ["poison", "burn"].includes(type) ? Math.max(existing.value || 0, value) : value,
+    critChance,
+    critMultiplier: source?.id ? 2 : 2 + (source?.affixes?.critDamage || 0),
     coefficient: existing && type === "poison" ? Math.max(existing.coefficient || 0, coefficient) : coefficient,
     appliedRound: battle?.round || 0,
     appliedTurn: combatantKey(source)
   };
   if (type === "evasion") data.incomingCharges = Math.max(1, Number(options.incomingCharges) || duration);
   if (existing) {
-    if (type === "poison") data.remaining = Math.max(existing.remaining || 0, duration);
+    if (["poison", "burn"].includes(type)) {
+      data.remaining = Math.max(existing.remaining || 0, duration);
+      if ((existing.value || 0) > value) {
+        data.source = existing.source;
+        data.critChance = existing.critChance || 0;
+        data.critMultiplier = existing.critMultiplier || 2;
+      }
+    }
     Object.assign(existing, data);
   }
   else ensureStatuses(target).push(data);
@@ -5702,11 +5722,13 @@ function processTurnStart(unit) {
     const dot = statusOf(unit, type);
     if (!dot || unit.hp <= 0) return;
     let amount = dot.value || 1;
+    const critical = ["burn", "poison"].includes(type) && Math.random() < (dot.critChance || 0);
+    if (critical) amount = Math.max(1, Math.round(amount * (dot.critMultiplier || 2)));
     if (type === "burn" && dot.source?.id === "Sparky" && unlockedRank0("Sparky").some(entry => entry.passive === "doubleBurn")) amount *= 2;
     if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
     unit.hp = Math.max(0, unit.hp - amount);
-    addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label });
-    notes.push(`${STATUS_DEFS[type].label} -${amount} HP`);
+    addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label, crit: critical });
+    notes.push(`${critical ? "CRIT " : ""}${STATUS_DEFS[type].label} -${amount} HP`);
   });
   transferDeadSparkyBurns();
   if (unit.hp <= 0) return { skip: true, notes };
