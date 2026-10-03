@@ -7333,6 +7333,7 @@ html:not(.touch-layout) .menu {
   }
 }
 .menu .shop-row.is-artifact-offer {
+  display: grid;
   grid-template-columns: 48px minmax(0, 1fr) auto auto;
   align-items: start;
 }
