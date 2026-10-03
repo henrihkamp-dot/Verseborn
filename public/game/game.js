@@ -5307,6 +5307,11 @@ function typedTalentValue(id, type, matchType = null) {
 
 function ensureStatuses(unit) {
   if (unit && !Array.isArray(unit.statuses)) unit.statuses = [];
+  for (const status of unit?.statuses || []) {
+    for (const key of ["remaining", "initialRemaining", "incomingCharges"]) {
+      if (Number.isFinite(status[key])) status[key] = Math.max(0, Math.round(status[key]));
+    }
+  }
   return unit?.statuses || [];
 }
 
@@ -5475,10 +5480,10 @@ function statusDurationFor(source, type, requested) {
   const negative = STATUS_DEFS[type]?.negative;
   const talentBonus = negative && source?.id ? typedTalentValue(source.id, "statusDuration", type) : 0;
   const gearBonus = negative && source?.id ? effectValue(source.id, "statusDuration") : 0;
-  if (type === "sleep") return Math.min(5, base);
+  if (type === "sleep") return Math.max(1, Math.min(5, Math.round(base)));
   if (type === "stun") return 1;
   const burnBonus = type === "burn" && source?.id === "Sparky" ? typedTalentValue(source.id, "burnDuration") : 0;
-  return Math.max(1, base + talentBonus + gearBonus + burnBonus);
+  return Math.max(1, Math.round(base + talentBonus + gearBonus + burnBonus));
 }
 
 function applyStatus(target, type, source, options = {}) {
@@ -5492,6 +5497,7 @@ function applyStatus(target, type, source, options = {}) {
   const poisonDurations = { weak: 3, normal: 4, strong: 5 };
   if (type === "poison" && !options.duration) duration = statusDurationFor(source, type, poisonDurations[options.potency || "normal"]);
   if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
+  duration = Math.max(1, Math.round(duration));
   let value = ["poison", "burn", "bleed"].includes(type) ? (Number.isFinite(options.value) ? options.value : dotValueFor(type, target, source, options)) : options.value ?? def.value;
   if (def.negative && source?.id && !["poison", "burn", "bleed"].includes(type) && Number.isFinite(value)) value *= 1 + typedTalentValue(source.id, "debuffPotency");
   const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .3, normal: .4, strong: .5 }[options.potency || "normal"]) : null;
@@ -5510,7 +5516,7 @@ function applyStatus(target, type, source, options = {}) {
     appliedRound: battle?.round || 0,
     appliedTurn: combatantKey(source)
   };
-  if (type === "evasion") data.incomingCharges = Math.max(1, Number(options.incomingCharges) || duration);
+  if (type === "evasion") data.incomingCharges = Math.max(1, Math.round(Number(options.incomingCharges) || duration));
   if (existing) {
     if (["poison", "burn"].includes(type)) {
       data.remaining = Math.max(existing.remaining || 0, duration);
@@ -13058,7 +13064,7 @@ function affixComparisonKey(entry) {
 function affixComparisonValue(entry, value = entry?.value || 0) {
   const percent = ["statPct", "hpPct", "statusOnHit", "statusResistance", "critChance", "afflictedDamage", "physicalDamage", "magicDamage", "poisonReduction", "statusChance", "allStatusResistance", "echoing", "openingTurnProgress", "leeching", "siphoning"].includes(entry?.type);
   const turns = ["statusDuration", "statusDurationReduction", "buffDuration"].includes(entry?.type);
-  return turns ? `${comparisonNumber(value)} turn${Math.abs(value) === 1 ? "" : "s"}` : comparisonNumber(value, percent);
+  return turns ? `${comparisonNumber(Math.round(value))} turn${Math.abs(Math.round(value)) === 1 ? "" : "s"}` : comparisonNumber(value, percent);
 }
 
 function affixIconHtml(entry) {
