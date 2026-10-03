@@ -15,6 +15,7 @@ for (const entry of Object.values(manifest)) {
 }
 for (const file of ['lyrsa.webp', 'nyx.webp', 'jory.webp']) fs.rmSync(path.join(game, sprites, file), { force: true });
 fs.cpSync(path.join(root, 'public/game/assets/ui/boss-mechanics'), path.join(game, 'assets/ui/boss-mechanics'), { recursive: true });
+fs.cpSync(path.join(root, 'public/game/assets/effects/endgame-bosses'), path.join(game, 'assets/effects/endgame-bosses'), { recursive: true });
 const code = fs.readFileSync(path.join(game, 'game.js'), 'utf8');
 for (const match of code.matchAll(/["'`](assets\/[^"'`$\n]+\.webp)["'`]/g)) {
   if (!fs.existsSync(path.join(game, match[1]))) throw Error('Missing runtime asset: ' + match[1]);

@@ -4,6 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 import numpy as np
 from collections import deque
+from build_hall_endgame_sprites import transparent_seam
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'public/game/assets/ui/boss-mechanics'
@@ -73,9 +74,18 @@ def main():
         for col in range(4):
             extract(icons, (xs[col],ys[row],xs[col+1],ys[row+1]), NAMES[row*4+col], 96, clean=True)
     overlays = Image.open(DOWNLOADS/'a_clean_png_style_game_ui_asset_sheet_on_a_transpa_4_batch_4.png').convert('RGBA')
+    overlay_alpha = np.array(overlays.getchannel('A'))
+    boundaries = [np.zeros(overlays.width,dtype=int)] + [transparent_seam(overlay_alpha.T,y,50) for y in (330,645,965)] + [np.full(overlays.width,overlays.height,dtype=int)]
     for index, name in enumerate(['guidance', 'sanctuary', 'roots', 'violation', 'echo', 'veil', 'lock', 'brokenShield', 'rings', 'core', 'aura', 'impact']):
         col, row = index % 3, index // 3
-        extract(overlays, (round(col*overlays.width/3), round(row*overlays.height/4), round((col+1)*overlays.width/3), round((row+1)*overlays.height/4)), 'effect-'+name, 176)
+        row_mask = (np.arange(overlays.height)[:,None]>=boundaries[row][None,:]) & (np.arange(overlays.height)[:,None]<boundaries[row+1][None,:])
+        row_alpha = np.where(row_mask,overlay_alpha,0)
+        columns = [np.zeros(overlays.height,dtype=int)] + [transparent_seam(row_alpha,x,75) for x in (420,840)] + [np.full(overlays.height,overlays.width,dtype=int)]
+        mask = row_mask & (np.arange(overlays.width)[None,:]>=columns[col][:,None]) & (np.arange(overlays.width)[None,:]<columns[col+1][:,None])
+        rgba = np.array(overlays)
+        rgba[:,:,3][~mask] = 0
+        isolated = Image.fromarray(rgba)
+        extract(isolated, (0,0,overlays.width,overlays.height), 'effect-'+name, 176, clean=name == 'veil')
     panels = Image.open(DOWNLOADS/'a_clean_transparent_png_asset_sheet_ui_overlay_3_batch_3.png').convert('RGBA')
     extract(panels, (545,375,panels.width,668), 'detail-panel', 640)
     extract(panels, (0,670,panels.width,956), 'warning-banner', 768)

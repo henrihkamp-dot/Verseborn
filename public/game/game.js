@@ -1370,11 +1370,25 @@ function loadEchoProjectileSheet() {
 const characterVfxSheets = {};
 const statusIconImages = {};
 const bossMechanicImages = {};
+const endgameBossVfxSheets = {};
+async function loadEndgameBossVfx() {
+  try {
+    const response = await fetch("assets/effects/endgame-bosses/manifest.json?v=113");
+    if (!response.ok) return;
+    const manifest = await response.json();
+    await Promise.all(Object.entries(manifest).map(([name, config]) => new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => { endgameBossVfxSheets[name] = { ...config, image }; resolve(); };
+      image.onerror = resolve;
+      image.src = `assets/effects/endgame-bosses/${config.file}`;
+    })));
+  } catch (_) { /* Never substitute an opaque placeholder for missing boss art. */ }
+}
 const BOSS_MECHANIC_ICONS = { protectedGuest: "protectedGuest", sanctuary: "sanctuary", inspectionOrder: "inspectionOrder", violationStamp: "violationStamp", guidanceMark: "guidanceMark", rootBind: "rootBind", memoryAdaptation: "memoryAdaptation", memoryCore: "memoryCore", echoSigil: "echoSigil", beguilingVeil: "beguilingVeil", oathguard: "oathguard", brokenOath: "brokenOath", harmonicRings: "harmonicRings", buffRecord: "buffRecord", skillRecord: "skillRecord", memoryRecord: "memoryRecord" };
 const BOSS_TELEGRAPH_EFFECTS = { guidanceMark: "guidance", sanctuary: "sanctuary", rootBind: "roots", violationStamp: "violation", echoSigil: "echo", beguilingVeil: "veil", skillRecord: "lock", brokenOath: "brokenShield", harmonicRings: "rings", memoryCore: "core", buffRecord: "aura", memoryRecord: "impact" };
 async function loadBossMechanicAssets() {
   try {
-    const response = await fetch("assets/ui/boss-mechanics/manifest.json?v=112");
+    const response = await fetch("assets/ui/boss-mechanics/manifest.json?v=113");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([name, file]) => new Promise(resolve => {
@@ -1417,6 +1431,7 @@ async function loadCharacterVfxSheets() {
 }
 
 Promise.all([
+  loadEndgameBossVfx(),
   loadBossMechanicAssets(),
   loadStatusIcons(),
   loadCharacterVfxSheets(),
@@ -8292,6 +8307,12 @@ function drawEnemy(e, px, py) {
 
 function drawEffect() {
   if (!effect) return;
+  if (effect.bossSheetVfx) {
+    effect.t++;
+    drawEndgameBossVfx(effect);
+    if (performance.now() - effect.startedAt >= effect.timing.totalMs) effect = null;
+    return;
+  }
   if (effect.characterVfx) {
     effect.t++;
     drawCharacterVfx(effect);
@@ -8318,6 +8339,39 @@ function drawEffect() {
     drawUltimateEffect(effect);
   }
   if (effect.t > (effect.duration || 24)) effect = null;
+}
+
+function drawEndgameBossVfx(fx) {
+  const sheet = endgameBossVfxSheets[fx.caster];
+  if (!sheet) return;
+  const elapsed = Math.max(0, performance.now() - fx.startedAt);
+  const impact = fx.timing.impactMs;
+  const peak = fx.vfxKind === "magic" ? 3 : 2;
+  const col = elapsed < impact ? Math.min(peak - 1, Math.floor(elapsed / impact * peak)) : Math.min(3, peak + Math.floor((elapsed - impact) / Math.max(1, fx.timing.totalMs - impact) * (4 - peak)));
+  const row = sheet.rowMap[fx.vfxKind];
+  const size = fx.vfxKind === "ultimate" ? 150 : fx.vfxKind === "support" ? 83 : fx.vfxKind === "melee" ? 78 : 94;
+  const scale = size / Math.max(sheet.cellWidth, sheet.cellHeight);
+  let points = fx.vfxTargets;
+  if (fx.vfxKind === "magic") {
+    const progress = Math.min(1, elapsed / impact);
+    points = [{ x: fx.fromX + (fx.toX - fx.fromX) * progress, y: fx.fromY + (fx.toY - fx.fromY) * progress }];
+  }
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 20, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT - 20);
+  ctx.clip();
+  for (const point of points) {
+    const x = Math.max(sheet.anchorX * scale, Math.min(LOGICAL_WIDTH - (sheet.cellWidth - sheet.anchorX) * scale, point.x));
+    const y = Math.max(20 + sheet.anchorY * scale, Math.min(BATTLE_ARENA_HEIGHT - (sheet.cellHeight - sheet.anchorY) * scale, point.y));
+    ctx.save();
+    ctx.translate(x, y);
+    if (fx.vfxKind === "magic") ctx.rotate(Math.atan2(fx.toY - fx.fromY, fx.toX - fx.fromX) - Math.PI);
+    ctx.drawImage(sheet.image, col * sheet.cellWidth, row * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight,
+      -sheet.anchorX * scale, -sheet.anchorY * scale,
+      sheet.cellWidth * scale, sheet.cellHeight * scale);
+    ctx.restore();
+  }
+  ctx.restore();
 }
 
 function enemyAbilityProfile(unit) {
@@ -11551,23 +11605,55 @@ function makeEnemyBattleEffect(unit, target, action) {
   const visualKind = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
   const timing = battleActionTiming(visualKind);
   const profile = enemyAbilityProfile(unit);
+  const vfxKind = action.kind === "ultimate" ? "ultimate" : action.kind === "melee" ? "melee" : action.healing || ["buff", "cleanse", "dispel", "utility"].includes(action.kind) ? "support" : "magic";
+  let visualTargets = [target || unit];
+  if (unit.endgameBoss && action.healing && action.allAllies) visualTargets = battle.enemies.filter(ally => ally.hp > 0);
+  if (unit.endgameBoss && vfxKind === "support") {
+    if (action.allAllies || ["sanctuaryCleanse", "sanctuaryWard", "seating", "rings"].includes(action.endgameEffect)) visualTargets = battle.enemies.filter(ally => ally.hp > 0);
+    if (action.endgameEffect === "guest") {
+      const guests = battle.enemies.filter(ally => ally.hp > 0 && ally !== unit);
+      visualTargets = [guests[(unit.encounterMechanic?.guestIndex || 0) % guests.length] || unit];
+    }
+    if (action.endgameEffect === "record") {
+      const party = battle.party.filter(hero => hero.hp > 0);
+      const index = (unit.encounterMechanic?.recordIndex || 0) % 3;
+      const owner = index === 0 ? party.find(hero => removableStatus(hero, DISPEL_PRIORITY)) : index === 1 ? party.find(hero => hero.lastActiveSkill) || target : null;
+      visualTargets = [unit, owner].filter(Boolean);
+    }
+    if (action.endgameEffect === "reproduce") {
+      const record = unit.encounterMechanic?.record;
+      const recipient = record?.effect && !STATUS_DEFS[record.effect.type]?.negative ? battle.enemies.find(ally => ally.hp > 0 && ally !== unit) || unit : target;
+      visualTargets = [unit, recipient].filter(Boolean);
+    }
+  }
+  const vfxTargets = visualTargets.map(ally => {
+    const index = battle.party.indexOf(ally);
+    const [x, baseline] = index >= 0 ? partyBattlePosition(index, battle.party.length) : enemyBattlePosition(Math.max(0, battle.enemies.indexOf(ally)), battle.enemies.length);
+    return unit.endgameBoss ? battleVfxAnchor(ally) : { x, y: baseline - 24 };
+  });
+  if (unit.endgameBoss && partyIndex >= 0) { toX = vfxTargets[0].x; toY = vfxTargets[0].y; }
   return {
     kind: visualKind,
     actionKind: action.kind,
     caster: unit.sprite || unit.name,
     enemyCaster: true,
+    bossSheetVfx: Boolean(unit.endgameBoss),
+    vfxKind,
+    vfxTargets,
+    startedAt: performance.now(),
+    timing,
     effectRow: profile?.row,
     skill: action.name,
     element: action.element,
     color: elementColor(action.element),
     t: 0,
-    fromX,
-    fromY: fromBaseline - 25,
+    fromX: unit.endgameBoss ? battleVfxAnchor(unit).x : fromX,
+    fromY: unit.endgameBoss ? battleVfxAnchor(unit).y : fromBaseline - 25,
     toX,
     toY,
     x: toX,
     y: toY,
-    duration: timing.effectTicks,
+    duration: unit.endgameBoss ? Math.ceil(timing.totalMs / 16) + 2 : timing.effectTicks,
     impactTicks: timing.impactTicks
   };
 }

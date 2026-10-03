@@ -1,0 +1,152 @@
+{
+  "Malkhius": {
+    "file": "malkhius.webp",
+    "cellWidth": 240,
+    "cellHeight": 222,
+    "anchorX": 124.68427095292766,
+    "anchorY": 116.55568312284728,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Draconic Guide": {
+    "file": "draconic-guide.webp",
+    "cellWidth": 221,
+    "cellHeight": 240,
+    "anchorX": 123.26901248581157,
+    "anchorY": 119.04653802497162,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Memory Root Guardian": {
+    "file": "memory-root-guardian.webp",
+    "cellWidth": 228,
+    "cellHeight": 240,
+    "anchorX": 116.47058823529412,
+    "anchorY": 132.4235294117647,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Sister Maelin": {
+    "file": "sister-maelin.webp",
+    "cellWidth": 236,
+    "cellHeight": 240,
+    "anchorX": 110.05599104143337,
+    "anchorY": 120.67189249720045,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Guild Inspector Voss": {
+    "file": "guild-inspector-voss.webp",
+    "cellWidth": 240,
+    "cellHeight": 236,
+    "anchorX": 119.72571428571429,
+    "anchorY": 125.34857142857143,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Concierge Veyr": {
+    "file": "concierge-veyr.webp",
+    "cellWidth": 230,
+    "cellHeight": 240,
+    "anchorX": 114.06360424028269,
+    "anchorY": 121.27208480565372,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Lady Morvanna": {
+    "file": "lady-morvanna.webp",
+    "cellWidth": 228,
+    "cellHeight": 240,
+    "anchorX": 114.2795232936078,
+    "anchorY": 124.55037919826651,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Koru-Vak, the Iron Oathkeeper": {
+    "file": "koru-vak.webp",
+    "cellWidth": 240,
+    "cellHeight": 204,
+    "anchorX": 122.80623608017818,
+    "anchorY": 101.82628062360803,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Selyra Quill, the Grand Cantor": {
+    "file": "selyra-quill.webp",
+    "cellWidth": 239,
+    "cellHeight": 240,
+    "anchorX": 114.51851851851852,
+    "anchorY": 119.1111111111111,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  },
+  "Ilyss Vanthe, the First Archivist": {
+    "file": "ilyss-vanthe.webp",
+    "cellWidth": 240,
+    "cellHeight": 235,
+    "anchorX": 115.21640091116173,
+    "anchorY": 130.93394077448747,
+    "columns": 4,
+    "rows": 4,
+    "rowMap": {
+      "melee": 0,
+      "support": 1,
+      "magic": 2,
+      "ultimate": 3
+    }
+  }
+}
