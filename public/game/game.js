@@ -9062,6 +9062,11 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
     if (profile.finalState) unit.finalState = profile.finalState;
     unit.levelHint = stage;
     unit.fixedLevel = true;
+    unit.combatPotency = stage < 5 ? { damage: 1, healing: 1, ultimate: 1 }
+      : stage <= 8 ? { damage: 1.2, healing: 1.3, ultimate: 1.35 }
+      : stage <= 12 ? { damage: 1.25, healing: 1.4, ultimate: 1.45 }
+      : stage <= 20 ? { damage: 1.3, healing: 1.5, ultimate: 1.6 }
+      : { damage: 1, healing: 1, ultimate: 1 };
     if (info.boss || profile.node >= 3) {
       unit.npcBoss = true;
       unit.resistanceTier = info.boss && (stage > 20 || enemyIndex === 0) && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
@@ -11042,6 +11047,7 @@ function enemyActionCrit(unit, action, target) {
 function enemyDamageRoll(unit, action, target) {
   const random = Math.floor(Math.random() * 6);
   let damage = enemyActionScalingStat(unit, action) * (action.coefficient || .9) + Math.max(0, unit.level - 1) * .35 + random;
+  damage *= unit.combatPotency?.[action.kind === "ultimate" ? "ultimate" : "damage"] || 1;
   const physical = action.scaling === "str" || action.kind === "melee" || action.element === "Physical";
   const damageKind = physical ? "melee" : "magic";
   damage *= outgoingDamageMultiplier(unit, damageKind, target);
@@ -11159,7 +11165,7 @@ function resolveEnemyTurn(turn, prev) {
       const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
       let total = 0;
       healTargets.forEach(ally => {
-        let amount = (e.stats.mag * (action.healCoefficient || 1.35) + e.stats.stam * .22 + e.level * 1.4) * (1 + (e.affixes?.healPotency || 0));
+        let amount = (e.stats.mag * (action.healCoefficient || 1.35) + e.stats.stam * .22 + e.level * 1.4) * (1 + (e.affixes?.healPotency || 0)) * (e.combatPotency?.healing || 1);
         const critical = enemyActionCrit(e, action, ally);
         if (critical) amount *= 2 + (e.affixes?.critDamage || 0);
         amount = healingReceived(ally, Math.max(1, Math.round(amount)));
