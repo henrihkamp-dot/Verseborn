@@ -4495,6 +4495,32 @@ html.touch-phone.touch-landscape body[data-play-mode="atlas"] .game {
 }
 /* Hover details stay centered and fully contained by the viewport. */
 .battle-status-tooltip { position: fixed; z-index: 10000; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; padding: 16px; box-sizing: border-box; border: 2px solid #c59b5e; background: #100d18fa; color: #eee1c9; font: 13px/1.5 monospace; box-shadow: 0 14px 40px #000c; pointer-events: none; }
+
+.game.has-endgame-mechanics { padding-top: 112px; }
+.boss-mechanic-hud { position: absolute; inset: 4px 8px auto; height: 104px; display: grid; grid-template-columns: minmax(135px, 1fr) minmax(0, 2.5fr) minmax(135px, 1fr); grid-template-rows: 18px 82px; gap: 4px 10px; color: #edd6a6; font: 12px/1.25 "Segoe UI", Arial, sans-serif; }
+.boss-mechanic-hud > header { grid-column: 1 / -1; text-align: center; color: #f5cf79; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.boss-hud-roster { min-width: 0; display: grid; align-content: center; gap: 4px; padding: 4px 6px; background: #090a11df; border-top: 1px solid #d8b06b; }
+.boss-hud-roster.is-enemy { border-color: #a15446; }
+.boss-hud-roster > span { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; }
+.boss-hud-roster b { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.boss-hud-roster i { font-size: 10px; font-style: normal; color: #d4b585; }
+.boss-mechanic-panel { min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 14px 40px 12px; box-sizing: border-box; background: url("assets/ui/boss-mechanics/detail-panel.webp") center / 100% 100% no-repeat; color: #35231a; text-shadow: none; }
+.boss-mechanic-panel strong { display: block; font-size: 11px; color: #ffe097; }
+.boss-mechanic-panel p { margin: 6px 0 0; font-size: 11px; line-height: 1.2; overflow-wrap: anywhere; }
+.boss-mechanic-panel.is-warning { background-image: url("assets/ui/boss-mechanics/warning-banner.webp"); color: #fff0d0; }
+.boss-mechanic-panel.is-warning strong { color: #ffe097; }
+@media (max-width: 600px) {
+  .game.has-endgame-mechanics { padding-top: 166px; padding-bottom: 158px; }
+  .boss-mechanic-hud { inset: 4px 6px auto; height: 158px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 18px 46px 86px; gap: 4px 6px; }
+  .boss-hud-roster { padding: 2px 4px; gap: 1px; }
+  .boss-hud-roster > span { grid-template-columns: minmax(0, 1fr) max-content; align-items: center; gap: 2px; }
+  .boss-hud-roster b, .boss-hud-roster i { font-size: 9px; }
+  .boss-hud-roster.is-enemy { grid-column: 2; grid-row: 2; }
+  .boss-mechanic-panel { grid-column: 1 / -1; grid-row: 3; padding: 14px 30px 12px; }
+  .boss-mechanic-panel p { font-size: 11px; }
+  .boss-mechanic-panel.is-warning { background-image: url("assets/ui/boss-mechanics/detail-panel.webp"); color: #35231a; }
+  .boss-mechanic-panel.is-warning strong { color: #ffe097; }
+}
 .battle-status-tooltip[hidden] { display: none; }
 .battle-status-tooltip > strong { color: #ffe096; }
 .battle-status-tooltip section { border-top: 1px solid #4d394c; margin-top: 7px; padding-top: 6px; }

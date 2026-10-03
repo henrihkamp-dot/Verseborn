@@ -394,6 +394,7 @@ const animatedNpcHeights = {
   Grumm: 24
 };
 const enemyAnimationFiles = {
+  ...Object.fromEntries(["Concierge Veyr", "Sister Maelin", "Guild Inspector Voss", "Draconic Guide", "Memory Root Guardian", "Malkhius", "Lady Morvanna", "Koru-Vak, the Iron Oathkeeper", "Selyra Quill, the Grand Cantor", "Ilyss Vanthe, the First Archivist"].map(name => [name, name])),
   "Ash Wyrm": "Ash Wyrm",
   "Seal Bearer": "Seal Bearer",
   "Inkbound Auditor": "Inkbound Auditor",
@@ -437,6 +438,10 @@ const enemyAnimationFiles = {
   "Ember Leviathan": "Ember Leviathan"
 };
 const enemyAnimationHeights = {
+  "Concierge Veyr": 55, "Sister Maelin": 55, "Guild Inspector Voss": 55,
+  "Draconic Guide": 65, "Memory Root Guardian": 86, Malkhius: 57,
+  "Lady Morvanna": 57, "Koru-Vak, the Iron Oathkeeper": 82,
+  "Selyra Quill, the Grand Cantor": 65, "Ilyss Vanthe, the First Archivist": 64,
   "Ash Wyrm": 58,
   "Seal Bearer": 51,
   "Inkbound Auditor": 47,
@@ -811,6 +816,39 @@ earlyProfile("Elder Plumpin", { cleanse: em("Ancient Renewal", "cleanse", "Ancie
 enemyAbilityProfiles["Red Dragon Lord"].escalation = .05;
 enemyAbilityProfiles["Red Dragon Lord"].telegraphUltimate = true;
 
+const ENDGAME_BOSS_CONFIG = {
+  "Concierge Veyr": { mechanic: "guest", element: "Sound", melee: "Courtesy Blade", magic: "Nocturne Rebuke", ultimate: "Closed Reception" },
+  "Sister Maelin": { mechanic: "sanctuary", element: "Holy Fire", melee: "Sanctuary Staff", magic: "Pressure of Light", ultimate: "Sanctuary Renewal" },
+  "Guild Inspector Voss": { mechanic: "inspection", element: "Tech", melee: "Inspector's Gavel", magic: "Violation Assessment", ultimate: "Final Notice" },
+  "Draconic Guide": { mechanic: "guidance", element: "Sigil", melee: "Crystal Staff", magic: "Astral Projectile", ultimate: "Starless Convergence" },
+  "Memory Root Guardian": { mechanic: "root", element: "Earth", melee: "Root Impact", magic: "Memory Roots", ultimate: "Ancient Overgrowth" },
+  Malkhius: { mechanic: "echo", element: "Shadow", melee: "Sigil Blade", magic: "Occult Echo", ultimate: "Shadow Refrain" },
+  "Lady Morvanna": { mechanic: "veil", element: "Shadow", melee: "Nocturne Lash", magic: "Dream Pressure", ultimate: "Court of Illusions" },
+  "Koru-Vak, the Iron Oathkeeper": { mechanic: "oath", element: "Physical", melee: "Chained Impact", magic: "Iron Chain", ultimate: "Oathbreaker Impact" },
+  "Selyra Quill, the Grand Cantor": { mechanic: "crescendo", element: "Sound", melee: "Cantor's Stroke", magic: "Harmonic Ring", ultimate: "Grand Crescendo" },
+  "Ilyss Vanthe, the First Archivist": { mechanic: "archive", element: "Sigil", melee: "Archive Chain", magic: "Recorded Rupture", ultimate: "The Living Archive" }
+};
+const ENDGAME_PRIMARY_ROLES = {
+  "Concierge Veyr": "utility", "Sister Maelin": "healer", "Guild Inspector Voss": "controller",
+  "Draconic Guide": "hybrid", "Memory Root Guardian": "tank", Malkhius: "hybrid",
+  "Lady Morvanna": "hybrid", "Koru-Vak, the Iron Oathkeeper": "tank",
+  "Selyra Quill, the Grand Cantor": "utility", "Ilyss Vanthe, the First Archivist": "controller"
+};
+Object.entries(ENDGAME_BOSS_CONFIG).forEach(([name, config]) => {
+  const statuses = {
+    root: { type: "rootBind", chance: .85, duration: 2, value: .25 },
+    echo: { type: "disrupted", chance: .85, duration: 2, value: .2 },
+    veil: { type: "mentalPressure", chance: .9, duration: 2, value: .2 },
+    crescendo: { type: "silence", chance: .65, duration: 2 }
+  };
+  enemyAbilityProfiles[name] = enemyCombatProfile(ENDGAME_PRIMARY_ROLES[name], .1,
+    { hp: 100, mp: 180, str: 110, mag: 130, stam: 130, agi: 85 }, {
+      melee: em(config.melee, "melee", "Physical", 0, { coefficient: 1.1, breakPower: config.mechanic === "oath" ? 3 : 1 }),
+      magic: em(config.magic, "magic", config.element, 16, { coefficient: 1.2, status: statuses[config.mechanic], breakPower: config.mechanic === "oath" ? 3 : 0 }),
+      ultimate: em(config.ultimate, "ultimate", config.element, 0, { coefficient: 1.7, allTargets: true, status: statuses[config.mechanic], breakPower: config.mechanic === "oath" ? 4 : 0 })
+    }, ["magic", "melee"], { element: config.element, innateStatusResistance: config.mechanic === "sanctuary" ? .25 : config.mechanic === "root" ? .2 : .1, escalation: config.mechanic === "root" ? .035 : 0 });
+});
+
 const animationLayouts = {
   Marla: { columns: 4, rows: 7, chromaBlack: true },
   Nyx: { columns: 4, rows: 7 },
@@ -1118,7 +1156,7 @@ function loadMarlaBattleSheet() {
 
 async function loadEnemyAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-80");
+    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-112");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -1331,7 +1369,23 @@ function loadEchoProjectileSheet() {
 
 const characterVfxSheets = {};
 const statusIconImages = {};
-const statusIconAliases = { administrativeLock: "resonanceLocked", audit: "marked", anchored: "agilityDown", scorched: "burn", statusWard: "barrier" };
+const bossMechanicImages = {};
+const BOSS_MECHANIC_ICONS = { protectedGuest: "protectedGuest", sanctuary: "sanctuary", inspectionOrder: "inspectionOrder", violationStamp: "violationStamp", guidanceMark: "guidanceMark", rootBind: "rootBind", memoryAdaptation: "memoryAdaptation", memoryCore: "memoryCore", echoSigil: "echoSigil", beguilingVeil: "beguilingVeil", oathguard: "oathguard", brokenOath: "brokenOath", harmonicRings: "harmonicRings", buffRecord: "buffRecord", skillRecord: "skillRecord", memoryRecord: "memoryRecord" };
+const BOSS_TELEGRAPH_EFFECTS = { guidanceMark: "guidance", sanctuary: "sanctuary", rootBind: "roots", violationStamp: "violation", echoSigil: "echo", beguilingVeil: "veil", skillRecord: "lock", brokenOath: "brokenShield", harmonicRings: "rings", memoryCore: "core", buffRecord: "aura", memoryRecord: "impact" };
+async function loadBossMechanicAssets() {
+  try {
+    const response = await fetch("assets/ui/boss-mechanics/manifest.json?v=112");
+    if (!response.ok) return;
+    const manifest = await response.json();
+    await Promise.all(Object.entries(manifest).map(([name, file]) => new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => { bossMechanicImages[name] = image; resolve(); };
+      image.onerror = resolve;
+      image.src = `assets/ui/boss-mechanics/${file}`;
+    })));
+  } catch (_) { /* Combat text remains available if decorative art cannot load. */ }
+}
+const statusIconAliases = { administrativeLock: "resonanceLocked", audit: "marked", anchored: "agilityDown", scorched: "burn", statusWard: "barrier", protectedGuest: "barrier", inspectionOrder: "marked", violationStamp: "disrupted", guidanceMark: "marked", memoryCore: "magicVulnerability", memoryAdaptation: "defenseUp", echoSigil: "shadowUp", beguilingVeil: "sleep", mentalPressure: "disrupted", oathguard: "barrier", brokenOath: "broken", harmonicRings: "echoPower", skillRecord: "silence", livingArchive: "echoPower" };
 let statusHoverAreas = [];
 let statusPointer = null;
 let statusTooltip = null;
@@ -1363,6 +1417,7 @@ async function loadCharacterVfxSheets() {
 }
 
 Promise.all([
+  loadBossMechanicAssets(),
   loadStatusIcons(),
   loadCharacterVfxSheets(),
   loadBreakIconSheet(),
@@ -2283,7 +2338,7 @@ function gearIconHtml(gear, heroId, fallbackIndex, className = "", ref = null) {
 
 function gearAccessLabel(gear) {
   if (gear?.name === "Echo-Thread Lute") return "ULTIMATE WEAPON / VERSEBORN ONLY";
-  if (mythicGearNames.has(gear?.name)) return "EMBER HALL 41-50 MYTHIC / ALL HEROES";
+  if (mythicGearNames.has(gear?.name)) return "EMBER HALL 41-57 MYTHIC / ALL HEROES";
   if (ngPlusSignatureNames.has(gear?.name)) return `HALL 21+ / NG+ ULTIMATE WEAPON / ${gearOwners[gear.name][0].toUpperCase()} ONLY`;
   if (echoForgeGearNames.has(gear?.name)) return `ECHO HUNT RANK ${gear.echoRank} / ${gear.echoRarity.toUpperCase()} UPGRADE OF ${gear.echoBase.toUpperCase()} / ALL HEROES`;
   if (ngPlusChestGearNames.has(gear?.name)) return "NG+ RANDOM CHEST GEAR / ALL HEROES";
@@ -3710,6 +3765,24 @@ function rank0ChoicesHtml(id) {
 }
 
 const STATUS_DEFS = {
+  protectedGuest: { label: "PROTECTED GUEST", short: "GUEST", buff: true, duration: 3, value: .55 },
+  inspectionOrder: { label: "INSPECTION ORDER", short: "ORDER", buff: true, duration: 3 },
+  violationStamp: { label: "VIOLATION STAMP", short: "STAMP", negative: true, duration: 4, value: 1 },
+  guidanceMark: { label: "GUIDANCE MARK", short: "GUIDE", negative: true, duration: 4 },
+  memoryCore: { label: "MEMORY CORE OPEN", short: "CORE", negative: true, duration: 3, value: .6 },
+  memoryAdaptation: { label: "MEMORY ADAPTATION", short: "ADAPT", buff: true, duration: 3, value: .15 },
+  echoSigil: { label: "ECHO SIGIL", short: "ECHO", buff: true, duration: 3 },
+  beguilingVeil: { label: "BEGUILING VEIL", short: "VEIL", negative: true, duration: 2 },
+  mentalPressure: { label: "MENTAL PRESSURE", short: "MIND", negative: true, duration: 2, value: .2 },
+  oathguard: { label: "OATHGUARD / TAUNT", short: "OATH", buff: true, duration: 99, value: .6 },
+  brokenOath: { label: "BROKEN OATH", short: "OPEN", negative: true, duration: 3, value: .75 },
+  harmonicRings: { label: "CRESCENDO RINGS", short: "RINGS", buff: true, duration: 99, value: 1 },
+  skillRecord: { label: "SKILL RECORD", short: "SEALED", negative: true, duration: 2 },
+  sanctuary: { label: "SANCTUARY", short: "WARD", buff: true, duration: 2 },
+  rootBind: { label: "ROOT BIND", short: "ROOT", negative: true, duration: 2, value: .25 },
+  buffRecord: { label: "BUFF RECORD", short: "BUFF", buff: true, duration: 3 },
+  memoryRecord: { label: "MEMORY RECORD", short: "MEM", buff: true, duration: 3 },
+  livingArchive: { label: "LIVING ARCHIVE", short: "RECORD", buff: true, duration: 3 },
   administrativeLock: { label: "ADMINISTRATIVE LOCK", short: "LOCK", negative: true, duration: 2, value: .5 },
   audit: { label: "AUDIT", short: "AUDIT", negative: true, duration: 2, value: .5 },
   anchored: { label: "ANCHORED", short: "ANCHOR", negative: true, duration: 2, value: .25 },
@@ -4274,6 +4347,17 @@ const maps = {
 };
 
 const HALL_ENEMY_LIBRARY = {
+  reginald: { name: "Sir Reginald", hp: 160, atk: 23, weak: "Tech", color: "#aa8d53", node: 3 },
+  veyr: { name: "Concierge Veyr", hp: 245, atk: 34, weak: "Sound", color: "#ab8f62", node: 3 },
+  maelin: { name: "Sister Maelin", hp: 260, atk: 32, weak: "Shadow", color: "#e8d69c", node: 3 },
+  voss: { name: "Guild Inspector Voss", hp: 265, atk: 36, weak: "Tech", color: "#aa8e54", node: 3 },
+  guide: { name: "Draconic Guide", hp: 280, atk: 37, weak: "Holy Fire", color: "#8d4bd6", node: 3 },
+  rootGuardian: { name: "Memory Root Guardian", hp: 390, atk: 38, weak: "Ancient Fire", color: "#77508b", node: 3 },
+  malkhius: { name: "Malkhius", hp: 285, atk: 39, weak: "Holy Fire", color: "#6e3597", node: 3 },
+  morvanna: { name: "Lady Morvanna", hp: 290, atk: 39, weak: "Sound", color: "#9f2857", node: 3 },
+  koru: { name: "Koru-Vak, the Iron Oathkeeper", hp: 380, atk: 41, weak: "Tech", color: "#ba633e", node: 3 },
+  selyra: { name: "Selyra Quill, the Grand Cantor", hp: 310, atk: 40, weak: "Shadow", color: "#44b4b6", node: 3 },
+  ilyss: { name: "Ilyss Vanthe, the First Archivist", hp: 330, atk: 43, weak: "Sound", color: "#ab3c72", node: 3 },
   ashWyrm: { name: "Ash Wyrm", hp: 105, atk: 12, weak: "Sigil", color: "#6d344b", node: 2 },
   sealBearer: { name: "Seal Bearer", hp: 72, atk: 8, weak: "Shadow", color: "#9d7356", node: 2 },
   ledger: { name: "Slobbo", hp: 42, atk: 6, weak: "Sound", color: "#71513e", node: 1 },
@@ -4363,7 +4447,17 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["Ember Old Guard", "emberRoof", ["memory", "tja"], true, [["wyrm", "chain"], ["sentinel", "wyrm", "tja"]]],
   ["Names in the Archive", "reverieArchive", ["nyx", "scribe"], true, [["custodian", "prince"], ["sigil", "null", "nyx"]]],
   ["Company Reprise", "emberYard", ["shade", "grumm", "tja"], true, [["kaeldrin", "lyrsa"], ["king", "marla", "rava"]]],
-  ["Solinar's Final Sunrise", "alarm", ["frostmile"], true, [["leviathan"], ["solinar"], ["solinarEnraged"]]]
+  ["Solinar's Final Sunrise", "alarm", ["frostmile"], true, [["leviathan"], ["solinar"], ["solinarEnraged"]]],
+  ["Nocturne Reception", "guildCouncil", ["sentinel", "sealBearer"], true, [["scribe", "custodian", "reginald"], ["veyr", "sealBearer", "sentinel"]]],
+  ["Sanctuary Under Pressure", "reverieSeal", ["seal", "sigil"], true, [["lyrsa", "sealBearer", "sigil"], ["maelin", "sigil", "sealBearer"]]],
+  ["The Final Inspection", "guildRegistry", ["auditor", "custodian"], true, [["scribe", "reginald", "sealBearer"], ["voss", "auditor", "sealBearer"]]],
+  ["The Starless Passage", "emberRoof", ["ashWyrm", "pillar"], true, [["memory", "construct", "ashWyrm"], ["guide", "ashWyrm", "pillar"]]],
+  ["The Memory Root", "emberCellar", ["construct", "pillar"], true, [["memory", "ashWyrm", "construct"], ["rootGuardian", "pillar", "memory"]]],
+  ["The Strange Refrain", "lantern", ["tja", "tibby"], true, [["jory", "lyrsa", "nyx"], ["malkhius", "tja", "jory"]]],
+  ["Mistress of Nocturne", "reverieArchive", ["shade", "nyx"], true, [["custodian", "lyrsa", "scribe"], ["morvanna", "nyx", "custodian"]]],
+  ["Trial of Iron", "guildHall", ["chain", "pillar"], true, [["grumm", "kaeldrin", "reginald"], ["koru", "grumm", "chain"]]],
+  ["The Last Chorus", "reverieCourt", ["jory", "tja"], true, [["lyrsa", "sigil", "jory"], ["selyra", "jory", "sigil"]]],
+  ["The First Record", "reverieArchive", ["auditor", "scribe", "custodian"], true, [["king", "prince", "sentinel"], ["ilyss", "custodian", "auditor"]]]
 ].map(([name, mapId, enemies, boss, waves = []], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss), waves }));
 
 const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
@@ -5182,9 +5276,11 @@ function currentBreakStrength(source) {
 function addBreakProgress(source, target, amount) {
   if (!canGenerateBreak(source)) return { gain: 0, breaks: 0, remainder: target?.stagger || 0, bonusDamage: 0 };
   const gain = Math.max(0, Math.round(amount || 0));
+  const threshold = target?.breakThreshold || BREAK_THRESHOLD;
   const total = Math.max(0, target?.stagger || 0) + gain;
-  const breaks = Math.floor(total / BREAK_THRESHOLD);
-  if (target) target.stagger = total % BREAK_THRESHOLD;
+  const breaks = Math.floor(total / threshold);
+  if (target) target.stagger = total % threshold;
+  if (breaks && target?.endgameBoss) endgameBossBroken(target);
   return {
     gain,
     breaks,
@@ -5353,6 +5449,7 @@ function applyStatus(target, type, source, options = {}) {
 }
 
 const CLEANSE_PRIORITY = {
+  skillRecord: 96, beguilingVeil: 94, guidanceMark: 92, violationStamp: 86, mentalPressure: 84, rootBind: 75,
   administrativeLock: 85, audit: 85, anchored: 75, scorched: 82,
   shadowVulnerability: 80,
   stun: 100, sleep: 95, silence: 90, physicalVulnerability: 80, magicVulnerability: 80,
@@ -5361,6 +5458,7 @@ const CLEANSE_PRIORITY = {
 };
 
 const DISPEL_PRIORITY = {
+  protectedGuest: 96, echoSigil: 91, harmonicRings: 92, memoryAdaptation: 80,
   statusWard: 84,
   rankProtection: 85,
   barrier: 100, evasion: 95, damageUp: 90, strengthUp: 85, magicUp: 85,
@@ -5430,6 +5528,7 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
     multiplier *= 1 + statusValue(unit, "shadowUp");
   }
   multiplier *= Math.max(.5, 1 - statusValue(unit, "disrupted"));
+  multiplier *= 1 - statusValue(unit, "mentalPressure");
   return multiplier;
 }
 
@@ -5447,7 +5546,7 @@ function effectiveAgility(unit, base) {
   const buff = 1 + statusValue(unit, "agilityUp");
   const opening = battle?.round === 1 && unit?.id ? 1 + effectValue(unit.id, "openingTurnProgress") : 1;
   const talent = unit?.id ? 1 + typedTalentValue(unit.id, "initiativeBoost") : 1;
-  const slowed = unit && hasNegativeStatus(unit) ? (1 - statusValue(unit, "agilityDown")) * (1 - statusValue(unit, "anchored")) : 1;
+  const slowed = unit && hasNegativeStatus(unit) ? (1 - statusValue(unit, "agilityDown")) * (1 - statusValue(unit, "anchored")) * (1 - statusValue(unit, "rootBind")) : 1;
   return Math.round(base * buff * opening * talent * slowed);
 }
 
@@ -5533,6 +5632,7 @@ function statusBadgesHtml(unit) {
 
 function processTurnStart(unit) {
   const notes = [];
+  if (unit.endgameBoss) endgameBossTurnStart(unit);
   if (unit.protectedAlly && --unit.protectedAlly.remaining <= 0) delete unit.protectedAlly;
   delete unit.holdTheLine;
   delete unit.mechClinicResolved;
@@ -7449,6 +7549,7 @@ function partyBattlePosition(index, count = battle?.party?.length || 1) {
 }
 
 function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
+  if (count === 3 && ["root", "oath"].includes(battle?.enemies?.[0]?.endgameBoss)) index = index === 0 ? 1 : index === 1 ? 0 : index;
   const positions = count === 1
     ? [[184, 124]]
     : count === 2
@@ -7649,6 +7750,24 @@ function statusDisplayData(unit, status) {
   const value = statusValue(unit, status.type);
   const percent = `${Math.round(value * 1000) / 10}%`;
   const descriptions = {
+    sanctuary: 'Sanctuary barriers and status resistance are active. Silence or Break Maelin to interrupt the next support action.',
+    rootBind: `Root Bind reduces initiative by ${percent}. Cleanse frees this ally.`,
+    buffRecord: status.note || 'Ilyss has archived a player buff and can move it to an ally.',
+    memoryRecord: status.note || 'Ilyss has recorded a recent effect for a later Recorded Action.',
+    protectedGuest: 'Attacks against this guest are reduced and trigger Veyr\'s rebuke. Attack another enemy or remove this protection.',
+    inspectionOrder: status.note || 'Obey the current Inspection Order to avoid Violation Stamps.',
+    violationStamp: `${value} stamps. Voss deals 15% extra damage per stamp; further violations remove buffs and apply Silence.`,
+    guidanceMark: status.note || 'An astral attack is approaching this target. The mark may move before impact; cleanse or interrupt the Guide.',
+    memoryCore: 'The core is vulnerable: direct damage increased by 60%.',
+    memoryAdaptation: `${status.category || 'Repeated attack category'} resistance +${percent}. Change attack categories or attack the open core.`,
+    echoSigil: 'Malkhius can copy an offensive or defensive buff while this sigil remains active.',
+    beguilingVeil: 'Single-target attacks are redirected to a different enemy. Cleanse removes the illusion.',
+    mentalPressure: `Outgoing damage reduced by ${percent}.`,
+    oathguard: `${percent} damage reduction. Single-target enemy attacks are drawn to Koru-Vak. Break opens his shield.`,
+    brokenOath: 'Shield disabled: direct damage increased by 75%. Burst before Oathguard returns stronger.',
+    harmonicRings: `${value} active rings. Each adds 35% power to Grand Crescendo; Silence, Break or defeating support units counters them.`,
+    skillRecord: `${status.skillName || 'Recorded skill'} is temporarily unavailable. Use another action or cleanse this record.`,
+    livingArchive: status.note || 'The Archivist has stored an effect for a later Recorded Action.',
     administrativeLock: `${status.skillName || 'Last active skill'} costs ${percent} extra MP while locked. Cleanse removes the lock.`,
     audit: `Repeating ${status.skillName || 'the marked skill'} on the next action costs ${percent} extra MP and grants the Auditor 15 Resonance. Any other action clears Audit.`,
     anchored: `Initiative AGI reduced by ${percent}. Dock Foreman gains +2 Break against this target.`,
@@ -7731,6 +7850,77 @@ function drawEnemyBreakIcon(unit, anchorX) {
   ctx.restore();
 }
 
+function drawBossIndicatorStrip(unit, anchorX, enemySide) {
+  if (unit.hp <= 0) return;
+  const icons = ensureStatuses(unit).filter(status => BOSS_MECHANIC_ICONS[status.type]).slice(0, 3);
+  const broken = Boolean(statusOf(unit, "broken"));
+  const threshold = unit.breakThreshold || BREAK_THRESHOLD;
+  const breakValue = Math.max(0, Math.min(3, Math.ceil((unit.stagger || 0) * 3 / threshold)));
+  const showBreak = broken || breakValue > 0;
+  const size = 10, gap = 2;
+  const width = (1 + Number(showBreak) + icons.length) * (size + gap) - gap;
+  const [, baseline] = enemySide ? enemyBattlePosition(battle.enemies.indexOf(unit), battle.enemies.length) : partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
+  const height = enemySide ? (enemyAnimationHeights[enemyAnimationKey(unit)] || 46) * BATTLE_COMPOSITION_SCALE : battleSpriteHeights[unit.id] * BATTLE_COMPOSITION_SCALE;
+  const y = Math.max(22, Math.round(baseline - height - size - 4));
+  let x = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
+  drawCombatRoleIcon(combatRoleKey(unit, enemySide), x, y, size);
+  x += size + gap;
+  if (showBreak) {
+    const cell = breakIconSheet?.cells[broken ? 3 : breakValue - 1];
+    if (cell) ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x, y, size, size);
+    x += size + gap;
+  }
+  icons.forEach(status => {
+    const image = bossMechanicImages[BOSS_MECHANIC_ICONS[status.type]];
+    const frame = bossMechanicImages[status.type === "brokenOath" || status.type === "memoryCore" ? "active-frame" : "normal-frame"];
+    if (frame) ctx.drawImage(frame, x - 1, y - 1, size + 2, size + 2);
+    if (image) ctx.drawImage(image, x, y, size, size);
+    const count = ["violationStamp", "harmonicRings"].includes(status.type) ? status.value : status.remaining;
+    drawText(String(count || 1), x + size, y + size + 3, "#fff3d0", 4, "right");
+    statusHoverAreas.push({ unit, x: x - 1, y: y - 1, w: size + 2, h: size + 6 });
+    x += size + gap;
+  });
+}
+
+function drawBossTelegraphs() {
+  if (!battle?.mechanicTelegraphs) return;
+  battle.mechanicTelegraphs = battle.mechanicTelegraphs.filter(entry => tick - entry.start < 42);
+  battle.mechanicTelegraphs.forEach(entry => {
+    const image = bossMechanicImages[`effect-${BOSS_TELEGRAPH_EFFECTS[entry.type]}`];
+    if (!image || entry.unit.hp <= 0) return;
+    const enemySide = battle.enemies.includes(entry.unit);
+    const index = (enemySide ? battle.enemies : battle.party).indexOf(entry.unit);
+    const [x,y] = enemySide ? enemyBattlePosition(index,battle.enemies.length) : partyBattlePosition(index,battle.party.length);
+    const age = tick - entry.start, size = 30 + Math.min(6, age/4);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, .52 * (1-age/42));
+    ctx.drawImage(image,x-size/2,y-size*.8,size,size);
+    ctx.restore();
+  });
+}
+
+function updateBossMechanicDisplay() {
+  const hud = document.getElementById("bossMechanicHud");
+  if (!hud) return;
+  const active = mode === "battle" && battle?.hallStage > 50;
+  hud.classList.toggle("hidden", !active);
+  document.querySelector(".game")?.classList.toggle("has-endgame-mechanics", active);
+  if (!active) return;
+  const escape = value => String(value || "").replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+  const boss = battle.enemies.find(unit => unit.hp > 0 && unit.endgameBoss);
+  const phase = battle.phaseTotal ? battle.phaseTotal - (battle.waves?.length || 0) : (boss ? 3 : 1);
+  const announcement = battle.mechanicAnnouncement;
+  const warning = announcement && performance.now() < announcement.until;
+  const rule = boss?.encounterMechanic?.order;
+  const focused = boss && ensureStatuses(boss).find(status => ["brokenOath", "memoryCore", "inspectionOrder", "buffRecord", "memoryRecord", "harmonicRings", "echoSigil"].includes(status.type));
+  const names = { guest: "Protected Guest", sanctuary: "Sanctuary", inspection: "Inspection Orders", guidance: "Guidance Marks", root: "Memory Adaptation", echo: "Echo Sigil", veil: "Beguiling Veil", oath: "Oathguard", crescendo: "Crescendo", archive: "The Living Archive" };
+  const title = warning ? announcement.title : focused ? STATUS_DEFS[focused.type].label : boss ? names[boss.endgameBoss] : `Phase ${phase}/3`;
+  const text = warning ? announcement.text : focused ? statusDisplayData(boss,focused).description : boss ? `Read ${boss.name}'s next action. Silence, Break and cleanses counter the active mechanic.` : battle.enemies.filter(unit=>unit.hp>0).map(unit=>unit.name).join(" / ");
+  const roster = (units, enemySide) => `<div class="boss-hud-roster ${enemySide ? 'is-enemy' : ''}">${units.map(unit=>`<span><b>${escape(unit.name)}</b><i>${Math.max(0,Math.round(unit.hp))} HP / ${Math.max(0,Math.round(unit.mp||0))} MP</i></span>`).join('')}</div>`;
+  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/3</header>${roster(battle.party,false)}<div class="boss-mechanic-panel ${warning ? 'is-warning' : ''}"><strong>${escape(title)}</strong><p>${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>${roster(battle.enemies,true)}`;
+  if (hud.innerHTML !== html) hud.innerHTML = html;
+}
+
 function drawBattleTurnRail() {
   if (!battle?.turnQueue) return;
   const turns = battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive);
@@ -7810,6 +8000,7 @@ function drawBattleRoleRosters() {
 }
 
 function drawBattleScene() {
+  updateBossMechanicDisplay();
   statusHoverAreas = [];
   const map = currentMap();
   const arenaId = battleArenaFor(map);
@@ -7841,6 +8032,7 @@ function drawBattleScene() {
     };
     if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
     else drawUnit();
+    if (battle.hallStage > 50) drawBossIndicatorStrip(unit, anchorX, false);
     drawBattleVitals(unit, anchorX, baseline);
   });
 
@@ -7861,13 +8053,15 @@ function drawBattleScene() {
     const drawUnit = () => drawEnemy(enemyUnit, anchorX - 8 + battleOffset(enemyUnit), baseline - 31);
     if (hasTurn) drawWithTurnOutline(drawUnit, "#ffc08a");
     else drawUnit();
-    drawEnemyBreakIcon(enemyUnit, anchorX);
+    if (battle.hallStage > 50) drawBossIndicatorStrip(enemyUnit, anchorX, true);
+    else drawEnemyBreakIcon(enemyUnit, anchorX);
     drawBattleVitals(enemyUnit, anchorX, baseline + (battle.hallStage === 50 ? 8 : 0), true);
     ctx.globalAlpha = 1;
   });
   drawEffect();
+  drawBossTelegraphs();
   drawBattleTurnRail();
-  drawBattleRoleRosters();
+  if (!(battle.hallStage > 50)) drawBattleRoleRosters();
   drawBattleFloaters();
   updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
@@ -8322,6 +8516,7 @@ function draw(now = performance.now()) {
 }
 
 function updatePanels() {
+  updateBossMechanicDisplay();
   refreshHeroVitals();
   const q = currentQuest();
   const objective = objectiveTarget();
@@ -8703,7 +8898,7 @@ function enemyPortraitDataUrl(name) {
   if (portraitSources[name]) return portraitSources[name];
   if (bossPortraitSources[name]) return bossPortraitSources[name];
   if (enemyPortraitCache.has(name)) return enemyPortraitCache.get(name);
-  const animatedEnemySheet = enemyAnimationSheets[name];
+  const animatedEnemySheet = enemyAnimationSheets[enemyAnimationFiles[name] || name];
   if (animatedEnemySheet) {
     const portrait = document.createElement("canvas");
     portrait.width = 96;
@@ -9033,7 +9228,7 @@ function normalizeHallBattleProgress(progress) {
   normalized.startingWelcomeComplete = typeof normalized.startingWelcomeComplete === "boolean"
     ? normalized.startingWelcomeComplete
     : highestCleared > 0;
-  normalized.shopStage = Math.max(0, Math.min(maxStage, Number(normalized.shopStage) || 0));
+  normalized.shopStage = Math.max(0, Math.min(50, Number(normalized.shopStage) || 0));
   normalized.shopOffers = normalized.shopOffers && typeof normalized.shopOffers === "object" ? { ...normalized.shopOffers } : {};
   normalized.purchasedShopStages = Array.isArray(normalized.purchasedShopStages)
     ? [...new Set(normalized.purchasedShopStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= maxStage))]
@@ -9062,6 +9257,10 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
     if (profile.finalState) unit.finalState = profile.finalState;
     unit.levelHint = stage;
     unit.fixedLevel = true;
+    if (stage > 50 && ENDGAME_BOSS_CONFIG[unit.name]) {
+      unit.endgameBoss = ENDGAME_BOSS_CONFIG[unit.name].mechanic;
+      if (["root", "oath"].includes(unit.endgameBoss)) unit.breakThreshold = BREAK_THRESHOLD * (unit.endgameBoss === "root" ? 3 : 2);
+    }
     unit.combatPotency = stage < 5 ? { damage: 1, healing: 1, ultimate: 1 }
       : stage <= 8 ? { damage: 1.2, healing: 1.3, ultimate: 1.35 }
       : stage <= 12 ? { damage: 1.25, healing: 1.4, ultimate: 1.45 }
@@ -9117,7 +9316,7 @@ function renderHallBattleMap() {
     const isCleared = cleared.has(info.stage);
     const unlocked = info.stage <= progress.unlockedStage || isCleared;
     const stateLabel = isCleared ? "CLEARED / REPLAY" : unlocked ? "AVAILABLE" : "LOCKED";
-    const lootLabel = `${hallNormalGearRarity(info.stage)} gear`;
+    const lootLabel = `${rollHallGearRarity(info.stage)} gear`;
     const thumbnail = (info.stage - 1) % 8;
     return `<button type="button" class="hall-stage hall-thumb-${thumbnail} ${info.boss ? "is-boss" : ""} ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
@@ -9145,8 +9344,9 @@ function startHallBattleStage(stage) {
   state.map = info.mapId;
   const label = `Hall ${String(stage).padStart(2, "0")}/${HALL_BATTLE_BLUEPRINTS.length} - ${info.name}`;
   const waves = info.waves.map((keys, index) => ({ name: `${label} - Phase ${index + 2}/${info.waves.length + 1}${keys.includes("solinarEnraged") ? " / Enraged" : ""}`, enemies: hallEnemiesForStage(stage, keys, index + 1) }));
-  startBattle(label, hallEnemiesForStage(stage), undefined, null, waves, { hallBoss: info.boss, hallFinale: stage === 50, roundCap: stage === 50 ? 40 : stage > 40 ? 32 : MAX_BATTLE_ROUNDS });
+  startBattle(label, hallEnemiesForStage(stage), undefined, null, waves, { hallBoss: info.boss, hallFinale: stage === 50, roundCap: stage > 50 ? 60 : stage === 50 ? 40 : stage > 40 ? 32 : MAX_BATTLE_ROUNDS });
   battle.hallStage = stage;
+  battle.phaseTotal = info.waves.length + 1;
   battle.hallBoss = info.boss;
   el.chapter.textContent = "Ember Hall Battle";
   el.place.textContent = `${currentMap().name} / Stage ${stage}`;
@@ -9733,7 +9933,7 @@ function renderBattle(log) {
     const onceUsed = sk.oncePerBattle && battle.usedOnce[sk.oncePerBattle];
     const noEncore = sk.encore && !battle.lastSupport;
     const extraUnavailable = (sk.immediateTurn || (sk.encore && battle.lastSupport?.immediateTurn)) && !canGrantImmediateTurn();
-    b.disabled = Boolean(onceUsed || noEncore || extraUnavailable || (sk.anim === "ultimate" ? state.resonance < 100 : skillMpCost(u.id, sk, u) > u.mp));
+    b.disabled = Boolean(onceUsed || noEncore || extraUnavailable || endgameSilenceBlocks(u, sk) || statusOf(u, "skillRecord")?.skillName === sk.name || (sk.anim === "ultimate" ? state.resonance < 100 : skillMpCost(u.id, sk, u) > u.mp));
     setBattlePreview(b, sk.name, skillPreview(u, sk));
     b.onclick = () => chooseSkillTarget(u, sk);
     el.actions.appendChild(b);
@@ -10276,8 +10476,14 @@ function guardedTalentBreak(source, enemy) {
   }
 }
 
+function endgameSilenceBlocks(unit, sk) {
+  return battle?.hallStage > 50 && statusOf(unit, "silence") && ["magic", "ultimate"].includes(sk.anim);
+}
+
 function useSkill(u, selectedSkill, chosenTarget = null) {
   if (battle.resolving) return;
+  if (endgameSilenceBlocks(u, selectedSkill)) return renderBattle(`${u.name} is Silenced. Use a weapon action or cleanse Silence.`);
+  if (statusOf(u, "skillRecord")?.skillName === selectedSkill.name) return renderBattle(`${selectedSkill.name} is sealed by the Living Archive. Use another action or cleanse it.`);
   if (selectedSkill.oncePerBattle && battle.usedOnce[selectedSkill.oncePerBattle]) return renderBattle(`${selectedSkill.name} was already used this battle.`);
   const selectedCost = skillMpCost(u.id, selectedSkill, u);
   if (selectedSkill.anim !== "ultimate" && selectedCost > u.mp) return renderBattle(`${u.name} needs more MP.`);
@@ -10289,11 +10495,14 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   if (sk.immediateTurn && !canGrantImmediateTurn()) return renderBattle("No extra action available: maximum 2 per battle, and Overheated allies cannot receive one. No MP spent.");
   if (selectedSkill.anim === "ultimate" && state.resonance < 100) return renderBattle("An ultimate requires 100 Resonance.");
   const liveAtStart = battle.enemies.filter(e => e.hp > 0);
-  const target = sk.targetSide === "ally"
+  let target = sk.targetSide === "ally"
     ? (chosenTarget?.hp > 0 ? chosenTarget : battle.party.find(ally => ally.hp > 0) || u)
     : skillTargetsEnemies(sk)
       ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0])
       : u;
+  target = endgamePlayerTarget(u, sk, target);
+  const previousSkill = u.lastInspectionSkill;
+  u.lastInspectionSkill = selectedSkill.name;
   const timing = skillVisualTiming(u, sk);
   battle.targetMode = false;
   battle.pendingSkill = null;
@@ -10329,6 +10538,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     const refreshedBurns = new Set();
     const zeroResonanceAtStart = battle.enemyResonance === 0;
     let log = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${u.name} uses ${sk.name}.`;
+    log += endgameInspectPlayerAction(u, sk, target, previousSkill);
+    battle.lastEndgameEffect = { actor: u.id, skillName: selectedSkill.name, buff: sk.buffs?.find(entry => DISPEL_PRIORITY[entry.type]), status: sk.status && CLEANSE_PRIORITY[sk.status.type] ? { ...sk.status } : null };
     const supportTargets = sk.targetSide === "self"
       ? [u]
       : sk.targetSide === "ally"
@@ -10491,6 +10702,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const sleepBreak = breakSleepFromDamage(hitTarget);
         if (sleepBreak) log += ` ${hitTarget.name}: ${sleepBreak}`;
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
+        dmg = Math.max(1, Math.round(dmg * endgamePlayerDamageMultiplier(u, sk, hitTarget)));
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
         directDamageDealt += dmg;
@@ -10949,8 +11161,336 @@ function enemyProfileAction(unit, key) {
   return enemyActionForKind(unit, key);
 }
 
+function endgameMechanicState(unit) {
+  return unit.encounterMechanic ||= { turn: 0, shield: .6, rings: 0, window: 0, adaptation: 0 };
+}
+
+function endgameStatus(unit, type, source, options = {}, note = "") {
+  const result = applyStatus(unit, type, source, { ...options, force: true });
+  if (result.applied && note) statusOf(unit, type).note = note;
+  if (result.applied && BOSS_MECHANIC_ICONS[type] && battle?.hallStage > 50) {
+    battle.mechanicTelegraphs ||= [];
+    battle.mechanicTelegraphs.push({ unit, type, start: tick });
+    if (battle.mechanicTelegraphs.length > 8) battle.mechanicTelegraphs.shift();
+    battle.mechanicAnnouncement = { title: STATUS_DEFS[type].label, text: note || statusDisplayData(unit, statusOf(unit, type)).description, until: performance.now() + 3200 };
+  }
+  return result;
+}
+
+function clearEndgameStatus(type, source) {
+  [...battle.party, ...battle.enemies].forEach(unit => {
+    unit.statuses = ensureStatuses(unit).filter(entry => entry.type !== type || source && entry.source?.name !== source.name);
+  });
+}
+
+function endgameBossBroken(unit) {
+  const data = endgameMechanicState(unit);
+  if (unit.endgameBoss === "root") {
+    data.window = 3;
+    endgameStatus(unit, "memoryCore", unit, { duration: 3 });
+  } else if (unit.endgameBoss === "oath") {
+    data.window = 3;
+    clearEndgameStatus("oathguard", unit);
+    endgameStatus(unit, "brokenOath", unit, { duration: 3 });
+  }
+  endgameInterrupt(unit);
+}
+
+function endgameInterrupt(unit) {
+  const data = endgameMechanicState(unit);
+  data.pending = null;
+  data.rings = 0;
+  data.charging = false;
+  data.sanctuaryStep = 0;
+  clearEndgameStatus("guidanceMark", unit);
+  clearEndgameStatus("protectedGuest", unit);
+  clearEndgameStatus("harmonicRings", unit);
+  clearEndgameStatus("echoSigil", unit);
+}
+
+function endgameBossTurnStart(unit) {
+  const data = endgameMechanicState(unit);
+  data.turn++;
+  if (["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type))) endgameInterrupt(unit);
+  if (data.order && --data.order.remaining <= 0) {
+    data.order = null;
+    clearEndgameStatus("inspectionOrder", unit);
+  }
+  if (data.window > 0 && --data.window === 0) {
+    clearEndgameStatus("memoryCore", unit);
+    clearEndgameStatus("brokenOath", unit);
+    if (unit.endgameBoss === "oath") {
+      data.shield = Math.min(.8, data.shield + .08);
+      endgameStatus(unit, "oathguard", unit, { duration: 99, value: data.shield });
+    }
+  }
+  if (data.adaptationUntil && data.turn >= data.adaptationUntil) {
+    data.adaptation = 0;
+    data.category = null;
+    clearEndgameStatus("memoryAdaptation", unit);
+  }
+  if (unit.endgameBoss === "crescendo") {
+    const supports = battle.enemies.filter(ally => ally !== unit && ally.hp > 0).length;
+    data.rings = statusOf(unit, "harmonicRings") ? Math.min(data.rings, supports * 3) : 0;
+    if (data.rings) statusOf(unit, "harmonicRings").value = data.rings;
+    else clearEndgameStatus("harmonicRings", unit);
+  }
+}
+
+function endgamePlayerTarget(actor, sk, target) {
+  if (!battle?.enemies?.some(unit => unit.endgameBoss) || !skillTargetsEnemies(sk) || skillHitsAll(actor.id, sk)) return target;
+  const live = battle.enemies.filter(unit => unit.hp > 0);
+  const oathkeeper = live.find(unit => unit.endgameBoss === "oath" && statusOf(unit, "oathguard"));
+  if (oathkeeper) return oathkeeper;
+  if (statusOf(actor, "beguilingVeil")) return live.find(unit => unit !== target) || target;
+  return target;
+}
+
+function endgameInspectPlayerAction(actor, sk, target, previousSkill) {
+  const inspector = battle.enemies.find(unit => unit.hp > 0 && unit.endgameBoss === "inspection" && endgameMechanicState(unit).order);
+  if (!inspector) return "";
+  const order = inspector.encounterMechanic.order;
+  const attacking = skillTargetsEnemies(sk);
+  const violation = order.type === "repeat" ? previousSkill === sk.name
+    : order.type === "buff" ? Boolean(sk.buffs?.length || sk.grantsWard || sk.transform)
+    : order.type === "magic" ? sk.anim !== "melee" && attacking && !sk.statusOnly && !sk.dispel
+    : attacking && !order.fulfilled && (target !== order.target || skillHitsAll(actor.id, sk));
+  if (order.type === "target" && attacking && target === order.target && !skillHitsAll(actor.id, sk)) order.fulfilled = true;
+  if (!violation) return "";
+  const stamps = Math.min(4, (statusValue(actor, "violationStamp") || 0) + 1);
+  endgameStatus(actor, "violationStamp", inspector, { value: stamps, duration: 4 });
+  if (stamps >= 2) {
+    endgameStatus(actor, "defenseDown", inspector, { value: .25, duration: 3 });
+    enemyDispelOne(actor);
+  }
+  if (stamps >= 3) endgameStatus(actor, "silence", inspector, { duration: 2 });
+  return ` VIOLATION: ${actor.name} receives stamp ${stamps}; Voss gains damage against stamped targets.`;
+}
+
+function endgamePlayerDamageMultiplier(actor, sk, target) {
+  let multiplier = 1;
+  const protectedStatus = statusOf(target, "protectedGuest");
+  const host = protectedStatus && battle.enemies.find(unit => unit.hp > 0 && unit.name === protectedStatus.source?.name);
+  if (host) {
+    multiplier *= 1 - protectedStatus.value;
+    const rebuke = Math.max(1, Math.round(host.stats.mag * .35));
+    actor.hp = Math.max(0, actor.hp - rebuke);
+    addBattleFloater(actor, rebuke, { damageType: "Sound" });
+    enemyDispelOne(actor);
+    markBattleUnitDown(actor);
+  }
+  if (!target.endgameBoss) return multiplier;
+  const data = endgameMechanicState(target);
+  if (target.endgameBoss === "oath") multiplier *= statusOf(target, "brokenOath") ? 1.75 : 1 - statusValue(target, "oathguard");
+  if (target.endgameBoss === "root") {
+    const category = sk.anim === "ultimate" ? "Ultimate" : skillScaling(sk) === "str" ? "Physical" : "Magic";
+    if (statusOf(target, "memoryCore")) multiplier *= 1.6;
+    else {
+      if (statusOf(target, "memoryAdaptation") && data.category === category) multiplier *= 1 - data.adaptation;
+      data.adaptation = data.category === category ? Math.min(.6, data.adaptation + .15) : .15;
+      data.category = category;
+      data.adaptationUntil = data.turn + 2;
+      endgameStatus(target, "memoryAdaptation", target, { value: data.adaptation, duration: 3 });
+      statusOf(target, "memoryAdaptation").category = category;
+    }
+  }
+  return multiplier;
+}
+
+function endgameEnemyAction(unit) {
+  const data = endgameMechanicState(unit);
+  const step = (unit.actionsTaken || 0) % 3;
+  const special = (name, effect, target = unit) => ({ kind: "utility", name, element: ENDGAME_BOSS_CONFIG[unit.name].element, mpCost: 0, endgameEffect: effect, target });
+  const party = battle.party.filter(hero => hero.hp > 0);
+  const other = party[(unit.actionsTaken || 0) % party.length];
+  const controlled = ["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type));
+  if (controlled) {
+    endgameInterrupt(unit);
+    return enemyActionForKind(unit, "melee");
+  }
+  if (unit.endgameBoss === "guidance") {
+    if (!data.pending || !statusOf(data.pending, "guidanceMark")) return special("Guidance Mark - astral strike in two actions", "mark", other);
+    if (!data.moved) return special("Wandering Guidance - mark moves; impact next action", "moveMark", other);
+    const target = data.pending;
+    clearEndgameStatus("guidanceMark", unit);
+    data.pending = null;
+    return { ...enemyActionForKind(unit, "magic", target), name: "Guided Astral Impact", coefficient: 2.1 };
+  }
+  if (unit.endgameBoss === "crescendo") {
+    if (data.charging) {
+      const rings = data.rings;
+      data.charging = false;
+      data.rings = 0;
+      clearEndgameStatus("harmonicRings", unit);
+      return { ...enemyActionForKind(unit, "ultimate"), coefficient: 1.5 * (1 + rings * .35) };
+    }
+    if (data.rings >= 3 || (battle.enemyResonance || 0) >= 100) return special("Crescendo - Grand Crescendo next action", "charge");
+    return step === 1 ? enemyActionForKind(unit, "magic") : special("Harmonic Rings", "rings");
+  }
+  if ((battle.enemyResonance || 0) >= 100) {
+    if (unit.endgameBoss === "sanctuary") return { kind: "ultimate", name: "Sanctuary Renewal", element: "Holy Fire", healing: true, allAllies: true, healCoefficient: 2.4, cleanse: true, buffs: [{ type: "statusWard", duration: 2, value: .4 }] };
+    return enemyActionForKind(unit, "ultimate");
+  }
+  switch (unit.endgameBoss) {
+    case "guest": return step === 0 ? special("Protected Guest - attack an unprotected target", "guest") : step === 1 ? special("Change of Seating", "seating", other) : { kind: "dispel", name: "Withdraw the Invitation", element: "Sound", target: party.find(hero => removableStatus(hero, DISPEL_PRIORITY)) || other };
+    case "sanctuary": {
+      const cycle = data.sanctuaryStep || 0;
+      data.sanctuaryStep = (cycle + 1) % 3;
+      return cycle === 0 ? special("Sanctuary Purification", "sanctuaryCleanse") : cycle === 1 ? special("Sanctuary Barriers", "sanctuaryWard") : { kind: "magic", name: "Sanctuary Mend", element: "Holy Fire", mpCost: 18, healing: true, allAllies: true, healCoefficient: 2, cleanse: true, target: unit };
+    }
+    case "inspection": return !data.order ? special("Inspection Order", "order") : { ...enemyActionForKind(unit, step === 1 ? "magic" : "melee"), name: step === 1 ? "Violation Assessment" : "Inspector's Gavel" };
+    case "root": return !data.window && (unit.actionsTaken || 0) % 4 === 2 ? special("Memory Core - burst window", "core") : { ...enemyActionForKind(unit, step === 0 ? "magic" : "melee"), allTargets: step === 0 };
+    case "echo":
+      if (data.pending) { const target = data.pending; data.pending = null; return { ...enemyActionForKind(unit, "magic", target), name: "Delayed Occult Echo", coefficient: 1.7 }; }
+      return step === 0 ? special("Echo Sigil", "echo") : step === 1 ? special("Occult Mark - attack next action", "occult", other) : enemyActionForKind(unit, "magic");
+    case "veil": return step === 0 ? special("Beguiling Veil", "veil", other) : step === 1 ? special("Buff Inversion", "invert", party.find(hero => removableStatus(hero, DISPEL_PRIORITY)) || other) : { ...enemyActionForKind(unit, "magic"), status: { type: "sleep", chance: .65, duration: 2 } };
+    case "oath":
+      if (!data.window && !statusOf(unit, "oathguard")) return special("Oathguard - Break the shield", "shield");
+      return { ...enemyActionForKind(unit, step === 1 ? "magic" : "melee"), allTargets: step === 1, breakPower: 3 };
+    case "archive": return step === 2 ? enemyActionForKind(unit, "magic") : special(data.record ? "Recorded Action" : "The Living Archive", data.record ? "reproduce" : "record", other);
+    default: return enemyActionForKind(unit, "magic");
+  }
+}
+
+function endgameResolveEnemyEffect(unit, action, target) {
+  const data = endgameMechanicState(unit);
+  const live = battle.enemies.filter(ally => ally.hp > 0);
+  const party = battle.party.filter(hero => hero.hp > 0);
+  switch (action.endgameEffect) {
+    case "guest": {
+      clearEndgameStatus("protectedGuest", unit);
+      const guests = live.filter(ally => ally !== unit);
+      const guest = guests[(data.guestIndex || 0) % guests.length] || unit;
+      data.guestIndex = (data.guestIndex || 0) + 1;
+      endgameStatus(guest, "protectedGuest", unit, { duration: 3 });
+      return ` ${guest.name} is the Protected Guest. Attacking the guest provokes a rebuke; target someone else or dispel protection.`;
+    }
+    case "seating":
+      live.forEach(ally => endgameStatus(ally, "agilityUp", unit, { duration: 2, value: .35 }));
+      enemyDispelOne(target);
+      return " Enemy initiative is accelerated and a player buff is removed.";
+    case "sanctuaryCleanse":
+      live.forEach(ally => enemyCleanseOne(ally));
+      return " The Sanctuary cleanses the enemy formation. Barriers follow, then healing; interrupt the cycle.";
+    case "sanctuaryWard":
+      live.forEach(ally => { endgameStatus(ally, "sanctuary", unit, { duration: 2 }); endgameStatus(ally, "barrier", unit, { duration: 2, value: .3 }); endgameStatus(ally, "statusWard", unit, { duration: 2, value: .4 }); });
+      return " Sanctuary barriers and status resistance protect the formation; interrupt before the healing pulse.";
+    case "order": {
+      const types = ["repeat", "buff", "magic", "target"];
+      const type = types[(data.orderIndex || 0) % types.length];
+      data.orderIndex = (data.orderIndex || 0) + 1;
+      const designated = live.find(ally => ally !== unit) || unit;
+      const label = { repeat: "No repeated skills", buff: "No buffs", magic: "No magic attacks", target: `Attack ${designated.name} first with a single-target action` }[type];
+      data.order = { type, target: designated, remaining: 3, fulfilled: false };
+      endgameStatus(unit, "inspectionOrder", unit, { duration: 3 }, label);
+      return ` ORDER: ${label}. Violations apply stacking stamps.`;
+    }
+    case "mark":
+      clearEndgameStatus("guidanceMark", unit);
+      data.pending = target; data.moved = false;
+      endgameStatus(target, "guidanceMark", unit, { duration: 4 }, "The mark moves next Guide action, then an astral strike resolves.");
+      return ` ${target.name} receives Guidance Mark. It may move before the delayed astral strike.`;
+    case "moveMark": {
+      const next = party.find(hero => hero !== data.pending) || data.pending;
+      clearEndgameStatus("guidanceMark", unit);
+      data.pending = next; data.moved = true;
+      endgameStatus(next, "guidanceMark", unit, { duration: 3 }, "Astral Impact on the Guide's next action. Cleanse or interrupt now.");
+      return ` Guidance moves to ${next.name}. Astral Impact arrives next action; cleanse or interrupt.`;
+    }
+    case "core":
+      data.window = 3;
+      endgameStatus(unit, "memoryCore", unit, { duration: 3 });
+      return " Memory Core glows: +60% incoming damage for the next two Guardian actions.";
+    case "echo": {
+      endgameStatus(unit, "echoSigil", unit, { duration: 3 });
+      const candidates = party.flatMap(hero => ensureStatuses(hero).filter(entry => DISPEL_PRIORITY[entry.type]).map(entry => ({ hero, entry })));
+      candidates.sort((a, b) => DISPEL_PRIORITY[b.entry.type] - DISPEL_PRIORITY[a.entry.type]);
+      const copied = candidates[0];
+      if (copied) endgameStatus(unit, copied.entry.type, unit, { duration: 2, value: copied.entry.value });
+      return copied ? ` Echo Sigil copies ${copied.hero.name}'s ${STATUS_DEFS[copied.entry.type].label}.` : " Echo Sigil is active; Malkhius awaits a strong player effect.";
+    }
+    case "occult":
+      data.pending = target;
+      endgameStatus(target, "marked", unit, { duration: 2, value: .15 });
+      if (statusOf(unit, "echoSigil") && battle.lastEndgameEffect?.buff) endgameStatus(unit, battle.lastEndgameEffect.buff.type, unit, { ...battle.lastEndgameEffect.buff, duration: 2 });
+      enemyDispelOne(target);
+      return ` ${target.name} is marked for a delayed occult attack; Echo Sigil can reproduce a recent buff.`;
+    case "veil":
+      endgameStatus(target, "beguilingVeil", unit, { duration: 2 });
+      endgameStatus(target, "mentalPressure", unit, { duration: 2, value: .2 });
+      return ` ${target.name} is misled: single-target attacks are redirected until the Veil is cleansed.`;
+    case "invert": {
+      const buff = removableStatus(target, DISPEL_PRIORITY);
+      if (!buff) return " No removable buff remains to invert.";
+      target.statuses = target.statuses.filter(entry => entry !== buff);
+      const inversions = { magicUp: "magicDefenseDown", defenseUp: "defenseDown", barrier: "defenseDown", agilityUp: "agilityDown", strengthUp: "physicalVulnerability" };
+      endgameStatus(target, inversions[buff.type] || "mentalPressure", unit, { duration: 2, value: Math.min(.35, buff.value || .2) });
+      return ` ${target.name}'s ${STATUS_DEFS[buff.type].label} becomes a negative effect.`;
+    }
+    case "shield":
+      endgameStatus(unit, "oathguard", unit, { duration: 99, value: data.shield });
+      return " Oathguard forces single-target attacks onto Koru-Vak. Build Break to disable the shield.";
+    case "rings": {
+      const supports = live.filter(ally => ally !== unit).length;
+      data.rings = Math.min(6, data.rings + Math.max(1, supports));
+      endgameStatus(unit, "harmonicRings", unit, { duration: 99, value: data.rings });
+      live.forEach(ally => endgameStatus(ally, "magicUp", unit, { duration: 2, value: .2 }));
+      battle.enemyResonance = Math.min(100, (battle.enemyResonance || 0) + 10);
+      return ` ${data.rings} harmonic rings increase Grand Crescendo. Defeat supports, Silence or Break the Cantor.`;
+    }
+    case "charge":
+      data.charging = true;
+      return ` Grand Crescendo is charging with ${data.rings} rings. Silence or Break now to interrupt it.`;
+    case "record": {
+      const index = (data.recordIndex || 0) % 3;
+      data.recordIndex = (data.recordIndex || 0) + 1;
+      enemyCleanseOne(unit);
+      if (index === 0) {
+        const owner = party.find(hero => removableStatus(hero, DISPEL_PRIORITY));
+        const buff = owner && removableStatus(owner, DISPEL_PRIORITY);
+        if (buff) { owner.statuses = owner.statuses.filter(entry => entry !== buff); data.record = { kind: "Buff Record", effect: { type: buff.type, value: buff.value } }; }
+      } else if (index === 1) {
+        const owner = party.find(hero => hero.lastActiveSkill) || target;
+        if (owner.lastActiveSkill) {
+          endgameStatus(owner, "skillRecord", unit, { duration: 2 });
+          statusOf(owner, "skillRecord").skillName = owner.lastActiveSkill;
+          data.record = { kind: "Skill Record", skillName: owner.lastActiveSkill };
+        }
+      } else {
+        const effect = battle.lastEndgameEffect?.buff || battle.lastEndgameEffect?.status;
+        data.record = { kind: "Memory Record", effect: effect ? { ...effect } : { type: "magicUp", value: .2 } };
+      }
+      if (!data.record) data.record = { kind: "Memory Record", effect: { type: "magicUp", value: .2 } };
+      endgameStatus(unit, "livingArchive", unit, { duration: 3 }, `${data.record.kind}: ${data.record.skillName || STATUS_DEFS[data.record.effect?.type]?.label}. Recorded Action follows.`);
+      endgameStatus(unit, data.record.kind === "Buff Record" ? "buffRecord" : data.record.kind === "Memory Record" ? "memoryRecord" : "skillRecord", unit, { duration: 3 }, statusOf(unit, "livingArchive").note);
+      return ` ${statusOf(unit, "livingArchive").note} Ilyss cleanses an important debuff.`;
+    }
+    case "reproduce": {
+      const record = data.record;
+      data.record = null;
+      clearEndgameStatus("livingArchive", unit);
+      clearEndgameStatus("buffRecord", unit);
+      clearEndgameStatus("memoryRecord", unit);
+      unit.statuses = ensureStatuses(unit).filter(entry => entry.type !== "skillRecord");
+      if (record?.effect) {
+        const negative = STATUS_DEFS[record.effect.type]?.negative;
+        const recipient = negative ? target : live.find(ally => ally !== unit) || unit;
+        endgameStatus(recipient, record.effect.type, unit, { ...record.effect, duration: 2 });
+      }
+      const transferable = ensureStatuses(unit).find(entry => CLEANSE_PRIORITY[entry.type]);
+      if (transferable) {
+        unit.statuses = unit.statuses.filter(entry => entry !== transferable);
+        endgameStatus(target, transferable.type, unit, { value: transferable.value, duration: 2 });
+      }
+      return ` ${record?.kind || "Memory Record"} is reproduced; stored effects move to new targets.`;
+    }
+    default: return "";
+  }
+}
+
 function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
+  if (unit.endgameBoss) return endgameEnemyAction(unit);
   if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
   if ((battle.enemyResonance || 0) >= 100) {
     if (profile?.telegraphUltimate && !unit.ultimateTelegraphed) {
@@ -11061,6 +11601,8 @@ function enemyDamageRoll(unit, action, target) {
   if (enemyPayoffMatches(action, target)) damage *= action.payoffMultiplier || 1.2;
   damage *= 1 + (physical ? statusValue(target, "physicalVulnerability") : statusValue(target, "magicVulnerability"));
   if (action.element === "Holy Fire") damage *= 1 + statusValue(target, "holyVulnerability");
+  if (unit.endgameBoss === "inspection") damage *= 1 + statusValue(target, "violationStamp") * .15;
+  if (statusOf(target, "violationStamp") && statusOf(target, "defenseDown")) damage *= 1 + statusValue(target, "defenseDown");
   const critical = enemyActionCrit(unit, action, target);
   if (critical) damage *= 2 + (unit.affixes?.critDamage || 0);
   damage = Math.max(1, Math.round(damage * incomingDamageMultiplier(target)));
@@ -11110,6 +11652,10 @@ function enemyApplyActionStatuses(source, target, action) {
   }
   statuses.forEach(status => {
     const result = applyStatus(target, status.type, source, status);
+    if (result.applied && source.endgameBoss && BOSS_MECHANIC_ICONS[status.type]) {
+      battle.mechanicTelegraphs ||= [];
+      battle.mechanicTelegraphs.push({ unit: target, type: status.type, start: tick });
+    }
     if (result.applied && ["administrativeLock", "audit"].includes(status.type)) statusOf(target, status.type).skillName = target.lastActiveSkill;
     applications.push(result);
   });
@@ -11117,7 +11663,7 @@ function enemyApplyActionStatuses(source, target, action) {
 }
 
 function enemyResonanceGainForAction(unit, action) {
-  if (unit.role === "boss") return 20;
+  if (unit.role === "boss" || unit.endgameBoss) return 20;
   if (action.healing || ["buff", "cleanse", "dispel", "utility"].includes(action.kind)) return 13;
   return action.kind === "magic" ? 14 : 11;
 }
@@ -11161,7 +11707,9 @@ function resolveEnemyTurn(turn, prev) {
     if (!battle || mode !== "battle" || e.hp <= 0) return;
     battle.attackDamage = [];
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
-    if (action.healing) {
+    if (action.endgameEffect) {
+      actionLog += endgameResolveEnemyEffect(e, action, target);
+    } else if (action.healing) {
       const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
       let total = 0;
       healTargets.forEach(ally => {
@@ -11645,10 +12193,11 @@ function hallShopGearRarity(stage = 1) {
 }
 
 function rollHallGearRarity(stage = 1) {
-  return hallNormalGearRarity(stage);
+  return stage >= 58 ? "Artifact" : hallNormalGearRarity(stage);
 }
 
 function hallGearPoolForRarity(rarity, stage = 1) {
+  if (rarity === "Artifact") return HALL_ARTIFACT_GEAR;
   if (rarity === "Rare") return HALL_RARE_GEAR_POOL;
   if (rarity === "Epic") return HALL_EPIC_GEAR_POOL;
   if (rarity === "Legendary") return HALL_LEGENDARY_GEAR_POOL;
@@ -11669,12 +12218,18 @@ function guaranteeHallBattleGearReward(rewards, stage = 1) {
   if (!gear) return null;
   const themes = ["swamp", "ruins", "mountain", "dragon"];
   const theme = HALL_MYTHIC_THEMES[stage] || themes[Math.floor(Math.random() * themes.length)];
-  const affixes = rollGearAffixes(gear, rarity, theme, HALL_GENERATED_AFFIX_COUNTS[rarity]);
+  const rewardScale = stage > 50 ? 1 + (stage - 50) * .045 : 1;
+  const affixes = rollGearAffixes(gear, rarity, theme, HALL_GENERATED_AFFIX_COUNTS[rarity]).map(entry => {
+    if (stage <= 50) return entry;
+    const scaled = { ...entry, value: entry.max > 1 ? Math.round(entry.value * rewardScale) : Number((entry.value * rewardScale).toFixed(4)) };
+    scaled.text = formatAffix(scaled);
+    return scaled;
+  });
   const awarded = awardGearDrop(gear.name, rarity, rewards.drops, {
     theme,
     separateCopy: true,
     affixes,
-    stats: rollHallBaseStats(rarity)
+    stats: Object.fromEntries(Object.entries(rollHallBaseStats(rarity)).map(([key, value]) => [key, Math.round(value * rewardScale)]))
   });
   rewards.gearDrops.push(awarded);
   return awarded;
@@ -12994,7 +13549,7 @@ function ensureHallShopOfferAffixes(offer, gear, stage) {
 }
 
 function ensureHallShopOffer(stage) {
-  const value = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(stage) || 1));
+  const value = Math.max(1, Math.min(50, Number(stage) || 1));
   const progress = hallBattleProgress();
   const rarity = hallShopGearRarity(value);
   const existing = progress.shopOffers[value];
@@ -13028,7 +13583,7 @@ function ensureHallShopOffer(stage) {
 }
 
 function hallShopOffersThrough(stage) {
-  const limit = Math.max(1, Math.min(HALL_BATTLE_BLUEPRINTS.length, Number(stage) || 1));
+  const limit = Math.max(1, Math.min(50, Number(stage) || 1));
   return Array.from({ length: limit }, (_, index) => ensureHallShopOffer(index + 1)).filter(Boolean);
 }
 
