@@ -3287,7 +3287,7 @@ const baseJobs = {
   ]),
   Sparky: character("Sparky", "Emberborn", "Ancient Fire", "#332846", "#7f4ad1", "#b66cff", { str: 7, agi: 13, mag: 16, stam: 8, echo: 16 }, ["Voice of Verse", "Workshop Coat", "Promise Ring", "Gearheart Charm", "Glimmer Goggles"], [
     skill("Ember Nip", "melee", "Ancient Fire", 14, 0, "Tiny bite. Applies Burn for 4 actions on a successful hit.", { status: { type: "burn", chance: 1, duration: 4 } }),
-    skill("Memory Flare", "magic", "Ancient Fire", 36, 7, "Burns false commands."),
+    skill("Memory Flare", "magic", "Ancient Fire", 36, 7, "Ancient Fire strikes every living enemy.", { allEnemies: true }),
     skill("Prrrp", "block", "Heart", -20, 5, "Morale heal."),
     skill("Emberblood", "magic", "Ancient Fire", 0, 8, "Grant one ally 25% Vampiric for 3 turns.", { targetSide: "ally", buffs: [{ type: "vampiric", duration: 3, value: .25 }] }),
     skill("ULT: Eternal Flame", "ultimate", "Ancient Fire", 88, 100, "Dragon memory erupts.")
@@ -3508,7 +3508,7 @@ const earlyTalentAlternatives = {
   ],
   Sparky: [
     talent(5, "Focused Flame", "magicDamage", .15, "MAG attacks deal 15% more damage."),
-    talent(10, "Kindled Core", "magicDamage", .2, "20% more MAG damage; Memory Flare stays single-target."),
+    talent(10, "Kindled Core", "magicDamage", .2, "20% more MAG damage."),
     talent(15, "Ancient Sight", "revealWeakness", true, "Reveal and remember enemy weaknesses."),
     talent(20, "Hearthkeeper", "newSkill", skill("ULT: Hearthkeeper", "ultimate", "Heart", -65, 100, "Heal the party and grant Defense Up.", { partyWide: true, buffs: [{ type: "defenseUp" }] }))
   ]
