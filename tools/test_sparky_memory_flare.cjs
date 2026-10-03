@@ -11,3 +11,24 @@ assert.ok(run(`(()=>{
   return flare && flare.allEnemies && flare.cost === 7 && skillHitsAll('Sparky', flare);
 })()`));
 console.log('PASS Memory Flare hits all enemies without talents and retains its MP cost');
+assert.ok(run(`(()=>{
+  progressFor('Sparky').talents = ['Ember Bite'];
+  const original = applyStatus;
+  const calls = [];
+  applyStatus = (target, type, source, options) => { calls.push({type, options}); return true; };
+  try {
+    for (const name of ['Ember Nip', 'Memory Flare']) {
+      const sk = battleSkills('Sparky').find(entry => entry.name === name);
+      applySkillStatuses({id:'Sparky'}, {}, sk);
+    }
+    return calls.length === 2 && calls.every(call => call.type === 'burn' && call.options.chance === 1 && call.options.duration === 4);
+  } finally { applyStatus = original; }
+})()`));
+assert.ok(run(`(()=>{
+  const source = {id:'Sparky', mag:100, str:100};
+  progressFor('Sparky').talents = [];
+  const normal = dotValueFor('burn', {}, source, {scaling:'mag'});
+  progressFor('Sparky').talents = ['Living Wildfire'];
+  return dotValueFor('burn', {}, source, {scaling:'mag'}) === normal * 2 && !typedTalentValue('Sparky','deathBurnTransfer');
+})()`));
+console.log('PASS Ember Bite grants both skills 100% Burn for 4 actions; Living Wildfire doubles ticks');

@@ -3709,7 +3709,7 @@ compactTalentTrees.Sparky = [
   talentNode(1, "Smolder", "burnDuration", 1, "Burn applied by Sparky lasts 1 additional action."),
   talentNode(2, "Shared Warmth", "emberDefense", .1, "Emberblood also grants its target Defense Up 10% for 3 actions."),
   talentNode(2, "Smoke Trail", "interceptEvasion", .3, "After a successful intercept, gain 30% Evasion for the next incoming direct attack."),
-  talentNode(2, "Ember Bite", "emberNipBurn", .8, "Ember Nip gains an 80% base chance to apply Burn for 4 actions."),
+  talentNode(2, "Ember Bite", "emberNipBurn", 1, "Ember Nip and every Memory Flare hit gain a 100% base chance to apply Burn for 4 actions."),
   talentNode(3, "Ember Bond", "emberBond", .25, "Emberblood Vampiric healing also heals Sparky for 25% of HP actually restored."),
   talentNode(3, "Brave Little Thing", "interceptResonance", 12, "Each successful intercept generates +12 party Resonance."),
   talentNode(3, "Hungry Flame", "burningDamage", .25, "Direct Ancient Fire damage +25% against Burning enemies."),
@@ -3718,7 +3718,7 @@ compactTalentTrees.Sparky = [
   talentNode(4, "Inferno Heart", "burnRefresh", 1, "A direct Ancient Fire hit refreshes existing Burn to full duration, once per enemy each action."),
   talentNode(5, "Hearthfire", "hearthfire", .25, "Emberblood Vampiric healing heals the most wounded other living ally for 25% of restored HP."),
   talentNode(5, "Tiny Dragon, Huge Problem", "interceptCharges", 3, "Tiny Dragon, Big Problem can intercept 3 single-target attacks during its duration."),
-  talentNode(5, "Living Wildfire", "deathBurnTransfer", .75, "When a Sparky-Burning enemy dies, transfer Burn to one living enemy with remaining duration and 75% tick potency."),
+  talentNode(5, "Living Wildfire", "doubleBurnDamage", 1, "Burn damage inflicted by Sparky is doubled."),
 ];
 
 const HEAL_CONVERSION_BUFFS = {
@@ -5458,7 +5458,8 @@ function dotValueFor(type, target, source, options = {}) {
   const coefficient = type === "burn" ? .24 : .2;
   const boostType = type === "burn" ? "burnDamage" : "bleedDamage";
   const capstone = type === "burn" && source?.id ? typedTalentValue(source.id, "livingWildfire") : 0;
-  return Math.max(1, Math.round(sourceRelevantStat(source, options) * coefficient * (1 + (source?.id ? typedTalentValue(source.id, boostType) : 0) + capstone)));
+  const multiplier = type === "burn" && source?.id && typedTalentValue(source.id, "doubleBurnDamage") ? 2 : 1;
+  return Math.max(1, Math.round(sourceRelevantStat(source, options) * coefficient * (1 + (source?.id ? typedTalentValue(source.id, boostType) : 0) + capstone))) * multiplier;
 }
 
 function statusDurationFor(source, type, requested) {
@@ -5616,7 +5617,7 @@ function applySkillStatuses(source, target, sk) {
   const status = sk.status && sk.name === "Scramble Signal" ? { ...sk.status, duration: sk.status.duration + typedTalentValue(source.id, "scrambleDuration") } : sk.status;
   if (status) applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
   if (source?.id === "Seerin" && sk.name === "Starflame Cut" && typedTalentValue(source.id, "starflameBrand")) applications.push(applyStatus(target, "holyVulnerability", source, { duration: 2, value: .2, force: true }));
-  if (source?.id === "Sparky" && sk.name === "Ember Nip" && !sk.status && typedTalentValue(source.id, "emberNipBurn")) applications.push(applyStatus(target, "burn", source, { duration: 4, chance: .8, scaling: skillScaling(sk), element: sk.element }));
+  if (source?.id === "Sparky" && ["Ember Nip", "Memory Flare"].includes(sk.name) && !sk.status && typedTalentValue(source.id, "emberNipBurn")) applications.push(applyStatus(target, "burn", source, { duration: 4, chance: 1, scaling: skillScaling(sk), element: sk.element }));
   (sk.extraStatuses || []).forEach(status => applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element })));
   if (source?.id && sk.element === "Tech" && !sk.statusOnly && (sk.power > 0 || sk.coefficient) && Math.random() < typedTalentValue(source.id, "techDisrupt")) {
     applications.push(applyStatus(target, "disrupted", source, { force: true, duration: 2, value: .15 }));
