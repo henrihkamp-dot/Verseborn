@@ -10,7 +10,7 @@ const server=http.createServer((req,res)=>{const name=decodeURIComponent(req.url
  assert.equal(await page.locator('.shop-offer-section').first().locator('[data-buy]').count(),10);
  await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/artifact-shop-desktop.png')});
  await page.locator('.shop-offer-section').first().locator('[data-buy]').first().click();
- assert.ok(await page.evaluate(`(()=>{const ref=ownedGearRefs().find(r=>gearByName(r)?.name==='Courtesy Engine'),stats=JSON.stringify(gearInstance(ref).stats),gold=state.gold;saveGame(hallSaveKey());loadGame(hallSaveKey());return hallBattleProgress().artifactShopUnlocks.length===10&&glimmerArtifactWares().length===10&&JSON.stringify(gearInstance(ref).stats)===stats&&state.gold===gold&&gold===232000;})()`));
+ assert.ok(await page.evaluate(`(()=>{const ref=ownedGearRefs().find(r=>gearByName(r)?.name==='Courtesy Engine'),stats=JSON.stringify(gearInstance(ref).stats),gold=state.gold;saveGame(hallSaveKey());loadGame(hallSaveKey());return hallBattleProgress().artifactShopUnlocks.length===10&&glimmerArtifactWares().length===10&&JSON.stringify(gearInstance(ref).stats)===stats&&state.gold===gold&&gold===240000;})()`));
  await page.evaluate(`activeVendor='workshop';mode='shop';vendorTab='buy';el.menu.classList.remove('hidden');renderVendor();`);
  await page.setViewportSize({width:390,height:844});await page.mouse.move(0,0);await page.evaluate('hideGearHoverTooltip()');await page.waitForTimeout(250);await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/artifact-shop-mobile.png')});
  assert.ok(await page.locator('.is-artifact-offer > div').first().evaluate(el=>el.clientWidth>=220),'Artifact details too narrow');

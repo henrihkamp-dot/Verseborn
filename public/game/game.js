@@ -2087,16 +2087,16 @@ const HALL_ARTIFACT_GEAR = [
   ])
 ];
 const GLIMMER_ARTIFACT_CATALOG = [
-  [51, 18000, "Courtesy Engine", "ring", { mag: 22, agi: 12, echo: 10 }, "First Courtesy", [["openingTurnProgress", .25], ["statusChance", .2]], ["quickstart", "alchemist", "resonant", "resolute"]],
-  [52, 23000, "Sanctuary Dynamo", "armour", { stam: 26, mag: 14, echo: 8 }, "Shelter Circuit", [["buffDuration", 1], ["allStatusResistance", .25]], ["stout", "vital", "lasting", "steadfast"]],
-  [53, 29000, "Inspector's Counterseal", "helmet", { mag: 25, agi: 14, stam: 12 }, "Countermand", [["statusDuration", 1], ["statusChance", .25]], ["alchemist", "resolute", "cruel", "keen"]],
-  [54, 36000, "Starpath Amplifier", "weapon", { mag: 30, agi: 16, echo: 10 }, "Astral Calibration", [["magicDamage", .22], ["weaknessDamage", .2]], ["scholars", "arcane", "resonant", "siphoning"]],
-  [55, 44000, "Rootwatch Bastion", "armour", { stam: 34, str: 16, mag: 10 }, "Living Bulwark", [["blockPower", .3], ["statusDurationReduction", 1]], ["stout", "vital", "unyielding", "leeching"]],
-  [56, 53000, "Sigil Relay", "necklace", { mag: 29, echo: 20, agi: 14 }, "Occult Feedback", [["afflictedDamage", .25], ["statusDuration", 1]], ["alchemist", "cruel", "resonant", "siphoning"]],
-  [57, 63000, "Veilbreaker Lens", "helmet", { str: 25, mag: 25, agi: 18 }, "Lucid Aim", [["allStatusResistance", .3], ["weaknessDamage", .25]], ["resolute", "keen", "fleet", "quickstart"]],
-  [58, 78000, "Ironwake Foundryblade", "weapon", { str: 42, stam: 22, agi: 14 }, "Oathsteel Overdrive", [["physicalDamage", .3], ["afflictedDamage", .25]], ["strong", "physical", "executioner", "leeching"]],
-  [59, 95000, "Grand Chorus Capacitor", "necklace", { mag: 38, echo: 28, stam: 16 }, "Stored Ovation", [["openingResonance", 45], ["magicDamage", .25], ["buffDuration", 1]], ["resonant", "echoing", "prolonging", "siphoning"]],
-  [60, 125000, "Glimmer's Final Masterwork", "ring", { str: 32, mag: 32, stam: 24, agi: 20, echo: 18 }, "Masterwork Reprise", [["physicalDamage", .25], ["magicDamage", .25], ["weaknessDamage", .3]], ["keen", "resolute", "echoing", "resonant"]]
+  [51, 10000, "Courtesy Engine", "ring", { mag: 22, agi: 12, echo: 10 }, "First Courtesy", [["openingTurnProgress", .25], ["statusChance", .2]], ["quickstart", "alchemist", "resonant", "resolute"]],
+  [52, 11000, "Sanctuary Dynamo", "armour", { stam: 26, mag: 14, echo: 8 }, "Shelter Circuit", [["buffDuration", 1], ["allStatusResistance", .25]], ["stout", "vital", "lasting", "steadfast"]],
+  [53, 12000, "Inspector's Counterseal", "helmet", { mag: 25, agi: 14, stam: 12 }, "Countermand", [["statusDuration", 1], ["statusChance", .25]], ["alchemist", "resolute", "cruel", "keen"]],
+  [54, 13000, "Starpath Amplifier", "weapon", { mag: 30, agi: 16, echo: 10 }, "Astral Calibration", [["magicDamage", .22], ["weaknessDamage", .2]], ["scholars", "arcane", "resonant", "siphoning"]],
+  [55, 14000, "Rootwatch Bastion", "armour", { stam: 34, str: 16, mag: 10 }, "Living Bulwark", [["blockPower", .3], ["statusDurationReduction", 1]], ["stout", "vital", "unyielding", "leeching"]],
+  [56, 15000, "Sigil Relay", "necklace", { mag: 29, echo: 20, agi: 14 }, "Occult Feedback", [["afflictedDamage", .25], ["statusDuration", 1]], ["alchemist", "cruel", "resonant", "siphoning"]],
+  [57, 16000, "Veilbreaker Lens", "helmet", { str: 25, mag: 25, agi: 18 }, "Lucid Aim", [["allStatusResistance", .3], ["weaknessDamage", .25]], ["resolute", "keen", "fleet", "quickstart"]],
+  [58, 17500, "Ironwake Foundryblade", "weapon", { str: 42, stam: 22, agi: 14 }, "Oathsteel Overdrive", [["physicalDamage", .3], ["afflictedDamage", .25]], ["strong", "physical", "executioner", "leeching"]],
+  [59, 19000, "Grand Chorus Capacitor", "necklace", { mag: 38, echo: 28, stam: 16 }, "Stored Ovation", [["openingResonance", 45], ["magicDamage", .25], ["buffDuration", 1]], ["resonant", "echoing", "prolonging", "siphoning"]],
+  [60, 20000, "Glimmer's Final Masterwork", "ring", { str: 32, mag: 32, stam: 24, agi: 20, echo: 18 }, "Masterwork Reprise", [["physicalDamage", .25], ["magicDamage", .25], ["weaknessDamage", .3]], ["keen", "resolute", "echoing", "resonant"]]
 ].map(([stage, price, name, slot, stats, signature, effects, affixKeys]) => {
   const labels = { openingTurnProgress: "opening turn progress", statusChance: "status application chance", buffDuration: "buff duration (turns)", allStatusResistance: "all-status resistance", statusDuration: "inflicted status duration (turns)", magicDamage: "magic damage", physicalDamage: "physical damage", weaknessDamage: "weakness damage", blockPower: "personal guard strength", statusDurationReduction: "negative status duration reduction (turns)", afflictedDamage: "damage against afflicted targets", openingResonance: "starting Resonance" };
   const effect = effects.map(([type, value], index) => ({ type, value, artifactUnique: index === 0, label: `${index === 0 ? signature + ": " : ""}+${value < 1 ? Math.round(value * 100) + "%" : value} ${labels[type]}` }));
@@ -7891,13 +7891,12 @@ function drawBossIndicatorStrip(unit, anchorX, enemySide) {
   const breakValue = Math.max(0, Math.min(3, Math.ceil((unit.stagger || 0) * 3 / threshold)));
   const showBreak = broken || breakValue > 0;
   const size = 10, gap = 2;
-  const width = (1 + Number(showBreak) + icons.length) * (size + gap) - gap;
+  const width = (Number(showBreak) + icons.length) * (size + gap) - gap;
+  if (!showBreak && !icons.length) return;
   const [, baseline] = enemySide ? enemyBattlePosition(battle.enemies.indexOf(unit), battle.enemies.length) : partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
   const height = enemySide ? (enemyAnimationHeights[enemyAnimationKey(unit)] || 46) * BATTLE_COMPOSITION_SCALE : battleSpriteHeights[unit.id] * BATTLE_COMPOSITION_SCALE;
   const y = Math.max(22, Math.round(baseline - height - size - 4));
   let x = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
-  drawCombatRoleIcon(combatRoleKey(unit, enemySide), x, y, size);
-  x += size + gap;
   if (showBreak) {
     const cell = breakIconSheet?.cells[broken ? 3 : breakValue - 1];
     if (cell) ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x, y, size, size);
@@ -7949,8 +7948,7 @@ function updateBossMechanicDisplay() {
   const names = { guest: "Protected Guest", sanctuary: "Sanctuary", inspection: "Inspection Orders", guidance: "Guidance Marks", root: "Memory Adaptation", echo: "Echo Sigil", veil: "Beguiling Veil", oath: "Oathguard", crescendo: "Crescendo", archive: "The Living Archive" };
   const title = warning ? announcement.title : focused ? STATUS_DEFS[focused.type].label : boss ? names[boss.endgameBoss] : `Phase ${phase}/3`;
   const text = warning ? announcement.text : focused ? statusDisplayData(boss,focused).description : boss ? `Read ${boss.name}'s next action. Silence, Break and cleanses counter the active mechanic.` : battle.enemies.filter(unit=>unit.hp>0).map(unit=>unit.name).join(" / ");
-  const roster = (units, enemySide) => `<div class="boss-hud-roster ${enemySide ? 'is-enemy' : ''}">${units.map(unit=>`<span><b>${escape(unit.name)}</b><i>${Math.max(0,Math.round(unit.hp))} HP / ${Math.max(0,Math.round(unit.mp||0))} MP</i></span>`).join('')}</div>`;
-  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/3</header>${roster(battle.party,false)}<div class="boss-mechanic-panel ${warning ? 'is-warning' : ''}"><strong>${escape(title)}</strong><p>${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>${roster(battle.enemies,true)}`;
+  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/3</header><div class="boss-mechanic-panel ${warning ? 'is-warning' : ''}"><strong>${escape(boss?.name || title)}</strong><p>${boss ? escape(title) + ': ' : ''}${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>`;
   if (hud.innerHTML !== html) hud.innerHTML = html;
 }
 
@@ -8094,7 +8092,7 @@ function drawBattleScene() {
   drawEffect();
   drawBossTelegraphs();
   drawBattleTurnRail();
-  if (!(battle.hallStage > 50)) drawBattleRoleRosters();
+  drawBattleRoleRosters();
   drawBattleFloaters();
   updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
@@ -12051,8 +12049,9 @@ function winBattle(log) {
   awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
   if (hallStage) {
     const hallGold = 12 + hallStage * 4 + (battle.hallBoss ? 40 + hallStage * 2 : 0);
-    state.gold += hallGold;
-    rewards.gold += hallGold;
+    const endgameGoldBonus = hallStage >= 51 && hallStage <= 60 ? (rewards.gold + hallGold) * 2 : 0;
+    state.gold += hallGold + endgameGoldBonus;
+    rewards.gold += hallGold + endgameGoldBonus;
     guaranteeHallBattleGearReward(rewards, hallStage);
   }
   if (echoHuntBattle) {

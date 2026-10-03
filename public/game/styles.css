@@ -7337,6 +7337,17 @@ html:not(.touch-layout) .menu {
   grid-template-columns: 48px minmax(0, 1fr) auto auto;
   align-items: start;
 }
+.game.has-endgame-mechanics { padding-top: 150px; }
+.boss-mechanic-hud { height: 142px; grid-template-columns: minmax(0, 1fr); grid-template-rows: 18px 120px; }
+.boss-mechanic-panel { position: relative; grid-column: 1 / -1; grid-row: 2; padding: 0; }
+.boss-mechanic-panel strong { position: absolute; left: 12%; right: 12%; top: 18%; margin: 0; text-align: center; color: #ffe097; }
+.boss-mechanic-panel p { position: absolute; left: 12%; right: 12%; top: 45%; bottom: 17%; margin: 0; overflow-y: auto; }
+.boss-mechanic-panel.is-warning { background-image: url("assets/ui/boss-mechanics/detail-panel.webp"); color: #35231a; }
+@media (max-width: 600px) {
+  .game.has-endgame-mechanics { padding-top: 158px; }
+  .boss-mechanic-hud { height: 150px; grid-template-columns: minmax(0, 1fr); grid-template-rows: 18px 128px; }
+  .boss-mechanic-panel { grid-row: 2; padding: 0; }
+}
 @media (max-width: 600px) {
   .menu[data-menu-view="glimmer-shop"] .shop-row.is-artifact-offer {
     grid-template-columns: 40px minmax(0, 1fr);
