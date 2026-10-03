@@ -2086,7 +2086,25 @@ const HALL_ARTIFACT_GEAR = [
     { type: "openingResonance", value: 30, label: "+30 Resonance at battle start" }
   ])
 ];
-const artifactGearNames = new Set(HALL_ARTIFACT_GEAR.map(gear => gear.name));
+const GLIMMER_ARTIFACT_CATALOG = [
+  [51, 18000, "Courtesy Engine", "ring", { mag: 22, agi: 12, echo: 10 }, "First Courtesy", [["openingTurnProgress", .25], ["statusChance", .2]], ["quickstart", "alchemist", "resonant", "resolute"]],
+  [52, 23000, "Sanctuary Dynamo", "armour", { stam: 26, mag: 14, echo: 8 }, "Shelter Circuit", [["buffDuration", 1], ["allStatusResistance", .25]], ["stout", "vital", "lasting", "steadfast"]],
+  [53, 29000, "Inspector's Counterseal", "helmet", { mag: 25, agi: 14, stam: 12 }, "Countermand", [["statusDuration", 1], ["statusChance", .25]], ["alchemist", "resolute", "cruel", "keen"]],
+  [54, 36000, "Starpath Amplifier", "weapon", { mag: 30, agi: 16, echo: 10 }, "Astral Calibration", [["magicDamage", .22], ["weaknessDamage", .2]], ["scholars", "arcane", "resonant", "siphoning"]],
+  [55, 44000, "Rootwatch Bastion", "armour", { stam: 34, str: 16, mag: 10 }, "Living Bulwark", [["blockPower", .3], ["statusDurationReduction", 1]], ["stout", "vital", "unyielding", "leeching"]],
+  [56, 53000, "Sigil Relay", "necklace", { mag: 29, echo: 20, agi: 14 }, "Occult Feedback", [["afflictedDamage", .25], ["statusDuration", 1]], ["alchemist", "cruel", "resonant", "siphoning"]],
+  [57, 63000, "Veilbreaker Lens", "helmet", { str: 25, mag: 25, agi: 18 }, "Lucid Aim", [["allStatusResistance", .3], ["weaknessDamage", .25]], ["resolute", "keen", "fleet", "quickstart"]],
+  [58, 78000, "Ironwake Foundryblade", "weapon", { str: 42, stam: 22, agi: 14 }, "Oathsteel Overdrive", [["physicalDamage", .3], ["afflictedDamage", .25]], ["strong", "physical", "executioner", "leeching"]],
+  [59, 95000, "Grand Chorus Capacitor", "necklace", { mag: 38, echo: 28, stam: 16 }, "Stored Ovation", [["openingResonance", 45], ["magicDamage", .25], ["buffDuration", 1]], ["resonant", "echoing", "prolonging", "siphoning"]],
+  [60, 125000, "Glimmer's Final Masterwork", "ring", { str: 32, mag: 32, stam: 24, agi: 20, echo: 18 }, "Masterwork Reprise", [["physicalDamage", .25], ["magicDamage", .25], ["weaknessDamage", .3]], ["keen", "resolute", "echoing", "resonant"]]
+].map(([stage, price, name, slot, stats, signature, effects, affixKeys]) => {
+  const labels = { openingTurnProgress: "opening turn progress", statusChance: "status application chance", buffDuration: "buff duration (turns)", allStatusResistance: "all-status resistance", statusDuration: "inflicted status duration (turns)", magicDamage: "magic damage", physicalDamage: "physical damage", weaknessDamage: "weakness damage", blockPower: "personal guard strength", statusDurationReduction: "negative status duration reduction (turns)", afflictedDamage: "damage against afflicted targets", openingResonance: "starting Resonance" };
+  const effect = effects.map(([type, value], index) => ({ type, value, artifactUnique: index === 0, label: `${index === 0 ? signature + ": " : ""}+${value < 1 ? Math.round(value * 100) + "%" : value} ${labels[type]}` }));
+  const gear = item(name, slot, stats, `Glimmer's ${signature} Artifact, commissioned after Stage ${stage}.`, effect);
+  gearDb[slot].push(gear);
+  return { stage, price, gear, affixKeys };
+});
+const artifactGearNames = new Set([...HALL_ARTIFACT_GEAR, ...GLIMMER_ARTIFACT_CATALOG.map(entry => entry.gear)].map(gear => gear.name));
 
 [...HALL_RARE_GEAR_POOL, ...HALL_EPIC_GEAR_POOL, ...HALL_LEGENDARY_GEAR_POOL, ...HALL_ARTIFACT_GEAR].forEach(gear => gearDb[gear.slot].push(gear));
 
@@ -9283,6 +9301,10 @@ function normalizeHallBattleProgress(progress) {
     ? normalized.startingWelcomeComplete
     : highestCleared > 0;
   normalized.shopStage = Math.max(0, Math.min(50, Number(normalized.shopStage) || 0));
+  normalized.artifactShopUnlocks = [...new Set([
+    ...(Array.isArray(normalized.artifactShopUnlocks) ? normalized.artifactShopUnlocks : []),
+    ...normalized.clearedStages
+  ].filter(stage => Number.isInteger(stage) && stage >= 51 && stage <= 60))].sort((a, b) => a - b);
   normalized.shopOffers = normalized.shopOffers && typeof normalized.shopOffers === "object" ? { ...normalized.shopOffers } : {};
   normalized.purchasedShopStages = Array.isArray(normalized.purchasedShopStages)
     ? [...new Set(normalized.purchasedShopStages.filter(stage => Number.isInteger(stage) && stage >= 1 && stage <= maxStage))]
@@ -9781,6 +9803,7 @@ function recordHallBattleClear(stage) {
   progress.unlockedStage = Math.min(HALL_BATTLE_BLUEPRINTS.length, Math.max(progress.unlockedStage, stage + 1));
   if (!firstClear) return false;
   progress.clearedStages.push(stage);
+  if (stage >= 51 && stage <= 60 && !progress.artifactShopUnlocks.includes(stage)) progress.artifactShopUnlocks.push(stage);
   progress.clearedStages.sort((a, b) => a - b);
   const remainingRecruit = HALL_RECRUITS.some(id => !state.party.includes(id));
   if (remainingRecruit && HALL_RECRUIT_STAGES.includes(stage) && !progress.recruitStages.includes(stage)) progress.pendingRecruit = stage;
@@ -13673,12 +13696,23 @@ function hallShopOffersThrough(stage) {
   return Array.from({ length: limit }, (_, index) => ensureHallShopOffer(index + 1)).filter(Boolean);
 }
 
+function glimmerArtifactWares() {
+  const unlocked = hallBattleProgress().artifactShopUnlocks;
+  return GLIMMER_ARTIFACT_CATALOG.filter(entry => unlocked.includes(entry.stage)).map(({ stage, price, gear, affixKeys }) => {
+    const pool = affixPools[gear.slot] || affixPools.accessory;
+    return { kind: "gear", name: gear.name, price, rarity: "Artifact", hallStage: stage, artifactShop: true, stats: { ...gear.stats }, affixes: affixKeys.map(key => {
+      const entry = pool.find(affix => affix.key === key);
+      return { ...entry, value: entry.max };
+    }) };
+  });
+}
+
 function vendorWares(id) {
   const vendor = vendors[id];
   if (!vendor) return [];
   if (id === "workshop" && state.gameMode === "hallBattles") {
     const progress = hallBattleProgress();
-    return hallShopOffersThrough(Math.max(progress.unlockedStage, progress.shopStage, 1));
+    return [...hallShopOffersThrough(Math.max(progress.unlockedStage, progress.shopStage, 1)), ...glimmerArtifactWares()];
   }
   const wares = [...vendor.wares];
   if (id !== "workshop") return wares;
@@ -13698,7 +13732,7 @@ function vendorWares(id) {
   echoForgeGear.filter(gear => gear.echoRank <= unlockedRank).forEach(gear => {
     wares.push({ kind: "gear", name: gear.name, price: gear.price });
   });
-  return wares;
+  return [...wares, ...glimmerArtifactWares()];
 }
 
 const AFFIX_REROLL_COST = 250;
@@ -13741,14 +13775,14 @@ function shopWareRowHtml(ware, index, purchased = false) {
   const gear = ware.kind === "gear" ? gearByName(ware.name) : null;
   const repeatableEcho = gear && echoForgeGearNames.has(gear.name);
   const hallOfferPurchased = Number.isInteger(ware.hallStage) && hallBattleProgress().purchasedShopStages.includes(ware.hallStage);
-  const owned = purchased || ware.kind === "gear" && (hallOfferPurchased || (state.ownedGear.includes(ware.name) && !repeatableEcho && !ware.hallStage));
+  const owned = !ware.artifactShop && (purchased || ware.kind === "gear" && (hallOfferPurchased || (state.ownedGear.includes(ware.name) && !repeatableEcho && !ware.hallStage)));
   const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
   const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
   const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
   const icon = gear
     ? gearIconHtml({ ...gear, rarity: displayedRarity }, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
     : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
-  const ownedCount = repeatableEcho ? gearCopyCount(gear.name) : 0;
+  const ownedCount = repeatableEcho || ware.artifactShop ? gearCopyCount(gear.name) : 0;
   const displayedStats = ware.stats && typeof ware.stats === "object" ? ware.stats : gear?.stats;
   const comparisonHero = gear ? gearComparisonHero(gear, ware.hallStage ? selectedShopHero : selectedGearHero) : null;
   const hover = gear ? gearHoverAttribute({
@@ -13761,8 +13795,9 @@ function shopWareRowHtml(ware, index, purchased = false) {
   const metadata = gear
     ? `<small class="shop-gear-metadata">${displayedRarity.toUpperCase()} &bull; ${gearSlotLabel(gear.slot).toUpperCase()}${ware.hallStage ? ` &bull; STAGE ${ware.hallStage}` : ""}</small><small>${statLine(displayedStats)}</small>`
     : `<small>${ware.desc}</small>`;
+  const artifactDetails = ware.artifactShop ? `<small>${gearEffects(gear).map(effect => escapeMarkup(gearEffectLabel(effect))).join(" &bull; ")}</small><small>${ware.affixes.map(entry => escapeMarkup(formatAffix(entry))).join(" &bull; ")}</small>` : "";
   const buttonLabel = purchased ? "Purchased" : owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy";
-  return `<div class="shop-row ${gear ? "is-gear-row" : ""}" ${hover}>${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${metadata}</div><span>${price} G</span><button type="button" ${purchased ? "" : `data-buy="${index}"`} ${owned || full || state.gold < price ? "disabled" : ""}>${buttonLabel}</button></div>`;
+  return `<div class="shop-row ${gear ? "is-gear-row" : ""} ${ware.artifactShop ? "is-artifact-offer" : ""}" ${hover}>${icon}<div><strong>${ware.name}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${metadata}${artifactDetails}</div><span>${price} G</span><button type="button" ${purchased ? "" : `data-buy="${index}"`} ${owned || full || state.gold < price ? "disabled" : ""}>${buttonLabel}</button></div>`;
 }
 
 function renderVendor() {
@@ -13776,15 +13811,16 @@ function renderVendor() {
   const indexedWares = wares.map((ware, index) => ({ ware, index }));
   const hallShop = activeVendor === "workshop" && state.gameMode === "hallBattles";
   if (hallShop && !state.party.includes(selectedShopHero)) selectedShopHero = state.party[0];
-  const availableWares = hallShop ? indexedWares.filter(({ ware }) => !hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : indexedWares;
-  const purchasedWares = hallShop ? indexedWares.filter(({ ware }) => hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : [];
+  const availableWares = indexedWares.filter(({ ware }) => !ware.artifactShop && (!hallShop || !hallBattleProgress().purchasedShopStages.includes(ware.hallStage)));
+  const purchasedWares = hallShop ? indexedWares.filter(({ ware }) => !ware.artifactShop && hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) : [];
   const shopSections = hallShop
     ? `<section class="shop-offer-section"><h3>Available</h3><div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("") || `<div class="shop-empty"><strong>No offers available</strong><p>New persistent offers unlock with Ember Hall stages.</p></div>`}</div></section><details class="shop-purchased"><summary>Purchased (${purchasedWares.length})</summary><div class="shop-list">${purchasedWares.map(({ ware, index }) => shopWareRowHtml(ware, index, true)).join("") || `<div class="shop-empty"><p>No purchased offers yet.</p></div>`}</div></details>`
     : `<div class="shop-list">${availableWares.map(({ ware, index }) => shopWareRowHtml(ware, index)).join("")}</div>`;
   const comparisonSelector = hallShop
     ? `<nav class="shop-character-selector" aria-label="Comparison character"><span>Compare for</span>${state.party.map(id => `<button type="button" data-shop-hero="${id}" class="${selectedShopHero === id ? "is-active" : ""}"><img src="${menuPortraitSource(id)}" alt=""><b>${id}</b></button>`).join("")}</nav>`
     : "";
-  const buyList = `${shopSections}${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
+  const artifactSection = activeVendor === "workshop" ? `<section class="shop-offer-section"><h3>Artifact Masterworks</h3><div class="shop-list">${indexedWares.filter(({ ware }) => ware.artifactShop).map(({ ware, index }) => shopWareRowHtml(ware, index)).join("") || `<div class="shop-empty"><p>No Artifact commissions unlocked.</p></div>`}</div></section>` : "";
+  const buyList = `${artifactSection}${shopSections}${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
     return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
   }).join("")}</div>` : ""}`;
@@ -13802,7 +13838,7 @@ function renderVendor() {
   }).join("")}${!sellItems.length && !sellGear.length ? `<div class="shop-empty"><strong>Nothing sellable</strong><p>Key items, quest materials, equipped pieces and character-bound signature gear stay with the Flameguard.</p></div>` : ""}</div>`;
   const forgeRank = Math.min(40, Math.max(state.echoForgeRank || 0, state.endgameRank || 0));
   const shopNote = activeVendor === "workshop" && state.gameMode === "hallBattles"
-    ? `${wares.length} stage offer${wares.length === 1 ? "" : "s"} available. One fixed item per unlocked stage through Stage ${Math.max(hallBattleProgress().unlockedStage, hallBattleProgress().shopStage, 1)}.`
+    ? `${Math.min(50, Math.max(hallBattleProgress().unlockedStage, hallBattleProgress().shopStage, 1))} regular stage offers. ${glimmerArtifactWares().length}/10 permanent Artifact commissions unlocked.`
     : activeVendor === "workshop"
     ? `Echo Forge rank ${forgeRank}/40. Every unlocked Echo-Forged item can be bought repeatedly. Each purchase is a separate copy with its own completely rerolled set of four affixes. NG+ also unlocks improved consumables.`
     : "Rare effect gear normally comes from battles and quests. Spare general gear can be sold after it is unequipped.";
@@ -13908,7 +13944,7 @@ function buyWare(index) {
   if (!ware || state.gold < price) return;
   const repeatableEcho = ware.kind === "gear" && echoForgeGearNames.has(ware.name);
   const hallOffer = ware.kind === "gear" && Number.isInteger(ware.hallStage);
-  if (hallOffer && hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) return;
+  if (hallOffer && !ware.artifactShop && hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) return;
   if (ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho && !hallOffer) return;
   if (ware.kind === "item" && inventoryUsed() >= state.inventorySlots) return;
   state.gold -= price;
@@ -13922,7 +13958,7 @@ function buyWare(index) {
     const refs = addOwnedGear(ware.name, 1, gearOptions);
     const ref = refs[0] || gear?.name;
     if (gear && (postgameGearNames.has(gear.name) || echoForgeGearNames.has(gear.name))) topUpGearAffixes(ref, gearRarity(ref), repeatableEcho ? "" : "dragon");
-    if (hallOffer) hallBattleProgress().purchasedShopStages.push(ware.hallStage);
+    if (hallOffer && !ware.artifactShop) hallBattleProgress().purchasedShopStages.push(ware.hallStage);
   }
   else if (ware.kind === "upgrade") {
     state.inventorySlots += 10;

@@ -7332,3 +7332,22 @@ html:not(.touch-layout) .menu {
     background: linear-gradient(180deg, #f2c467, #87552d);
   }
 }
+.menu .shop-row.is-artifact-offer {
+  grid-template-columns: 48px minmax(0, 1fr) auto auto;
+  align-items: start;
+}
+@media (max-width: 600px) {
+  .menu[data-menu-view="glimmer-shop"] .shop-row.is-artifact-offer {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .menu[data-menu-view="glimmer-shop"] .shop-row.is-artifact-offer > div {
+    grid-column: 2;
+  }
+  .menu[data-menu-view="glimmer-shop"] .shop-row.is-artifact-offer > span {
+    grid-column: 2;
+  }
+  .menu[data-menu-view="glimmer-shop"] .shop-row.is-artifact-offer > button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
