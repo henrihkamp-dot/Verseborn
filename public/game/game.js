@@ -394,6 +394,8 @@ const animatedNpcHeights = {
   Grumm: 24
 };
 const enemyAnimationFiles = {
+  "Ash Wyrm": "Ash Wyrm",
+  "Seal Bearer": "Seal Bearer",
   "Inkbound Auditor": "Inkbound Auditor",
   "King Maeric": "King Maeric",
   Grumm: "Grumm",
@@ -435,6 +437,8 @@ const enemyAnimationFiles = {
   "Ember Leviathan": "Ember Leviathan"
 };
 const enemyAnimationHeights = {
+  "Ash Wyrm": 58,
+  "Seal Bearer": 51,
   "Inkbound Auditor": 47,
   "King Maeric": 54,
   Grumm: 55,
@@ -765,6 +769,48 @@ const enemyAbilityProfiles = {
     ultimate: em("Frostfire Cataclysm", "ultimate", "Ancient Fire", 0, { coefficient: 1.3, allTargets: true, breakPower: 2, status: { type: "burn", chance: .8, duration: 4 }, extraStatuses: [{ type: "agilityDown", chance: .8, duration: 3, value: .2 }] })
   }, ["magic", "heavy", "buff", "melee"], { element: "Ancient Fire", affixes: { elementDamage: .2, breakPower: 1, critDamage: .25, resonanceGeneration: .3 } })
 };
+// Early Hall opponents share the normal combat pipeline and status rules.
+Object.assign(enemyAbilityProfiles, {
+  "Ash Wyrm": enemyCombatProfile("dps", .1, { hp: 112, mp: 94, str: 106, mag: 122, stam: 92, agi: 92 }, {
+    melee: em("Ash Fang", "melee", "Ancient Fire", 0, { coefficient: 1.05, woundedPriority: true }),
+    utility: em("Scorching Breath", "utility", "Ancient Fire", 14, { status: { type: "scorched", chance: 1, duration: 2, value: .25 }, woundedPriority: true }),
+    magic: em("Cinder Hunt", "magic", "Ancient Fire", 18, { coefficient: 1.15, woundedPriority: true }),
+    ultimate: em("Ashen Torrent", "ultimate", "Ancient Fire", 0, { coefficient: 1.15, allTargets: true })
+  }, ["utility", "magic", "melee"], { element: "Ancient Fire" }),
+  "Seal Bearer": enemyCombatProfile("utility", .05, { hp: 100, mp: 132, str: 66, mag: 112, stam: 120, agi: 76 }, {
+    melee: em("Seal Staff", "melee", "Physical", 0, { coefficient: .75 }),
+    cleanse: em("Seal Mend", "cleanse", "Holy Fire", 12, { cleanse: true }),
+    buff: em("Protective Seal", "buff", "Holy Fire", 16, { targetRole: "threatened", buffs: [{ type: "statusWard", duration: 2, value: .45 }] }),
+    ultimate: em("Seal Sanctuary", "buff", "Holy Fire", 0, { targetRole: "threatened", buffs: [{ type: "defenseUp", duration: 2, value: .25 }] })
+  }, ["buff", "melee"], { element: "Holy Fire" })
+});
+const earlyProfile = (name, moves, pattern, options = {}) => {
+  const profile = enemyAbilityProfiles[name];
+  Object.assign(profile.moves, moves);
+  profile.pattern = pattern;
+  Object.assign(profile, options);
+};
+earlyProfile("Slobbo", { melee: em("Ledger Jab", "melee", "Physical", 0, { coefficient: .88 }) }, ["melee"], { role: "bruiser", crit: .06 });
+earlyProfile("Brokk", { buff: em("Shield the Weak", "buff", "Earth", 14, { targetRole: "protected", buffs: [{ type: "defenseUp", duration: 2, value: .25 }] }) }, ["melee", "buff", "melee"], { role: "tank", physicalBrokenBonus: .25 });
+enemyAbilityProfiles.Brokk.moves.melee.breakPower = 2;
+earlyProfile("High Administrator Thaddeus", { utility: em("Administrative Lock", "utility", "Tech", 16, { recentSkillLock: true, status: { type: "administrativeLock", chance: 1, duration: 2, value: .5 } }) }, ["utility", "melee", "magic"]);
+earlyProfile("Inkbound Auditor", { utility: em("Audit", "utility", "Shadow", 16, { auditSkill: true, status: { type: "audit", chance: 1, duration: 2, value: .5 } }) }, ["utility", "magic", "melee"]);
+earlyProfile("Dock Foreman", { utility: em("Anchor Chain", "utility", "Earth", 14, { status: { type: "anchored", chance: 1, duration: 2, value: .25 } }) }, ["utility", "melee", "magic"], { anchoredBreak: 2, breakPriority: true });
+enemyAbilityProfiles["Corrupt Clergy"].moves.heal.cleanse = true;
+earlyProfile("Saint Justin", { cleanse: em("Holy Purification", "cleanse", "Holy Fire", 16, { cleanse: true, teamBuffs: [{ type: "statusWard", duration: 2, value: .35 }] }) }, ["heal", "buff", "magic"], { role: "healer" });
+earlyProfile("Archive Custodian", { dispel: em("Archive", "dispel", "Arcane", 18, { dispel: true }) }, ["dispel", "magic", "buff", "melee"], { role: "controller" });
+earlyProfile("Gorg", { buff: em("Furnace Rage", "buff", "Ancient Fire", 12, { targetSide: "self", belowHalf: true, buffs: [{ type: "damageUp", duration: 2, value: .25 }] }) }, ["magic", "melee", "buff"], { escalation: .04 });
+earlyProfile("Cracked Pillar", { heavy: em("Shatter the Broken", "melee", "Earth", 18, { coefficient: 1.2, payoff: "broken", payoffMultiplier: 1.4, breakPower: 2 }) }, ["melee", "magic", "heavy"], { breakPriority: true });
+enemyAbilityProfiles["Cracked Pillar"].moves.melee.breakPower = 3;
+earlyProfile("Grumm", { buff: em("Stone Shelter", "buff", "Earth", 16, { targetRole: "protected", buffs: [{ type: "defenseUp", duration: 2, value: .3 }] }) }, ["melee", "buff", "magic"], { breakPriority: true, physicalBrokenBonus: .35 });
+enemyAbilityProfiles.Grumm.moves.melee.breakPower = 2;
+enemyAbilityProfiles.Lysra.moves.heal.cleanse = true;
+enemyAbilityProfiles.Lysra.moves.buff.cleanseAlly = true;
+earlyProfile("Kaeldrin", { buff: em("Commander's Shelter", "buff", "Holy Fire", 18, { targetRole: "protected", protectAlly: true, buffs: [{ type: "defenseUp", duration: 2, value: .25 }] }) }, ["buff", "melee", "magic", "heal"], { breakPriority: true, brokenBonus: .2, brokenGuard: true });
+earlyProfile("Elder Plumpin", { cleanse: em("Ancient Renewal", "cleanse", "Ancient Fire", 16, { cleanse: true, selfCleanse: true, limitedUses: 1 }) }, ["buff", "magic", "melee"], { innateStatusResistance: .25 });
+enemyAbilityProfiles["Red Dragon Lord"].escalation = .05;
+enemyAbilityProfiles["Red Dragon Lord"].telegraphUltimate = true;
+
 const animationLayouts = {
   Marla: { columns: 4, rows: 7, chromaBlack: true },
   Nyx: { columns: 4, rows: 7 },
@@ -1285,6 +1331,7 @@ function loadEchoProjectileSheet() {
 
 const characterVfxSheets = {};
 const statusIconImages = {};
+const statusIconAliases = { administrativeLock: "resonanceLocked", audit: "marked", anchored: "agilityDown", scorched: "burn", statusWard: "barrier" };
 let statusHoverAreas = [];
 let statusPointer = null;
 let statusTooltip = null;
@@ -3663,6 +3710,11 @@ function rank0ChoicesHtml(id) {
 }
 
 const STATUS_DEFS = {
+  administrativeLock: { label: "ADMINISTRATIVE LOCK", short: "LOCK", negative: true, duration: 2, value: .5 },
+  audit: { label: "AUDIT", short: "AUDIT", negative: true, duration: 2, value: .5 },
+  anchored: { label: "ANCHORED", short: "ANCHOR", negative: true, duration: 2, value: .25 },
+  scorched: { label: "SCORCHED", short: "SCORCH", negative: true, duration: 2, value: .25 },
+  statusWard: { label: "STATUS WARD", short: "WARD", buff: true, duration: 2, value: .35 },
   shadowVulnerability: { label: "SHADOW VULNERABILITY", short: "SH-", negative: true, duration: 3, value: .2 },
   rankProtection: { label: "ALLY PROTECTION", short: "COVER", buff: true, duration: 2, value: 1 },
   poison: { label: "POISON", short: "PSN", negative: true, duration: 4 },
@@ -4222,6 +4274,8 @@ const maps = {
 };
 
 const HALL_ENEMY_LIBRARY = {
+  ashWyrm: { name: "Ash Wyrm", hp: 105, atk: 12, weak: "Sigil", color: "#6d344b", node: 2 },
+  sealBearer: { name: "Seal Bearer", hp: 72, atk: 8, weak: "Shadow", color: "#9d7356", node: 2 },
   ledger: { name: "Slobbo", hp: 42, atk: 6, weak: "Sound", color: "#71513e", node: 1 },
   chain: { name: "Brokk", hp: 54, atk: 8, weak: "Shadow", color: "#4a4542", node: 1 },
   scribe: { name: "High Administrator Thaddeus", hp: 48, atk: 7, weak: "Sound", color: "#6d5948", node: 2 },
@@ -4261,25 +4315,25 @@ const HALL_ENEMY_LIBRARY = {
 
 const HALL_BATTLE_BLUEPRINTS = [
   ["Sootline Opening", "ashLane", ["ledger"]],
-  ["Chain Runners", "sootMarket", ["ledger", "chain"]],
-  ["Dock Ledger Patrol", "ashDock", ["chain", "ledger"]],
-  ["Ink in the Rain", "ashLane", ["auditor", "scribe"]],
-  ["The Dock Foreman", "ashDock", ["foreman"], true],
-  ["Courtyard Seal", "reverieCourt", ["seal"]],
-  ["Dormitory Scribes", "reverieDorm", ["scribe", "seal"]],
+  ["Chain Runners", "sootMarket", ["ledger", "ledger"]],
+  ["Dock Ledger Patrol", "ashDock", ["chain"]],
+  ["Ink in the Rain", "ashLane", ["ledger", "scribe"]],
+  ["The Dock Foreman", "ashDock", ["foreman", "chain"], true],
+  ["Courtyard Seal", "reverieCourt", ["construct", "seal"]],
+  ["Dormitory Scribes", "reverieDorm", ["scribe", "sealBearer", "ledger"]],
   ["Saint Justin", "reverieSeal", ["sigil", "scribe"]],
-  ["Clergy Lockdown", "reverieDorm", ["seal", "scribe", "seal"]],
-  ["The Archive Custodian", "reverieArchive", ["custodian"], true, [["seal", "scribe"]]],
-  ["Crown Step Construct", "guildSteps", ["construct"]],
-  ["Registry Faultline", "guildRegistry", ["pillar", "construct"], false, [["construct", "pillar"]]],
-  ["The Unbreakable", "guildHall", ["grumm"]],
-  ["Spellbinder Trial", "guildCouncil", ["lyrsa", "seal"]],
-  ["The Ex-Rank", "guildCouncil", ["kaeldrin", "grumm"], true, [["seal", "lyrsa"]]],
-  ["Buried Hall Memory", "emberYard", ["construct", "pillar"]],
-  ["Armory Collapse", "emberArmory", ["pillar", "construct", "pillar"], false, [["construct", "pillar"]]],
-  ["Elder Plumpin", "emberRoof", ["memory"]],
-  ["Resonance Breach", "emberCellar", ["wyrm", "pillar"]],
-  ["The Red Dragon Lord", "emberRoof", ["wyrm"], true, [["wyrm", "seal"]]],
+  ["Clergy Lockdown", "reverieDorm", ["chain", "auditor", "seal"]],
+  ["The Archive Custodian", "reverieArchive", ["custodian", "sealBearer"], true],
+  ["Crown Step Construct", "guildSteps", ["construct", "sigil"]],
+  ["Registry Faultline", "guildRegistry", ["pillar", "ledger", "sealBearer"]],
+  ["The Unbreakable", "guildHall", ["grumm", "sealBearer"]],
+  ["Spellbinder Trial", "guildCouncil", ["lyrsa", "auditor"]],
+  ["The Ex-Rank", "guildCouncil", ["kaeldrin", "lyrsa"], true],
+  ["Buried Hall Memory", "emberYard", ["ashWyrm", "construct", "sealBearer"]],
+  ["Armory Collapse", "emberArmory", ["pillar", "grumm", "custodian"]],
+  ["Elder Plumpin", "emberRoof", ["memory", "sigil", "ashWyrm"]],
+  ["Resonance Breach", "emberCellar", ["grumm", "ashWyrm", "sealBearer"]],
+  ["The Red Dragon Lord", "emberRoof", ["kaeldrin", "sealBearer"], true, [["wyrm", "ashWyrm"]]],
   ["Clock Goblin Patrol", "dawnCauseway", ["bell"], false, [["bell", "lock"]]],
   ["Calibration Locks", "dawnStation", ["lock", "bell"], false, [["bell", "lock", "construct"]]],
   ["Baron Revus Veln", "dawnStation", ["null", "bell"]],
@@ -5192,6 +5246,7 @@ function statusApplicationChance(target, type, baseChance = 1, source = null) {
   if (source?.id) {
     chance *= 1 + typedTalentValue(source.id, "statusChance", type) + effectValue(source.id, "statusChance");
   }
+  chance *= Math.max(.05, 1 - statusValue(target, "statusWard") - (enemyTarget ? enemyAbilityProfile(target)?.innateStatusResistance || 0 : 0));
   return Math.max(0, Math.min(.95, chance));
 }
 
@@ -5298,6 +5353,7 @@ function applyStatus(target, type, source, options = {}) {
 }
 
 const CLEANSE_PRIORITY = {
+  administrativeLock: 85, audit: 85, anchored: 75, scorched: 82,
   shadowVulnerability: 80,
   stun: 100, sleep: 95, silence: 90, physicalVulnerability: 80, magicVulnerability: 80,
   holyVulnerability: 80, marked: 78, critExposed: 74, poison: 60, burn: 60, bleed: 60,
@@ -5305,6 +5361,7 @@ const CLEANSE_PRIORITY = {
 };
 
 const DISPEL_PRIORITY = {
+  statusWard: 84,
   rankProtection: 85,
   barrier: 100, evasion: 95, damageUp: 90, strengthUp: 85, magicUp: 85,
   defenseUp: 85, critUp: 80, agilityUp: 78, shadowUp: 75, echoPower: 75,
@@ -5345,7 +5402,7 @@ function cleanseWithTalent(source, target) {
   if (removedStatus) addBattleFloater(target, 0, { kind: "cleanse", text: `CLEANSED: ${removedStatus.toUpperCase()}` });
   const bonus = source?.id ? typedTalentValue(source.id, "cleanseHeal") : 0;
   if (removed && bonus) {
-    const restored = Math.min(Math.round(target.max * bonus), target.max - target.hp);
+    const restored = Math.min(healingReceived(target, target.max * bonus), target.max - target.hp);
     target.hp += restored;
     if (restored) addBattleFloater(target, restored, { kind: "heal" });
   }
@@ -5378,6 +5435,8 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
 
 function incomingDamageMultiplier(unit) {
   let multiplier = Math.max(.2, 1 - statusValue(unit, "defenseUp") - statusValue(unit, "barrier"));
+  const commander = battle?.enemies?.find(enemy => enemy.hp > 0 && enemy !== unit && enemy.protectedAlly?.target === unit && enemy.protectedAlly.remaining > 0);
+  if (commander) multiplier *= .85;
   if (unit?.form === "mech") multiplier *= 1 - TRANSFORMATION_CONFIG.mech.defense - typedTalentValue(unit.id, "mechDefense") - typedTalentValue(unit.id, "fortressCapstone");
   if (statusOf(unit, "combatDrone")) multiplier *= 1 - typedTalentValue(unit.id, "gadgetDefense");
   multiplier *= 1 - statusValue(unit, "mechGuard");
@@ -5388,7 +5447,7 @@ function effectiveAgility(unit, base) {
   const buff = 1 + statusValue(unit, "agilityUp");
   const opening = battle?.round === 1 && unit?.id ? 1 + effectValue(unit.id, "openingTurnProgress") : 1;
   const talent = unit?.id ? 1 + typedTalentValue(unit.id, "initiativeBoost") : 1;
-  const slowed = unit && hasNegativeStatus(unit) ? 1 - statusValue(unit, "agilityDown") : 1;
+  const slowed = unit && hasNegativeStatus(unit) ? (1 - statusValue(unit, "agilityDown")) * (1 - statusValue(unit, "anchored")) : 1;
   return Math.round(base * buff * opening * talent * slowed);
 }
 
@@ -5474,6 +5533,7 @@ function statusBadgesHtml(unit) {
 
 function processTurnStart(unit) {
   const notes = [];
+  if (unit.protectedAlly && --unit.protectedAlly.remaining <= 0) delete unit.protectedAlly;
   delete unit.holdTheLine;
   delete unit.mechClinicResolved;
   ["poison", "burn", "bleed"].forEach(type => {
@@ -5512,7 +5572,7 @@ function processTurnEnd(unit) {
   expired.forEach(status => {
     notes.push(`${STATUS_DEFS[status.type]?.label || status.type} faded.`);
     if (STATUS_DEFS[status.type]?.buff && status.source?.id === "Verseborn" && typedTalentValue("Verseborn", "finalRefrain") && unit.hp > 0) {
-      const hp = Math.min(Math.max(1, Math.round(unit.max * .04)), unit.max - unit.hp);
+      const hp = Math.min(healingReceived(unit, Math.max(1, Math.round(unit.max * .04))), unit.max - unit.hp);
       const mp = Math.min(Math.max(1, Math.round(unit.maxmp * .03)), unit.maxmp - unit.mp);
       unit.hp += hp;
       unit.mp += mp;
@@ -5843,7 +5903,14 @@ function skillMpCost(id, sk, unit = null) {
   const firstSongKey = `firstSong:${id}`;
   if (sk.element === "Sound" && battle && !battle.usedOnce[firstSongKey]) multiplier -= typedTalentValue(id, "firstSongDiscount");
   const comfortDiscount = sk.name === "Prrrp" && unit?.prrrpWindow > 0 && typedTalentValue(id, "interceptPrrrp") ? 2 : 0;
-  return Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)) - comfortDiscount);
+  const lock = statusOf(unit, "administrativeLock");
+  const audit = statusOf(unit, "audit");
+  const penalty = !sk.basicAttack ? (lock?.skillName === sk.name ? lock.value : 0) + (audit?.skillName === sk.name ? audit.value : 0) : 0;
+  return Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)) - comfortDiscount) + (penalty ? Math.max(1, Math.ceil((sk.cost || 0) * penalty)) : 0);
+}
+
+function healingReceived(unit, amount) {
+  return Math.max(0, Math.round(amount * (1 - statusValue(unit, "scorched"))));
 }
 
 function scaledMpOnHitRecovery(unit, flat) {
@@ -5874,7 +5941,7 @@ function resolveActionSustain(unit, sk, directDamage) {
   if (!unit?.id || !sk || directDamage <= 0) return { hp: 0, mp: 0 };
   const leeching = combatSustainRate(unit.id, "leeching");
   const eligibleDamage = Math.min(directDamage, unit.max * 2);
-  const hp = leeching ? Math.min(Math.max(1, Math.round(eligibleDamage * leeching)), unit.max - unit.hp) : 0;
+  const hp = leeching ? Math.min(healingReceived(unit, Math.max(1, Math.round(eligibleDamage * leeching))), unit.max - unit.hp) : 0;
   if (hp > 0) {
     unit.hp += hp;
     addBattleFloater(unit, hp, { kind: "heal" });
@@ -7568,7 +7635,7 @@ function drawBattleStatusBadges(unit, anchorX, y) {
     const x = Math.round(left + index * (chipWidth + gap));
     drawRect(x, y, chipWidth, chipHeight, def?.negative ? '#7f2f39' : '#52655d');
     drawRect(x + .5, y + .5, chipWidth - 1, chipHeight - 1, '#100d18');
-    const image = statusIconImages[status.type];
+    const image = statusIconImages[statusIconAliases[status.type] || status.type];
     if (image) { ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(image, x, y, chipWidth, 7); ctx.restore(); }
     else drawText(def?.short || '?', x + 4, y + 5, '#fff0da', 3, 'center');
     drawRect(x + .5, y + 6, chipWidth - 1, 3.5, '#100d18');
@@ -7582,6 +7649,11 @@ function statusDisplayData(unit, status) {
   const value = statusValue(unit, status.type);
   const percent = `${Math.round(value * 1000) / 10}%`;
   const descriptions = {
+    administrativeLock: `${status.skillName || 'Last active skill'} costs ${percent} extra MP while locked. Cleanse removes the lock.`,
+    audit: `Repeating ${status.skillName || 'the marked skill'} on the next action costs ${percent} extra MP and grants the Auditor 15 Resonance. Any other action clears Audit.`,
+    anchored: `Initiative AGI reduced by ${percent}. Dock Foreman gains +2 Break against this target.`,
+    scorched: `All combat healing received reduced by ${percent}. Cleanse removes Scorched.`,
+    statusWard: `Negative-status application chance reduced by ${percent}.`,
     strengthUp: `Physical attack damage +${percent}.`, magicUp: `Magic attack damage +${percent}.`,
     defenseUp: `Reduces incoming damage by ${percent}; combines with other defenses.`, damageUp: `Direct damage +${percent}.`,
     agilityUp: `Initiative AGI +${percent}; does not grant an extra action.`, critUp: `Attack critical chance +${percent}, subject to the total cap.`,
@@ -8984,7 +9056,7 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
   const advanced = stage > 40;
   const healthScale = (1 + Math.max(0, stage - 1) * .052) * (advanced ? 1.12 + phaseIndex * .08 : 1);
   const attackScale = (1 + Math.max(0, stage - 1) * .024) * (advanced ? 1.08 + phaseIndex * .04 : 1);
-  return (keys || info.enemies).map(key => {
+  return (keys || info.enemies).map((key, enemyIndex) => {
     const profile = HALL_ENEMY_LIBRARY[key];
     const unit = enemy(profile.name, Math.round(profile.hp * healthScale), Math.round(profile.atk * attackScale), profile.weak, profile.color, profile.node, profile.sprite || null);
     if (profile.finalState) unit.finalState = profile.finalState;
@@ -8992,7 +9064,7 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
     unit.fixedLevel = true;
     if (info.boss || profile.node >= 3) {
       unit.npcBoss = true;
-      unit.resistanceTier = info.boss && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
+      unit.resistanceTier = info.boss && (stage > 20 || enemyIndex === 0) && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
     }
     return unit;
   });
@@ -9835,6 +9907,7 @@ function defendReduction(u) {
 
 function useDefend(u) {
   if (battle.resolving) return;
+  u.statuses = ensureStatuses(u).filter(status => status.type !== "audit");
   const timing = battleActionTiming("block");
   battle.resolving = true;
   u.anim = "block";
@@ -10043,7 +10116,7 @@ function applyWeaponBasicAttackEffect(source, target) {
   if (basic.type === "resonance") state.resonance = Math.min(100, state.resonance + basic.value);
   if (basic.type === "songCharge") source.nextSongBoost = Math.max(source.nextSongBoost || 0, basic.value + typedTalentValue(source.id, "weaponSongBoost"));
   if (basic.type === "heal") {
-    const restored = Math.min(Math.max(1, Math.round(source.max * basic.value)), source.max - source.hp);
+    const restored = Math.min(healingReceived(source, Math.max(1, Math.round(source.max * basic.value))), source.max - source.hp);
     source.hp += restored;
     if (restored) addBattleFloater(source, restored, { kind: "heal" });
   }
@@ -10108,7 +10181,7 @@ function skillDamageTalentMultiplier(source, sk, target, zeroResonance = battle?
 
 function restoreTalentHp(target, amount) {
   if (!target || target.hp <= 0) return 0;
-  const restored = Math.min(Math.max(0, Math.round(amount)), target.max - target.hp);
+  const restored = Math.min(healingReceived(target, Math.max(0, amount)), target.max - target.hp);
   target.hp += restored;
   if (restored) addBattleFloater(target, restored, { kind: "heal" });
   return restored;
@@ -10228,6 +10301,12 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
   }
   else state.resonance = 0;
   if (selectedSkill.oncePerBattle) battle.usedOnce[selectedSkill.oncePerBattle] = true;
+  const audit = statusOf(u, "audit");
+  if (audit) {
+    if (!selectedSkill.basicAttack && selectedSkill.name === audit.skillName) gainEnemyResonance(battle.enemies.find(enemy => enemy.name === audit.source.name && enemy.hp > 0), 15);
+    u.statuses = ensureStatuses(u).filter(status => status !== audit);
+  }
+  if (!selectedSkill.basicAttack && selectedSkill.anim !== "ultimate") u.lastActiveSkill = selectedSkill.name;
   playSfx(sk.anim);
   updatePanels();
   const livingAtStart = battle.party.filter(p => p.hp > 0);
@@ -10272,7 +10351,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const belowHalf = ally.hp / ally.max < .5;
         const protector = ally.hp / ally.max < .35 ? 1 + typedTalentValue(u.id, "woundedProtection") : 1;
         const critical = Math.random() < healingCritChance(u);
-        const restored = Math.min(Math.round((critical ? healing * 2 : healing) * protector), ally.max - ally.hp);
+        const restored = Math.min(healingReceived(ally, (critical ? healing * 2 : healing) * protector), ally.max - ally.hp);
         ally.hp += restored;
         totalRestored += restored;
         if (critical && restored) criticalHeals++;
@@ -10484,7 +10563,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
       const vampiric = statusValue(u, "vampiric");
       if (vampiric && directDamageDealt > 0) {
-        const restored = Math.min(Math.max(1, Math.round(directDamageDealt * vampiric)), u.max - u.hp);
+        const restored = Math.min(healingReceived(u, Math.max(1, Math.round(directDamageDealt * vampiric))), u.max - u.hp);
         u.hp += restored;
         if (restored) {
           addBattleFloater(u, restored, { kind: "heal" });
@@ -10536,7 +10615,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
       log += combatDroneFollowUp(u, totalDamageDealt, hitTargets.length);
       if (sk.selfHealRatio && totalDamageDealt > 0) {
-        const restored = Math.min(Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio)), u.max - u.hp);
+        const restored = Math.min(healingReceived(u, Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio))), u.max - u.hp);
         u.hp += restored;
         if (restored) {
           addBattleFloater(u, restored, { kind: "heal" });
@@ -10552,7 +10631,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const hpOnHit = effectValue(u.id, "hpOnHit");
         const mpOnHit = effectValue(u.id, "mpOnHit");
         if (hpOnHit) {
-          const restored = Math.min(hpOnHit, u.max - u.hp);
+          const restored = Math.min(healingReceived(u, hpOnHit), u.max - u.hp);
           u.hp += restored;
           addBattleFloater(u, restored, { kind: "heal" });
           if (restored) log += ` ${u.name} restores ${restored} HP.`;
@@ -10655,12 +10734,13 @@ function closeBattleItems() {
 function useBattleItem(u, name) {
   const info = inventoryInfo(name);
   if (!info.battle || !state.inventory[name] || !canUseBattleItem(u, info)) return;
+  u.statuses = ensureStatuses(u).filter(status => status.type !== "audit");
   state.inventory[name]--;
   battle.itemMode = false;
   let log = `${u.name} uses ${name}.`;
   if (info.battle === "hp") {
     const before = u.hp;
-    u.hp = Math.min(u.max, u.hp + info.value);
+    u.hp = Math.min(u.max, u.hp + healingReceived(u, info.value));
     const restored = u.hp - before;
     addBattleFloater(u, restored, { kind: "heal" });
     log += ` HP +${restored}.`;
@@ -10760,12 +10840,27 @@ function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member
   if (enemyActionHitsAll(unit, action)) return valid[Math.floor(Math.random() * valid.length)];
   const awake = valid.filter(member => !statusOf(member, "sleep"));
   if (awake.length) valid = awake;
+  const profile = enemyAbilityProfile(unit);
+  if (action.recentSkillLock || action.auditSkill) {
+    const recent = valid.filter(member => member.lastActiveSkill && !statusOf(member, action.status.type));
+    if (recent.length) return recent[Math.floor(Math.random() * recent.length)];
+  }
+  if (enemyActionDealsDamage(action) && profile?.breakPriority) {
+    const broken = valid.filter(member => statusOf(member, "broken"));
+    if (broken.length) return broken[Math.floor(Math.random() * broken.length)];
+    if (profile.anchoredBreak) {
+      const anchored = valid.filter(member => statusOf(member, "anchored"));
+      if (anchored.length) return anchored[0];
+    }
+    return valid.slice().sort((a,b)=>(b.stagger || 0)-(a.stagger || 0))[0];
+  }
   const payoffTargets = valid.filter(member => enemyPayoffMatches(action, member));
   if (payoffTargets.length) valid = payoffTargets;
   if (action.status?.type) {
     const unaffected = valid.filter(member => !statusOf(member, action.status.type));
     if (unaffected.length) valid = unaffected;
   }
+  if (action.woundedPriority) return valid.slice().sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
   return valid[Math.floor(Math.random() * valid.length)];
 }
 
@@ -10805,6 +10900,10 @@ function enemyBuffTarget(unit, action) {
   const useful = living.filter(ally => buffs.some(buff => (statusOf(ally, buff.type)?.remaining || 0) <= 1));
   const candidates = useful.length ? useful : [];
   if (!candidates.length) return null;
+  if (action.targetRole === "protected") {
+    const allies = candidates.filter(ally => ally !== unit);
+    return allies.sort((a,b)=>(a.hp/a.max - (['healer','controller','utility'].includes(a.role) ? .25 : 0))-(b.hp/b.max - (['healer','controller','utility'].includes(b.role) ? .25 : 0)))[0] || (unit.hp/unit.max < .6 ? unit : null);
+  }
   if (action.targetRole === "physical") return candidates.sort((a, b) => b.stats.str - a.stats.str)[0];
   if (action.targetRole === "caster") return candidates.sort((a, b) => b.stats.mag - a.stats.mag)[0];
   if (action.targetRole === "fast") return candidates.sort((a, b) => b.stats.agi - a.stats.agi)[0];
@@ -10815,6 +10914,9 @@ function enemyBuffTarget(unit, action) {
 
 function enemyActionUseful(unit, action) {
   if (!action || !enemyCanAfford(unit, action)) return false;
+  if (action.belowHalf && unit.hp/unit.max >= .5) return false;
+  if (action.limitedUses && (unit.moveUses?.[action.name] || 0) >= action.limitedUses) return false;
+  if ((action.recentSkillLock || action.auditSkill) && !battle.party.some(hero => hero.hp > 0 && hero.lastActiveSkill && !statusOf(hero, action.status.type))) return false;
   if (action.requiresEnemyStatus && !battle.party.some(hero => hero.hp > 0 && statusOf(hero, action.requiresEnemyStatus))) return false;
   if (action.requiresFallenAlly && !battle.defeated.length && !battle.enemies.some(ally => ally.hp <= 0)) return false;
   if (action.healing) {
@@ -10824,7 +10926,7 @@ function enemyActionUseful(unit, action) {
     return true;
   }
   if (action.cleanse && action.kind === "cleanse") {
-    action.target = chooseEnemyCleanseTarget();
+    action.target = action.selfCleanse ? (enemyCleanseStatus(unit) ? unit : null) : chooseEnemyCleanseTarget();
     return Boolean(action.target);
   }
   if (action.dispel && action.kind === "dispel") {
@@ -10846,8 +10948,14 @@ function chooseEnemyAction(unit) {
   const profile = enemyAbilityProfile(unit);
   if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
   if ((battle.enemyResonance || 0) >= 100) {
+    if (profile?.telegraphUltimate && !unit.ultimateTelegraphed) {
+      unit.ultimateTelegraphed = true;
+      return em("Gathering Ancient Fire — AoE next action", "buff", "Ancient Fire", 0, { targetSide: "self", target: unit, buffs: [{ type: "damageUp", duration: 2, value: .15 }] });
+    }
     return enemyActionForKind(unit, "ultimate");
   }
+  const finisher = Object.values(profile?.moves || {}).find(move => move.payoff === "broken" && battle.party.some(hero => hero.hp > 0 && statusOf(hero, "broken")) && enemyCanAfford(unit, move));
+  if (finisher) return { ...finisher };
   const wounded = chooseEnemyHealTarget();
   const healingKey = Object.keys(profile?.moves || {}).find(key => profile.moves[key].healing && enemyCanAfford(unit, profile.moves[key]));
   if (wounded && wounded.hp / wounded.max < .35 && healingKey) {
@@ -10859,6 +10967,13 @@ function chooseEnemyAction(unit) {
   if (cleanseKey) {
     const cleanse = enemyProfileAction(unit, cleanseKey);
     if (enemyActionUseful(unit, cleanse)) return cleanse;
+  }
+  if (wounded && wounded.hp/wounded.max < .65 && healingKey) {
+    const action = enemyProfileAction(unit, healingKey); action.target = wounded; return action;
+  }
+  const protection = profile?.moves?.buff;
+  if (protection?.targetRole === "protected" && battle.enemies.some(ally => ally !== unit && ally.hp > 0 && ally.hp/ally.max < .6)) {
+    const action = enemyProfileAction(unit, "buff"); if (enemyActionUseful(unit, action)) return action;
   }
   const pattern = profile?.pattern || ["magic", "melee"];
   if (pattern.length) {
@@ -10934,6 +11049,9 @@ function enemyDamageRoll(unit, action, target) {
   else damage *= 1 + (unit.affixes?.physicalDamage || 0);
   if (hasNegativeStatus(target)) damage *= 1 + (unit.affixes?.damageAfflicted || 0);
   if (statusOf(target, "broken")) damage *= 1 + (unit.affixes?.damageBroken || 0);
+  const profile = enemyAbilityProfile(unit);
+  if (statusOf(target, "broken")) damage *= 1 + (physical ? profile?.physicalBrokenBonus || profile?.brokenBonus || 0 : profile?.brokenBonus || 0);
+  damage *= 1 + Math.min(.4, (unit.actionsTaken || 0) * (profile?.escalation || 0));
   if (enemyPayoffMatches(action, target)) damage *= action.payoffMultiplier || 1.2;
   damage *= 1 + (physical ? statusValue(target, "physicalVulnerability") : statusValue(target, "magicVulnerability"));
   if (action.element === "Holy Fire") damage *= 1 + statusValue(target, "holyVulnerability");
@@ -10984,7 +11102,11 @@ function enemyApplyActionStatuses(source, target, action) {
     ];
     statuses = [choices[Math.floor(Math.random() * choices.length)]];
   }
-  statuses.forEach(status => applications.push(applyStatus(target, status.type, source, status)));
+  statuses.forEach(status => {
+    const result = applyStatus(target, status.type, source, status);
+    if (result.applied && ["administrativeLock", "audit"].includes(status.type)) statusOf(target, status.type).skillName = target.lastActiveSkill;
+    applications.push(result);
+  });
   return applications.filter(result => result.applied).map(result => result.message);
 }
 
@@ -11017,6 +11139,10 @@ function resolveEnemyTurn(turn, prev) {
   const timingKey = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
   const timing = battleActionTiming(timingKey);
   const mpCost = enemyActionMpCost(e, action);
+  if (action.recentSkillLock || action.auditSkill) action.status = { ...action.status };
+  e.moveUses ||= {};
+  e.moveUses[action.name] = (e.moveUses[action.name] || 0) + 1;
+  e.actionsTaken = (e.actionsTaken || 0) + 1;
   e.mp = Math.max(0, e.mp - mpCost);
   e.anim = "attack";
   e.animTick = 0;
@@ -11036,7 +11162,7 @@ function resolveEnemyTurn(turn, prev) {
         let amount = (e.stats.mag * (action.healCoefficient || 1.35) + e.stats.stam * .22 + e.level * 1.4) * (1 + (e.affixes?.healPotency || 0));
         const critical = enemyActionCrit(e, action, ally);
         if (critical) amount *= 2 + (e.affixes?.critDamage || 0);
-        amount = Math.max(1, Math.round(amount));
+        amount = healingReceived(ally, Math.max(1, Math.round(amount)));
         const restored = Math.min(amount, ally.max - ally.hp);
         ally.hp += restored;
         total += restored;
@@ -11059,6 +11185,8 @@ function resolveEnemyTurn(turn, prev) {
         ? [{ type: ["magicUp", "agilityUp", "critUp"][Math.floor(Math.random() * 3)], duration: 3 }]
         : action.buffs;
       const notes = enemyApplyBuffs(e, buffTargets, buffs);
+      if (action.cleanseAlly) buffTargets.forEach(ally => enemyCleanseOne(ally));
+      if (action.protectAlly && target !== e) e.protectedAlly = { target, remaining: 2 };
       actionLog += ` ${notes.join("; ")}.`;
       playSfx("item");
     } else if (action.kind === "cleanse") {
@@ -11117,7 +11245,8 @@ function resolveEnemyTurn(turn, prev) {
           defenseText = " Party Guard softens the hit.";
         }
         const brokenAtHitStart = Boolean(statusOf(defender, "broken"));
-        const breakPower = Math.max(0, action.breakPower || 0) + (action.kind === "ultimate" ? (e.affixes?.breakPower || 0) : 0);
+        const breakPower = Math.max(0, action.breakPower || 0) + (action.kind === "ultimate" ? (e.affixes?.breakPower || 0) : 0) + (statusOf(defender, "anchored") ? enemyAbilityProfile(e)?.anchoredBreak || 0 : 0);
+        if (brokenAtHitStart && enemyAbilityProfile(e)?.brokenGuard) enemyApplyBuffs(e, [e], [{ type: "defenseUp", duration: 2, value: .2 }]);
         const breakResult = breakPower ? addBreakProgress(e, defender, breakPower) : null;
         if (breakResult?.breaks) {
           dmg += breakResult.bonusDamage;
@@ -11166,7 +11295,7 @@ function resolveEnemyTurn(turn, prev) {
       const notes = enemyApplyBuffs(e, battle.enemies.filter(ally => ally.hp > 0), action.teamBuffs);
       if (notes.length) actionLog += ` ${notes.join("; ")}.`;
     }
-    if (action.kind === "ultimate") battle.enemyResonance = 0;
+    if (action.kind === "ultimate") { battle.enemyResonance = 0; delete e.ultimateTelegraphed; }
     else gainEnemyResonance(e, enemyResonanceGainForAction(e, action));
     if (e.hp <= 0) {
       e.anim = "death";
