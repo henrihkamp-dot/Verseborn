@@ -7337,16 +7337,26 @@ html:not(.touch-layout) .menu {
   grid-template-columns: 48px minmax(0, 1fr) auto auto;
   align-items: start;
 }
-.game.has-endgame-mechanics { padding-top: 150px; }
-.boss-mechanic-hud { height: 142px; grid-template-columns: minmax(0, 1fr); grid-template-rows: 18px 120px; }
+.game.has-endgame-mechanics { padding-top: 228px; }
+.boss-mechanic-hud { height: 220px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 18px 120px 74px; }
 .boss-mechanic-panel { position: relative; grid-column: 1 / -1; grid-row: 2; padding: 0; }
 .boss-mechanic-panel strong { position: absolute; left: 12%; right: 12%; top: 18%; margin: 0; text-align: center; color: #ffe097; }
 .boss-mechanic-panel p { position: absolute; left: 12%; right: 12%; top: 45%; bottom: 17%; margin: 0; overflow-y: auto; }
 .boss-mechanic-panel.is-warning { background-image: url("assets/ui/boss-mechanics/detail-panel.webp"); color: #35231a; }
+.boss-mechanic-panel.is-boss { background-image: url("assets/ui/boss-mechanics/warning-banner.webp"); color: #fff0d0; }
+.boss-mechanic-panel.is-boss strong { left: 12%; right: 54%; top: 34%; text-align: left; }
+.boss-mechanic-panel.is-boss p { left: 54%; right: 12%; top: 34%; bottom: 28%; }
+.boss-mechanic-hud .boss-hud-roster { grid-column: 1; grid-row: 3; }
+.boss-mechanic-hud .boss-hud-roster.is-enemy { grid-column: 2; grid-row: 3; }
+.boss-mechanic-hud .boss-hud-roster > span { grid-template-columns: 18px minmax(0, 1fr) max-content; align-items: center; gap: 4px; }
+.boss-roster-role { display: block; width: 18px; height: 18px; background-repeat: no-repeat; background-size: 500% 100%; }
 @media (max-width: 600px) {
-  .game.has-endgame-mechanics { padding-top: 158px; }
-  .boss-mechanic-hud { height: 150px; grid-template-columns: minmax(0, 1fr); grid-template-rows: 18px 128px; }
+  .game.has-endgame-mechanics { padding-top: 242px; }
+  .boss-mechanic-hud { height: 234px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 18px 128px 80px; }
   .boss-mechanic-panel { grid-row: 2; padding: 0; }
+  .boss-mechanic-hud .boss-hud-roster > span { grid-template-columns: 16px minmax(0, 1fr); }
+  .boss-mechanic-hud .boss-hud-roster i { grid-column: 2; }
+  .boss-roster-role { width: 16px; height: 16px; grid-row: span 2; }
 }
 @media (max-width: 600px) {
   .menu[data-menu-view="glimmer-shop"] .shop-row.is-artifact-offer {

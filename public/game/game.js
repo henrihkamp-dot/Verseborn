@@ -484,6 +484,7 @@ const enemyAnimationHeights = {
 const HALL_FINALE_SPRITES = new Set(["Frostmile Wyrm", "Ember Leviathan", "Solinar", "Solinar Enraged"]);
 
 function enemyBattleScale(key) {
+  if (battle?.hallStage > 50 && battle.enemies.some(unit => unit.endgameBoss && enemyAnimationKey(unit) === key)) return 1.12;
   return battle?.hallStage === 50 && HALL_FINALE_SPRITES.has(key) ? 1.25 : 1;
 }
 const magicNpcAnimations = new Set(["Lyrsa", "Nyx", "Jory"]);
@@ -3141,6 +3142,24 @@ const inventoryDb = {
   "Sentinel Core": { type: "Boss Trophy", desc: "The dormant heart of a Dawn Gate Sentinel." }
 };
 
+const MARLA_CONSUMABLES = [
+  ["Marla's Soup", "hp", .2, 18, 1], ["Emberheart Stew", "hp", .4, 65, 2],
+  ["Royal Ember Stew", "hp", .65, 150, 3], ["Sovereign Ember Soup", "hp", .9, 320, 4],
+  ["Clockwork Tonic", "mp", .25, 26, 1], ["Resonance Draught", "mp", .45, 80, 2],
+  ["Grand Resonance Draught", "mp", .7, 180, 3], ["Sovereign Resonance Tonic", "mp", 1, 400, 4],
+  ["Phoenix Ticket", "revive", .5, 200, 1]
+].map(([name, resource, fraction, price, tier]) => {
+  const desc = resource === "revive" ? "Revives one fallen ally with 50% Max HP." : `Restores ${Math.round(fraction * 100)}% Max ${resource.toUpperCase()} to a hero. Tier ${tier}/4.`;
+  inventoryDb[name] = { ...inventoryDb[name], type: resource === "revive" ? "Revival Consumable" : `${resource === "hp" ? "Food / HP" : "Tonic / MP"} Tier ${tier}`, desc, battle: resource, field: resource, fraction, tier, shopPrice: price, short: resource === "revive" ? "Revive / 50% HP" : `${resource.toUpperCase()} +${Math.round(fraction * 100)}%` };
+  return { kind: "item", name, price, desc };
+});
+const HALL_COLLECTIBLES = ["Ember Coin", "Guild Ticket", "Archive Token", "Oath Medallion", "Chorus Voucher"];
+HALL_COLLECTIBLES.forEach(name => { inventoryDb[name] = { type: "Collectible Token", desc: "Collectible reserved for future crafting and guild shop exchanges." }; });
+
+function consumableRecovery(info, maximum) {
+  return info.fraction ? Math.max(1, Math.round(maximum * info.fraction)) : info.value;
+}
+
 function inventoryInfo(name) {
   return inventoryDb[name] || { type: "Field Loot", desc: "Battle loot or a quest material." };
 }
@@ -3201,6 +3220,10 @@ function lootSummaryContent(gold, drops) {
 }
 
 function inventoryIcon(name) {
+  if (name === "Sovereign Ember Soup") return { sheet: "item", index: 0 };
+  if (name === "Sovereign Resonance Tonic") return { sheet: "item", index: 1 };
+  if (name === "Phoenix Ticket") return { sheet: "item", index: 2 };
+  if (HALL_COLLECTIBLES.includes(name)) return { sheet: "loot", index: 0 };
   const itemIcons = { "Marla's Soup": 0, "Emberheart Stew": 0, "Royal Ember Stew": 0, "Clockwork Tonic": 1, "Resonance Draught": 1, "Grand Resonance Draught": 1, "Ash Ward": 2, "Old Registry Key": 3 };
   if (Number.isFinite(itemIcons[name])) return { sheet: "item", index: itemIcons[name] };
   const lootIcons = { "Ledger Scrap": 0, "Iron Chain Link": 1, "Broken Wax Seal": 2, "Ash Ink": 3, "Living Ash Ink": 3, "Resonant Stone": 4 };
@@ -3931,7 +3954,7 @@ const state = {
   activeParty: ["Verseborn"],
   gold: 180,
   inventory: { "Marla's Soup": 4, "Clockwork Tonic": 2, "Ash Ward": 1, "Old Registry Key": 1 },
-  inventorySlots: 30,
+  inventorySlots: 10,
   bagUpgrades: 0,
   stash: {},
   ownedGear: [...new Set(["Verseborn"].flatMap(id => Object.values(baseJobs[id].gear)))],
@@ -4057,6 +4080,7 @@ function loadGame(saveKey = activeSaveKey()) {
   state.gearCopies ||= {};
   state.discoveredMaps = Array.isArray(state.discoveredMaps) ? state.discoveredMaps.filter(id => maps[id]) : ["lantern"];
   state.flags ||= {};
+  migrateInventoryStacks();
   state.hallBattles = normalizeHallBattleProgress(state.hallBattles);
   if (!maps[state.map]) state.map = "lantern";
   Object.entries(data.heroes || {}).forEach(([id, saved]) => {
@@ -4117,12 +4141,11 @@ const vendors = {
     name: "Marla's Counter",
     blurb: "Hot food, honest prices, no heroic credit.",
     wares: [
-      { kind: "item", name: "Marla's Soup", price: 18, desc: "Restores 24 HP in battle." },
-      { kind: "item", name: "Clockwork Tonic", price: 26, desc: "Restores 18 MP in battle." },
+      ...MARLA_CONSUMABLES,
       { kind: "item", name: "Ash Ward", price: 34, desc: "Grants a one-turn party guard." },
       { kind: "gear", name: "Ashrunner Knife", price: 72 },
       { kind: "gear", name: "Sootweave Coat", price: 78 },
-      { kind: "upgrade", name: "Field Satchel Expansion", basePrice: 140, desc: "+10 inventory slots. Each expansion costs more." }
+      { kind: "upgrade", name: "Field Satchel Expansion", basePrice: 140, desc: "+5 inventory slots. Each expansion costs more." }
     ]
   },
   shelter: {
@@ -4174,6 +4197,11 @@ const vendors = {
     ]
   }
 };
+
+Object.values(vendors).forEach(vendor => vendor.wares.forEach(ware => {
+  if (ware.kind === "item") ware.desc = inventoryInfo(ware.name).desc;
+  if (ware.kind === "upgrade") ware.desc = "+5 inventory slots. Each expansion costs more.";
+}));
 
 const lootTables = {
   "Slobbo": loot([8, 15], [["Ledger Scrap", 1, 1]], [["Echo-Thread Lute", .18]]),
@@ -6872,7 +6900,7 @@ function resetHallBattleRun() {
     activeParty: ["Verseborn"],
     gold: 180,
     inventory: { "Marla's Soup": 4, "Clockwork Tonic": 2, "Ash Ward": 1, "Old Registry Key": 1 },
-    inventorySlots: 30,
+    inventorySlots: 10,
     bagUpgrades: 0,
     stash: {},
     ownedGear: [...new Set(Object.values(STARTING_HERO_GEAR.Verseborn))],
@@ -7582,7 +7610,8 @@ function partyBattlePosition(index, count = battle?.party?.length || 1) {
 }
 
 function enemyBattlePosition(index, count = battle?.enemies?.length || 1) {
-  if (count === 3 && ["root", "oath"].includes(battle?.enemies?.[0]?.endgameBoss)) index = index === 0 ? 1 : index === 1 ? 0 : index;
+  const bossIndex = battle?.enemies?.findIndex(unit => unit.endgameBoss) ?? -1;
+  if (bossIndex >= 0 && count > 1) index = index === bossIndex ? 1 : index === 1 ? bossIndex : index;
   const positions = count === 1
     ? [[184, 124]]
     : count === 2
@@ -7894,7 +7923,7 @@ function drawBossIndicatorStrip(unit, anchorX, enemySide) {
   const width = (Number(showBreak) + icons.length) * (size + gap) - gap;
   if (!showBreak && !icons.length) return;
   const [, baseline] = enemySide ? enemyBattlePosition(battle.enemies.indexOf(unit), battle.enemies.length) : partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
-  const height = enemySide ? (enemyAnimationHeights[enemyAnimationKey(unit)] || 46) * BATTLE_COMPOSITION_SCALE : battleSpriteHeights[unit.id] * BATTLE_COMPOSITION_SCALE;
+  const height = enemySide ? (enemyAnimationHeights[enemyAnimationKey(unit)] || 46) * enemyBattleScale(enemyAnimationKey(unit)) * BATTLE_COMPOSITION_SCALE : battleSpriteHeights[unit.id] * BATTLE_COMPOSITION_SCALE;
   const y = Math.max(22, Math.round(baseline - height - size - 4));
   let x = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
   if (showBreak) {
@@ -7946,9 +7975,15 @@ function updateBossMechanicDisplay() {
   const rule = boss?.encounterMechanic?.order;
   const focused = boss && ensureStatuses(boss).find(status => ["brokenOath", "memoryCore", "inspectionOrder", "buffRecord", "memoryRecord", "harmonicRings", "echoSigil"].includes(status.type));
   const names = { guest: "Protected Guest", sanctuary: "Sanctuary", inspection: "Inspection Orders", guidance: "Guidance Marks", root: "Memory Adaptation", echo: "Echo Sigil", veil: "Beguiling Veil", oath: "Oathguard", crescendo: "Crescendo", archive: "The Living Archive" };
+  const summaries = { guest: "Strike the unprotected target.", sanctuary: "Interrupt healing and cleanse cycles.", inspection: "Obey the active Inspection Order.", guidance: "Marks reveal the next astral target.", root: "Vary attacks; burst the exposed Core.", echo: "Sigils copy buffs and delay attacks.", veil: "Cleanse illusions to restore targeting.", oath: "Break his shield, then burst.", crescendo: "Silence or Break before the chorus.", archive: "Buff theft, skill locks and replayed effects." };
   const title = warning ? announcement.title : focused ? STATUS_DEFS[focused.type].label : boss ? names[boss.endgameBoss] : `Phase ${phase}/3`;
-  const text = warning ? announcement.text : focused ? statusDisplayData(boss,focused).description : boss ? `Read ${boss.name}'s next action. Silence, Break and cleanses counter the active mechanic.` : battle.enemies.filter(unit=>unit.hp>0).map(unit=>unit.name).join(" / ");
-  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/3</header><div class="boss-mechanic-panel ${warning ? 'is-warning' : ''}"><strong>${escape(boss?.name || title)}</strong><p>${boss ? escape(title) + ': ' : ''}${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>`;
+  const text = warning ? announcement.text : focused ? statusDisplayData(boss,focused).description : boss ? summaries[boss.endgameBoss] : battle.enemies.filter(unit=>unit.hp>0).map(unit=>unit.name).join(" / ");
+  const roster = (units, enemySide) => `<div class="boss-hud-roster ${enemySide ? 'is-enemy' : ''}">${units.map(unit => {
+    const role = combatRoleKey(unit, enemySide);
+    const icon = COMBAT_ROLE_ICON_INDEX[role] ?? COMBAT_ROLE_ICON_INDEX.hybrid;
+    return `<span><span class="boss-roster-role" title="${escape(role)}" style="background-image:url('${escape(combatRoleIconSheet?.image.src || '')}');background-position:${icon * 25}% center"></span><b title="${escape(unit.name)}">${escape(unit.name)}</b><i>${Math.max(0, Math.round(unit.hp))} HP / ${Math.max(0, Math.round(unit.mp || 0))} MP</i></span>`;
+  }).join('')}</div>`;
+  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/3</header><div class="boss-mechanic-panel ${boss ? 'is-boss' : ''} ${warning ? 'is-warning' : ''}"><strong>${escape(boss?.name || title)}</strong><p>${boss ? escape(title) + ': ' : ''}${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>${roster(battle.party, false)}${roster(battle.enemies, true)}`;
   if (hud.innerHTML !== html) hud.innerHTML = html;
 }
 
@@ -8067,7 +8102,9 @@ function drawBattleScene() {
     drawBattleVitals(unit, anchorX, baseline);
   });
 
-  battle.enemies.forEach((enemyUnit, index) => {
+  battle.enemies.map((enemyUnit, index) => ({ enemyUnit, index }))
+    .sort((a, b) => Number(Boolean(a.enemyUnit.endgameBoss)) - Number(Boolean(b.enemyUnit.endgameBoss)))
+    .forEach(({ enemyUnit, index }) => {
     const animatedDeath = Boolean(enemyAnimationSheetFor(enemyUnit));
     if (enemyUnit.hp <= 0 && !enemyUnit.defeatUntil) {
       enemyUnit.anim = "death";
@@ -8092,7 +8129,7 @@ function drawBattleScene() {
   drawEffect();
   drawBossTelegraphs();
   drawBattleTurnRail();
-  drawBattleRoleRosters();
+  if (!(battle.hallStage > 50)) drawBattleRoleRosters();
   drawBattleFloaters();
   updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
@@ -9830,6 +9867,11 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
   const hallBoss = Boolean(options.hallBoss);
   const musicTrack = battleMusicForEncounter(hallBoss);
+  state.activeParty.slice(0, 3).forEach(id => {
+    const total = totals(id);
+    baseJobs[id].hp = total.max;
+    baseJobs[id].mp = total.mp;
+  });
   battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, enemyResonance: 0, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
@@ -10971,6 +11013,7 @@ function carriedBattleItems() {
 }
 
 function canUseBattleItem(u, info) {
+  if (info.battle === "revive") return battle.party.some(ally => ally.hp <= 0);
   if (info.battle === "hp") return u.hp > 0 && u.hp < u.max;
   if (info.battle === "mp") return u.hp > 0 && u.mp < u.maxmp;
   if (info.battle === "guard") return !battle.ward;
@@ -11023,24 +11066,47 @@ function closeBattleItems() {
   renderBattle("Choose a class command.");
 }
 
-function useBattleItem(u, name) {
+function useBattleItem(u, name, target = null) {
   const info = inventoryInfo(name);
   if (!info.battle || !state.inventory[name] || !canUseBattleItem(u, info)) return;
+  if (battle.resolving || u.hp <= 0) return;
+  if (info.battle === "revive" && !target) {
+    el.actions.innerHTML = "";
+    battle.party.filter(ally => ally.hp <= 0).forEach(ally => {
+      const button = document.createElement("button");
+      button.textContent = `Revive ${ally.name} / 50% HP`;
+      button.onclick = () => useBattleItem(u, name, ally);
+      el.actions.appendChild(button);
+    });
+    const back = document.createElement("button");
+    back.textContent = "Back to Items";
+    back.onclick = () => { el.actions.innerHTML = ""; renderBattleItems(u); };
+    el.actions.appendChild(back);
+    battleActionIndex = 0;
+    highlightBattleAction();
+    return;
+  }
+  if (info.battle === "revive" && (!battle.party.includes(target) || target.hp > 0)) return;
   u.statuses = ensureStatuses(u).filter(status => status.type !== "audit");
   state.inventory[name]--;
   battle.itemMode = false;
   let log = `${u.name} uses ${name}.`;
   if (info.battle === "hp") {
     const before = u.hp;
-    u.hp = Math.min(u.max, u.hp + healingReceived(u, info.value));
+    u.hp = Math.min(u.max, u.hp + healingReceived(u, consumableRecovery(info, u.max)));
     const restored = u.hp - before;
     addBattleFloater(u, restored, { kind: "heal" });
     log += ` HP +${restored}.`;
     playSfx("item");
   } else if (info.battle === "mp") {
     const before = u.mp;
-    u.mp = Math.min(u.maxmp, u.mp + info.value);
+    u.mp = Math.min(u.maxmp, u.mp + consumableRecovery(info, u.maxmp));
     log += ` MP +${u.mp - before}.`;
+    playSfx("item");
+  } else if (info.battle === "revive") {
+    const restored = reviveBattleUnit(target, info.fraction);
+    addBattleFloater(target, restored, { kind: "heal" });
+    log += ` ${target.name} revived with ${restored} HP.`;
     playSfx("item");
   } else if (info.battle === "guard") {
     battle.ward = true;
@@ -12040,6 +12106,7 @@ function winBattle(log) {
   });
   const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
   const rewards = rollBattleLoot(battle.defeated, {
+    hallStage,
     forceGearRarity: echoHuntBattle ? "Legendary" : null,
     allowGearLoot: !hallStage
   });
@@ -12049,7 +12116,7 @@ function winBattle(log) {
   awardPartyXp(battleXp, bossBattle ? "boss victory" : "battle");
   if (hallStage) {
     const hallGold = 12 + hallStage * 4 + (battle.hallBoss ? 40 + hallStage * 2 : 0);
-    const endgameGoldBonus = hallStage >= 51 && hallStage <= 60 ? (rewards.gold + hallGold) * 2 : 0;
+    const endgameGoldBonus = hallStage >= 51 && hallStage <= 60 ? (rewards.gold + hallGold) * 5 : 0;
     state.gold += hallGold + endgameGoldBonus;
     rewards.gold += hallGold + endgameGoldBonus;
     guaranteeHallBattleGearReward(rewards, hallStage);
@@ -12354,6 +12421,7 @@ function guaranteeEchoHuntGearReward(rewards, rank = state.endgameRank || 1) {
 }
 
 function rollBattleLoot(enemies, options = {}) {
+  const hallStage = Number(options.hallStage) || (state.gameMode === "hallBattles" ? Number(battle?.hallStage) || 1 : 0);
   let gold = 0;
   const drops = [];
   const gearDrops = [];
@@ -12361,7 +12429,7 @@ function rollBattleLoot(enemies, options = {}) {
     const tables = [lootTables[enemyUnit.name]].filter(Boolean);
     tables.forEach(table => {
       gold += table.gold[0] + Math.floor(Math.random() * (table.gold[1] - table.gold[0] + 1));
-      table.common.forEach(([name, chance, amount]) => {
+      if (!hallStage) table.common.forEach(([name, chance, amount]) => {
         if (Math.random() > chance) return;
         const stored = addInventoryItem(name, amount);
         drops.push(lootItemDrop(name, amount, stored));
@@ -12374,10 +12442,18 @@ function rollBattleLoot(enemies, options = {}) {
         });
       }
     });
-    if (state.ngPlus > 0 && options.allowNgPlusLoot !== false) {
+    if (!hallStage && state.ngPlus > 0 && options.allowNgPlusLoot !== false) {
       gold += rollNgPlusRandomLoot(enemyUnit, drops, gearDrops, { allowGearLoot: options.allowGearLoot });
     }
   });
+  if (hallStage) {
+    const tier = Math.min(4, Math.ceil(hallStage / 15));
+    const supplies = MARLA_CONSUMABLES.filter(ware => inventoryDb[ware.name].tier === tier && ["hp", "mp"].includes(inventoryDb[ware.name].battle));
+    const token = HALL_COLLECTIBLES[Math.min(4, Math.floor((hallStage - 1) / 12))];
+    const awarded = [...supplies.map(ware => [ware.name, 1]), [token, 1]];
+    if (Math.random() < .25) awarded.push(["Phoenix Ticket", 1]);
+    awarded.forEach(([name, amount]) => drops.push(lootItemDrop(name, amount, addInventoryItem(name, amount))));
+  }
   state.gold += gold;
   return { gold, drops, gearDrops };
 }
@@ -12415,11 +12491,34 @@ function rollNgPlusRandomLoot(enemyUnit, drops, gearDrops = [], options = {}) {
 }
 
 function inventoryUsed() {
-  return Object.values(state.inventory).reduce((sum, amount) => sum + amount, 0);
+  return Object.values(state.inventory).reduce((sum, amount) => sum + Math.ceil(Math.max(0, Number(amount) || 0) / 99), 0);
+}
+
+function canCarryInventoryItem(name, amount = 1) {
+  const current = Math.max(0, Number(state.inventory[name]) || 0);
+  return inventoryUsed() + Math.ceil((current + amount) / 99) - Math.ceil(current / 99) <= state.inventorySlots;
+}
+
+function migrateInventoryStacks() {
+  if (state.flags.inventoryStacksV1) return;
+  state.bagUpgrades = Math.max(0, Math.floor(Number(state.bagUpgrades) || 0));
+  state.inventorySlots = 10 + state.bagUpgrades * 5;
+  state.inventory ||= {};
+  state.stash ||= {};
+  const names = Object.keys(state.inventory).sort((a, b) => Number(Boolean(inventoryInfo(b).battle)) - Number(Boolean(inventoryInfo(a).battle)));
+  let used = 0;
+  names.forEach(name => {
+    const amount = Math.max(0, Math.floor(Number(state.inventory[name]) || 0));
+    const kept = Math.min(amount, Math.max(0, state.inventorySlots - used) * 99);
+    state.inventory[name] = kept;
+    used += Math.ceil(kept / 99);
+    if (kept < amount) state.stash[name] = (state.stash[name] || 0) + amount - kept;
+  });
+  state.flags.inventoryStacksV1 = true;
 }
 
 function addInventoryItem(name, amount = 1) {
-  if (inventoryUsed() + amount <= state.inventorySlots) {
+  if (canCarryInventoryItem(name, amount)) {
     state.inventory[name] = (state.inventory[name] || 0) + amount;
     return true;
   }
@@ -13330,7 +13429,7 @@ function renderMenu() {
       const targets = selectedEntry.kind === "item" && info.field ? `<div class="field-targets"><span>Use on</span>${state.party.map(id => {
         const hero = baseJobs[id], total = totals(id);
         const canUse = canUseFieldItem(name, id);
-        const value = info.field === "hp" ? `${hero.hp}/${total.max} HP` : info.field === "mp" ? `${hero.mp}/${total.mp} MP` : state.fieldWard ? "Ward ready" : "Prepare ward";
+        const value = info.field === "hp" ? `${hero.hp}/${total.max} HP` : info.field === "mp" ? `${hero.mp}/${total.mp} MP` : info.field === "revive" ? hero.hp > 0 ? "Alive" : "Fallen / revive" : state.fieldWard ? "Ward ready" : "Prepare ward";
         return `<button type="button" class="field-target" data-field-item="${name}:${id}" ${canUse ? "" : "disabled"}><img src="${menuPortraitSource(id)}" alt=""><span>${hero.name}<small>${value}</small></span></button>`;
       }).join("")}</div>` : "";
       const trade = selectedEntry.kind === "stash" ? "Stored safely with Marla." : selectedItemCategory === "treasure" ? `Sell value: ${inventorySellPrice(name)} G each at a vendor.` : selectedItemCategory === "quest" ? "Protected quest item. Cannot be sold." : info.short || "";
@@ -13428,6 +13527,7 @@ function canUseFieldItem(name, id) {
   if (info.field === "hp") return hero.hp > 0 && hero.hp < total.max;
   if (info.field === "mp") return hero.hp > 0 && hero.mp < total.mp;
   if (info.field === "guard") return !state.fieldWard;
+  if (info.field === "revive") return hero.hp <= 0;
   return false;
 }
 
@@ -13440,8 +13540,9 @@ function useFieldItem(value) {
   const hero = baseJobs[id];
   const total = totals(id);
   state.inventory[name]--;
-  if (info.field === "hp") hero.hp = Math.min(total.max, hero.hp + info.value);
-  if (info.field === "mp") hero.mp = Math.min(total.mp, hero.mp + info.value);
+  if (info.field === "hp") hero.hp = Math.min(total.max, hero.hp + consumableRecovery(info, total.max));
+  if (info.field === "mp") hero.mp = Math.min(total.mp, hero.mp + consumableRecovery(info, total.mp));
+  if (info.field === "revive") hero.hp = Math.max(1, Math.round(total.max * info.fraction));
   if (info.field === "guard") state.fieldWard = true;
   playSfx(info.field === "guard" ? "block" : "item");
   updatePanels();
@@ -13776,7 +13877,7 @@ function shopWareRowHtml(ware, index, purchased = false) {
   const hallOfferPurchased = Number.isInteger(ware.hallStage) && hallBattleProgress().purchasedShopStages.includes(ware.hallStage);
   const owned = !ware.artifactShop && (purchased || ware.kind === "gear" && (hallOfferPurchased || (state.ownedGear.includes(ware.name) && !repeatableEcho && !ware.hallStage)));
   const price = ware.kind === "upgrade" ? bagUpgradePrice(ware.basePrice) : ware.price;
-  const full = ware.kind === "item" && inventoryUsed() >= state.inventorySlots;
+  const full = ware.kind === "item" && !canCarryInventoryItem(ware.name);
   const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
   const icon = gear
     ? gearIconHtml({ ...gear, rarity: displayedRarity }, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
@@ -13821,7 +13922,7 @@ function renderVendor() {
   const artifactSection = activeVendor === "workshop" ? `<section class="shop-offer-section"><h3>Artifact Masterworks</h3><div class="shop-list">${indexedWares.filter(({ ware }) => ware.artifactShop).map(({ ware, index }) => shopWareRowHtml(ware, index)).join("") || `<div class="shop-empty"><p>No Artifact commissions unlocked.</p></div>`}</div></section>` : "";
   const buyList = `${artifactSection}${shopSections}${activeVendor === "marla" && stashEntries.length ? `<h3>Safe Stash</h3><div class="shop-list">${stashEntries.map(([name, amount], index) => {
     const stashIcon = inventoryIcon(name);
-    return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${inventoryUsed() >= state.inventorySlots ? "disabled" : ""}>Take</button></div>`;
+    return `<div class="shop-row">${pixelIconHtml(stashIcon.sheet, stashIcon.index, "shop-icon")}<div><strong>${name}</strong><small>Stored after a full inventory.</small></div><span>x${amount}</span><button type="button" data-take-stash="${index}" ${!canCarryInventoryItem(name) ? "disabled" : ""}>Take</button></div>`;
   }).join("")}</div>` : ""}`;
   const sellItems = Object.entries(state.inventory).filter(([name, amount]) => amount > 0 && inventorySellPrice(name) > 0);
   const sellGear = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(({ ref, gear }) => gear && !state.favoriteGear[ref] && gearSellPrice(gear) > 0 && gearCopyCount(ref) > equippedGearUsers(ref).length);
@@ -13872,6 +13973,7 @@ function renderVendor() {
 }
 
 function inventorySellPrice(name) {
+  if (inventoryInfo(name).shopPrice) return Math.floor(inventoryInfo(name).shopPrice * .4);
   if (inventoryCategory(name) === "quest") return 0;
   const shopWare = Object.values(vendors).flatMap(vendor => vendor.wares).find(ware => ware.kind === "item" && ware.name === name);
   if (shopWare) return Math.max(1, Math.floor(shopWare.price * .4));
@@ -13945,7 +14047,7 @@ function buyWare(index) {
   const hallOffer = ware.kind === "gear" && Number.isInteger(ware.hallStage);
   if (hallOffer && !ware.artifactShop && hallBattleProgress().purchasedShopStages.includes(ware.hallStage)) return;
   if (ware.kind === "gear" && state.ownedGear.includes(ware.name) && !repeatableEcho && !hallOffer) return;
-  if (ware.kind === "item" && inventoryUsed() >= state.inventorySlots) return;
+  if (ware.kind === "item" && !canCarryInventoryItem(ware.name)) return;
   state.gold -= price;
   if (ware.kind === "gear") {
     const gear = gearByName(ware.name);
@@ -13960,7 +14062,7 @@ function buyWare(index) {
     if (hallOffer && !ware.artifactShop) hallBattleProgress().purchasedShopStages.push(ware.hallStage);
   }
   else if (ware.kind === "upgrade") {
-    state.inventorySlots += 10;
+    state.inventorySlots += 5;
     state.bagUpgrades++;
   } else addInventoryItem(ware.name, 1);
   playSfx("coin");
@@ -13970,7 +14072,7 @@ function buyWare(index) {
 }
 
 function takeFromStash(name) {
-  if (!name || !state.stash[name] || inventoryUsed() >= state.inventorySlots) return;
+  if (!name || !state.stash[name] || !canCarryInventoryItem(name)) return;
   state.stash[name]--;
   state.inventory[name] = (state.inventory[name] || 0) + 1;
   playSfx("item");
