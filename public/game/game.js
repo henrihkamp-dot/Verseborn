@@ -167,6 +167,8 @@ let nextFieldMove = 0;
 let activeVendor = null;
 let vendorTab = "buy";
 let gearInstances = {};
+let developerGearLoadout = null;
+const developerGearInstances = new Map();
 let audioContext = null;
 let screenSlide = null;
 let titleMenuIndex = 0;
@@ -2123,7 +2125,7 @@ const ngPlusChestGearNames = new Set(ngPlusChestGear.map(gear => gear.name));
 const echoForgeGearNames = new Set(echoForgeGear.map(gear => gear.name));
 
 function gearInstance(ref) {
-  return typeof ref === "string" ? gearInstances[ref] || null : null;
+  return typeof ref === "string" ? developerGearInstances.get(ref) || gearInstances[ref] || null : null;
 }
 
 function gearBaseName(ref) {
@@ -4033,7 +4035,7 @@ function saveGame(saveKey = activeSaveKey()) {
     const heroes = Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, {
       hp: hero.hp,
       mp: hero.mp,
-      gear: { ...hero.gear }
+      gear: { ...(developerGearLoadout?.original[id] || hero.gear) }
     }]));
     const questState = Object.fromEntries(sideQuests.map(quest => [quest.id, { status: quest.status, progress: quest.progress }]));
     const spawnState = Object.fromEntries(Object.entries(maps).map(([mapId, mapData]) => [mapId, Object.fromEntries((mapData.spawns || []).map(spawnPoint => [spawnPoint.id, {
@@ -4064,8 +4066,10 @@ function loadGame(saveKey = activeSaveKey()) {
     return false;
   }
   if (!data?.state) return false;
+  restoreDeveloperGear();
   Object.assign(state, data.state);
   state.developerTuning = data.state.developerTuning || {};
+  state.developerGearChoice = data.state.developerGearChoice || null;
   state.gameMode = data.state.gameMode === "hallBattles" ? "hallBattles" : "story";
   state.knownWeaknesses = data.state.knownWeaknesses || {};
   state.favoriteGear = data.state.favoriteGear || {};
@@ -5173,6 +5177,7 @@ function assignGearRef(id, slot, ref) {
 }
 
 function autoEquipHero(id, pool = autoEquipPool) {
+  if (developerGearLoadout) return false;
   if (!state.party.includes(id)) return false;
   let changed = false;
   Object.keys(baseJobs[id].gear).forEach(slot => {
@@ -5189,6 +5194,7 @@ function autoEquipHero(id, pool = autoEquipPool) {
 }
 
 function autoEquipParty(pool = autoEquipPool) {
+  if (developerGearLoadout) return false;
   const heroes = state.party.filter(id => baseJobs[id]);
   if (!heroes.length) return false;
   let changed = false;
@@ -6952,6 +6958,7 @@ function closeTitleSubmenu() {
 
 function startTitleGame(continueGame = false) {
   if (!runtimeAssetsReady) return;
+  restoreDeveloperGear();
   const loaded = continueGame && loadGame(storySaveKey());
   if (!continueGame) {
     try { localStorage.removeItem(storySaveKey()); } catch {}
@@ -6966,6 +6973,7 @@ function startTitleGame(continueGame = false) {
 }
 
 function resetHallBattleRun() {
+  restoreDeveloperGear();
   clearTimeout(saveTimer);
   try {
     localStorage.removeItem(hallSaveKey());
@@ -9996,6 +10004,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   battle.meterStarted = new Date().toISOString();
   battle.meterName = name;
   battle.meterTuning = JSON.parse(JSON.stringify(state.developerTuning || {}));
+  if (developerGearLoadout) battle.meterTuning.gearTest = { stage: developerGearLoadout.stage, rarity: developerGearLoadout.rarity };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -14087,6 +14096,22 @@ function renderMenu() {
       const side = index === 0 ? "party" : "enemy";
       section.insertAdjacentHTML("beforeend", [["healing", "Healing"], ["burn", "Burn Damage"], ["poison", "Poison Damage"], ["bleed", "Bleed Damage"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join(""));
     });
+    const gearChoice = developerGearLoadout || state.developerGearChoice || { stage: Math.min(60, hallBattleProgress().unlockedStage), rarity: "Epic" };
+    const gearStage = Math.max(1, Math.min(60, Number(gearChoice.stage) || 1));
+    const gearRarities = ["Rare", "Epic", "Legendary", "Mythic", "Artifact"];
+    const gearRarity = developerGearCandidates(gearStage, gearChoice.rarity).length ? gearChoice.rarity : "Rare";
+    el.menuBody.insertAdjacentHTML("beforeend", `<section class="developer-controls"><h3>Team Gear Test</h3><label class="developer-slider"><span>Gear Stage</span><input type="range" min="1" max="60" step="1" value="${gearStage}" data-gear-stage aria-label="Gear Stage"><output>${gearStage}</output></label><label>Rarity <select data-gear-rarity>${gearRarities.map(rarity => `<option value="${rarity}" ${rarity === gearRarity ? "selected" : ""} ${developerGearCandidates(gearStage, rarity).length ? "" : "disabled"}>${rarity}</option>`).join("")}</select></label><label><input type="checkbox" data-gear-enabled ${developerGearLoadout ? "checked" : ""}> Test sets: all characters</label><strong>${developerGearLoadout ? `${gearRarity} / Stage ${gearStage}` : "Own gear"}</strong></section>`);
+    const changeGearTest = () => {
+      const stage = Number(el.menuBody.querySelector("[data-gear-stage]").value);
+      let rarity = el.menuBody.querySelector("[data-gear-rarity]").value;
+      if (!developerGearCandidates(stage, rarity).length) rarity = "Rare";
+      state.developerGearChoice = { stage, rarity };
+      const enabled = el.menuBody.querySelector("[data-gear-enabled]").checked;
+      if (!setDeveloperGear(stage, rarity, enabled)) showHudNotice("No complete team set available for this selection.");
+      queueSave(); updatePanels(); renderMenu();
+    };
+    el.menuBody.querySelector("[data-gear-stage]").addEventListener("input", event => { event.target.nextElementSibling.textContent = event.target.value; });
+    ["[data-gear-stage]", "[data-gear-rarity]", "[data-gear-enabled]"].forEach(selector => el.menuBody.querySelector(selector).addEventListener("change", changeGearTest));
     el.menuBody.querySelectorAll("[data-export-battle]").forEach(button => button.addEventListener("click", () => exportDamageMeter(Number(button.dataset.exportBattle))));
     el.menuBody.querySelectorAll("[data-tune-side]").forEach(input => input.addEventListener("input", () => {
       state.developerTuning ||= {};
@@ -14180,6 +14205,7 @@ function useFieldSkill(value) {
 }
 
 function equipGear(value) {
+  if (developerGearLoadout) return showHudNotice("Disable the developer gear set before changing equipment.");
   const [id, slot, name] = value.split(":");
   const currentName = baseJobs[id]?.gear[slot] || null;
   if (!baseJobs[id] || !Object.hasOwn(baseJobs[id].gear, slot)) return;
@@ -14344,6 +14370,72 @@ function hallShopGearPool(rarity, stage) {
 }
 
 const HALL_SHOP_AFFIX_COUNTS = HALL_GENERATED_AFFIX_COUNTS;
+
+function developerGearCandidates(stage, rarity) {
+  const candidates = new Map();
+  for (let value = 1; value <= stage; value++) {
+    if (rollHallGearRarity(value) === rarity) hallGearRewardCandidates(value, rarity).forEach(gear => candidates.set(gear.name, { gear, stage: value, drop: true }));
+    if (value <= 50 && hallShopGearRarity(value) === rarity) hallShopGearPool(rarity, value).forEach(gear => {
+      if (!candidates.has(gear.name)) candidates.set(gear.name, { gear, stage: value, drop: false });
+    });
+  }
+  if (rarity === "Artifact") GLIMMER_ARTIFACT_CATALOG.filter(entry => entry.stage <= stage).forEach(entry => candidates.set(entry.gear.name, { ...entry, commissioned: true }));
+  return [...candidates.values()];
+}
+
+function restoreDeveloperGear() {
+  if (!developerGearLoadout) return;
+  Object.entries(developerGearLoadout.original).forEach(([id, gear]) => { baseJobs[id].gear = { ...gear }; });
+  developerGearLoadout = null;
+  developerGearInstances.clear();
+}
+
+function setDeveloperGear(stage, rarity, enabled) {
+  if (mode === "battle" || state.gameMode !== "hallBattles") return false;
+  stage = Math.max(1, Math.min(60, Math.round(Number(stage) || 1)));
+  if (!enabled) { restoreDeveloperGear(); refreshHeroVitals(); return true; }
+  const pool = developerGearCandidates(stage, rarity);
+  if (!pool.length) return false;
+  const prepared = new Map();
+  const random = Math.random;
+  try {
+    for (const entry of pool) {
+      const { gear } = entry;
+      Math.random = hallSeededRandom(`developer-gear:${stage}:${rarity}:${gear.name}`);
+      const scale = entry.drop && entry.stage > 50 ? 1 + (entry.stage - 50) * .045 : 1;
+      const stats = entry.commissioned ? { ...gear.stats } : Object.fromEntries(Object.entries(rollHallBaseStats(rarity)).map(([key, value]) => [key, Math.round(value * scale)]));
+      const affixPool = affixPools[gear.slot] || affixPools.accessory;
+      const affixes = entry.commissioned ? entry.affixKeys.map(key => { const affix = affixPool.find(a => a.key === key); return { ...affix, value: affix.max }; })
+        : rollGearAffixes(gear, rarity, hallShopAffixTheme(entry.stage), HALL_GENERATED_AFFIX_COUNTS[rarity]).map(affix => ({ ...affix, value: affix.max > 1 ? Math.round(affix.value * scale) : Number((affix.value * scale).toFixed(4)) }));
+      prepared.set(gear.name, { gear, stats, affixes });
+    }
+  } finally { Math.random = random; }
+  const original = developerGearLoadout?.original || Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, { ...hero.gear }]));
+  const loadouts = {};
+  const physical = new Set(["Torren", "Mira", "Seerin"]);
+  for (const [id, hero] of Object.entries(baseJobs)) {
+    loadouts[id] = {};
+    const profile = AUTO_EQUIP_PROFILES[id];
+    const weights = { str: physical.has(id) ? profile.damage : .1, mag: physical.has(id) ? profile.healing : profile.damage + profile.healing * .4, stam: profile.hp * 2, agi: profile.agi, echo: profile.echo };
+    for (const slot of Object.keys(hero.gear)) {
+      const choices = [...prepared.values()].filter(entry => entry.gear.slot === slot && canEquip(id, entry.gear));
+      const score = entry => Object.entries(entry.stats).reduce((sum, [stat, value]) => sum + value * (weights[stat] || 0), 0);
+      choices.sort((a, b) => score(b) - score(a) || a.gear.name.localeCompare(b.gear.name));
+      if (!choices.length) return false;
+      const entry = choices[0], ref = `developer_${id}_${slot}`;
+      loadouts[id][slot] = { id: ref, name: entry.gear.name, rarity, stats: entry.stats, affixes: entry.affixes, copyNumber: 1 };
+    }
+  }
+  developerGearInstances.clear();
+  for (const [id, loadout] of Object.entries(loadouts)) {
+    Object.values(loadout).forEach(entry => developerGearInstances.set(entry.id, entry));
+    baseJobs[id].gear = Object.fromEntries(Object.entries(loadout).map(([slot, entry]) => [slot, entry.id]));
+  }
+  developerGearLoadout = { stage, rarity, original };
+  state.developerGearChoice = { stage, rarity };
+  refreshHeroVitals();
+  return true;
+}
 
 function hallShopAffixTheme(stage) {
   return HALL_MYTHIC_THEMES[stage] || ["swamp", "ruins", "mountain", "dragon"][(Math.max(1, stage) - 1) % 4];
@@ -14619,6 +14711,7 @@ function gearSellPrice(gear) {
 }
 
 function sellVendorItem(kind, name) {
+  if (kind === "gear" && developerGearLoadout) return showHudNotice("Disable the developer gear set before selling equipment.");
   if (kind === "item") {
     const price = inventorySellPrice(name);
     if (!price || !state.inventory[name]) return;
