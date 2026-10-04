@@ -5650,18 +5650,21 @@ function breakSleepFromDamage(target) {
   return "SLEEP BROKEN!";
 }
 
-function outgoingDamageMultiplier(unit, kind, target = null) {
+function outgoingDamageMultiplier(unit, kind, target = null, element = null) {
   let multiplier = 1 + statusValue(unit, "damageUp");
   if (kind === "melee") multiplier *= 1 + statusValue(unit, "strengthUp");
   if (kind === "magic" || kind === "ultimate") multiplier *= 1 + statusValue(unit, "magicUp");
   if (unit?.id) {
+    const primaryBuff = kind === "melee" ? "strengthUp" : "magicUp";
+    const temporaryBonus = statusValue(unit, "damageUp") + statusValue(unit, primaryBuff)
+      + (element === "Shadow" ? statusValue(unit, "shadowUp") : 0);
+    multiplier = 1 + Math.min(.5, Math.max(0, temporaryBonus));
     const damageType = kind === "melee" ? "physicalDamage" : "magicDamage";
     multiplier *= 1 + effectValue(unit.id, damageType) + typedTalentValue(unit.id, damageType);
     if (target && hasNegativeStatus(target)) multiplier *= 1 + typedTalentValue(unit.id, "afflictedDamage") + effectValue(unit.id, "afflictedDamage");
     if (target && target.hp / target.max < .35) multiplier *= 1 + typedTalentValue(unit.id, "lowHpDamage");
     if (kind === "melee") multiplier *= 1 + statusValue(target, "physicalVulnerability");
     else multiplier *= 1 + statusValue(target, "magicVulnerability");
-    multiplier *= 1 + statusValue(unit, "shadowUp");
   }
   multiplier *= Math.max(.5, 1 - statusValue(unit, "disrupted"));
   multiplier *= 1 - statusValue(unit, "mentalPressure");
@@ -6189,11 +6192,11 @@ function siphoningOffensiveStat(unit, sk) {
   return skillScaling(sk) === "str" ? stats.str : stats.mag;
 }
 
-function resolveActionSustain(unit, sk, directDamage, paidMp = 0, targetCount = 1) {
+function resolveActionSustain(unit, sk, directDamage, paidMp = 0, targetCount = 1, alreadyHealed = 0) {
   if (!unit?.id || !sk || directDamage <= 0) return { hp: 0, mp: 0 };
   const leeching = combatSustainRate(unit.id, "leeching");
   const eligibleDamage = directDamage / Math.max(1, targetCount);
-  const hp = leeching ? Math.min(healingReceived(unit, Math.round(eligibleDamage * leeching)), Math.floor(unit.max * .08), unit.max - unit.hp) : 0;
+  const hp = leeching ? Math.min(healingReceived(unit, Math.round(eligibleDamage * leeching)), Math.floor(unit.max * .08), Math.max(0, Math.floor(unit.max * .12) - alreadyHealed), unit.max - unit.hp) : 0;
   if (hp > 0) {
     unit.hp += hp;
     addBattleFloater(unit, hp, { kind: "heal" });
@@ -7934,14 +7937,14 @@ function statusDisplayData(unit, status) {
     anchored: `Initiative AGI reduced by ${percent}. Dock Foreman gains +2 Break against this target.`,
     scorched: `All combat healing received reduced by ${percent}. Cleanse removes Scorched.`,
     statusWard: `Negative-status application chance reduced by ${percent}.`,
-    strengthUp: `Physical attack damage +${percent}.`, magicUp: `Magic attack damage +${percent}.`,
-    defenseUp: `Reduces incoming damage by ${percent}; combines with other defenses.`, damageUp: `Direct damage +${percent}.`,
+    strengthUp: `Physical attack damage +${percent}; additive with Damage Up, shared +50% cap.`, magicUp: `Magic attack damage +${percent}; additive with Damage Up, shared +50% cap.`,
+    defenseUp: `Reduces incoming damage by ${percent}; combines with other defenses.`, damageUp: `Direct damage +${percent}; additive with STR/MAG and matching Shadow buffs, shared +50% cap.`,
     agilityUp: `Initiative AGI +${percent}; does not grant an extra action.`, critUp: `Attack critical chance +${percent}, subject to the total cap.`,
-    shadowUp: `Direct attack damage +${percent} in the current combat implementation.`, echoPower: `Adds ${value.toFixed(2)} to the Ultimate ECHO multiplier.`,
+    shadowUp: `Shadow damage +${percent}; shares the +50% temporary offensive buff cap with Damage Up and STR/MAG Up.`, echoPower: `Adds ${value.toFixed(2)} to the Ultimate ECHO multiplier.`,
     evasion: `Evasion +${percent}. Each incoming direct attack consumes one charge whether it hits or is Evaded.`, barrier: `${percent} damage reduction, not a separate HP shield.`,
-    mechGuard: `Reduces incoming damage by ${percent}.`, holyFollowUp: `Next damaging action adds ${percent} Holy follow-up damage.`,
-    combatDrone: `Drone follows damaging actions. Applied power: ${percent}; source talents can add further damage.`,
-    vampiric: `Heal ${percent} of direct damage dealt.`, stunFocus: 'Doubles Mira\'s existing gear-based Stun chance; does not create a chance by itself.',
+    mechGuard: `Reduces incoming damage by ${percent}.`, holyFollowUp: `Next damaging action adds ${percent} Holy damage, capped at 50% of the source's MAG across all targets.`,
+    combatDrone: `Drone damage uses ${percent} of the source's MAG plus drone talents; all drones share a 125% MAG action budget. Main-hit crits and weaknesses do not amplify drones.`,
+    vampiric: `Heal ${percent} of average direct damage per target. Vampiric and Leeching together restore at most 12% Max HP per action.`, stunFocus: 'Doubles Mira\'s existing gear-based Stun chance; does not create a chance by itself.',
     poison: `${value} damage at the start of each action.`, burn: `${value} damage at the start of each action.`, bleed: `${value} damage at the start of each action.`,
     marked: `Attacks against this target gain ${percent} critical chance.`, physicalVulnerability: `Takes ${percent} more physical damage from player attacks.`,
     magicVulnerability: `Takes ${percent} more magical damage from player attacks.`, holyVulnerability: `Takes ${percent} more Holy Fire damage.`,
@@ -10036,6 +10039,7 @@ function battleRoundLimitReached(currentBattle = battle) {
 }
 
 function runCurrentTurn(log) {
+  battle.meterActionRecorded = false;
   while (currentTurn() && !turnIsAlive(currentTurn())) battle.turnIndex++;
   if (!currentTurn()) {
     if (battleRoundLimitReached()) return endBattleDraw(log);
@@ -10056,12 +10060,14 @@ function runCurrentTurn(log) {
   if (turn.side === "party" && unit.hp <= 0) markBattleUnitDown(unit);
   battle.turnStartMessage = start.notes.length ? `${unit.name}: ${start.notes.join(" ")}` : "";
   if (start.notes.length) log = `${log} ${unit.name}: ${start.notes.join(" ")}`;
+  if (unit.hp <= 0) recordDamageMeterAction(battle.turnStartMessage || `${unit.name}: defeated at turn start.`);
   if (partyIsDefeated()) return triggerPartyDefeat(log);
   if (unit.hp <= 0 && turn.side === "enemy" && battle.enemies.every(enemyUnit => enemyUnit.hp <= 0)) {
     renderBattle(log);
     return setTimeout(() => winBattle(log), 520);
   }
   if (start.skip) {
+    if (!battle.meterActionRecorded) recordDamageMeterAction(`${unit.name}: ${start.notes.join(" ") || "Turn skipped."}`);
     battle.resolving = true;
     renderBattle(log);
     return setTimeout(() => finishTurn(log), 620);
@@ -10079,10 +10085,10 @@ function runCurrentTurn(log) {
 
 function finishTurn(log) {
   if (!battle.meterActionRecorded) recordDamageMeterAction(log);
-  battle.meterActionRecorded = false;
   transferDeadSparkyBurns();
   const actor = currentTurn();
-  if (actor?.side === "party") log += finishMechTalentAction(battle.party.find(member => member.id === actor.id));
+  const clinicMessage = actor?.side === "party" ? finishMechTalentAction(battle.party.find(member => member.id === actor.id)) : "";
+  log += clinicMessage;
   battle.itemMode = false;
   battle.targetMode = false;
   battle.pendingSkill = null;
@@ -10091,6 +10097,15 @@ function finishTurn(log) {
   const unit = turn?.side === "party" ? battle.party.find(member => member.id === turn.id) : battle.enemies[turn?.index];
   const faded = unit ? processTurnEnd(unit) : [];
   if (faded.length) log = `${log} ${faded.join(" ")}`;
+  const recorded = battle.actionHistory?.at(-1);
+  if (recorded && clinicMessage) recorded.message += clinicMessage;
+  if (recorded && battle.meterEvents?.length) {
+    recorded.events.push(...battle.meterEvents);
+    recorded.party = battle.party.map(member => ({ name: member.name, hp: member.hp, mp: member.mp }));
+    battle.meterEvents = [];
+  }
+  if (recorded && faded.length) recorded.message += ` ${faded.join(" ")}`;
+  battle.meterActionRecorded = false;
   battle.turnIndex++;
   runCurrentTurn(log);
 }
@@ -10274,7 +10289,7 @@ function skillPreview(u, sk, target = null) {
   const naturalWeakness = target && target.weak === sk.element;
   const revealWeakness = target ? knownWeakness(target) : partyCanSeeWeaknesses();
   const displayWeakness = hitsWeakness && (naturalWeakness ? revealWeakness : Boolean(statusOf(target, "shadowExposed")));
-  const multiplier = outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", target)
+  const multiplier = outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", target, sk.element)
     * (sk.element === "Shadow" ? 1 + statusValue(target, "shadowVulnerability") : 1)
     * (sk.rank0BreakPayoff && target && (statusOf(target, "broken") || (target.stagger || 0) >= 2) ? 1 + sk.rank0BreakPayoff : 1)
     * (target && hasNegativeStatus(target) ? 1 + (sk.afflictedBonus || 0) : 1)
@@ -10701,17 +10716,24 @@ function transferDeadSparkyBurns() {
 function combatDroneFollowUp(source, totalDamage, targetCount) {
   const drone = statusOf(source, "combatDrone");
   const carrier = source.id === "Glimmer" && source.form === "mech" ? typedTalentValue(source.id, "mechCarrier") : 0;
-  if ((!drone && !carrier) || (!carrier && totalDamage <= 0)) return "";
+  if ((!drone && !carrier) || totalDamage <= 0) return "";
   const ownerId = baseJobs[drone?.source?.id] ? drone.source.id : source.id;
   const dual = typedTalentValue(ownerId, "dronePower");
   const base = (drone?.value ?? .25) + typedTalentValue(ownerId, "droneBaseBonus");
-  const damage = Math.max(1, Math.round((totals(ownerId).mag * base + totalDamage / Math.max(1, targetCount) * .15) * (1 + dual) * (1 + carrier)));
+  const ownerMag = totals(ownerId).mag;
+  const swarm = typedTalentValue(ownerId, "droneSwarm");
+  const ratios = 1 + (dual ? .5 : 0) + swarm;
+  // Additional drones divide a bounded budget, independent of the triggering hit.
+  const damage = Math.max(1, Math.floor(Math.min(ownerMag * base * (1 + dual + carrier), ownerMag * 1.25 / ratios)));
+  let budget = Math.floor(ownerMag * 1.25);
   const enemies = battle.enemies.filter(enemy => enemy.hp > 0);
   let log = "";
   function strike(enemy, ratio) {
-    if (!enemy || enemy.hp <= 0) return;
+    if (!enemy || enemy.hp <= 0 || budget <= 0) return;
     const crash = ownerId === "Glimmer" && statusOf(enemy, "disrupted") ? typedTalentValue(ownerId, "systemCrash") : 0;
-    const amount = developerScale("party", "damage", Math.max(1, Math.round(damage * ratio * (1 + crash))));
+    const raw = Math.min(budget, Math.max(1, Math.round(damage * ratio * (1 + crash))));
+    budget -= raw;
+    const amount = developerScale("party", "damage", raw);
     enemy.hp = Math.max(0, enemy.hp - amount);
     enemy.flash = 10;
     addBattleFloater(enemy, amount, { damageType: "Drone Tech" });
@@ -10723,12 +10745,16 @@ function combatDroneFollowUp(source, totalDamage, targetCount) {
   }
   strike(enemies[0], 1);
   if (dual) strike(enemies[1], .5);
-  const swarm = typedTalentValue(ownerId, "droneSwarm");
   if (swarm) {
     const living = battle.enemies.filter(enemy => enemy.hp > 0);
     strike(dual ? living.find(enemy => enemy !== enemies[0]) || living[0] : living[0], swarm);
   }
   return log;
+}
+
+function holyFollowUpCap(source, targetCount) {
+  const ownerId = statusOf(source, "holyFollowUp")?.source?.id || source.id;
+  return Math.floor(totals(ownerId).mag * .5 / Math.max(1, targetCount));
 }
 
 function finishMechTalentAction(unit) {
@@ -10919,7 +10945,9 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
       let totalDamageDealt = 0;
       let directDamageDealt = 0;
+      let vampiricRestored = 0;
       const holyFollowUpPower = statusValue(u, "holyFollowUp");
+      const holyCapPerTarget = holyFollowUpCap(u, hitTargets.length);
       let holyFollowUpTriggered = false;
       hitTargets.forEach(hitTarget => {
         if (tryEvadeAttack(hitTarget)) {
@@ -10981,7 +11009,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const defenseDebuff = statusValue(hitTarget, "defenseDown") + (statKey === "mag" ? statusValue(hitTarget, "magicDefenseDown") : 0);
         const wordPierce = u.id === "Verseborn" && sk.element === "Sound" ? typedTalentValue(u.id, "wordPierce") : 0;
         const defense = Math.max(0, statusValue(hitTarget, "defenseUp") - defenseDebuff) * (1 - Math.min(.8, (sk.pierce || 0) + wordPierce));
-        dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", hitTarget) * (1 - defense)));
+        dmg = Math.max(1, Math.round(dmg * outgoingDamageMultiplier(u, statKey === "str" ? "melee" : "magic", hitTarget, sk.element) * (1 - defense)));
         if (brokenAtHitStart) dmg = Math.max(1, Math.round(dmg * brokenPhysicalDamageMultiplier(u, statKey, hitTarget)));
         if (breakResult.breaks) {
           dmg += breakResult.bonusDamage;
@@ -10999,7 +11027,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
         directDamageDealt += dmg;
-        const holyDamage = holyFollowUpPower ? Math.max(1, Math.round(dmg * holyFollowUpPower)) : 0;
+        const holyDamage = holyFollowUpPower ? Math.min(holyCapPerTarget, Math.max(1, Math.round(dmg * holyFollowUpPower))) : 0;
         if (holyDamage) {
           hitTarget.hp -= holyDamage;
           totalDamageDealt += holyDamage;
@@ -11073,7 +11101,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
       const vampiric = statusValue(u, "vampiric");
       if (vampiric && directDamageDealt > 0) {
-        const restored = Math.min(healingReceived(u, Math.max(1, Math.round(directDamageDealt * vampiric))), u.max - u.hp);
+        const restored = Math.min(healingReceived(u, Math.max(1, Math.round(directDamageDealt / Math.max(1, hitTargets.length) * vampiric))), Math.floor(u.max * .12), u.max - u.hp);
+        vampiricRestored = restored;
         u.hp += restored;
         if (restored) {
           addBattleFloater(u, restored, { kind: "heal" });
@@ -11136,7 +11165,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
       playSfx("hit");
       if (state.gameMode === "hallBattles") {
-        const sustain = resolveActionSustain(u, sk, directDamageDealt, selectedSkill.anim === "ultimate" ? 0 : selectedCost, hitTargets.length);
+        const sustain = resolveActionSustain(u, sk, directDamageDealt, selectedSkill.anim === "ultimate" ? 0 : selectedCost, hitTargets.length, vampiricRestored);
         if (sustain.hp) log += ` Leeching restores ${sustain.hp} HP to ${u.name}.`;
         if (sustain.mp) log += ` Siphoning restores ${sustain.mp} MP to ${u.name}.`;
       } else {
@@ -13264,7 +13293,7 @@ function skillExpectedOutput(id, sk, unit = { id, statuses: [] }, afflicted = fa
   const target = { statuses: afflicted ? [{ type: "poison" }] : [] };
   base *= skillDamageTalentMultiplier(unit, sk, target);
   if (sk.anim === "ultimate") base *= ultimatePotencyMultiplier(id, sk);
-  const multiplier = outgoingDamageMultiplier(unit, statKey === "str" ? "melee" : "magic", target)
+  const multiplier = outgoingDamageMultiplier(unit, statKey === "str" ? "melee" : "magic", target, sk.element)
     * (afflicted ? 1 + (sk.afflictedBonus || 0) : 1)
     * (1 + (sk.buffScaling || 0) * ensureStatuses(unit).filter(status => STATUS_DEFS[status.type]?.buff).length);
   const crit = heroCritChance(id, afflicted);
@@ -13285,7 +13314,7 @@ function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
   const target = { statuses: [] };
   base *= skillDamageTalentMultiplier(unit, sk, target);
   if (sk.anim === "ultimate") base *= ultimatePotencyMultiplier(id, sk);
-  const multiplier = outgoingDamageMultiplier(unit, statKey === "str" ? "melee" : "magic", target)
+  const multiplier = outgoingDamageMultiplier(unit, statKey === "str" ? "melee" : "magic", target, sk.element)
     * (1 + (sk.buffScaling || 0) * ensureStatuses(unit).filter(status => STATUS_DEFS[status.type]?.buff).length);
   const normal = Array.from({ length: 6 }, (_, roll) => Math.max(1, Math.round((base + roll) * multiplier)))
     .reduce((sum, value) => sum + value, 0) / 6;
@@ -15106,7 +15135,7 @@ function runQaChecks() {
     applyStatus(qaHero, "strengthUp", qaHero, { force: true, duration: 3 });
     applyStatus(qaHero, "damageUp", qaHero, { force: true, duration: 3 });
     check("buff-refresh-and-coexist", qaHero.statuses.filter(status => status.type === "strengthUp").length === 1 && qaHero.statuses.some(status => status.type === "damageUp"));
-    check("buff-multipliers", Math.abs(outgoingDamageMultiplier(qaHero, "melee") - 1.4375) < .0001);
+    check("buff-multipliers", Math.abs(outgoingDamageMultiplier(qaHero, "melee") - 1.4) < .0001);
     applyStatus(qaHero, "agilityUp", qaHero, { force: true, duration: 3 });
     check("agility-buff", effectiveAgility(qaHero, 20) === 25);
     check("boss-status-rates", STATUS_TIER_CHANCES.boss.poison === .5 && STATUS_TIER_CHANCES.boss.sleep === .1 && STATUS_TIER_CHANCES.boss.stun === .2);
