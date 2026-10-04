@@ -3613,7 +3613,7 @@ const compactTalentTrees = {
     talentNode(4, "Aftershock", "aftershock", .3, "Heavy Earth attacks trigger a 30% shockwave against other enemies."),
     talentNode(4, "Stonefury", "damageResonance", .25, "Taking damage generates 25% more Resonance."),
     talentNode(5, "Mountain Stands", "newSkill", skill("ULT II: Mountain Stands", "ultimate", "Earth", 0, 100, "Grant long Party Guard and a powerful barrier.", { targetSide: "party", partyWide: true, ultimateIndex: 2, grantsWard: true, buffs: [{ type: "barrier", value: .35, duration: 5 }] })),
-    talentNode(5, "Worldbreaker", "newSkill", skill("ULT II: Worldbreaker", "ultimate", "Earth", 0, 100, "2.75x STR + 1.375x STAM to all enemies with extreme Break.", { coefficient: 2.75, scaling: "str", allEnemies: true, ultimateIndex: 2, staggerPower: 5 })),
+    talentNode(5, "Worldbreaker", "newSkill", skill("ULT II: Worldbreaker", "ultimate", "Earth", 0, 100, "2.75x STR + 0.275x STAM to all enemies with extreme Break.", { coefficient: 2.75, scaling: "str", allEnemies: true, ultimateIndex: 2, staggerPower: 5 })),
     talentNode(5, "Immovable Object", "defendBoost", .2, "Defend and personal Guard gain 20 percentage points of reduction."),
   ],
   Glimmer: [
@@ -3764,7 +3764,7 @@ const rank0Choices = {
     skill("Bulwark of Faith", "magic", "Holy Fire", 0, 7, "Choose one ally: grant 25% damage reduction for 2 actions. Seerin intercepts their next single-target hostile attack.", { targetSide: "ally", protectsAlly: true, buffs: [{ type: "defenseUp", value: .25, duration: 2 }] })
   ],
   Torren: [
-    skill("Faultline Smash", "melee", "Earth", 0, 7, "1.4x (STR + 0.5 STAM) damage; 30% extra damage against a Broken enemy or one with at least 2 Break buildup.", { coefficient: 1.4, rank0BreakPayoff: .3 }),
+    skill("Faultline Smash", "melee", "Earth", 0, 7, "1.4x (STR + 0.1 STAM) damage; 30% extra damage against a Broken enemy or one with at least 2 Break buildup.", { coefficient: 1.4, rank0BreakPayoff: .3 }),
     skill("Mountain Stance", "magic", "Earth", 0, 6, "Guard Torren and grant 30% damage reduction for 3 actions.", { targetSide: "self", rank0Guard: true, buffs: [{ type: "defenseUp", value: .3, duration: 3 }] })
   ],
   Glimmer: [
@@ -5859,7 +5859,7 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
   if (sk.rank0Agility) return Math.round(primary);
   const agility = id === "Mira" ? stats.agi * .5 : 0;
   if (id === "Torren" && statKey === "str" && skillTargetsEnemies(sk)) {
-    return primary + stats.stam * transformedStatMultiplier(unit, "stam") * .5;
+    return primary + stats.stam * transformedStatMultiplier(unit, "stam") * .1;
   }
   if (id === "Seerin" && statKey === "str" && skillTargetsEnemies(sk) && !sk.dispel) {
     return primary + stats.mag * transformedStatMultiplier(unit, "mag") * .5;
@@ -5870,7 +5870,7 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
 function skillScalingLabel(id, sk) {
   const primary = skillScaling(sk).toUpperCase();
   if (sk.rank0Agility) return primary;
-  if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return "STR + 0.5 STAM";
+  if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return "STR + 0.1 STAM";
   if (id === "Seerin" && primary === "STR" && skillTargetsEnemies(sk) && !sk.dispel) return "STR + 0.5 MAG";
   return id === "Mira" && skillTargetsEnemies(sk) ? `${primary} + 0.5 AGI` : primary;
 }
@@ -7740,6 +7740,7 @@ function addBattleMpGain(target, amount, source) {
 
 function addBattleFloater(target, amount, options = {}) {
   if (!battle || (!amount && !options.text)) return;
+  if (battle.actionHistory) (battle.meterEvents ||= []).push({ target: target.name || target.id, amount: Math.abs(Math.round(amount)), kind: options.kind || "damage", type: options.damageType || "", crit: Boolean(options.crit), text: options.text || "" });
   if (battle.attackDamage && (!options.kind || options.kind === "damage")) {
     battle.attackDamage.push({ amount: Math.abs(Math.round(amount)), type: options.damageType || "Physical", crit: Boolean(options.crit) });
   }
@@ -9382,7 +9383,8 @@ function prepareEnemyForBattle(source, mapId = state.map) {
   const baseMax = source.baseMax || source.max;
   const baseAtk = source.baseAtk || source.atk;
   const hallLateStage = mapId === "emberHallBattles" ? Math.max(0, (source.levelHint || 1) - 40) : 0;
-  const max = developerScale("enemy", "hp", Math.round(Math.max(baseMax, hallLateStage * 80) * ngScale * levelScale * (source.endgameBoss ? 1 + hallLateStage * .0075 : 1)), 1);
+  const hallHpBonus = mapId === "emberHallBattles" && source.levelHint >= 30 ? 1.1 : 1;
+  const max = developerScale("enemy", "hp", Math.round(Math.max(baseMax, hallLateStage * 80) * ngScale * levelScale * (source.endgameBoss ? 1 + hallLateStage * .0075 : 1) * hallHpBonus), 1);
   const atk = Math.round(baseAtk * (1 + state.ngPlus * .22) * (1 + Math.max(0, level - 1) * .01));
   const baseStats = source.baseStats || source.stats;
   const profile = enemyAbilityProfile(source);
@@ -9926,6 +9928,7 @@ function completeBattleResult() {
 }
 
 function triggerPartyDefeat(log = "") {
+  archiveDamageMeter("defeat");
   if (!battle || battle.defeatPending || battleResultState) return false;
   battle.defeatPending = true;
   battle.resolving = true;
@@ -9984,6 +9987,11 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   });
   battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, enemyResonance: 0, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
   initializeEndgameFormation();
+  battle.actionHistory = [];
+  battle.meterEvents = [];
+  battle.meterStarted = new Date().toISOString();
+  battle.meterName = name;
+  battle.meterTuning = JSON.parse(JSON.stringify(state.developerTuning || {}));
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -10069,6 +10077,8 @@ function runCurrentTurn(log) {
 }
 
 function finishTurn(log) {
+  if (!battle.meterActionRecorded) recordDamageMeterAction(log);
+  battle.meterActionRecorded = false;
   transferDeadSparkyBurns();
   const actor = currentTurn();
   if (actor?.side === "party") log += finishMechTalentAction(battle.party.find(member => member.id === actor.id));
@@ -10086,6 +10096,7 @@ function finishTurn(log) {
 
 function endBattleDraw(log = "") {
   if (!battle || mode !== "battle") return false;
+  archiveDamageMeter("draw");
   const hallStage = Number(battle.hallStage) || 0;
   battle.resolving = true;
   battle.party.forEach(unit => {
@@ -10112,7 +10123,51 @@ function endBattleDraw(log = "") {
   return true;
 }
 
+function damageMeterKey() {
+  return `verseborn-battle-history-${state.gameMode || "story"}-${activeSaveSlot}`;
+}
+
+function recentDamageMeters() {
+  try { return JSON.parse(localStorage.getItem(damageMeterKey()) || "[]").slice(-3); }
+  catch { return []; }
+}
+
+function recordDamageMeterAction(message) {
+  if (!battle?.actionHistory) return;
+  battle.meterActionRecorded = true;
+  const turn = currentTurn();
+  battle.actionHistory.push({ number: battle.actionHistory.length + 1, round: battle.round, phase: battle.name, actor: turn?.name || "Battle", side: turn?.side || "system", message, events: battle.meterEvents || [], party: battle.party.map(u => ({ name: u.name, hp: u.hp, mp: u.mp })), enemies: battle.enemies.map(u => ({ name: u.name, hp: u.hp, mp: u.mp })) });
+  battle.meterEvents = [];
+}
+
+function archiveDamageMeter(result) {
+  if (!battle?.actionHistory || battle.meterArchived) return;
+  battle.meterArchived = true;
+  const report = { name: battle.meterName, started: battle.meterStarted, ended: new Date().toISOString(), result, tuning: battle.meterTuning, actions: battle.actionHistory };
+  try { localStorage.setItem(damageMeterKey(), JSON.stringify([...recentDamageMeters(), report].slice(-3))); }
+  catch { battle.meterArchived = false; }
+}
+
+function renderDamageMeter() {
+  const panel = document.getElementById("damageMeter");
+  if (!panel) return;
+  panel.innerHTML = (battle.actionHistory || []).slice(-4).map(action => `<div><strong>R${action.round} · ${escapeMarkup(action.actor)}</strong><p>${escapeMarkup(action.message)}</p>${action.events.map(event => `<small>${escapeMarkup(event.target)}: ${event.crit ? "CRIT " : ""}${event.amount} ${escapeMarkup(event.type || event.kind)} ${escapeMarkup(event.text)}</small>`).join("")}</div>`).join("") || "No actions yet.";
+}
+
+function exportDamageMeter(index) {
+  const report = recentDamageMeters()[index];
+  if (!report) return;
+  const lines = [`${report.name} | ${report.result}`, `${report.started} — ${report.ended}`, `Developer tuning: ${JSON.stringify(report.tuning)}`, "", ...report.actions.flatMap(action => [`#${action.number} | Round ${action.round} | ${action.phase} | ${action.actor}`, action.message, ...action.events.map(event => `  ${event.target}: ${event.crit ? "CRIT " : ""}${event.amount} ${event.type || event.kind} ${event.text}`), `  Party: ${action.party.map(u => `${u.name} HP ${u.hp} MP ${u.mp}`).join("; ")}`, `  Enemies: ${action.enemies.map(u => `${u.name} HP ${u.hp} MP ${u.mp}`).join("; ")}`, ""])];
+  const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `verseborn-battle-${report.started.replace(/[^0-9]/g, "")}.txt`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function finishAttackDamageSummary(actionLog = "") {
+  recordDamageMeterAction(actionLog);
   const hits = battle.attackDamage || [];
   const statuses = [...new Set(battle.attackStatuses || [])];
   delete battle.attackDamage;
@@ -10136,6 +10191,7 @@ function finishAttackDamageSummary(actionLog = "") {
 function renderBattle(log) {
   el.battleLog.textContent = battle.lastAttackDamage || "";
   el.battleLog.title = battle.lastAttackDamage || "";
+  renderDamageMeter();
   el.battleResonance.style.width = `${Math.max(0, Math.min(100, state.resonance))}%`;
   const enemyResonance = Math.max(0, Math.min(100, battle.enemyResonance || 0));
   el.enemyBattleResonance.style.width = `${enemyResonance}%`;
@@ -12622,6 +12678,7 @@ function winBattle(log) {
     if (battle.winFlag === "ngOrphanTrialWon") completeSideQuest("orphanTrial");
   }
   battle.ended = true;
+  archiveDamageMeter("victory");
   updatePanels();
   playSfx("coin");
   const resultEntries = [];
@@ -13991,6 +14048,8 @@ function renderMenu() {
   }
   if (menuTab === "developer") {
     el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;
+    el.menuBody.insertAdjacentHTML("beforeend", `<section class="battle-report-exports"><h3>Battle Reports</h3>${recentDamageMeters().map((report, index) => `<div><span>${escapeMarkup(report.name)} · ${escapeMarkup(report.result)} · ${report.actions.length} actions</span><button type="button" data-export-battle="${index}">Export Battle</button></div>`).join("") || "No completed battles recorded yet."}</section>`);
+    el.menuBody.querySelectorAll("[data-export-battle]").forEach(button => button.addEventListener("click", () => exportDamageMeter(Number(button.dataset.exportBattle))));
     el.menuBody.querySelectorAll("[data-tune-side]").forEach(input => input.addEventListener("input", () => {
       state.developerTuning ||= {};
       state.developerTuning[input.dataset.tuneSide] ||= {};

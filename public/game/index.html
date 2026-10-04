@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
   <title>Verseborn getting started</title>
-    <link rel="stylesheet" href="styles.css?v=hall-release-126">
+    <link rel="stylesheet" href="styles.css?v=hall-release-127">
 </head>
 <body>
   <main class="shell">
@@ -54,7 +54,7 @@
         <div id="battlePreview" class="battle-preview hidden"></div>
         <div class="battle-top">
           <strong id="battleName">Battle</strong>
-          <span id="battleLog">Kies een actie.</span>
+          <div class="battle-history-anchor" tabindex="0" aria-label="Recent battle actions"><span id="battleLog">Kies een actie.</span><div id="damageMeter" class="damage-meter" role="log"></div></div>
           <div id="turnOrder" class="turn-order" aria-label="Turn order"></div>
         </div>
         <div id="partyRows" class="party-rows"></div>
@@ -139,6 +139,6 @@
     </aside>
   </main>
 
-  <script src="game.js?v=hall-release-126"></script>
+  <script src="game.js?v=hall-release-127"></script>
 </body>
 </html>
