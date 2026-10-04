@@ -7,6 +7,39 @@
   --green: #436d60;
 }
 
+.hall-menu-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 44px;
+  z-index: 10000;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid #d59b42;
+  border-radius: 4px;
+  background: #17131f;
+  color: #efe2c7;
+  font-size: 26px;
+  cursor: pointer;
+}
+.hall-menu-toggle:hover { background: #3b2934; }
+#menu > .hall-menu-toggle { bottom: 12px; }
+.hall-menu-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.hall-save-exports { padding-bottom: 16px; border-bottom: 1px solid #705637; margin-bottom: 16px; }
+.hall-save-exports > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.hall-save-exports span { display: grid; gap: 4px; }
+.hall-save-exports small { font-size: 12px; }
+.hall-save-exports button { padding: 8px 12px; border: 1px solid #d59b42; background: #17131f; color: #efe2c7; cursor: pointer; }
+#menu:has(.hall-save-exports) .menu-body { padding-bottom: 56px; }
+.developer-controls { padding-bottom: 52px; }
+.developer-controls header, .developer-gold { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; }
+.developer-controls section { border-top: 1px solid #705637; margin-top: 16px; }
+.developer-controls button, .developer-controls input[type="number"] { padding: 8px; background: #17131f; color: #efe2c7; border: 1px solid #d59b42; max-width: 100%; }
+.developer-gold input { width: 110px; }
+.developer-slider { display: grid; grid-template-columns: 85px minmax(0, 1fr) 52px; align-items: center; gap: 10px; margin: 16px 0; font-size: 14px; }
+.developer-slider input { width: 100%; min-width: 0; accent-color: #d59b42; }
+.developer-slider output { text-align: right; font-variant-numeric: tabular-nums; }
+
 * {
   box-sizing: border-box;
 }

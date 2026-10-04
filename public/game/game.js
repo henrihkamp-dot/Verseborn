@@ -4065,6 +4065,7 @@ function loadGame(saveKey = activeSaveKey()) {
   }
   if (!data?.state) return false;
   Object.assign(state, data.state);
+  state.developerTuning = data.state.developerTuning || {};
   state.gameMode = data.state.gameMode === "hallBattles" ? "hallBattles" : "story";
   state.knownWeaknesses = data.state.knownWeaknesses || {};
   state.favoriteGear = data.state.favoriteGear || {};
@@ -5453,6 +5454,49 @@ function dotScalingStat(source, stat) {
   return Math.max(1, base * (1 + statusValue(source, buff)));
 }
 
+function developerPercent(side, stat) {
+  if (state.gameMode !== "hallBattles") return 0;
+  return Math.max(-100, Math.min(100, Math.round(Number(state.developerTuning?.[side]?.[stat]) || 0)));
+}
+
+function developerScale(side, stat, value, minimum = 0) {
+  const percent = developerPercent(side, stat);
+  return percent === 0 ? value : Math.max(minimum, Math.round(value * (1 + percent / 100)));
+}
+
+function exportHallSave(slot) {
+  try {
+    if (slot === activeSaveSlot) saveGame(hallSaveKey(slot));
+    const raw = localStorage.getItem(hallSaveKey(slot));
+    if (!raw || !JSON.parse(raw)?.state) return showHudNotice("No save in this slot.");
+    const url = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `verseborn-ember-hall-slot-${slot}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch {
+    showHudNotice("Save export failed. Your stored save is unchanged.");
+  }
+}
+
+function updateHallMenuButton() {
+  const button = document.getElementById("hallMenuToggle");
+  if (!button) return;
+  const parent = mode === "menu" ? el.menu : document.querySelector(".game");
+  if (button.parentElement !== parent) parent.appendChild(button);
+  document.getElementById("hallDeveloperTab")?.classList.toggle("hidden", state.gameMode !== "hallBattles");
+  const visible = state.gameMode === "hallBattles" && ["walk", "menu", "atlas"].includes(mode);
+  button.classList.toggle("hidden", !visible);
+  const label = mode === "menu" ? "&#215;" : "&#9776;";
+  if (button.dataset.mode !== mode) { button.innerHTML = label; button.dataset.mode = mode; }
+  button.title = mode === "menu" ? "Close menu" : "Menu";
+  button.setAttribute("aria-label", mode === "menu" ? "Close menu" : "Open menu");
+  button.setAttribute("aria-expanded", String(mode === "menu"));
+}
+
 function poisonValueFor(target, source, options = {}) {
   if (Number.isFinite(options.value)) return Math.max(1, Math.round(options.value));
   const coefficients = { weak: .3, normal: .4, strong: .5 };
@@ -5732,6 +5776,7 @@ function processTurnStart(unit) {
     if (critical) amount = Math.max(1, Math.round(amount * (dot.critMultiplier || 2)));
     if (type === "burn" && dot.source?.id === "Sparky" && unlockedRank0("Sparky").some(entry => entry.passive === "doubleBurn")) amount *= 2;
     if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
+    amount = developerScale(dot.source?.id ? "party" : "enemy", "damage", amount);
     unit.hp = Math.max(0, unit.hp - amount);
     addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label, crit: critical });
     notes.push(`${critical ? "CRIT " : ""}${STATUS_DEFS[type].label} -${amount} HP`);
@@ -6032,7 +6077,7 @@ function totals(id) {
   if (constitution) out.mag += Math.round(out.stam * .25);
   const max = 30 + out.stam * (1 + constitution) * (4 + typedTalentValue(id, "stamHpBonus"));
   const mp = 12 + Math.floor(out.mag / 2);
-  return { ...out, max: Math.round(max * (1 + affixValue(id, "hpPct"))), mp };
+  return { ...out, max: developerScale("party", "hp", Math.round(max * (1 + affixValue(id, "hpPct"))), 1), mp: developerScale("party", "mp", mp) };
 }
 
 function agilityCritBonusFromAgi(agility) {
@@ -6096,7 +6141,8 @@ function skillMpCost(id, sk, unit = null) {
   const lock = statusOf(unit, "administrativeLock");
   const audit = statusOf(unit, "audit");
   const penalty = !sk.basicAttack ? (lock?.skillName === sk.name ? lock.value : 0) + (audit?.skillName === sk.name ? audit.value : 0) : 0;
-  return Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)) - comfortDiscount) + (penalty ? Math.max(1, Math.ceil((sk.cost || 0) * penalty)) : 0);
+  const cost = Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)) - comfortDiscount) + (penalty ? Math.max(1, Math.ceil((sk.cost || 0) * penalty)) : 0);
+  return developerScale("party", "cost", cost);
 }
 
 function healingReceived(unit, amount) {
@@ -8630,6 +8676,7 @@ function drawMenuBack() {
 }
 
 function draw(now = performance.now()) {
+  updateHallMenuButton();
   if (mode !== 'battle' && statusTooltip) statusTooltip.hidden = true;
   tick++;
   syncResponsiveMode();
@@ -9304,12 +9351,12 @@ function prepareEnemyForBattle(source, mapId = state.map) {
   const levelScale = 1 + Math.max(0, level - 1) * .012;
   const baseMax = source.baseMax || source.max;
   const baseAtk = source.baseAtk || source.atk;
-  const max = Math.round(baseMax * ngScale * levelScale);
+  const max = developerScale("enemy", "hp", Math.round(baseMax * ngScale * levelScale), 1);
   const atk = Math.round(baseAtk * (1 + state.ngPlus * .22) * (1 + Math.max(0, level - 1) * .01));
   const baseStats = source.baseStats || source.stats;
   const profile = enemyAbilityProfile(source);
   const identity = profile?.identity || { str: 100, mag: 100, stam: 100, agi: 100, mp: 72 };
-  const maxmp = Math.max(0, Math.round(profile?.maxMp || identity.mp || 72));
+  const maxmp = developerScale("enemy", "mp", Math.max(0, Math.round(profile?.maxMp || identity.mp || 72)));
   return {
     ...source,
     hp: max,
@@ -10572,7 +10619,7 @@ function combatDroneFollowUp(source, totalDamage, targetCount) {
   function strike(enemy, ratio) {
     if (!enemy || enemy.hp <= 0) return;
     const crash = ownerId === "Glimmer" && statusOf(enemy, "disrupted") ? typedTalentValue(ownerId, "systemCrash") : 0;
-    const amount = Math.max(1, Math.round(damage * ratio * (1 + crash)));
+    const amount = developerScale("party", "damage", Math.max(1, Math.round(damage * ratio * (1 + crash))));
     enemy.hp = Math.max(0, enemy.hp - amount);
     enemy.flash = 10;
     addBattleFloater(enemy, amount, { damageType: "Drone Tech" });
@@ -10616,6 +10663,7 @@ function guardedTalentBreak(source, enemy) {
   if (source.id !== "Seerin" || enemy.hp <= 0) return;
   const result = addBreakProgress(source, enemy, 1);
   if (result.breaks) {
+    result.bonusDamage = developerScale("party", "damage", result.bonusDamage);
     enemy.hp = Math.max(0, enemy.hp - result.bonusDamage);
     applyStatus(enemy, "broken", source, { duration: 1, force: true });
     addBattleFloater(enemy, result.bonusDamage, { damageType: "Break" });
@@ -10849,6 +10897,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (sleepBreak) log += ` ${hitTarget.name}: ${sleepBreak}`;
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
         dmg = Math.max(1, Math.round(dmg * endgamePlayerDamageMultiplier(u, sk, hitTarget)));
+        dmg = developerScale("party", "damage", dmg);
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
         directDamageDealt += dmg;
@@ -11204,7 +11253,7 @@ function enemyActionDealsDamage(action) {
 
 function enemyActionMpCost(unit, action) {
   if (!action || action.kind === "ultimate") return 0;
-  return Math.max(0, Math.round((action.mpCost || 0) * (1 - (unit.affixes?.mpEfficiency || 0))));
+  return developerScale("enemy", "cost", Math.max(0, Math.round((action.mpCost || 0) * (1 - (unit.affixes?.mpEfficiency || 0)))));
 }
 
 function enemyCanAfford(unit, action) {
@@ -11443,7 +11492,7 @@ function endgamePlayerDamageMultiplier(actor, sk, target) {
   const host = protectedStatus && battle.enemies.find(unit => unit.hp > 0 && unit.name === protectedStatus.source?.name);
   if (host) {
     multiplier *= 1 - protectedStatus.value;
-    const rebuke = Math.max(1, Math.round(host.stats.mag * .35));
+    const rebuke = developerScale("enemy", "damage", Math.max(1, Math.round(host.stats.mag * .35)));
     actor.hp = Math.max(0, actor.hp - rebuke);
     addBattleFloater(actor, rebuke, { damageType: "Sound" });
     enemyDispelOne(actor);
@@ -11990,7 +12039,7 @@ function resolveEnemyTurn(turn, prev) {
           const counter = typedTalentValue(defender.id, "guardCounter");
           if (counter && e.hp > 0) {
             const basic = battleSkills(defender.id, defender).find(sk => sk.basicAttack) || baseJobs[defender.id].skills[0];
-            const counterDamage = Math.max(1, Math.round((basic.power + skillOffensiveStat(defender.id, basic, defender)) * counter));
+            const counterDamage = developerScale("party", "damage", Math.max(1, Math.round((basic.power + skillOffensiveStat(defender.id, basic, defender)) * counter)));
             e.hp = Math.max(0, e.hp - counterDamage);
             addBattleFloater(e, counterDamage, { damageType: "Counter" });
             defenseText += ` Counter -${counterDamage}.`;
@@ -12015,7 +12064,8 @@ function resolveEnemyTurn(turn, prev) {
           defenseText += ` Break ${defender.stagger}/${BREAK_THRESHOLD}.`;
         }
         if (brokenAtHitStart && action.payoff === "broken" && action.payoffStatus) applyStatus(defender, action.payoffStatus.type, e, action.payoffStatus);
-        const sleepBreak = breakSleepFromDamage(defender);
+        dmg = developerScale("enemy", "damage", dmg);
+        const sleepBreak = dmg > 0 ? breakSleepFromDamage(defender) : "";
         const lastBastion = battle.party.find(ally => ally.hp > 0 && typedTalentValue(ally.id, "lastBastion") && !battle.usedOnce[`lastBastion:${ally.id}`]);
         if (dmg >= defender.hp && lastBastion) {
           dmg = Math.max(0, defender.hp - 1);
@@ -12025,7 +12075,7 @@ function resolveEnemyTurn(turn, prev) {
         defender.hp = Math.max(0, defender.hp - dmg);
         const thorns = personallyGuarded ? typedTalentValue(defender.id, "thorns") : 0;
         if (thorns && action.kind === "melee" && e.hp > 0 && dmg > 0) {
-          const reflected = Math.max(1, Math.round(dmg * thorns));
+          const reflected = developerScale("party", "damage", Math.max(1, Math.round(dmg * thorns)));
           e.hp = Math.max(0, e.hp - reflected);
           addBattleFloater(e, reflected, { damageType: "Holy Fire" });
           defenseText += ` Burning Aegis -${reflected}.`;
@@ -13259,6 +13309,7 @@ function favoriteGearButton(ref) {
 }
 
 function renderMenu() {
+  if (menuTab === "developer" && state.gameMode !== "hallBattles") menuTab = "system";
   gearHoverRegistry = [];
   hideGearHoverTooltip();
   el.menu.dataset.menuView = menuTab;
@@ -13539,11 +13590,41 @@ function renderMenu() {
     el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
     el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
   }
+  if (menuTab === "developer") {
+    el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;
+    el.menuBody.querySelectorAll("[data-tune-side]").forEach(input => input.addEventListener("input", () => {
+      state.developerTuning ||= {};
+      state.developerTuning[input.dataset.tuneSide] ||= {};
+      state.developerTuning[input.dataset.tuneSide][input.dataset.tuneStat] = Math.round(Number(input.value));
+      input.nextElementSibling.textContent = `${input.value}%`;
+      queueSave();
+    }));
+    el.menuBody.querySelector("[data-reset-tuning]").addEventListener("click", () => {
+      state.developerTuning = {};
+      queueSave();
+      renderMenu();
+    });
+    el.menuBody.querySelector("[data-adjust-gold]").addEventListener("click", () => {
+      const delta = Number(el.menuBody.querySelector("[data-gold-delta]").value);
+      if (!Number.isFinite(delta)) return;
+      state.gold = Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, state.gold + Math.round(delta)));
+      updatePanels();
+      queueSave();
+      renderMenu();
+    });
+  }
   if (menuTab === "system") {
     const postgame = state.flags.endingComplete ? `<section class="postgame-panel"><header><strong>Postgame Unlocked</strong><span>Echo Hunt Rank ${state.endgameRank} / New Game Plus ${state.ngPlus}</span></header><p>Echo Hunts grow stronger every clear and guarantee at least one Legendary gear drop with four affixes. New Game Plus carries levels, talent builds, companions, equipment, items and gold into zones that scale toward level 40, expanded legendary loot tables and new Stonewake and Reverie boss quests.</p><div><button type="button" data-endgame-hunt>Start Echo Hunt ${state.endgameRank + 1}</button><button type="button" data-new-game-plus>Begin New Game Plus</button></div></section>` : `<section class="postgame-panel is-locked"><strong>Postgame</strong><p>Complete Issue 4 to unlock repeatable Echo Hunts and New Game Plus.</p></section>`;
     el.menuBody.innerHTML = `<div class="menu-grid"><div class="menu-card"><strong>Combat</strong><p>Normal Attack triggers the equipped weapon's unique setup effect and restores 6% Max MP. Skills use fixed MP costs; AGI controls initiative and contributes CRIT.</p></div><div class="menu-card"><strong>Levels & Talents</strong><p>The level cap is 40. Gain 10 talent points from level 4 through 40, unlock five tiers, and choose one capstone. Respec is free outside combat.</p></div><div class="menu-card"><strong>Loot & Gold</strong><p>Each weapon changes Normal Attack as well as stats. Dropped equipment can also gain readable rarity-based affixes.</p></div><div class="menu-card"><strong>World</strong><p>Regions keep their story level bands; New Game Plus and Echo Hunts grow toward level 40.</p></div></div>${postgame}`;
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
+    if (state.gameMode === "hallBattles") {
+      el.menuBody.insertAdjacentHTML("afterbegin", `<section class="hall-save-exports"><h3>Save Files</h3>${[1, 2].map(slot => {
+        const summary = saveSlotSummary(1, slot);
+        return `<div><span><strong>Save Slot ${slot}</strong><small>${summary.detail || "Empty"}</small></span><button type="button" data-export-hall-save="${slot}" ${!summary.exists && slot !== activeSaveSlot ? "disabled" : ""}>Export Save</button></div>`;
+      }).join("")}</section>`);
+      el.menuBody.querySelectorAll("[data-export-hall-save]").forEach(button => button.addEventListener("click", () => exportHallSave(Number(button.dataset.exportHallSave))));
+    }
   }
   bindGearHoverTooltips();
 }
@@ -14423,6 +14504,10 @@ document.querySelectorAll(".menu-tabs button").forEach(btn => {
 });
 
 el.skillPointNotice.addEventListener("click", openSkillPointMenu);
+document.getElementById("hallMenuToggle")?.addEventListener("click", () => {
+  toggleMenu();
+  updateHallMenuButton();
+});
 el.battleResultContinue.addEventListener("click", completeBattleResult);
 el.dialogueSkip.addEventListener("click", event => {
   event.preventDefault();
