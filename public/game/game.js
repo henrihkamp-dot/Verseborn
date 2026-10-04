@@ -844,9 +844,9 @@ Object.entries(ENDGAME_BOSS_CONFIG).forEach(([name, config]) => {
   };
   enemyAbilityProfiles[name] = enemyCombatProfile(ENDGAME_PRIMARY_ROLES[name], .1,
     { hp: 100, mp: 180, str: 110, mag: 130, stam: 130, agi: 85 }, {
-      melee: em(config.melee, "melee", "Physical", 0, { coefficient: 1.1, breakPower: config.mechanic === "oath" ? 3 : 1 }),
-      magic: em(config.magic, "magic", config.element, 16, { coefficient: 1.2, status: statuses[config.mechanic], breakPower: config.mechanic === "oath" ? 3 : 0 }),
-      ultimate: em(config.ultimate, "ultimate", config.element, 0, { coefficient: 1.7, allTargets: true, status: statuses[config.mechanic], breakPower: config.mechanic === "oath" ? 4 : 0 })
+      melee: em(config.melee, "melee", "Physical", 0, { coefficient: .7, breakPower: config.mechanic === "oath" ? 3 : 1 }),
+      magic: em(config.magic, "magic", config.element, 16, { coefficient: .8, status: statuses[config.mechanic], breakPower: config.mechanic === "oath" ? 3 : 0 }),
+      ultimate: em(config.ultimate, "ultimate", config.element, 0, { coefficient: 1.15, allTargets: true, status: statuses[config.mechanic], breakPower: config.mechanic === "oath" ? 4 : 0 })
     }, ["magic", "melee"], { element: config.element, innateStatusResistance: config.mechanic === "sanctuary" ? .25 : config.mechanic === "root" ? .2 : .1, escalation: config.mechanic === "root" ? .035 : 0 });
 });
 
@@ -2447,8 +2447,8 @@ function gearEffectLabel(effect) {
     const type = effect.type === "mpOnHit" ? "Siphoning" : "Leeching";
     const rate = Math.round(legacyHallSustainRate(effect.type, effect.value) * 100);
     label = type === "Siphoning"
-      ? `${type}: after a damaging skill, restore MP equal to ${rate}% of its STR or MAG scaling stat`
-      : `${type}: heal ${rate}% of direct damage dealt by this action`;
+      ? `${type}: refund ${rate * 2}% of paid MP after a damaging skill (combined cap 30%)`
+      : `${type}: heal ${rate}% of average direct damage per target (cap 8% Max HP)`;
   }
   if (effect.artifactUnique) return `ARTIFACT EFFECT: ${label.replace(/^ARTIFACT(?: EFFECT)?:\s*/i, "")}`;
   return effect.echoUnique ? `ECHO EFFECT: ${label.replace(/^ECHO(?: EFFECT)?:\s*/i, "")}` : label;
@@ -5502,16 +5502,20 @@ function poisonValueFor(target, source, options = {}) {
   const coefficients = { weak: .3, normal: .4, strong: .5 };
   const coefficient = options.coefficient ?? coefficients[options.potency || "normal"];
   const poisonBoost = source?.id ? 1 + typedTalentValue(source.id, "poisonDamage") + effectValue(source.id, "poisonDamage") : 1;
-  const scaled = dotScalingStat(source, "agi") * coefficient * poisonBoost;
+  const scaled = dotScalingStat(source, "agi") * coefficient * poisonBoost * hallDotBalanceMultiplier(source);
   const boss = target?.resistanceTier === "boss";
   const floor = (target?.max || 1) * (boss ? .005 : .01);
   const capped = boss ? Math.min(Math.max(scaled, floor), (target?.max || 1) * .025) : Math.max(scaled, floor);
   return Math.max(1, Math.round(capped));
 }
 
+function hallDotBalanceMultiplier(source) {
+  return state.gameMode === "hallBattles" && source?.id ? 1 - Math.min(20, Math.max(0, progressFor(source.id).level - 20)) * .0125 : 1;
+}
+
 function dotValueFor(type, target, source, options = {}) {
   if (type === "poison") return poisonValueFor(target, source, options);
-  const coefficient = .4;
+  const coefficient = .4 * hallDotBalanceMultiplier(source);
   const boostType = type === "burn" ? "burnDamage" : "bleedDamage";
   const capstone = type === "burn" && source?.id ? typedTalentValue(source.id, "livingWildfire") : 0;
   const multiplier = type === "burn" && source?.id && typedTalentValue(source.id, "doubleBurnDamage") ? 2 : 1;
@@ -5775,6 +5779,7 @@ function processTurnStart(unit) {
     const critical = ["burn", "poison", "bleed"].includes(type) && Math.random() < (dot.critChance || 0);
     if (critical) amount = Math.max(1, Math.round(amount * (dot.critMultiplier || 2)));
     if (type === "burn" && dot.source?.id === "Sparky" && unlockedRank0("Sparky").some(entry => entry.passive === "doubleBurn")) amount *= 2;
+    if (type === "poison" && unit.resistanceTier === "boss") amount = Math.min(amount, Math.max(1, Math.floor(unit.max * .03)));
     if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
     amount = developerScale(dot.source?.id ? "party" : "enemy", "damage", amount);
     unit.hp = Math.max(0, unit.hp - amount);
@@ -6130,6 +6135,9 @@ function ultimatePotencyMultiplier(id, sk) {
 
 function skillMpCost(id, sk, unit = null) {
   if (!sk || sk.anim === "ultimate") return sk?.cost || 0;
+  const growth = state.gameMode === "hallBattles" && !sk.basicAttack ? Math.max(0, progressFor(id).level - 20) / 20 : 0;
+  const area = skillHitsAll(id, sk);
+  const baseCost = (sk.cost || 0) * (1 + growth * (area ? 2.2 : .6));
   let multiplier = 1;
   if (sk.element === "Earth") multiplier -= typedTalentValue(id, "earthCostReduction");
   if (sk.element === "Tech") multiplier -= typedTalentValue(id, "techCostReduction");
@@ -6141,7 +6149,7 @@ function skillMpCost(id, sk, unit = null) {
   const lock = statusOf(unit, "administrativeLock");
   const audit = statusOf(unit, "audit");
   const penalty = !sk.basicAttack ? (lock?.skillName === sk.name ? lock.value : 0) + (audit?.skillName === sk.name ? audit.value : 0) : 0;
-  const cost = Math.max(sk.cost > 0 ? 1 : 0, Math.round((sk.cost || 0) * Math.max(.35, multiplier)) - comfortDiscount) + (penalty ? Math.max(1, Math.ceil((sk.cost || 0) * penalty)) : 0);
+  const cost = Math.max(sk.cost > 0 ? 1 : 0, Math.round(baseCost * Math.max(.35, multiplier)) - comfortDiscount) + (penalty ? Math.max(1, Math.ceil(baseCost * penalty)) : 0);
   return developerScale("party", "cost", cost);
 }
 
@@ -6173,17 +6181,17 @@ function siphoningOffensiveStat(unit, sk) {
   return skillScaling(sk) === "str" ? stats.str : stats.mag;
 }
 
-function resolveActionSustain(unit, sk, directDamage) {
+function resolveActionSustain(unit, sk, directDamage, paidMp = 0, targetCount = 1) {
   if (!unit?.id || !sk || directDamage <= 0) return { hp: 0, mp: 0 };
   const leeching = combatSustainRate(unit.id, "leeching");
-  const eligibleDamage = Math.min(directDamage, unit.max * 2);
-  const hp = leeching ? Math.min(healingReceived(unit, Math.max(1, Math.round(eligibleDamage * leeching))), unit.max - unit.hp) : 0;
+  const eligibleDamage = directDamage / Math.max(1, targetCount);
+  const hp = leeching ? Math.min(healingReceived(unit, Math.round(eligibleDamage * leeching)), Math.floor(unit.max * .08), unit.max - unit.hp) : 0;
   if (hp > 0) {
     unit.hp += hp;
     addBattleFloater(unit, hp, { kind: "heal" });
   }
   const siphoning = sk.basicAttack ? 0 : combatSustainRate(unit.id, "siphoning");
-  const mp = siphoning ? Math.min(Math.max(1, Math.round(siphoningOffensiveStat(unit, sk) * siphoning)), unit.maxmp - unit.mp) : 0;
+  const mp = siphoning ? Math.min(Math.floor(Math.max(0, paidMp) * Math.min(.3, siphoning * 2)), unit.maxmp - unit.mp) : 0;
   if (mp > 0) unit.mp += mp;
   return { hp, mp };
 }
@@ -9351,11 +9359,15 @@ function prepareEnemyForBattle(source, mapId = state.map) {
   const levelScale = 1 + Math.max(0, level - 1) * .012;
   const baseMax = source.baseMax || source.max;
   const baseAtk = source.baseAtk || source.atk;
-  const max = developerScale("enemy", "hp", Math.round(baseMax * ngScale * levelScale), 1);
+  const hallLateStage = mapId === "emberHallBattles" ? Math.max(0, (source.levelHint || 1) - 40) : 0;
+  const max = developerScale("enemy", "hp", Math.round(Math.max(baseMax, hallLateStage * 80) * ngScale * levelScale * (source.endgameBoss ? 1 + hallLateStage * .0075 : 1)), 1);
   const atk = Math.round(baseAtk * (1 + state.ngPlus * .22) * (1 + Math.max(0, level - 1) * .01));
   const baseStats = source.baseStats || source.stats;
   const profile = enemyAbilityProfile(source);
   const identity = profile?.identity || { str: 100, mag: 100, stam: 100, agi: 100, mp: 72 };
+  const late = mapId === "emberHallBattles" ? Math.max(0, (source.levelHint || level) - 20) / 40 : 0;
+  const role = profile?.role || "fighter";
+  const speedFloor = /tank|guard/.test(role) ? 55 : /assassin|rogue/.test(role) ? 115 : source.endgameBoss ? 95 : 80;
   const maxmp = developerScale("enemy", "mp", Math.max(0, Math.round(profile?.maxMp || identity.mp || 72)));
   return {
     ...source,
@@ -9365,9 +9377,9 @@ function prepareEnemyForBattle(source, mapId = state.map) {
     level,
     xp: 14 + level * 7,
     stats: {
-      str: Math.max(1, Math.round(atk * (identity.str || 100) / 100)),
-      agi: Math.max(1, Math.round(((baseStats.agi || 5) + level * .45 + state.ngPlus * 3) * (identity.agi || 100) / 100)),
-      mag: Math.max(1, Math.round(((baseStats.mag || 3) + level * .35 + state.ngPlus * 2) * (identity.mag || 100) / 100)),
+      str: Math.max(1, Math.round(atk * (identity.str || 100) / 100 + late * 45)),
+      agi: Math.max(1, Math.round(Math.max(((baseStats.agi || 5) + level * .45 + state.ngPlus * 3) * (identity.agi || 100) / 100, late * speedFloor))),
+      mag: Math.max(1, Math.round(((baseStats.mag || 3) + level * .35 + state.ngPlus * 2) * (identity.mag || 100) / 100 + late * (source.endgameBoss ? 30 : 65))),
       stam: Math.max(1, Math.round(((baseStats.stam || 5) + level * .5 + state.ngPlus * 3) * (identity.stam || 100) / 100))
     },
     mp: maxmp,
@@ -9452,7 +9464,7 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
       : stage <= 8 ? { damage: 1.2, healing: 1.3, ultimate: 1.35 }
       : stage <= 12 ? { damage: 1.25, healing: 1.4, ultimate: 1.45 }
       : stage <= 20 ? { damage: 1.3, healing: 1.5, ultimate: 1.6 }
-      : { damage: 1, healing: 1, ultimate: 1 };
+      : { damage: 1.15, healing: 1.5, ultimate: 1.1 };
     if (info.boss || profile.node >= 3) {
       unit.npcBoss = true;
       unit.resistanceTier = info.boss && (stage > 20 || enemyIndex === 0) && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
@@ -9949,6 +9961,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
     baseJobs[id].mp = total.mp;
   });
   battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, enemyResonance: 0, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
+  initializeEndgameFormation();
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
   state.resonance = Math.min(100, state.resonance + opening);
   el.dialogue.classList.add("hidden");
@@ -9967,7 +9980,7 @@ function buildTurnOrder() {
   battle.turnQueue = [
     ...battle.party.filter(unit => unit.hp > 0).map(unit => ({ side: "party", id: unit.id, name: unit.name, agi: effectiveAgility(unit, totals(unit.id).agi) })),
     ...battle.enemies.map((unit, index) => ({ side: "enemy", index, name: unit.name, agi: effectiveAgility(unit, unit.stats.agi) })).filter(turn => battle.enemies[turn.index].hp > 0)
-  ].sort((a, b) => b.agi - a.agi || (a.side === "party" ? -1 : 1));
+  ].sort((a, b) => b.agi - a.agi || (a.side === b.side ? 0 : (a.side === (battle.round % 2 ? "enemy" : "party") ? -1 : 1)));
   battle.turnIndex = 0;
 }
 
@@ -10730,8 +10743,10 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     let feedbackUsed = false;
     let purifyingUsed = false;
     const refreshedBurns = new Set();
+    let actionResonance = 0;
     const zeroResonanceAtStart = battle.enemyResonance === 0;
     let log = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${u.name} uses ${sk.name}.`;
+    if (selectedSkill.anim !== "ultimate" && selectedCost) log += ` -${selectedCost} MP.`;
     log += endgameInspectPlayerAction(u, sk, target, previousSkill);
     battle.lastEndgameEffect = { actor: u.id, skillName: selectedSkill.name, buff: sk.buffs?.find(entry => DISPEL_PRIORITY[entry.type]), status: sk.status && CLEANSE_PRIORITY[sk.status.type] ? { ...sk.status } : null };
     const supportTargets = sk.targetSide === "self"
@@ -10858,10 +10873,10 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (weaknessHit) {
           if (hitTarget.weak === sk.element && rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
           dmg = Math.floor(dmg * skillWeaknessMultiplier(u.id, sk, hitTarget));
-          state.resonance = Math.min(100, state.resonance + 14);
+          if (sk.anim !== "ultimate") { const gain = Math.min(14, 18 - actionResonance); state.resonance = Math.min(100, state.resonance + gain); actionResonance += gain; }
           log += ` ${hitTarget.name}: Weakness!${sk.shadowExposureBonus && statusOf(hitTarget, "shadowExposed") ? " VOIDTHORN RUPTURE!" : ""}`;
         } else {
-          state.resonance = Math.min(100, state.resonance + 5);
+          if (sk.anim !== "ultimate") { const gain = Math.min(5, 18 - actionResonance); state.resonance = Math.min(100, state.resonance + gain); actionResonance += gain; }
         }
         if (afflicted && sk.afflictedBonus) dmg *= 1 + sk.afflictedBonus;
         dmg *= rank0BreakPayoff;
@@ -11036,7 +11051,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
       playSfx("hit");
       if (state.gameMode === "hallBattles") {
-        const sustain = resolveActionSustain(u, sk, directDamageDealt);
+        const sustain = resolveActionSustain(u, sk, directDamageDealt, selectedSkill.anim === "ultimate" ? 0 : selectedCost, hitTargets.length);
         if (sustain.hp) log += ` Leeching restores ${sustain.hp} HP to ${u.name}.`;
         if (sustain.mp) log += ` Siphoning restores ${sustain.mp} MP to ${u.name}.`;
       } else {
@@ -11066,6 +11081,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       battle.usedOnce[echoKey] = true;
       log += ` ECHOING: ${grantImmediateTurn(u, { appliesOverheated: true })}`;
     }
+    if (selectedSkill.anim === "ultimate") state.resonance = 0;
     updatePanels();
     finishAttackDamageSummary(log);
     renderBattle(log);
@@ -11487,12 +11503,12 @@ function endgameInspectPlayerAction(actor, sk, target, previousSkill) {
 }
 
 function endgamePlayerDamageMultiplier(actor, sk, target) {
-  let multiplier = 1;
+  let multiplier = statusOf(actor, "beguilingVeil") && skillHitsAll(actor.id, sk) ? .65 : 1;
   const protectedStatus = statusOf(target, "protectedGuest");
   const host = protectedStatus && battle.enemies.find(unit => unit.hp > 0 && unit.name === protectedStatus.source?.name);
   if (host) {
     multiplier *= 1 - protectedStatus.value;
-    const rebuke = developerScale("enemy", "damage", Math.max(1, Math.round(host.stats.mag * .35)));
+    const rebuke = developerScale("enemy", "damage", Math.max(1, Math.round(host.stats.mag * .65 * incomingDamageMultiplier(actor, "Sound"))));
     actor.hp = Math.max(0, actor.hp - rebuke);
     addBattleFloater(actor, rebuke, { damageType: "Sound" });
     enemyDispelOne(actor);
@@ -11516,10 +11532,17 @@ function endgamePlayerDamageMultiplier(actor, sk, target) {
   return multiplier;
 }
 
+function initializeEndgameFormation() {
+  for (const unit of battle?.enemies || []) {
+    const effect = { guest: "guest", oath: "shield", inspection: "order", crescendo: "rings" }[unit.endgameBoss];
+    if (effect) endgameResolveEnemyEffect(unit, { endgameEffect: effect }, battle.party.find(hero => hero.hp > 0));
+  }
+}
+
 function endgameEnemyAction(unit) {
   const data = endgameMechanicState(unit);
   const step = (unit.actionsTaken || 0) % 3;
-  const special = (name, effect, target = unit) => ({ kind: "utility", name, element: ENDGAME_BOSS_CONFIG[unit.name].element, mpCost: 0, endgameEffect: effect, target });
+  const special = (name, effect, target = null) => ({ kind: "utility", name, element: ENDGAME_BOSS_CONFIG[unit.name].element, mpCost: 0, endgameEffect: effect, target: target || other });
   const party = battle.party.filter(hero => hero.hp > 0);
   const other = party[(unit.actionsTaken || 0) % party.length];
   const controlled = ["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type));
@@ -11528,8 +11551,8 @@ function endgameEnemyAction(unit) {
     return enemyActionForKind(unit, "melee");
   }
   if (unit.endgameBoss === "guidance") {
-    if (!data.pending || !statusOf(data.pending, "guidanceMark")) return special("Guidance Mark - astral strike in two actions", "mark", other);
-    if (!data.moved) return special("Wandering Guidance - mark moves; impact next action", "moveMark", other);
+    if (!data.pending || !statusOf(data.pending, "guidanceMark")) return special("Guidance Mark - astral strike next action; mark may move", "mark", other);
+    if (!data.moved && (data.turn || 0) % 2 === 0) return special("Wandering Guidance - mark moves; impact next action", "moveMark", other);
     const target = data.pending;
     clearEndgameStatus("guidanceMark", unit);
     data.pending = null;
@@ -11541,7 +11564,7 @@ function endgameEnemyAction(unit) {
       data.charging = false;
       data.rings = 0;
       clearEndgameStatus("harmonicRings", unit);
-      return { ...enemyActionForKind(unit, "ultimate"), coefficient: 1.5 * (1 + rings * .35) };
+      return { ...enemyActionForKind(unit, "ultimate"), coefficient: 1 * (1 + rings * .18) };
     }
     if (data.rings >= 3 || (battle.enemyResonance || 0) >= 100) return special("Crescendo - Grand Crescendo next action", "charge");
     return step === 1 ? enemyActionForKind(unit, "magic") : special("Harmonic Rings", "rings");
@@ -11551,10 +11574,12 @@ function endgameEnemyAction(unit) {
     return enemyActionForKind(unit, "ultimate");
   }
   switch (unit.endgameBoss) {
-    case "guest": return step === 0 ? special("Protected Guest - attack an unprotected target", "guest") : step === 1 ? special("Change of Seating", "seating", other) : { kind: "dispel", name: "Withdraw the Invitation", element: "Sound", target: party.find(hero => removableStatus(hero, DISPEL_PRIORITY)) || other };
+    case "guest": return step === 0 ? special("Protected Guest - attack an unprotected target", "guest", other) : step === 1 ? special("Change of Seating", "seating", other) : { ...enemyActionForKind(unit, "magic", other), name: "Withdraw the Invitation", dispel: true };
     case "sanctuary": {
       const cycle = data.sanctuaryStep || 0;
       data.sanctuaryStep = (cycle + 1) % 3;
+      if (battle.enemies.some(ally => ally.hp > 0 && ally.hp < ally.max * .75)) return { kind: "magic", name: "Sanctuary Mend", element: "Holy Fire", mpCost: 18, healing: true, allAllies: true, healCoefficient: 2, cleanse: true, target: unit };
+      if (cycle === 0 && !battle.enemies.some(ally => ensureStatuses(ally).some(status => STATUS_DEFS[status.type]?.negative))) return enemyActionForKind(unit, "magic", other);
       return cycle === 0 ? special("Sanctuary Purification", "sanctuaryCleanse") : cycle === 1 ? special("Sanctuary Barriers", "sanctuaryWard") : { kind: "magic", name: "Sanctuary Mend", element: "Holy Fire", mpCost: 18, healing: true, allAllies: true, healCoefficient: 2, cleanse: true, target: unit };
     }
     case "inspection": return !data.order ? special("Inspection Order", "order") : { ...enemyActionForKind(unit, step === 1 ? "magic" : "melee"), name: step === 1 ? "Violation Assessment" : "Inspector's Gavel" };
@@ -11607,7 +11632,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
     case "mark":
       clearEndgameStatus("guidanceMark", unit);
       data.pending = target; data.moved = false;
-      endgameStatus(target, "guidanceMark", unit, { duration: 4 }, "The mark moves next Guide action, then an astral strike resolves.");
+      endgameStatus(target, "guidanceMark", unit, { duration: 4 }, "Astral strike next Guide action; the mark may move once. Cleanse or interrupt now.");
       return ` ${target.name} receives Guidance Mark. It may move before the delayed astral strike.`;
     case "moveMark": {
       const next = party.find(hero => hero !== data.pending) || data.pending;
@@ -11626,7 +11651,8 @@ function endgameResolveEnemyEffect(unit, action, target) {
       candidates.sort((a, b) => DISPEL_PRIORITY[b.entry.type] - DISPEL_PRIORITY[a.entry.type]);
       const copied = candidates[0];
       if (copied) endgameStatus(unit, copied.entry.type, unit, { duration: 2, value: copied.entry.value });
-      return copied ? ` Echo Sigil copies ${copied.hero.name}'s ${STATUS_DEFS[copied.entry.type].label}.` : " Echo Sigil is active; Malkhius awaits a strong player effect.";
+      else endgameStatus(unit, "magicUp", unit, { duration: 2, value: .2 });
+      return copied ? ` Echo Sigil copies ${copied.hero.name}'s ${STATUS_DEFS[copied.entry.type].label}.` : " Echo Sigil gathers occult power: MAG +20%.";
     }
     case "occult":
       data.pending = target;
@@ -11637,10 +11663,10 @@ function endgameResolveEnemyEffect(unit, action, target) {
     case "veil":
       endgameStatus(target, "beguilingVeil", unit, { duration: 2 });
       endgameStatus(target, "mentalPressure", unit, { duration: 2, value: .2 });
-      return ` ${target.name} is misled: single-target attacks are redirected until the Veil is cleansed.`;
+      return ` ${target.name} is misled: single-target attacks redirect and area attacks deal 35% less damage until cleansed.`;
     case "invert": {
       const buff = removableStatus(target, DISPEL_PRIORITY);
-      if (!buff) return " No removable buff remains to invert.";
+      if (!buff) { endgameStatus(target, "mentalPressure", unit, { duration: 2, value: .25 }); return ` ${target.name} suffers mental pressure.`; }
       target.statuses = target.statuses.filter(entry => entry !== buff);
       const inversions = { magicUp: "magicDefenseDown", defenseUp: "defenseDown", barrier: "defenseDown", agilityUp: "agilityDown", strengthUp: "physicalVulnerability" };
       endgameStatus(target, inversions[buff.type] || "mentalPressure", unit, { duration: 2, value: Math.min(.35, buff.value || .2) });
@@ -11855,7 +11881,7 @@ function enemyDamageRoll(unit, action, target) {
   if (unit.endgameBoss === "inspection") damage *= 1 + statusValue(target, "violationStamp") * .15;
   if (statusOf(target, "violationStamp") && statusOf(target, "defenseDown")) damage *= 1 + statusValue(target, "defenseDown");
   const critical = enemyActionCrit(unit, action, target);
-  if (critical) damage *= 2 + (unit.affixes?.critDamage || 0);
+  if (critical) damage *= (state.gameMode === "hallBattles" && unit.levelHint > 20 ? 1.5 : 2) + (unit.affixes?.critDamage || 0);
   damage = Math.max(1, Math.round(damage * incomingDamageMultiplier(target)));
   return { damage, critical };
 }
@@ -11960,11 +11986,23 @@ function resolveEnemyTurn(turn, prev) {
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
+      if (!["charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
+        target = taunter || rank0Protector(target, false) || target;
+        const pressure = { kind: "magic", element: action.element, coefficient: .35 };
+        let damage = enemyDamageRoll(e, pressure, target).damage;
+        if (tryEvadeAttack(target)) damage = 0;
+        else if (target.guarding) { damage = Math.ceil(damage * (1 - defendReduction(target) / 100)); target.guarding = false; }
+        target.hp = Math.max(0, target.hp - damage);
+        markBattleUnitDown(target);
+        addBattleFloater(target, damage, { damageType: action.element });
+        actionLog += ` ${target.name}: ${damage} ${action.element} pressure damage.`;
+      }
     } else if (action.healing) {
       const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
       let total = 0;
       healTargets.forEach(ally => {
         let amount = (e.stats.mag * (action.healCoefficient || 1.35) + e.stats.stam * .22 + e.level * 1.4) * (1 + (e.affixes?.healPotency || 0)) * (e.combatPotency?.healing || 1);
+        if (state.gameMode === "hallBattles" && e.levelHint > 20) amount = Math.max(amount, ally.max * (action.kind === "ultimate" ? .18 : .12));
         const critical = enemyActionCrit(e, action, ally);
         if (critical) amount *= 2 + (e.affixes?.critDamage || 0);
         amount = healingReceived(ally, Math.max(1, Math.round(amount)));
@@ -12138,6 +12176,7 @@ function winBattle(log) {
       battle.name = nextWave.name;
       battle.enemies = nextWave.enemies;
       battle.enemyResonance = 0;
+      initializeEndgameFormation();
       battle.ward = false;
       el.battleName.textContent = nextWave.name;
       state.resonance = Math.min(100, state.resonance + 10);
@@ -13159,8 +13198,8 @@ function affixDescription(entry) {
   if (entry?.type === "statusDuration") return `Negative statuses you inflict last ${entry.value} additional turn.`;
   if (entry?.type === "echoing") return `${percent}% chance after acting to grant an immediate ally action; once per wearer per battle and subject to the party cap.`;
   if (entry?.type === "openingTurnProgress") return `Adds ${percent}% initiative during round 1 only.`;
-  if (entry?.type === "leeching") return `Heals ${percent}% of direct damage dealt by the action.`;
-  if (entry?.type === "siphoning") return `After a damaging skill, restores MP equal to ${percent}% of its STR or MAG scaling stat.`;
+  if (entry?.type === "leeching") return `Heals ${percent}% of average direct damage per target; capped at 8% Max HP per action.`;
+  if (entry?.type === "siphoning") return `After a damaging skill, refunds ${percent * 2}% of paid MP; combined refund capped at 30%. Ultimates do not refund MP.`;
   return formatAffix(entry);
 }
 
@@ -14643,10 +14682,10 @@ function runQaChecks() {
     applyStatus(qaHero, "agilityUp", qaHero, { force: true, duration: 3 });
     check("agility-buff", effectiveAgility(qaHero, 20) === 25);
     check("boss-status-rates", STATUS_TIER_CHANCES.boss.poison === .5 && STATUS_TIER_CHANCES.boss.sleep === .1 && STATUS_TIER_CHANCES.boss.stun === .2);
-    const poisonScaleSource = { atk: 100, stats: { str: 100, mag: 100 } };
+    const poisonScaleSource = { atk: 100, stats: { str: 100, mag: 100, agi: 100 } };
     const poisonScaleTarget = { max: 100, resistanceTier: "normal" };
-    check("poison-potency-scaling", ["weak", "normal", "strong"].map(potency => poisonValueFor(poisonScaleTarget, poisonScaleSource, { potency, damageKind: "melee" })).join(",") === "20,30,40");
-    check("poison-boss-cap", poisonValueFor({ max: 1000, resistanceTier: "boss" }, { atk: 10000, stats: { str: 10000, mag: 10000 } }, { potency: "strong", damageKind: "melee" }) === 15);
+    check("poison-potency-scaling", ["weak", "normal", "strong"].map(potency => poisonValueFor(poisonScaleTarget, poisonScaleSource, { potency, damageKind: "melee" })).join(",") === "30,40,50");
+    check("poison-boss-cap", poisonValueFor({ max: 1000, resistanceTier: "boss" }, { atk: 10000, stats: { str: 10000, mag: 10000, agi: 10000 } }, { potency: "strong", damageKind: "melee" }) === 25);
     check("transformation-config", TRANSFORMATION_CONFIG.mech.duration === 4 && TRANSFORMATION_CONFIG.mech.visual === "GlimmerMech" && TRANSFORMATION_CONFIG.shadowpriest.duration === 4 && TRANSFORMATION_CONFIG.shadowpriest.visual === "KaelShadow");
     check("transformation-skill-kits", TRANSFORMED_SKILLS.mech.length === 5 && TRANSFORMED_SKILLS.shadowpriest.length === 5 && TRANSFORMED_SKILLS.mech.some(entry => entry.name === "Maximum Overdrive") && TRANSFORMED_SKILLS.shadowpriest.some(entry => entry.name === "Eclipse"));
 
