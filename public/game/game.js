@@ -9591,7 +9591,7 @@ function startHallBattleStage(stage) {
   state.map = info.mapId;
   const label = `Hall ${String(stage).padStart(2, "0")}/${HALL_BATTLE_BLUEPRINTS.length} - ${info.name}`;
   const waves = info.waves.map((keys, index) => ({ name: `${label} - Phase ${index + 2}/${info.waves.length + 1}${keys.includes("solinarEnraged") ? " / Enraged" : ""}`, enemies: hallEnemiesForStage(stage, keys, index + 1) }));
-  startBattle(label, hallEnemiesForStage(stage), undefined, null, waves, { hallBoss: info.boss, hallFinale: stage === 50, roundCap: stage > 50 ? 60 : stage === 50 ? 40 : stage > 40 ? 32 : MAX_BATTLE_ROUNDS });
+  startBattle(label, hallEnemiesForStage(stage), undefined, null, waves, { hallStage: stage, combatMapId: stage > 50 ? "emberHallBattles" : state.map, hallBoss: info.boss, hallFinale: stage === 50, roundCap: stage > 50 ? 60 : stage === 50 ? 40 : stage > 40 ? 32 : MAX_BATTLE_ROUNDS });
   battle.hallStage = stage;
   battle.phaseTotal = info.waves.length + 1;
   battle.hallBoss = info.boss;
@@ -9996,12 +9996,12 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   state.fieldWard = false;
   const scriptedBoss = ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(winFlag);
   const preparedEnemies = enemies.map((unit, index) => {
-    const prepared = prepareEnemyForBattle(unit);
+    const prepared = prepareEnemyForBattle(unit, options.combatMapId || state.map);
     if ((spawnRef?.boss && index === 0) || (scriptedBoss && (unit.npcBoss || unit.node >= 3 || enemies.length === 1))) prepared.resistanceTier = "boss";
     else if (scriptedBoss) prepared.resistanceTier = "elite";
     return prepared;
   });
-  const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit)) }));
+  const preparedWaves = waves.map(wave => ({ ...wave, enemies: wave.enemies.map(unit => prepareEnemyForBattle(unit, options.combatMapId || state.map)) }));
   const hallBoss = Boolean(options.hallBoss);
   const musicTrack = battleMusicForEncounter(hallBoss);
   state.activeParty.slice(0, 3).forEach(id => {
@@ -10010,6 +10010,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
     baseJobs[id].mp = total.mp;
   });
   battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, enemyResonance: 0, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
+  if (options.hallStage) battle.hallStage = options.hallStage;
   initializeEndgameFormation();
   battle.actionHistory = [];
   battle.meterEvents = [];
@@ -11929,7 +11930,7 @@ function receptionEnemyAction(unit) {
   const leader = host || live.find(ally => ally.name === "High Administrator Thaddeus") || live.find(ally => ally.name === "Dawn Gate Sentinel");
   if (!leader) return null;
   const data = endgameMechanicState(leader);
-  const controlled = ally => ["broken", "stun", "sleep", "silence"].some(type => statusOf(ally, type));
+  const controlled = ally => stageUnitControlled(ally);
   if (unit === leader) {
     if (controlled(unit)) {
       data.receptionPending = false;
@@ -12086,7 +12087,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
       data.receptionPending = true;
       const heroes = party;
       data.receptionTarget = heroes[(unit.actionsTaken || 0) % heroes.length];
-      receptionAnnounce(action.name, `${data.receptionTarget?.name || 'A party member'} is targeted on ${unit.name}'s next action. Break the attacker, Silence the Seal Bearer, defeat supports, or prepare Guard.`);
+      receptionAnnounce(action.name, `${data.receptionTarget?.name || 'A party member'} is targeted on ${unit.name}'s next action. ${unit.endgameBoss ? 'Silence the attacker' : 'Break the attacker'}, Silence the Seal Bearer, defeat supports, or prepare Guard.`);
       return ` ${data.receptionTarget?.name || 'The party'} is targeted next action. Interrupt the attacker or weaken its support.`;
     }
     case "guest": {
