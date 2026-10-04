@@ -5671,7 +5671,7 @@ function outgoingDamageMultiplier(unit, kind, target = null) {
 function incomingDamageMultiplier(unit) {
   let multiplier = Math.max(.2, 1 - statusValue(unit, "defenseUp") - statusValue(unit, "barrier"));
   const commander = battle?.enemies?.find(enemy => enemy.hp > 0 && enemy !== unit && enemy.protectedAlly?.target === unit && enemy.protectedAlly.remaining > 0);
-  if (commander) multiplier *= .85;
+  if (commander && !(battle?.hallStage >= 51 && ["broken", "stun", "sleep"].some(type => statusOf(commander, type)))) multiplier *= .85;
   if (unit?.form === "mech") multiplier *= 1 - TRANSFORMATION_CONFIG.mech.defense - typedTalentValue(unit.id, "mechDefense") - typedTalentValue(unit.id, "fortressCapstone");
   if (statusOf(unit, "combatDrone")) multiplier *= 1 - typedTalentValue(unit.id, "gadgetDefense");
   multiplier *= 1 - statusValue(unit, "mechGuard");
@@ -5768,6 +5768,8 @@ function statusBadgesHtml(unit) {
 
 function processTurnStart(unit) {
   const notes = [];
+  if (battle?.hallStage >= 53 && unit.encounterMechanic?.stagePending && stageUnitControlled(unit)) interruptStageCombination(unit);
+  if (battle?.hallStage === 52 && unit.encounterMechanic?.sanctuaryPending && ["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type))) interruptSanctuaryRitual(unit);
   if (unit.endgameBoss) endgameBossTurnStart(unit);
   if (unit.protectedAlly && --unit.protectedAlly.remaining <= 0) delete unit.protectedAlly;
   delete unit.holdTheLine;
@@ -11444,6 +11446,12 @@ function clearEndgameStatus(type, source) {
 
 function endgameBossBroken(unit) {
   const data = endgameMechanicState(unit);
+  if (battle?.hallStage >= 53 && data.stagePending) interruptStageCombination(unit);
+  if (battle?.hallStage === 52 && data.sanctuaryPending) interruptSanctuaryRitual(unit);
+  if (battle?.hallStage === 51 && unit.endgameBoss === "guest") {
+    data.receptionWindow = 2;
+    data.receptionPending = false;
+  }
   if (unit.endgameBoss === "root") {
     data.window = 3;
     endgameStatus(unit, "memoryCore", unit, { duration: 3 });
@@ -11465,6 +11473,11 @@ function endgameInterrupt(unit) {
   clearEndgameStatus("protectedGuest", unit);
   clearEndgameStatus("harmonicRings", unit);
   clearEndgameStatus("echoSigil", unit);
+  if (battle?.hallStage === 60 && data.record) {
+    data.record = null;
+    ['livingArchive', 'buffRecord', 'skillRecord', 'memoryRecord'].forEach(type => clearEndgameStatus(type, unit));
+    receptionAnnounce('Record Interrupted', 'The stored action is discarded. Ilyss must create a new record before replaying an effect.');
+  }
 }
 
 function endgameBossTurnStart(unit) {
@@ -11489,7 +11502,7 @@ function endgameBossTurnStart(unit) {
     clearEndgameStatus("memoryAdaptation", unit);
   }
   if (unit.endgameBoss === "crescendo") {
-    const supports = battle.enemies.filter(ally => ally !== unit && ally.hp > 0).length;
+    const supports = battle.enemies.filter(ally => ally !== unit && ally.hp > 0 && !stageUnitControlled(ally)).length;
     data.rings = statusOf(unit, "harmonicRings") ? Math.min(data.rings, supports * 3) : 0;
     if (data.rings) statusOf(unit, "harmonicRings").value = data.rings;
     else clearEndgameStatus("harmonicRings", unit);
@@ -11532,14 +11545,15 @@ function endgamePlayerDamageMultiplier(actor, sk, target) {
   const host = protectedStatus && battle.enemies.find(unit => unit.hp > 0 && unit.name === protectedStatus.source?.name);
   if (host) {
     multiplier *= 1 - protectedStatus.value;
-    const rebuke = developerScale("enemy", "damage", Math.max(1, Math.round(host.stats.mag * .65 * incomingDamageMultiplier(actor, "Sound"))));
+    const rebuke = battle.hallStage === 51 && skillHitsAll(actor.id, sk) ? 0 : developerScale("enemy", "damage", Math.max(1, Math.round(host.stats.mag * .65 * incomingDamageMultiplier(actor, "Sound"))));
     actor.hp = Math.max(0, actor.hp - rebuke);
-    addBattleFloater(actor, rebuke, { damageType: "Sound" });
-    enemyDispelOne(actor);
+    if (rebuke) addBattleFloater(actor, rebuke, { damageType: "Sound" });
+    if (rebuke) enemyDispelOne(actor);
     markBattleUnitDown(actor);
   }
   if (!target.endgameBoss) return multiplier;
   const data = endgameMechanicState(target);
+  if (battle.hallStage === 51 && target.endgameBoss === "guest" && data.receptionWindow > 0) multiplier *= 1.3;
   if (target.endgameBoss === "oath") multiplier *= statusOf(target, "brokenOath") ? 1.75 : 1 - statusValue(target, "oathguard");
   if (target.endgameBoss === "root") {
     const category = sk.anim === "ultimate" ? "Ultimate" : skillScaling(sk) === "str" ? "Physical" : "Magic";
@@ -11556,7 +11570,275 @@ function endgamePlayerDamageMultiplier(actor, sk, target) {
   return multiplier;
 }
 
+function receptionAnnounce(title, text) {
+  battle.mechanicAnnouncement = { title, text, until: performance.now() + 60000 };
+}
+
+// Each preliminary formation teaches one part of its boss's combat rhythm.
+const ENDGAME_STAGE_RHYTHMS = {
+  53: [
+    { leader: 'auditor', title: 'Violation Assessment', kind: 'magic', support: 'cleanse', status: 'disrupted', hint: 'Break the Auditor before assessment; remove the Custodian to stop restoration.' },
+    { leader: 'scribe', title: 'Administrative Sentence', kind: 'magic', support: 'guard', status: 'silence', hint: 'Reginald protects the speaker. Break him or interrupt Thaddeus before sentencing.' }
+  ],
+  54: [
+    { leader: 'ashWyrm', title: 'Astral Crossfire', kind: 'magic', support: 'break', status: 'marked', hint: 'Cleanse the mark or interrupt the Wyrm. The Pillar builds Break on the marked target.' },
+    { leader: 'memory', title: 'Falling Star', kind: 'magic', support: 'pressure', status: 'marked', hint: 'Cleanse the mark or interrupt Plumpin; surviving companions amplify the impact.' }
+  ],
+  55: [
+    { leader: 'construct', title: 'Rootline Impact', kind: 'melee', support: 'break', status: 'rootBind', hint: 'Cleanse Root Bind or Break Gorg before impact; the Pillar builds Break.' },
+    { leader: 'memory', title: 'Memory Bloom', kind: 'magic', support: 'pressure', status: 'rootBind', hint: 'Cleanse the roots or interrupt Plumpin. Strike during the recovery after Bloom.' }
+  ],
+  56: [
+    { leader: 'tja', title: 'Strange Duet', kind: 'magic', support: 'pressure', status: 'marked', hint: 'Tibby amplifies the delayed echo. Cleanse the mark or interrupt Tja.' },
+    { leader: 'jory', title: 'Borrowed Refrain', kind: 'magic', support: 'heal', status: 'marked', hint: 'Lysra restores the performers while Nyx adds pressure. Interrupt Jory or dismantle the ensemble.' }
+  ],
+  57: [
+    { leader: 'shade', title: 'Dream Pursuit', kind: 'magic', support: 'pressure', status: 'beguilingVeil', hint: 'Cleanse the illusion before the pursuit; interrupt Shade to open a counterattack.' },
+    { leader: 'scribe', title: 'False Testimony', kind: 'magic', support: 'heal', status: 'beguilingVeil', hint: 'Two healers sustain the speaker. Cleanse the illusion or interrupt Thaddeus.' }
+  ],
+  58: [
+    { leader: 'chain', title: 'Iron Double Impact', kind: 'melee', support: 'break', status: 'marked', hint: 'Break Brokk before the chained impact. The Pillar builds Break; Guard remains useful.' },
+    { leader: 'grumm', title: 'Oathbound Assault', kind: 'melee', support: 'guard', status: 'marked', hint: 'Break Grumm to cancel the assault or remove the escorts protecting him.' }
+  ],
+  59: [
+    { leader: 'jory', title: 'Opening Chorus', kind: 'magic', support: 'pressure', status: 'marked', hint: 'Tja strengthens the chorus. Silence Jory or eliminate the accompaniment.' },
+    { leader: 'jory', title: 'Sanctified Chorus', kind: 'magic', support: 'heal', status: 'marked', hint: 'Lysra and Justin sustain the chorus. Silence the singer or defeat the healers.' }
+  ],
+  60: [
+    { leader: 'scribe', title: 'Sealed Record', kind: 'magic', support: 'cleanse', status: 'marked', hint: 'The Auditor pressures your rotation; the Custodian restores it. Interrupt Thaddeus before the record resolves.' },
+    { leader: 'king', title: 'Royal Execution', kind: 'melee', support: 'guard', status: 'marked', hint: 'Lucan and the Sentinel escort Maeric. Break the King, dismantle his escorts, or Guard the announced target.' }
+  ]
+};
+
+function stageUnitControlled(unit) {
+  return ['silence', 'stun', 'sleep', 'broken'].some(type => statusOf(unit, type));
+}
+
+function interruptStageCombination(unit) {
+  const data = endgameMechanicState(unit);
+  data.stagePending = null;
+  data.stageRecovery = true;
+  clearEndgameStatus('marked', unit);
+  clearEndgameStatus('rootBind', unit);
+  endgameStatus(unit, 'physicalVulnerability', unit, { duration: 2, value: .2 });
+  endgameStatus(unit, 'magicVulnerability', unit, { duration: 2, value: .2 });
+  receptionAnnounce('Combination Interrupted', `${unit.name}'s announced attack is cancelled. Physical and magic damage against it increase by 20% for 2 actions.`);
+}
+
+function stageFormationRhythm() {
+  const rows = ENDGAME_STAGE_RHYTHMS[battle?.hallStage];
+  if (!rows || battle.enemies.some(unit => unit.endgameBoss)) return null;
+  const firstNames = hallBattleInfo(battle.hallStage).enemies.map(key => HALL_ENEMY_LIBRARY[key].name);
+  return rows[battle.enemies.every(unit => firstNames.includes(unit.name)) ? 0 : 1];
+}
+
+function stageRhythmAction(unit) {
+  const rhythm = stageFormationRhythm();
+  if (!rhythm) return unit.endgameBoss ? stageBossRhythmAction(unit) : stageBossSupportAction(unit);
+  const live = battle.enemies.filter(ally => ally.hp > 0);
+  const leader = live.find(ally => ally.name === HALL_ENEMY_LIBRARY[rhythm.leader].name);
+  if (!leader) return null;
+  const data = endgameMechanicState(leader);
+  if (unit !== leader) {
+    if (stageUnitControlled(unit)) return enemyActionForKind(unit, 'melee');
+    if (data.stagePending && rhythm.support === 'guard') return { kind: 'buff', name: 'Escort the Assault', element: 'Earth', mpCost: 12, target: leader, protectAlly: true, buffs: [{ type: 'defenseUp', value: .15, duration: 1 }] };
+    if (['heal', 'cleanse'].includes(rhythm.support)) {
+      const profile = enemyAbilityProfile(unit);
+      const wounded = live.filter(ally => ally.hp < ally.max * .7).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
+      const heal = Object.values(profile?.moves || {}).find(move => move.healing && enemyCanAfford(unit, move));
+      if (heal && wounded) return { ...heal, target: wounded };
+      const cleanse = Object.values(profile?.moves || {}).find(move => move.kind === 'cleanse' && enemyCanAfford(unit, move));
+      if (cleanse && ensureStatuses(leader).some(status => STATUS_DEFS[status.type]?.negative)) return { ...cleanse, target: leader };
+    }
+    if (data.stagePending) return { ...enemyActionForKind(unit, rhythm.support === 'break' ? 'melee' : 'magic', data.stagePending.target), target: data.stagePending.target, breakPower: rhythm.support === 'break' ? 2 : 1, name: rhythm.support === 'break' ? 'Fracture the Formation' : 'Accompanying Pressure' };
+    return null;
+  }
+  if (stageUnitControlled(unit)) {
+    if (data.stagePending) interruptStageCombination(unit);
+    return enemyActionForKind(unit, 'melee');
+  }
+  if (data.stageRecovery) { data.stageRecovery = false; return enemyActionForKind(unit, 'melee'); }
+  if (data.stagePending) {
+    const pending = data.stagePending;
+    data.stagePending = null;
+    data.stageRecovery = true;
+    const target = pending.target;
+    const escaped = !target || target.hp <= 0 || !ensureStatuses(target).some(status => status.type === rhythm.status && status.source?.name === unit.name);
+    clearEndgameStatus(rhythm.status, unit);
+    if (escaped) {
+      receptionAnnounce('Target Escaped', `${rhythm.title} loses its target. ${unit.name} must recover.`);
+      return enemyActionForKind(unit, 'melee');
+    }
+    const supports = live.filter(ally => ally !== unit && !stageUnitControlled(ally)).length;
+    receptionAnnounce(rhythm.title, `${target.name} receives the announced impact. ${supports} active companions amplify it. The attacker now recovers.`);
+    return { ...enemyActionForKind(unit, rhythm.kind, target), name: rhythm.title, target, allTargets: false, coefficient: 1.25 + supports * .2, breakPower: rhythm.kind === 'melee' ? 3 : 1 };
+  }
+  return { kind: 'utility', name: `${rhythm.title} - preparing`, element: rhythm.kind === 'melee' ? 'Physical' : 'Arcane', mpCost: 0, endgameEffect: 'stagePrepare', rhythm };
+}
+
+function stageBossRhythmAction(unit) {
+  if (!unit.endgameBoss) return null;
+  const data = endgameMechanicState(unit);
+  if (stageUnitControlled(unit)) {
+    if (data.stagePending) interruptStageCombination(unit);
+    return null;
+  }
+  if (data.stageRecovery) { data.stageRecovery = false; return enemyActionForKind(unit, 'melee'); }
+  if (data.stagePending) {
+    const pending = data.stagePending;
+    data.stagePending = null;
+    data.stageRecovery = true;
+    const target = pending.target?.hp > 0 ? pending.target : battle.party.find(hero => hero.hp > 0);
+    const supports = battle.enemies.filter(ally => ally !== unit && ally.hp > 0 && !stageUnitControlled(ally)).length;
+    if (unit.endgameBoss === 'root') {
+      data.window = 3;
+      endgameStatus(unit, 'memoryCore', unit, { duration: 3 });
+      receptionAnnounce('Memory Core Exposed', 'Root Eruption resolves, exposing the Core: +60% incoming damage. Burst now; cleanse Root Bind to restore initiative.');
+    } else receptionAnnounce(pending.title, `${supports} active supports strengthen the impact. ${unit.name} recovers after this attack.`);
+    const veilBonus = unit.endgameBoss === 'veil' && statusOf(target, 'beguilingVeil') ? .5 : 0;
+    return { ...enemyActionForKind(unit, pending.kind, target), name: pending.title, target, coefficient: 1.2 + supports * .2 + veilBonus, allTargets: unit.endgameBoss === 'root', breakPower: unit.endgameBoss === 'oath' ? 3 : 1,
+      ...(unit.endgameBoss === 'root' ? { status: { type: 'rootBind', chance: .7, duration: 2 } } : {}) };
+  }
+  const turn = unit.actionsTaken || 0;
+  let rhythm = null;
+  if (unit.endgameBoss === 'inspection' && data.order && turn % 3 === 2) rhythm = { title: 'Final Notice', kind: 'magic', hint: 'Break or Silence Voss before Final Notice. Violation Stamps increase its damage; defeating supports weakens the base impact.' };
+  if (unit.endgameBoss === 'root' && !data.window && turn % 3 === 1) rhythm = { title: 'Root Eruption', kind: 'magic', hint: 'AoE roots next action. Interrupt the Guardian or prepare protection; the Core opens after the eruption.' };
+  if (unit.endgameBoss === 'veil' && turn % 3 === 2) rhythm = { title: 'Dream Collapse', kind: 'magic', hint: 'Cleanse Beguiling Veil to weaken the targeted collapse, or interrupt Morvanna. Defeated supports reduce its power.' };
+  if (unit.endgameBoss === 'oath' && !data.window && turn % 3 === 1) rhythm = { title: 'Chained Judgment', kind: 'melee', hint: 'Break Koru-Vak to cancel this impact AND open Broken Oath. His companions strengthen the strike; Guard can absorb it.' };
+  if (rhythm) return { kind: 'utility', name: `${rhythm.title} - preparing`, element: ENDGAME_BOSS_CONFIG[unit.name].element, mpCost: 0, endgameEffect: 'stagePrepare', rhythm };
+  return null;
+}
+
+function stageBossSupportAction(unit) {
+  const boss = battle.enemies.find(ally => ally.hp > 0 && ally.endgameBoss);
+  if (!boss || stageUnitControlled(unit)) return null;
+  const profile = enemyAbilityProfile(unit);
+  const wounded = battle.enemies.filter(ally => ally.hp > 0 && ally.hp < ally.max * .65).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
+  const heal = Object.values(profile?.moves || {}).find(move => move.healing && enemyCanAfford(unit, move));
+  if (wounded && heal) return { ...heal, target: wounded, name: 'Sustain the Ritual' };
+  const data = endgameMechanicState(boss);
+  if (['guidance', 'oath', 'root'].includes(boss.endgameBoss)) {
+    const target = data.pending?.hp > 0 ? data.pending : data.stagePending?.target;
+    if (target?.hp > 0) return { ...enemyActionForKind(unit, 'melee', target), target, name: 'Fracture the Marked Target', breakPower: 2 };
+  }
+  if (['echo', 'crescendo'].includes(boss.endgameBoss)) {
+    if ((unit.actionsTaken || 0) % 2 === 0) return { kind: 'buff', name: 'Accompany the Refrain', element: 'Sound', mpCost: 12, target: boss, buffs: [{ type: 'magicUp', value: .15, duration: 2 }] };
+  }
+  if (boss.endgameBoss === 'archive' && unit.name === HALL_ENEMY_LIBRARY.auditor.name) return enemyActionForKind(unit, 'magic');
+  return null;
+}
+
+function interruptSanctuaryRitual(unit) {
+  const data = endgameMechanicState(unit);
+  data.sanctuaryPending = false;
+  data.sanctuaryRecovery = true;
+  clearEndgameStatus("sanctuary", unit);
+  clearEndgameStatus("barrier", unit);
+  clearEndgameStatus("statusWard", unit);
+  endgameStatus(unit, "magicVulnerability", unit, { value: .25, duration: 2 });
+  receptionAnnounce("Sanctuary Interrupted", `${unit.name}'s renewal is cancelled. Its wards fall and it takes 25% more magic damage for 2 actions.`);
+}
+
+function sanctuaryEnemyAction(unit) {
+  const live = battle.enemies.filter(ally => ally.hp > 0);
+  const leader = live.find(ally => ally.endgameBoss === "sanctuary") || live.find(ally => ally.name === "Lysra") || live.find(ally => ally.name === "Corrupt Clergy");
+  if (!leader) return null;
+  const data = endgameMechanicState(leader);
+  const controlled = ally => ["silence", "stun", "sleep", "broken"].some(type => statusOf(ally, type));
+  if (unit === leader) {
+    if (controlled(unit)) {
+      if (data.sanctuaryPending) interruptSanctuaryRitual(unit);
+      return enemyActionForKind(unit, "melee");
+    }
+    if (data.sanctuaryRecovery) {
+      data.sanctuaryRecovery = false;
+      return { ...enemyActionForKind(unit, "magic"), name: "Fractured Prayer" };
+    }
+    if (data.sanctuaryPending) {
+      data.sanctuaryPending = false;
+      data.sanctuaryRecovery = true;
+      const wounded = live.filter(ally => ally.hp < ally.max).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
+      if (!wounded) return { ...enemyActionForKind(unit, "magic"), name: "Unspent Prayer" };
+      const sealed = live.some(ally => ally.name === "Seal Bearer" && !controlled(ally));
+      const justin = live.some(ally => ally.name === "Saint Justin" && !controlled(ally));
+      const action = { kind: "magic", name: leader.endgameBoss ? "Sanctuary Renewal" : "Renewal Prayer", element: "Holy Fire", mpCost: 25, healing: true, allAllies: Boolean(leader.endgameBoss), target: wounded, healCoefficient: sealed ? 2.4 : 1.7, cleanse: justin };
+      receptionAnnounce(action.name, `${sealed ? 'Seal Bearer empowers the healing. ' : 'No seal amplification. '}${justin ? 'Justin enables a cleanse.' : 'No cleanse support remains.'} The healer must recover before another ritual.`);
+      return enemyCanAfford(unit, action) ? action : enemyActionForKind(unit, "melee");
+    }
+    const wounded = live.some(ally => ally.hp < ally.max * .85);
+    const prayer = { kind: "utility", name: leader.endgameBoss ? "Sanctuary - Renewal next action" : "Gathering Prayer - healing next action", element: "Holy Fire", mpCost: 0, endgameEffect: "sanctuaryPrepare" };
+    if (wounded && enemyCanAfford(unit, { mpCost: 25 })) return prayer;
+    return enemyActionForKind(unit, "magic");
+  }
+  if (controlled(unit)) return enemyActionForKind(unit, "melee");
+  if (unit.name === "Saint Justin" && data.sanctuaryPending) {
+    return { kind: "buff", name: "Guard the Prayer - interrupt the healer", element: "Holy Fire", mpCost: 12, target: leader, buffs: [{ type: "barrier", value: .2, duration: 1 }] };
+  }
+  if (unit.name === "Seal Bearer" && data.sanctuaryPending) {
+    return { ...enemyActionForKind(unit, "magic"), name: "Sanctuary Seal - Silence me to weaken Renewal" };
+  }
+  return { ...enemyActionForKind(unit, "magic"), name: unit.name === "Saint Justin" ? "Pressure of the Faithful" : "Seal Pressure" };
+}
+
+function receptionEnemyAction(unit) {
+  const live = battle.enemies.filter(ally => ally.hp > 0);
+  const host = live.find(ally => ally.endgameBoss === "guest");
+  const leader = host || live.find(ally => ally.name === "High Administrator Thaddeus") || live.find(ally => ally.name === "Dawn Gate Sentinel");
+  if (!leader) return null;
+  const data = endgameMechanicState(leader);
+  const controlled = ally => ["broken", "stun", "sleep", "silence"].some(type => statusOf(ally, type));
+  if (unit === leader) {
+    if (controlled(unit)) {
+      data.receptionPending = false;
+      if (host) clearEndgameStatus("protectedGuest", host);
+      receptionAnnounce("Reception interrupted", `${unit.name}'s combination is cancelled. The formation is exposed.`);
+      return enemyActionForKind(unit, "melee");
+    }
+    if (data.receptionWindow > 0) {
+      data.receptionWindow--;
+      receptionAnnounce("Reception Breached", "Guest protection is down. Veyr takes 30% more direct damage during this recovery window.");
+      return enemyActionForKind(unit, "melee");
+    }
+    if (data.receptionPending) {
+      data.receptionPending = false;
+      const support = live.find(ally => ally !== leader && ally.name === "Seal Bearer" && !controlled(ally));
+      const sentinel = host && live.find(ally => ally.name === "Dawn Gate Sentinel" && !controlled(ally));
+      const target = data.receptionTarget?.hp > 0 ? data.receptionTarget : battle.party.find(hero => hero.hp > 0);
+      receptionAnnounce("Last Courtesy resolves", `${support ? 'Seal empowered. ' : 'No seal amplification. '}${sentinel ? 'Sentinel joins the strike. ' : ''}Guard reduces the impact; defeated supports stay defeated.`);
+      return { ...enemyActionForKind(unit, host ? "magic" : "melee", target), name: host ? "Last Courtesy" : "Reception Combination", coefficient: 1.05 + (support ? .4 : 0) + (sentinel ? .3 : 0), allTargets: false, target };
+    }
+    if (host && !live.some(ally => statusOf(ally, "protectedGuest")) && live.length > 1) {
+      return { kind: "utility", name: "Reception Protocol", element: "Sound", mpCost: 0, endgameEffect: "guest" };
+    }
+    return { kind: "utility", name: host ? "Last Courtesy - preparing" : "Reception Combination - preparing", element: host ? "Sound" : "Physical", mpCost: 0, endgameEffect: "receptionPrepare" };
+  }
+  if (controlled(unit)) return enemyActionForKind(unit, "melee");
+  if (unit.name === "Seal Bearer" && data.receptionPending) {
+    return { kind: "buff", name: "Seal the Courtesy - Silence me before impact", element: "Arcane", mpCost: 0, target: leader, buffs: [{ type: "defenseUp", duration: 1, value: .15 }] };
+  }
+  if (unit.name === "Sir Reginald" && data.receptionPending) {
+    return { kind: "buff", name: "Escort the Speaker - Break me to remove protection", element: "Earth", mpCost: 0, target: leader, protectAlly: true, buffs: [{ type: "defenseUp", duration: 1, value: .15 }] };
+  }
+  if (unit.name === "Archive Custodian") {
+    const wounded = live.filter(ally => ally.hp < ally.max * .8).sort((a,b) => a.hp/a.max - b.hp/b.max)[0];
+    const heal = Object.values(enemyAbilityProfile(unit)?.moves || {}).find(move => move.healing && enemyCanAfford(unit, move));
+    if (wounded && heal) return { ...heal, target: wounded, name: "Preserve the Reception" };
+    const cleanse = Object.values(enemyAbilityProfile(unit)?.moves || {}).find(move => move.kind === "cleanse" && enemyCanAfford(unit, move));
+    if (cleanse && live.some(ally => ensureStatuses(ally).some(status => STATUS_DEFS[status.type]?.negative))) return { ...cleanse, target: leader };
+  }
+  return null;
+}
+
 function initializeEndgameFormation() {
+  if (battle?.hallStage >= 53) {
+    const rhythm = stageFormationRhythm();
+    if (rhythm) receptionAnnounce(rhythm.title, rhythm.hint);
+  }
+  if (battle?.hallStage === 52) receptionAnnounce("Sanctuary Under Pressure", "Wounded healers prepare Renewal before healing. Silence or Break cancels the ritual; Justin enables cleanse and the Seal Bearer amplifies healing.");
+  if (battle?.hallStage === 51) {
+    const leader = battle.enemies.find(unit => ["Concierge Veyr", "High Administrator Thaddeus", "Dawn Gate Sentinel"].includes(unit.name));
+    if (leader) receptionAnnounce(`${leader.name} prepares the reception`, "Watch the announced attack. Break its attacker or Silence its support to weaken the combination.");
+  }
   for (const unit of battle?.enemies || []) {
     const effect = { guest: "guest", oath: "shield", inspection: "order", crescendo: "rings" }[unit.endgameBoss];
     if (effect) endgameResolveEnemyEffect(unit, { endgameEffect: effect }, battle.party.find(hero => hero.hp > 0));
@@ -11564,6 +11846,8 @@ function initializeEndgameFormation() {
 }
 
 function endgameEnemyAction(unit) {
+  if (battle?.hallStage === 52 && unit.endgameBoss === "sanctuary") return sanctuaryEnemyAction(unit);
+  if (battle?.hallStage === 51 && unit.endgameBoss === "guest") return receptionEnemyAction(unit);
   const data = endgameMechanicState(unit);
   const step = (unit.actionsTaken || 0) % 3;
   const special = (name, effect, target = null) => ({ kind: "utility", name, element: ENDGAME_BOSS_CONFIG[unit.name].element, mpCost: 0, endgameEffect: effect, target: target || other });
@@ -11609,7 +11893,14 @@ function endgameEnemyAction(unit) {
     case "inspection": return !data.order ? special("Inspection Order", "order") : { ...enemyActionForKind(unit, step === 1 ? "magic" : "melee"), name: step === 1 ? "Violation Assessment" : "Inspector's Gavel" };
     case "root": return !data.window && (unit.actionsTaken || 0) % 4 === 2 ? special("Memory Core - burst window", "core") : { ...enemyActionForKind(unit, step === 0 ? "magic" : "melee"), allTargets: step === 0 };
     case "echo":
-      if (data.pending) { const target = data.pending; data.pending = null; return { ...enemyActionForKind(unit, "magic", target), name: "Delayed Occult Echo", coefficient: 1.7 }; }
+      if (data.pending) {
+        const target = data.pending; data.pending = null;
+        if (battle.hallStage === 56 && !ensureStatuses(target).some(status => status.type === 'marked' && status.source?.name === unit.name)) {
+          receptionAnnounce('Echo Dispersed', 'The occult mark was cleansed. Malkhius loses the delayed attack.');
+          return enemyActionForKind(unit, 'melee');
+        }
+        return { ...enemyActionForKind(unit, "magic", target), name: "Delayed Occult Echo", coefficient: 1.7 };
+      }
       return step === 0 ? special("Echo Sigil", "echo") : step === 1 ? special("Occult Mark - attack next action", "occult", other) : enemyActionForKind(unit, "magic");
     case "veil": return step === 0 ? special("Beguiling Veil", "veil", other) : step === 1 ? special("Buff Inversion", "invert", party.find(hero => removableStatus(hero, DISPEL_PRIORITY)) || other) : { ...enemyActionForKind(unit, "magic"), status: { type: "sleep", chance: .65, duration: 2 } };
     case "oath":
@@ -11625,12 +11916,38 @@ function endgameResolveEnemyEffect(unit, action, target) {
   const live = battle.enemies.filter(ally => ally.hp > 0);
   const party = battle.party.filter(hero => hero.hp > 0);
   switch (action.endgameEffect) {
+    case 'stagePrepare': {
+      const rhythm = action.rhythm;
+      const target = unit.endgameBoss === 'veil' ? party.find(hero => statusOf(hero, 'beguilingVeil')) || party[0] : party[(unit.actionsTaken || 0) % party.length];
+      data.stagePending = { target, title: rhythm.title, kind: rhythm.kind };
+      if (rhythm.status && target) endgameStatus(target, rhythm.status, unit, { duration: 4, value: .15 });
+      receptionAnnounce(`${rhythm.title} Preparing`, `${target?.name || 'The party'} is targeted on ${unit.name}'s next action. ${rhythm.hint}`);
+      return ` ${target?.name || 'The party'} is targeted next action. ${rhythm.hint}`;
+    }
+    case "sanctuaryPrepare": {
+      data.sanctuaryPending = true;
+      if (unit.endgameBoss === "sanctuary") live.forEach(ally => {
+        endgameStatus(ally, "sanctuary", unit, { duration: 2 });
+        endgameStatus(ally, "barrier", unit, { value: .2, duration: 2 });
+        endgameStatus(ally, "statusWard", unit, { value: .2, duration: 2 });
+      });
+      receptionAnnounce("Renewal Preparing", `${unit.name} heals ${unit.endgameBoss ? 'the living formation' : 'the most wounded ally'} on its next action. Silence or Break cancels Renewal and collapses its wards. Dispel barriers to maintain pressure.`);
+      return " Renewal arrives next action. Silence or Break the healer; supports empower healing and cleanse.";
+    }
+    case "receptionPrepare": {
+      data.receptionPending = true;
+      const heroes = party;
+      data.receptionTarget = heroes[(unit.actionsTaken || 0) % heroes.length];
+      receptionAnnounce(action.name, `${data.receptionTarget?.name || 'A party member'} is targeted on ${unit.name}'s next action. Break the attacker, Silence the Seal Bearer, defeat supports, or prepare Guard.`);
+      return ` ${data.receptionTarget?.name || 'The party'} is targeted next action. Interrupt the attacker or weaken its support.`;
+    }
     case "guest": {
       clearEndgameStatus("protectedGuest", unit);
       const guests = live.filter(ally => ally !== unit);
       const guest = guests[(data.guestIndex || 0) % guests.length] || unit;
       data.guestIndex = (data.guestIndex || 0) + 1;
       endgameStatus(guest, "protectedGuest", unit, { duration: 3 });
+      if (battle.hallStage === 51) receptionAnnounce("Reception Protocol", `${guest.name} is protected: direct attacks trigger a rebuke; AoE is reduced without retaliation. Break Veyr or dispel the protection.`);
       return ` ${guest.name} is the Protected Guest. Attacking the guest provokes a rebuke; target someone else or dispel protection.`;
     }
     case "seating":
@@ -11651,18 +11968,21 @@ function endgameResolveEnemyEffect(unit, action, target) {
       const label = { repeat: "No repeated skills", buff: "No buffs", magic: "No magic attacks", target: `Attack ${designated.name} first with a single-target action` }[type];
       data.order = { type, target: designated, remaining: 3, fulfilled: false };
       endgameStatus(unit, "inspectionOrder", unit, { duration: 3 }, label);
+      receptionAnnounce('Inspection Order', `${label}. Violations add stamps. Silence or Break Voss to interrupt his next action; Final Notice is announced before impact.`);
       return ` ORDER: ${label}. Violations apply stacking stamps.`;
     }
     case "mark":
       clearEndgameStatus("guidanceMark", unit);
       data.pending = target; data.moved = false;
       endgameStatus(target, "guidanceMark", unit, { duration: 4 }, "Astral strike next Guide action; the mark may move once. Cleanse or interrupt now.");
+      receptionAnnounce('Guidance Mark', `${target.name} is marked. Astral Impact follows; the mark can move once. Cleanse it or Silence/Break the Guide. His escorts pressure the marked target.`);
       return ` ${target.name} receives Guidance Mark. It may move before the delayed astral strike.`;
     case "moveMark": {
       const next = party.find(hero => hero !== data.pending) || data.pending;
       clearEndgameStatus("guidanceMark", unit);
       data.pending = next; data.moved = true;
       endgameStatus(next, "guidanceMark", unit, { duration: 3 }, "Astral Impact on the Guide's next action. Cleanse or interrupt now.");
+      receptionAnnounce('Guidance Moved', `${next.name} now receives the next Astral Impact. Cleanse the mark, interrupt the Guide, or Guard.`);
       return ` Guidance moves to ${next.name}. Astral Impact arrives next action; cleanse or interrupt.`;
     }
     case "core":
@@ -11683,10 +12003,12 @@ function endgameResolveEnemyEffect(unit, action, target) {
       endgameStatus(target, "marked", unit, { duration: 2, value: .15 });
       if (statusOf(unit, "echoSigil") && battle.lastEndgameEffect?.buff) endgameStatus(unit, battle.lastEndgameEffect.buff.type, unit, { ...battle.lastEndgameEffect.buff, duration: 2 });
       enemyDispelOne(target);
+      receptionAnnounce('Occult Echo Preparing', `${target.name} receives the delayed echo next action. Cleanse the mark or interrupt Malkhius; dispel his copied buff to reduce its power.`);
       return ` ${target.name} is marked for a delayed occult attack; Echo Sigil can reproduce a recent buff.`;
     case "veil":
       endgameStatus(target, "beguilingVeil", unit, { duration: 2 });
       endgameStatus(target, "mentalPressure", unit, { duration: 2, value: .2 });
+      receptionAnnounce('Beguiling Veil', `${target.name} is misled. Cleanse the illusion to restore targeting and weaken Dream Collapse. Morvanna may invert a buff before the collapse.`);
       return ` ${target.name} is misled: single-target attacks redirect and area attacks deal 35% less damage until cleansed.`;
     case "invert": {
       const buff = removableStatus(target, DISPEL_PRIORITY);
@@ -11700,7 +12022,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
       endgameStatus(unit, "oathguard", unit, { duration: 99, value: data.shield });
       return " Oathguard forces single-target attacks onto Koru-Vak. Build Break to disable the shield.";
     case "rings": {
-      const supports = live.filter(ally => ally !== unit).length;
+      const supports = live.filter(ally => ally !== unit && !stageUnitControlled(ally)).length;
       data.rings = Math.min(6, data.rings + Math.max(1, supports));
       endgameStatus(unit, "harmonicRings", unit, { duration: 99, value: data.rings });
       live.forEach(ally => endgameStatus(ally, "magicUp", unit, { duration: 2, value: .2 }));
@@ -11709,6 +12031,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
     }
     case "charge":
       data.charging = true;
+      receptionAnnounce('Grand Crescendo Preparing', `${data.rings} rings amplify the next attack. Silence or Break Selyra to cancel it; Silence/defeat her supports to reduce the rings, or prepare Guard.`);
       return ` Grand Crescendo is charging with ${data.rings} rings. Silence or Break now to interrupt it.`;
     case "record": {
       const index = (data.recordIndex || 0) % 3;
@@ -11732,6 +12055,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
       if (!data.record) data.record = { kind: "Memory Record", effect: { type: "magicUp", value: .2 } };
       endgameStatus(unit, "livingArchive", unit, { duration: 3 }, `${data.record.kind}: ${data.record.skillName || STATUS_DEFS[data.record.effect?.type]?.label}. Recorded Action follows.`);
       endgameStatus(unit, data.record.kind === "Buff Record" ? "buffRecord" : data.record.kind === "Memory Record" ? "memoryRecord" : "skillRecord", unit, { duration: 3 }, statusOf(unit, "livingArchive").note);
+      receptionAnnounce('The Living Archive', `${statusOf(unit, 'livingArchive').note} Silence or Break Ilyss before replay. Use a different skill when a Skill Record locks your last action.`);
       return ` ${statusOf(unit, "livingArchive").note} Ilyss cleanses an important debuff.`;
     }
     case "reproduce": {
@@ -11758,6 +12082,18 @@ function endgameResolveEnemyEffect(unit, action, target) {
 }
 
 function chooseEnemyAction(unit) {
+  if (battle?.hallStage >= 53 && battle.hallStage <= 60) {
+    const stageAction = stageRhythmAction(unit);
+    if (stageAction) return stageAction;
+  }
+  if (battle?.hallStage === 52) {
+    const sanctuaryAction = sanctuaryEnemyAction(unit);
+    if (sanctuaryAction) return sanctuaryAction;
+  }
+  if (battle?.hallStage === 51) {
+    const receptionAction = receptionEnemyAction(unit);
+    if (receptionAction) return receptionAction;
+  }
   const profile = enemyAbilityProfile(unit);
   if (unit.endgameBoss) return endgameEnemyAction(unit);
   if (statusOf(unit, "silence")) return enemyActionForKind(unit, "melee");
@@ -12010,7 +12346,7 @@ function resolveEnemyTurn(turn, prev) {
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
-      if (!["charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
+      if (!["stagePrepare", "sanctuaryPrepare", "receptionPrepare", "charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
         target = taunter || rank0Protector(target, false) || target;
         const pressure = { kind: "magic", element: action.element, coefficient: .35 };
         let damage = enemyDamageRoll(e, pressure, target).damage;
