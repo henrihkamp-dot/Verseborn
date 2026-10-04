@@ -5450,7 +5450,7 @@ function sourceRelevantStat(source, options = {}) {
 function dotScalingStat(source, stat) {
   const base = source?.id ? totals(source.id)[stat] * transformedStatMultiplier(source, stat)
     : source?.stats?.[stat] ?? source?.[stat] ?? source?.atk ?? 8;
-  const buff = stat === "mag" ? "magicUp" : "agilityUp";
+  const buff = stat === "mag" ? "magicUp" : stat === "str" ? "strengthUp" : "agilityUp";
   return Math.max(1, base * (1 + statusValue(source, buff)));
 }
 
@@ -5511,11 +5511,11 @@ function poisonValueFor(target, source, options = {}) {
 
 function dotValueFor(type, target, source, options = {}) {
   if (type === "poison") return poisonValueFor(target, source, options);
-  const coefficient = type === "burn" ? .4 : .2;
+  const coefficient = .4;
   const boostType = type === "burn" ? "burnDamage" : "bleedDamage";
   const capstone = type === "burn" && source?.id ? typedTalentValue(source.id, "livingWildfire") : 0;
   const multiplier = type === "burn" && source?.id && typedTalentValue(source.id, "doubleBurnDamage") ? 2 : 1;
-  const stat = type === "burn" ? dotScalingStat(source, "mag") : sourceRelevantStat(source, options);
+  const stat = dotScalingStat(source, type === "burn" ? "mag" : "str");
   return Math.max(1, Math.round(stat * coefficient * (1 + (source?.id ? typedTalentValue(source.id, boostType) : 0) + capstone))) * multiplier;
 }
 
@@ -5545,7 +5545,7 @@ function applyStatus(target, type, source, options = {}) {
   let value = ["poison", "burn", "bleed"].includes(type) ? (Number.isFinite(options.value) ? options.value : dotValueFor(type, target, source, options)) : options.value ?? def.value;
   if (def.negative && source?.id && !["poison", "burn", "bleed"].includes(type) && Number.isFinite(value)) value *= 1 + typedTalentValue(source.id, "debuffPotency");
   const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .3, normal: .4, strong: .5 }[options.potency || "normal"]) : null;
-  const critEnabled = ["burn", "poison"].includes(type);
+  const critEnabled = ["burn", "poison", "bleed"].includes(type);
   const critChance = critEnabled ? Math.max(0, Math.min(source?.id ? .65 : .75,
     (source?.id ? heroCritChance(source.id, true) : source?.crit ?? .08) + statusValue(source, "critUp"))) : 0;
   const data = {
@@ -5553,7 +5553,7 @@ function applyStatus(target, type, source, options = {}) {
     source: { id: source?.id || null, name: source?.name || source?.id || "Unknown" },
     remaining: duration,
     initialRemaining: duration,
-    value: existing && ["poison", "burn"].includes(type) ? Math.max(existing.value || 0, value) : value,
+    value: existing && ["poison", "burn", "bleed"].includes(type) ? Math.max(existing.value || 0, value) : value,
     critChance,
     critMultiplier: source?.id ? 2 : 2 + (source?.affixes?.critDamage || 0),
     coefficient: existing && type === "poison" ? Math.max(existing.coefficient || 0, coefficient) : coefficient,
@@ -5562,7 +5562,7 @@ function applyStatus(target, type, source, options = {}) {
   };
   if (type === "evasion") data.incomingCharges = Math.max(1, Math.round(Number(options.incomingCharges) || duration));
   if (existing) {
-    if (["poison", "burn"].includes(type)) {
+    if (["poison", "burn", "bleed"].includes(type)) {
       data.remaining = Math.max(existing.remaining || 0, duration);
       if ((existing.value || 0) > value) {
         data.source = existing.source;
@@ -5772,7 +5772,7 @@ function processTurnStart(unit) {
     const dot = statusOf(unit, type);
     if (!dot || unit.hp <= 0) return;
     let amount = dot.value || 1;
-    const critical = ["burn", "poison"].includes(type) && Math.random() < (dot.critChance || 0);
+    const critical = ["burn", "poison", "bleed"].includes(type) && Math.random() < (dot.critChance || 0);
     if (critical) amount = Math.max(1, Math.round(amount * (dot.critMultiplier || 2)));
     if (type === "burn" && dot.source?.id === "Sparky" && unlockedRank0("Sparky").some(entry => entry.passive === "doubleBurn")) amount *= 2;
     if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
