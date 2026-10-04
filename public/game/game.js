@@ -10869,7 +10869,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         healTargets.forEach(ally => cleansed += cleanseWithTalent(u, ally));
         if (cleansed) log += ` PURIFY removed ${cleansed} negative effect${cleansed === 1 ? "" : "s"}.`;
       }
-      battle.ward = battle.ward || sk.anim === "block" || sk.grantsWard || /Oath Unbound/.test(sk.name);
+      if (sk.anim === "block" && !sk.grantsWard) {
+        u.guarding = true;
+        log += ` ${u.name} gains Personal Guard for the next hit.`;
+      }
+      battle.ward = battle.ward || sk.grantsWard || /Oath Unbound/.test(sk.name);
       const buffNotes = applySkillBuffs(u, healTargets, sk);
       if (buffNotes.length) log += ` ${buffNotes.join(" ")}.`;
       state.resonance = Math.min(100, state.resonance + 5);
@@ -11540,7 +11544,7 @@ function endgameInterrupt(unit) {
 function endgameBossTurnStart(unit) {
   const data = endgameMechanicState(unit);
   data.turn++;
-  if (["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type))) endgameInterrupt(unit);
+  if (["silence", "stun", "sleep"].some(type => statusOf(unit, type))) endgameInterrupt(unit);
   if (data.order && --data.order.remaining <= 0) {
     data.order = null;
     clearEndgameStatus("inspectionOrder", unit);
@@ -11736,7 +11740,7 @@ function stageRhythmAction(unit) {
 function stageBossRhythmAction(unit) {
   if (!unit.endgameBoss) return null;
   const data = endgameMechanicState(unit);
-  if (stageUnitControlled(unit)) {
+  if (["silence", "stun", "sleep"].some(type => statusOf(unit, type))) {
     if (data.stagePending) interruptStageCombination(unit);
     return null;
   }
@@ -11910,7 +11914,7 @@ function endgameEnemyAction(unit) {
   const special = (name, effect, target = null) => ({ kind: "utility", name, element: ENDGAME_BOSS_CONFIG[unit.name].element, mpCost: 0, endgameEffect: effect, target: target || other });
   const party = battle.party.filter(hero => hero.hp > 0);
   const other = party[(unit.actionsTaken || 0) % party.length];
-  const controlled = ["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type));
+  const controlled = ["silence", "stun", "sleep"].some(type => statusOf(unit, type));
   if (controlled) {
     endgameInterrupt(unit);
     return enemyActionForKind(unit, "melee");
@@ -12353,7 +12357,7 @@ function enemyApplyActionStatuses(source, target, action) {
     if (result.applied && ["administrativeLock", "audit"].includes(status.type)) statusOf(target, status.type).skillName = target.lastActiveSkill;
     applications.push(result);
   });
-  return applications.filter(result => result.applied).map(result => result.message);
+  return applications.filter(result => result.message).map(result => result.message);
 }
 
 function enemyResonanceGainForAction(unit, action) {
