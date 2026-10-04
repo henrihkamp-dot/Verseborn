@@ -12,7 +12,7 @@ check('All thirty formations have distinct stage pressure using existing statuse
  u.actionsTaken=2;if(endgameFormationPressure(u))return false;
  }}return names.size===10;
 })()`);
-check('Physical Judgment survives Silence; fresh Break still cancels it',`(()=>{
+check('Physical Judgment survives Silence and Break; Broken Oath still opens',`(()=>{
  pressureSetup(58,2);const boss=battle.enemies.find(u=>u.endgameBoss);boss.actionsTaken=1;
  boss.statuses.push({type:'silence',remaining:3});endgameBossTurnStart(boss);
  const prep=chooseEnemyAction(boss);if(prep.endgameEffect!=='stagePrepare')return false;
@@ -20,7 +20,7 @@ check('Physical Judgment survives Silence; fresh Break still cancels it',`(()=>{
  if(boss.encounterMechanic.stagePending.target!==battle.party[0])return false;
  endgameBossTurnStart(boss);if(chooseEnemyAction(boss).name!=='Chained Judgment')return false;
  boss.encounterMechanic.stageRecovery=false;endgameResolveEnemyEffect(boss,prep,battle.party[0]);endgameBossBroken(boss);
- return !boss.encounterMechanic.stagePending&&statusOf(boss,'brokenOath');
+ return Boolean(boss.encounterMechanic.stagePending)&&statusOf(boss,'brokenOath');
 })()`);
 check('Magical preparations remain interruptible with Silence',`(()=>{
  pressureSetup(55,2);const boss=battle.enemies.find(u=>u.endgameBoss);boss.actionsTaken=1;
