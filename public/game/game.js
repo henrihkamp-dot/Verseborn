@@ -5784,6 +5784,7 @@ function processTurnStart(unit) {
     if (type === "poison" && unit.resistanceTier === "boss") amount = Math.min(amount, Math.max(1, Math.floor(unit.max * .03)));
     if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
     amount = developerScale(dot.source?.id ? "party" : "enemy", "damage", amount);
+    amount = developerScale(dot.source?.id ? "party" : "enemy", type, amount);
     unit.hp = Math.max(0, unit.hp - amount);
     addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label, crit: critical });
     notes.push(`${critical ? "CRIT " : ""}${STATUS_DEFS[type].label} -${amount} HP`);
@@ -6161,7 +6162,7 @@ function skillMpCost(id, sk, unit = null) {
 }
 
 function healingReceived(unit, amount) {
-  return Math.max(0, Math.round(amount * (1 - statusValue(unit, "scorched"))));
+  return developerScale(unit.id ? "party" : "enemy", "healing", Math.max(0, Math.round(amount * (1 - statusValue(unit, "scorched")))));
 }
 
 function scaledMpOnHitRecovery(unit, flat) {
@@ -10128,7 +10129,7 @@ function damageMeterKey() {
 }
 
 function recentDamageMeters() {
-  try { return JSON.parse(localStorage.getItem(damageMeterKey()) || "[]").slice(-3); }
+  try { return JSON.parse(localStorage.getItem(damageMeterKey()) || "[]").slice(-10); }
   catch { return []; }
 }
 
@@ -10144,7 +10145,7 @@ function archiveDamageMeter(result) {
   if (!battle?.actionHistory || battle.meterArchived) return;
   battle.meterArchived = true;
   const report = { name: battle.meterName, started: battle.meterStarted, ended: new Date().toISOString(), result, tuning: battle.meterTuning, actions: battle.actionHistory };
-  try { localStorage.setItem(damageMeterKey(), JSON.stringify([...recentDamageMeters(), report].slice(-3))); }
+  try { localStorage.setItem(damageMeterKey(), JSON.stringify([...recentDamageMeters(), report].slice(-10))); }
   catch { battle.meterArchived = false; }
 }
 
@@ -14049,6 +14050,10 @@ function renderMenu() {
   if (menuTab === "developer") {
     el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;
     el.menuBody.insertAdjacentHTML("beforeend", `<section class="battle-report-exports"><h3>Battle Reports</h3>${recentDamageMeters().map((report, index) => `<div><span>${escapeMarkup(report.name)} · ${escapeMarkup(report.result)} · ${report.actions.length} actions</span><button type="button" data-export-battle="${index}">Export Battle</button></div>`).join("") || "No completed battles recorded yet."}</section>`);
+    el.menuBody.querySelectorAll(".developer-controls > section").forEach((section, index) => {
+      const side = index === 0 ? "party" : "enemy";
+      section.insertAdjacentHTML("beforeend", [["healing", "Healing"], ["burn", "Burn Damage"], ["poison", "Poison Damage"], ["bleed", "Bleed Damage"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join(""));
+    });
     el.menuBody.querySelectorAll("[data-export-battle]").forEach(button => button.addEventListener("click", () => exportDamageMeter(Number(button.dataset.exportBattle))));
     el.menuBody.querySelectorAll("[data-tune-side]").forEach(input => input.addEventListener("input", () => {
       state.developerTuning ||= {};
