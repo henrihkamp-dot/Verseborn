@@ -5,7 +5,20 @@ const prefix = fs.readFileSync(path.join(__dirname, 'test_combat.cjs'), 'utf8').
   .replace('sandbox.window = sandbox;', 'sandbox.fetch=async()=>({ok:false});sandbox.window = sandbox;');
 const { run } = new Function('require', '__dirname', prefix + ';return {run};')(require, __dirname);
 function check(name, code) { assert.ok(run(code), name); console.log('PASS', name); }
+check('MP gain displays amount and source without entering the damage summary', `(() => {
+ const u=battleUnit('Sparky'); battle={party:[u],enemies:[],attackDamage:[]}; battleFloaters=[];
+ addBattleMpGain(u,16,'Attack'); addBattleMpGain(u,0,'Siphoning');
+ return battleFloaters.length===1 && battleFloaters[0].kind==='mp' && battleFloaters[0].text==='+16 MP' && battleFloaters[0].damageType==='Attack' && battle.attackDamage.length===0;
+})()`);
 check('Built-in QA', `runQaChecks(); JSON.parse(document.body.getAttribute('data-qa-result')).passed===70`);
+check('Basic MP recovery remains 6% in both early and late Ember Hall and Story', `(() => {
+ state.gameMode='hallBattles'; const p=progressFor('Sparky'); p.level=16;
+ const early=basicAttackMpRecoveryRate('Sparky'); p.level=30;
+ const middle=basicAttackMpRecoveryRate('Sparky'); p.level=40;
+ const late=basicAttackMpRecoveryRate('Sparky'); state.gameMode='story';
+ const story=basicAttackMpRecoveryRate('Sparky'); state.gameMode='hallBattles';
+ return early===.06 && middle===.06 && late===.06 && story===.06;
+})()`);
 check('Early MP costs preserved; late AoE grows without gear dependence', `(() => {
  state.gameMode='hallBattles'; state.developerTuning={}; progressFor('Sparky').level=16;
  const sk=battleSkills('Sparky').find(s=>s.name==='Memory Flare'); const early=skillMpCost('Sparky',sk);

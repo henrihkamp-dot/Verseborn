@@ -5817,6 +5817,7 @@ function processTurnEnd(unit) {
       unit.hp += hp;
       unit.mp += mp;
       if (hp) addBattleFloater(unit, hp, { kind: "heal" });
+      addBattleMpGain(unit, mp, "Final Refrain");
       notes.push(`Final Refrain restores ${hp} HP and ${mp} MP.`);
     }
   });
@@ -6133,6 +6134,10 @@ function ultimatePotencyMultiplier(id, sk) {
   return (1 + rankBonus + talentBonus + formBonus + gadgetBonus) * echoPotencyMultiplier(id, sk);
 }
 
+function basicAttackMpRecoveryRate(id) {
+  return .06;
+}
+
 function skillMpCost(id, sk, unit = null) {
   if (!sk || sk.anim === "ultimate") return sk?.cost || 0;
   const growth = state.gameMode === "hallBattles" && !sk.basicAttack ? Math.max(0, progressFor(id).level - 20) / 20 : 0;
@@ -6192,7 +6197,7 @@ function resolveActionSustain(unit, sk, directDamage, paidMp = 0, targetCount = 
   }
   const siphoning = sk.basicAttack ? 0 : combatSustainRate(unit.id, "siphoning");
   const mp = siphoning ? Math.min(Math.floor(Math.max(0, paidMp) * Math.min(.3, siphoning * 2)), unit.maxmp - unit.mp) : 0;
-  if (mp > 0) unit.mp += mp;
+  if (mp > 0) { unit.mp += mp; addBattleMpGain(unit, mp, "Siphoning"); }
   return { hp, mp };
 }
 
@@ -7726,6 +7731,11 @@ function battleFloaterPosition(target) {
   return [LOGICAL_WIDTH / 2, 80];
 }
 
+function addBattleMpGain(target, amount, source) {
+  if (amount <= 0) return;
+  addBattleFloater(target, amount, { kind: "mp", text: `+${Math.round(amount)} MP`, damageType: source });
+}
+
 function addBattleFloater(target, amount, options = {}) {
   if (!battle || (!amount && !options.text)) return;
   if (battle.attackDamage && (!options.kind || options.kind === "damage")) {
@@ -7780,7 +7790,7 @@ function drawBattleFloaters() {
       ctx.strokeStyle = "#ffd45c";
       ctx.strokeText(main, mainX, mainY);
     }
-    ctx.fillStyle = evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : floater.kind === "broken" ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
+    ctx.fillStyle = floater.kind === "mp" ? "#79ddff" : evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : floater.kind === "broken" ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
     ctx.fillText(main, mainX, mainY);
     ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
     ctx.lineWidth = 2;
@@ -7881,7 +7891,9 @@ function drawBattleStatusBadges(unit, anchorX, y) {
     const x = Math.round(left + index * (chipWidth + gap));
     drawRect(x, y, chipWidth, chipHeight, def?.negative ? '#7f2f39' : '#52655d');
     drawRect(x + .5, y + .5, chipWidth - 1, chipHeight - 1, '#100d18');
-    const image = statusIconImages[statusIconAliases[status.type] || status.type];
+    const bossIcon = bossMechanicImages[BOSS_MECHANIC_ICONS[status.type]];
+    const image = bossIcon || statusIconImages[statusIconAliases[status.type] || status.type];
+    if (bossIcon) drawBattleIconOutline(x, y, chipWidth, chipHeight, ['memoryCore', 'brokenOath'].includes(status.type));
     if (image) { ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(image, x, y, chipWidth, 7); ctx.restore(); }
     else drawText(def?.short || '?', x + 4, y + 5, '#fff0da', 3, 'center');
     drawRect(x + .5, y + 6, chipWidth - 1, 3.5, '#100d18');
@@ -7978,6 +7990,12 @@ canvas.addEventListener('wheel', event => {
   if (statusTooltip && !statusTooltip.hidden) { statusTooltip.scrollTop += event.deltaY; event.preventDefault(); }
 }, { passive: false });
 
+function drawBattleIconOutline(x, y, width, height, active = false) {
+  drawRect(x - 1, y - 1, width + 2, height + 2, '#08070d');
+  drawRect(x - .5, y - .5, width + 1, height + 1, active ? '#ffeaa0' : '#c9c4df');
+  drawRect(x, y, width, height, '#17121fe6');
+}
+
 function drawEnemyBreakIcon(unit, anchorX) {
   if (!breakIconSheet || unit.hp <= 0) return;
   const broken = Boolean(statusOf(unit, "broken"));
@@ -7991,6 +8009,7 @@ function drawEnemyBreakIcon(unit, anchorX) {
   const y = Math.max(21, Math.round(enemyTop - size - 2));
   ctx.save();
   ctx.imageSmoothingEnabled = false;
+  drawBattleIconOutline(x, y, size, size, broken);
   ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x, y, size, size);
   ctx.restore();
 }
@@ -8002,7 +8021,7 @@ function drawBossIndicatorStrip(unit, anchorX, enemySide) {
   const threshold = unit.breakThreshold || BREAK_THRESHOLD;
   const breakValue = Math.max(0, Math.min(3, Math.ceil((unit.stagger || 0) * 3 / threshold)));
   const showBreak = broken || breakValue > 0;
-  const size = 10, gap = 2;
+  const size = 12, gap = 4;
   const width = (Number(showBreak) + icons.length) * (size + gap) - gap;
   if (!showBreak && !icons.length) return;
   const [, baseline] = enemySide ? enemyBattlePosition(battle.enemies.indexOf(unit), battle.enemies.length) : partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
@@ -8011,15 +8030,16 @@ function drawBossIndicatorStrip(unit, anchorX, enemySide) {
   let x = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
   if (showBreak) {
     const cell = breakIconSheet?.cells[broken ? 3 : breakValue - 1];
+    drawBattleIconOutline(x, y, size, size, broken);
     if (cell) ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x, y, size, size);
     x += size + gap;
   }
   icons.forEach(status => {
     const image = bossMechanicImages[BOSS_MECHANIC_ICONS[status.type]];
-    const frame = bossMechanicImages[status.type === "brokenOath" || status.type === "memoryCore" ? "active-frame" : "normal-frame"];
-    if (frame) ctx.drawImage(frame, x - 1, y - 1, size + 2, size + 2);
+    drawBattleIconOutline(x, y, size, size, status.type === "brokenOath" || status.type === "memoryCore");
     if (image) ctx.drawImage(image, x, y, size, size);
     const count = ["violationStamp", "harmonicRings"].includes(status.type) ? status.value : status.remaining;
+    drawRect(x + size - 7, y + size, 8, 4, '#08070de6');
     drawText(String(count || 1), x + size, y + size + 3, "#fff3d0", 4, "right");
     statusHoverAreas.push({ unit, x: x - 1, y: y - 1, w: size + 2, h: size + 6 });
     x += size + gap;
@@ -10175,7 +10195,7 @@ function skillPreview(u, sk, target = null) {
   const t = totals(u.id);
   const heal = healingAmount(u.id, sk, u);
   const mpCost = skillMpCost(u.id, sk, u);
-  const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% Max MP" : `${mpCost} MP`;
+  const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? `0 MP / +${Math.round(basicAttackMpRecoveryRate(u.id) * 100)}% Max MP` : `${mpCost} MP`;
   const targetLabel = battleSkillTargetLabel(u.id, sk);
   if (sk.dispel) return `Remove one positive buff | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (sk.statusOnly) return `Debuff / no direct damage | ${targetLabel} | ${cost}. ${sk.desc}`;
@@ -11015,9 +11035,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         log += " Maestro of Flame grants Echo Power.";
       }
       if (sk.basicAttack) {
-        const restored = Math.min(Math.max(1, Math.round(u.maxmp * .06)), u.maxmp - u.mp);
+        const recoveryRate = basicAttackMpRecoveryRate(u.id);
+        const restored = Math.min(Math.max(1, Math.round(u.maxmp * recoveryRate)), u.maxmp - u.mp);
         u.mp += restored;
-        if (restored) log += ` Normal Attack restores ${restored} MP (6% Max MP).`;
+        addBattleMpGain(u, restored, "Attack");
+        if (restored) log += ` Normal Attack restores ${restored} MP (${Math.round(recoveryRate * 100)}% Max MP).`;
       }
       if (sk.element === "Holy Fire" && typedTalentValue(u.id, "selfCleanse")) {
         const negative = ensureStatuses(u).find(status => STATUS_DEFS[status.type]?.negative);
@@ -11066,6 +11088,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (mpOnHit) {
           const restored = Math.min(scaledMpOnHitRecovery(u, mpOnHit), u.maxmp - u.mp);
           u.mp += restored;
+          addBattleMpGain(u, restored, "Gear");
           if (restored) log += ` ${u.name} restores ${restored} MP.`;
         }
       }
@@ -11195,6 +11218,7 @@ function useBattleItem(u, name, target = null) {
   } else if (info.battle === "mp") {
     const before = u.mp;
     u.mp = Math.min(u.maxmp, u.mp + consumableRecovery(info, u.maxmp));
+    addBattleMpGain(u, u.mp - before, "Item");
     log += ` MP +${u.mp - before}.`;
     playSfx("item");
   } else if (info.battle === "revive") {
@@ -12816,7 +12840,7 @@ const statusStatHelp = [
   ["MAG", "+1 base damage per point for most magic skills, +0.3 healing before bonuses, and +1 Max MP per 2 MAG. MP costs stay fixed, so MAG increases casting endurance."],
   ["STAM", "+4 maximum HP per point. Every hero also has 30 base HP."],
   ["ECHO", "+0.15% Ultimate, Echo and transformation potency per point."],
-  ["HP / MP", "HP keeps a hero standing. MP pays fixed skill costs; Normal Attack restores exactly 6% Max MP."],
+  ["HP / MP", "HP keeps a hero standing. MP pays skill costs; Normal Attack restores 6% Max MP."],
   ["CRIT", "Starts at 5%, then adds AGI, gear and talents. A critical hit deals double damage."],
   ["DMG / ACTION", "Expected damage from the strongest non-ultimate command, including average critical damage."],
   ["HEAL / ALLY", "HP restored to one ally by the strongest non-ultimate heal. Group heals restore this to each ally."]
@@ -13032,7 +13056,7 @@ function abilityUnlockLabel(id, sk) {
 
 function statusAbilityRowsHtml(id, skills, unit = { id, statuses: [] }, originLabel = "") {
   return skills.map(sk => {
-    const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? "0 MP / +6% MP" : `${skillMpCost(id, sk, unit)} MP`;
+    const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? `0 MP / +${Math.round(basicAttackMpRecoveryRate(id) * 100)}% MP` : `${skillMpCost(id, sk, unit)} MP`;
     const target = battleSkillTargetLabel(id, sk);
     return `<div class="status-ability-row"><span><strong>${sk.name}</strong><small>${sk.element} / ${target} / ${cost}</small></span><p>${sk.desc}</p><b>${originLabel || abilityUnlockLabel(id, sk)}</b>${statusAbilityMetricsHtml(id, sk, unit)}</div>`;
   }).join("");
