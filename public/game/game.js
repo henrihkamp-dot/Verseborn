@@ -5543,6 +5543,8 @@ function statusDurationFor(source, type, requested) {
 function applyStatus(target, type, source, options = {}) {
   const def = STATUS_DEFS[type];
   if (!target || !def || target.hp <= 0) return { applied: false, message: "" };
+  const bossControl = !target.id && (target.endgameBoss || target.resistanceTier === "boss" && !(battle?.hallStage >= 51 && battle.hallStage <= 60)) && ["stun", "sleep"].includes(type);
+  if (bossControl && target.controlRecovery > 0) return { applied: false, message: `${def.label} RESISTED (boss control recovery)` };
   if (def.negative && !options.force && Math.random() >= statusApplicationChance(target, type, options.chance ?? 1, source)) {
     return { applied: false, message: `${def.label} RESISTED` };
   }
@@ -5552,6 +5554,10 @@ function applyStatus(target, type, source, options = {}) {
   if (type === "poison" && !options.duration) duration = statusDurationFor(source, type, poisonDurations[options.potency || "normal"]);
   if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
   duration = Math.max(1, Math.round(duration));
+  if (bossControl) {
+    duration = 1;
+    target.controlRecovery = 3;
+  }
   let value = ["poison", "burn", "bleed"].includes(type) ? (Number.isFinite(options.value) ? options.value : dotValueFor(type, target, source, options)) : options.value ?? def.value;
   if (def.negative && source?.id && !["poison", "burn", "bleed"].includes(type) && Number.isFinite(value)) value *= 1 + typedTalentValue(source.id, "debuffPotency");
   const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .3, normal: .4, strong: .5 }[options.potency || "normal"]) : null;
@@ -5777,7 +5783,7 @@ function statusBadgesHtml(unit) {
 
 function processTurnStart(unit) {
   const notes = [];
-  if (battle?.hallStage >= 53 && unit.encounterMechanic?.stagePending && stageUnitControlled(unit)) interruptStageCombination(unit);
+  if (battle?.hallStage >= 53 && unit.encounterMechanic?.stagePending && (unit.endgameBoss ? endgameBossControlled(unit) || statusOf(unit, "broken") : stageUnitControlled(unit))) interruptStageCombination(unit);
   if (battle?.hallStage === 52 && unit.encounterMechanic?.sanctuaryPending && ["silence", "stun", "sleep", "broken"].some(type => statusOf(unit, type))) interruptSanctuaryRitual(unit);
   if (unit.endgameBoss) endgameBossTurnStart(unit);
   if (unit.protectedAlly && --unit.protectedAlly.remaining <= 0) delete unit.protectedAlly;
@@ -5813,6 +5819,11 @@ function processTurnStart(unit) {
 
 function processTurnEnd(unit) {
   const notes = [];
+  if (unit.controlRecovery > 0) {
+    unit.controlRecovery--;
+    if (unit.controlRecovery === 2) notes.push("Boss control recovery: immune to Stun and Sleep for two own turns.");
+    if (unit.controlRecovery === 0) notes.push("Boss control recovery ended.");
+  }
   if (unit.prrrpWindow > 0) unit.prrrpWindow--;
   ensureStatuses(unit).forEach(status => {
     if (status.type === "evasion" && Number.isFinite(status.incomingCharges)) return;
@@ -5854,7 +5865,7 @@ function reorderRemainingTurns() {
   const remaining = battle.turnQueue.slice(battle.turnIndex + 1);
   const normal = remaining.filter(turn => !turn.extra).map(turn => {
     const unit = turn.side === "party" ? battle.party.find(p => p.id === turn.id) : battle.enemies[turn.index];
-    return { ...turn, agi: effectiveAgility(unit, turn.side === "party" ? totals(turn.id).agi : unit.stats.agi) };
+    return { ...turn, agi: battleInitiative(unit, turn.side === "party" ? totals(turn.id).agi : unit.stats.agi) };
   }).sort((a, b) => b.agi - a.agi);
   battle.turnQueue.splice(battle.turnIndex + 1, remaining.length, ...remaining.map(turn => turn.extra ? turn : normal.shift()));
 }
@@ -10019,10 +10030,22 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   runCurrentTurn(openingNotes);
 }
 
+function battleInitiative(unit, base) {
+  const agility = effectiveAgility(unit, base);
+  if (!unit.endgameBoss || battle?.hallStage < 51 || battle?.hallStage > 60) return agility;
+  const boosted = agility * 1.1;
+  if ((unit.actionsTaken || 0) === 0 || (battle.round - 1) % 3 === 0) {
+    const fastest = Math.max(0, ...battle.party.filter(hero => hero.hp > 0).map(hero => effectiveAgility(hero, totals(hero.id).agi)),
+      ...battle.enemies.filter(enemy => enemy.hp > 0).map(enemy => effectiveAgility(enemy, enemy.stats.agi) * (enemy.endgameBoss ? 1.1 : 1)));
+    return Math.max(boosted, fastest + 1);
+  }
+  return boosted;
+}
+
 function buildTurnOrder() {
   battle.turnQueue = [
-    ...battle.party.filter(unit => unit.hp > 0).map(unit => ({ side: "party", id: unit.id, name: unit.name, agi: effectiveAgility(unit, totals(unit.id).agi) })),
-    ...battle.enemies.map((unit, index) => ({ side: "enemy", index, name: unit.name, agi: effectiveAgility(unit, unit.stats.agi) })).filter(turn => battle.enemies[turn.index].hp > 0)
+    ...battle.party.filter(unit => unit.hp > 0).map(unit => ({ side: "party", id: unit.id, name: unit.name, agi: battleInitiative(unit, totals(unit.id).agi) })),
+    ...battle.enemies.map((unit, index) => ({ side: "enemy", index, name: unit.name, agi: battleInitiative(unit, unit.stats.agi) })).filter(turn => battle.enemies[turn.index].hp > 0)
   ].sort((a, b) => b.agi - a.agi || (a.side === b.side ? 0 : (a.side === (battle.round % 2 ? "enemy" : "party") ? -1 : 1)));
   battle.turnIndex = 0;
 }
@@ -12356,6 +12379,7 @@ function enemyDamageRoll(unit, action, target) {
   const random = Math.floor(Math.random() * 6);
   let damage = enemyActionScalingStat(unit, action) * (action.coefficient || .9) + Math.max(0, unit.level - 1) * .35 + random;
   damage *= unit.combatPotency?.[action.kind === "ultimate" ? "ultimate" : "damage"] || 1;
+  if (unit.endgameBoss && battle?.hallStage >= 51 && battle.hallStage <= 60) damage *= 1.12;
   const physical = action.scaling === "str" || action.kind === "melee" || action.element === "Physical";
   const damageKind = physical ? "melee" : "magic";
   damage *= outgoingDamageMultiplier(unit, damageKind, target);
