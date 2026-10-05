@@ -5476,6 +5476,17 @@ function dotScalingStat(source, stat) {
   return Math.max(1, base * (1 + statusValue(source, buff)));
 }
 
+function returnToOpeningScreen() {
+  if (mode === "battle" || mode === "transition" || mode === "title") return false;
+  clearTimeout(saveTimer);
+  if (!saveGame()) {
+    showHudNotice("Could not save. Stay in the game and export your save before leaving.");
+    return false;
+  }
+  window.location.reload();
+  return true;
+}
+
 function developerPercent(side, stat) {
   if (state.gameMode !== "hallBattles") return 0;
   return Math.max(-100, Math.min(100, Math.round(Number(state.developerTuning?.[side]?.[stat]) || 0)));
@@ -14408,6 +14419,8 @@ function renderMenu() {
       el.menuBody.insertAdjacentHTML('beforeend', `<section class="battle-report-exports"><h3>Last 10 Battle Reports</h3>${recentDamageMeters().slice(0, 10).map((report, index) => `<div><span>${escapeMarkup(report.name)} · ${escapeMarkup(report.result)} · ${report.actions.length} actions</span><button type="button" data-export-battle="${index}">Export Battle</button></div>`).join('') || 'No completed battles recorded yet.'}</section>`);
       el.menuBody.querySelectorAll('[data-export-battle]').forEach(button => button.addEventListener('click', () => exportDamageMeter(Number(button.dataset.exportBattle))));
     }
+    el.menuBody.insertAdjacentHTML('afterbegin', `<section class="hall-save-exports"><h3>Session</h3><div><span><strong>Opening Screen</strong><small>Save and return</small></span><button type="button" data-return-opening>Save &amp; Return to Opening Screen</button></div></section>`);
+    el.menuBody.querySelector('[data-return-opening]').addEventListener('click', returnToOpeningScreen);
   }
   bindGearHoverTooltips();
 }
