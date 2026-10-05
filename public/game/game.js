@@ -8100,7 +8100,8 @@ function drawBossTelegraphs() {
 function updateBossMechanicDisplay() {
   const hud = document.getElementById("bossMechanicHud");
   if (!hud) return;
-  const active = mode === "battle" && battle?.hallStage > 50;
+  const earlyAnnouncement = battle?.hallStage >= 5 && battle.hallStage <= 40 && battle.mechanicAnnouncement && performance.now() < battle.mechanicAnnouncement.until;
+  const active = mode === "battle" && (battle?.hallStage > 50 || earlyAnnouncement);
   hud.classList.toggle("hidden", !active);
   document.querySelector(".game")?.classList.toggle("has-endgame-mechanics", active);
   if (!active) return;
@@ -8120,7 +8121,7 @@ function updateBossMechanicDisplay() {
     const icon = COMBAT_ROLE_ICON_INDEX[role] ?? COMBAT_ROLE_ICON_INDEX.hybrid;
     return `<span><span class="boss-roster-role" title="${escape(role)}" style="background-image:url('${escape(combatRoleIconSheet?.image.src || '')}');background-position:${icon * 25}% center"></span><b title="${escape(unit.name)}">${escape(unit.name)}</b><i>${Math.max(0, Math.round(unit.hp))} HP / ${Math.max(0, Math.round(unit.mp || 0))} MP</i></span>`;
   }).join('')}</div>`;
-  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/3</header><div class="boss-mechanic-panel ${boss ? 'is-boss' : ''} ${warning ? 'is-warning' : ''}"><strong>${escape(boss?.name || title)}</strong><p>${boss ? escape(title) + ': ' : ''}${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>${roster(battle.party, false)}${roster(battle.enemies, true)}`;
+  const html = `<header>STAGE ${battle.hallStage}/60 · ${escape(hallBattleInfo(battle.hallStage)?.name)} · PHASE ${phase}/${battle.phaseTotal || 1}</header><div class="boss-mechanic-panel ${boss ? 'is-boss' : ''} ${warning ? 'is-warning' : ''}"><strong>${escape(boss?.name || title)}</strong><p>${boss ? escape(title) + ': ' : ''}${escape(text)}${rule?.fulfilled ? ' Designated target requirement fulfilled.' : ''}</p></div>${battle.hallStage > 50 ? roster(battle.party, false) + roster(battle.enemies, true) : ''}`;
   if (hud.innerHTML !== html) hud.innerHTML = html;
 }
 
