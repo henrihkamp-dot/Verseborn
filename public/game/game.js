@@ -5036,8 +5036,9 @@ function autoEquipLoadoutScore(id) {
   const resistance = ["poison", "sleep", "stun"].reduce((sum, type) => sum + effectValue(id, "statusResistance", type), effectValue(id, "allStatusResistance"));
   const utility = statusProc * 100 * profile.control
     + effectValue(id, "statusChance") * 65 * profile.control
-    + effectValue(id, "statusDuration") * 7 * profile.control
-    + effectValue(id, "buffDuration") * 8 * profile.support
+    + effectValue(id, "statusDuration") * 30 * (profile.control + .5)
+    + effectValue(id, "buffDuration") * 35 * (profile.support + .5)
+    + gearEffects(gearByName(baseJobs[id].gear.weapon)).filter(effect => effect.type === "statusOnHit" && ["stun", "sleep"].includes(effect.status)).reduce((sum, effect) => sum + effect.value, 0) * 180 * (profile.control + .5)
     + effectValue(id, "blockPower") * 100 * profile.tank
     + resistance * 36 * (profile.tank + .25)
     + effectValue(id, "echoing") * 260
@@ -5047,7 +5048,7 @@ function autoEquipLoadoutScore(id) {
     + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "mpOnHit") * 1.2)
     + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "battleRegen") * .16)
     + combatSustainRate(id, "leeching") * 90 * (profile.damage + .25)
-    + combatSustainRate(id, "siphoning") * 110 * (profile.damage + profile.support * .35)
+    + combatSustainRate(id, "siphoning") * 330 * (profile.damage + profile.support * .35 + .5)
     + effectValue(id, "weaknessDamage") * 55 * profile.damage
     + effectValue(id, "poisonDamage") * 55 * (id === "Mira" ? 1 : .25);
   return output.dps * profile.damage
