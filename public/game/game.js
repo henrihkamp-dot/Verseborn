@@ -10117,6 +10117,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   battle.meterEvents = [];
   battle.meterStarted = new Date().toISOString();
   battle.meterName = name;
+  battle.meterLoadout = snapshotBattleLoadout(battle.party);
   battle.meterTuning = JSON.parse(JSON.stringify(state.developerTuning || {}));
   if (developerGearLoadout) battle.meterTuning.gearTest = { stage: developerGearLoadout.stage, rarity: developerGearLoadout.rarity };
   const opening = battle.party.reduce((sum, unit) => sum + effectValue(unit.id, "openingResonance"), 0);
@@ -10294,7 +10295,7 @@ function recordDamageMeterAction(message) {
 function archiveDamageMeter(result) {
   if (!battle?.actionHistory || battle.meterArchived) return;
   battle.meterArchived = true;
-  const report = { name: battle.meterName, started: battle.meterStarted, ended: new Date().toISOString(), result, tuning: battle.meterTuning, actions: battle.actionHistory };
+  const report = { name: battle.meterName, started: battle.meterStarted, ended: new Date().toISOString(), result, tuning: battle.meterTuning, loadout: battle.meterLoadout, actions: battle.actionHistory };
   try { localStorage.setItem(damageMeterKey(), JSON.stringify([...recentDamageMeters(), report].slice(-10))); }
   catch { battle.meterArchived = false; }
 }
@@ -10305,10 +10306,36 @@ function renderDamageMeter() {
   panel.innerHTML = (battle.actionHistory || []).slice(-4).map(action => `<div><strong>R${action.round} · ${escapeMarkup(action.actor)}</strong><p>${escapeMarkup(action.message)}</p>${action.events.map(event => `<small>${escapeMarkup(event.target)}: ${event.crit ? "CRIT " : ""}${event.amount} ${escapeMarkup(event.type || event.kind)} ${escapeMarkup(event.text)}</small>`).join("")}</div>`).join("") || "No actions yet.";
 }
 
+function snapshotBattleLoadout(party) {
+  return JSON.parse(JSON.stringify(party.map(unit => ({
+    name: unit.name, level: progressFor(unit.id).level, stats: totals(unit.id),
+    gear: Object.entries(baseJobs[unit.id].gear || {}).map(([slot, ref]) => {
+      const gear = ref && gearByName(ref);
+      return gear ? { slot, name: gearDisplayName(ref), rarity: gearRarity(ref), stats: gear.stats,
+        description: gear.desc, effects: [weaponBasicAttackEffect(gear), ...gearEffects(gear)].filter(Boolean).map(entry => gearEffectLabel(entry)), affixes: gearAffixes(ref).map(entry => formatAffix(entry)) } : { slot, name: "Empty" };
+    })
+  }))));
+}
+
+function damageMeterLoadoutLines(report) {
+  if (!Array.isArray(report.loadout)) return ["Equipment snapshot unavailable (older report).", ""];
+  return ["Party equipment at battle start", ...report.loadout.flatMap(hero => [
+    `${hero.name} | Level ${hero.level}`,
+    `  Stats: ${JSON.stringify(hero.stats)}`,
+    ...hero.gear.flatMap(item => [
+      `  ${item.slot.toUpperCase()}: ${item.name}${item.rarity ? ` | ${item.rarity}` : ""}`,
+      ...(item.stats ? [`    Base stats: ${JSON.stringify(item.stats)}`] : []),
+      ...(item.description ? [`    Description: ${item.description}`] : []),
+      ...(item.effects || []).map(effect => `    Unique effect: ${effect}`),
+      ...(item.affixes || []).map(affix => `    Affix: ${affix}`)
+    ]), ""
+  ])];
+}
+
 function exportDamageMeter(index) {
   const report = recentDamageMeters()[index];
   if (!report) return;
-  const lines = [`${report.name} | ${report.result}`, `${report.started} — ${report.ended}`, `Developer tuning: ${JSON.stringify(report.tuning)}`, "", ...report.actions.flatMap(action => [`#${action.number} | Round ${action.round} | ${action.phase} | ${action.actor}`, action.message, ...action.events.map(event => `  ${event.target}: ${event.crit ? "CRIT " : ""}${event.amount} ${event.type || event.kind} ${event.text}`), `  Party: ${action.party.map(u => `${u.name} HP ${u.hp} MP ${u.mp}`).join("; ")}`, `  Enemies: ${action.enemies.map(u => `${u.name} HP ${u.hp} MP ${u.mp}`).join("; ")}`, ""])];
+  const lines = [`${report.name} | ${report.result}`, `${report.started} — ${report.ended}`, `Developer tuning: ${JSON.stringify(report.tuning)}`, "", ...damageMeterLoadoutLines(report), ...report.actions.flatMap(action => [`#${action.number} | Round ${action.round} | ${action.phase} | ${action.actor}`, action.message, ...action.events.map(event => `  ${event.target}: ${event.crit ? "CRIT " : ""}${event.amount} ${event.type || event.kind} ${event.text}`), `  Party: ${action.party.map(u => `${u.name} HP ${u.hp} MP ${u.mp}`).join("; ")}`, `  Enemies: ${action.enemies.map(u => `${u.name} HP ${u.hp} MP ${u.mp}`).join("; ")}`, ""])];
   const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;
