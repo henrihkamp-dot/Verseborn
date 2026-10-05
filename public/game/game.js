@@ -3295,7 +3295,7 @@ const baseJobs = {
   Sparky: character("Sparky", "Emberborn", "Ancient Fire", "#332846", "#7f4ad1", "#b66cff", { str: 7, agi: 13, mag: 16, stam: 8, echo: 16 }, ["Voice of Verse", "Workshop Coat", "Promise Ring", "Gearheart Charm", "Glimmer Goggles"], [
     skill("Ember Nip", "melee", "Ancient Fire", 14, 0, "Tiny bite. Applies Burn for 4 actions on a successful hit.", { status: { type: "burn", chance: 1, duration: 4 } }),
     skill("Memory Flare", "magic", "Ancient Fire", 36, 7, "Ancient Fire strikes every living enemy.", { allEnemies: true }),
-    skill("Prrrp", "block", "Heart", -20, 5, "Morale heal."),
+    skill("Prrrp", "magic", "Heart", 0, 5, "Restore 12 MP to one other living ally. Costs 5 base MP and an action; no HP healing. Mana talents can increase recovery, capped at 18 MP.", { targetSide: "ally", otherAllyOnly: true, manaRecovery: 12, fixedBaseCost: true }),
     skill("Emberblood", "magic", "Ancient Fire", 0, 8, "Grant one ally 25% Vampiric for 3 turns.", { targetSide: "ally", buffs: [{ type: "vampiric", duration: 3, value: .25 }] }),
     skill("ULT: Eternal Flame", "ultimate", "Ancient Fire", 88, 100, "Dragon memory erupts.")
   ])
@@ -3609,7 +3609,7 @@ const compactTalentTrees = {
   Torren: [
     talentNode(1, "Granite Skin", "stamHpBonus", 1, "Each STAM grants Torren 1 additional Max HP."),
     talentNode(1, "Heavy Hands", "staggerBonus", 1, "Attacks deal +1 Break."),
-    talentNode(1, "Stone Memory", "earthCostReduction", .15, "Earth abilities cost 15% less MP."),
+    talentNode(1, "Stone Memory", "earthCostReduction", .2, "Earth abilities cost 20% less MP."),
     talentNode(2, "Earthen Guard", "newSkill", skill("Earthen Guard", "block", "Earth", 0, 6, "Gain a personal stone barrier for 4 actions.", { targetSide: "self", buffs: [{ type: "barrier", value: .3, duration: 4 }] })),
     talentNode(2, "Concussive Blow", "basicBreak", 2, "Normal Attack deals +2 Break."),
     talentNode(2, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break becomes an area attack that damages every living enemy."),
@@ -3711,7 +3711,7 @@ compactTalentTrees.Seerin = [
   talentNode(5, "Last Bastion", "lastBastion", 1, "Once per battle, prevent a fatal ally hit and leave them at 1 HP."),
 ];
 compactTalentTrees.Sparky = [
-  talentNode(1, "Warm Little Heart", "prrrpHealing", .2, "Prrrp healing +20%."),
+  talentNode(1, "Warm Little Heart", "prrrpHealing", .2, "Prrrp MP recovery +20%; total recovery is capped at 18 MP."),
   talentNode(1, "Tough Little Scales", "interceptReduction", .15, "Tiny Dragon, Big Problem intercepts take another 15% less damage."),
   talentNode(1, "Smolder", "burnDuration", 1, "Burn applied by Sparky lasts 1 additional action."),
   talentNode(2, "Shared Warmth", "emberDefense", .1, "Emberblood also grants its target Defense Up 10% for 3 actions."),
@@ -3720,8 +3720,8 @@ compactTalentTrees.Sparky = [
   talentNode(3, "Ember Bond", "emberBond", .25, "Emberblood Vampiric healing also heals Sparky for 25% of HP actually restored."),
   talentNode(3, "Brave Little Thing", "interceptResonance", 12, "Each successful intercept generates +12 party Resonance."),
   talentNode(3, "Hungry Flame", "burningDamage", .25, "Direct Ancient Fire damage +25% against Burning enemies."),
-  talentNode(4, "Ancient Comfort", "prrrpBarrier", .2, "Prrrp grants 20% Barrier for 2 actions to an ally below 50% HP."),
-  talentNode(4, "Never Too Small", "interceptPrrrp", .25, "After intercepting, the next Prrrp within 2 actions costs 2 less MP and heals 25% more."),
+  talentNode(4, "Ancient Comfort", "prrrpBarrier", .2, "Prrrp also grants 20% Barrier for 2 actions if its target is below 50% HP."),
+  talentNode(4, "Never Too Small", "interceptPrrrp", .25, "After intercepting, the next Prrrp within 2 actions costs 2 less MP and restores 25% more MP. Recovery bonuses add together; capped at 18 MP."),
   talentNode(4, "Inferno Heart", "burnRefresh", 1, "A direct Ancient Fire hit refreshes existing Burn to full duration, once per enemy each action."),
   talentNode(5, "Hearthfire", "hearthfire", .25, "Emberblood Vampiric healing heals the most wounded other living ally for 25% of restored HP."),
   talentNode(5, "Tiny Dragon, Huge Problem", "interceptCharges", 3, "Tiny Dragon, Big Problem can intercept 3 single-target attacks during its duration."),
@@ -6166,12 +6166,29 @@ function ultimatePotencyMultiplier(id, sk) {
 }
 
 function basicAttackMpRecoveryRate(id) {
-  return .06;
+  return id === "Torren" ? .15 : .06;
+}
+
+function prrrpManaAmount(source, sk) {
+  const bonus = typedTalentValue(source.id, "prrrpHealing")
+    + (source.prrrpWindow > 0 ? typedTalentValue(source.id, "interceptPrrrp") : 0);
+  return Math.min(18, Math.round((sk.manaRecovery || 0) * (1 + bonus)));
+}
+
+function restorePrrrpMana(source, target, sk) {
+  if (!target || target === source || target.hp <= 0) return 0;
+  const restored = Math.min(prrrpManaAmount(source, sk), Math.max(0, target.maxmp - target.mp));
+  target.mp += restored;
+  addBattleMpGain(target, restored, "Prrrp");
+  const barrier = typedTalentValue(source.id, "prrrpBarrier");
+  if (barrier && target.hp / target.max < .5) applyStatus(target, "barrier", source, { duration: 2, value: barrier, force: true });
+  delete source.prrrpWindow;
+  return restored;
 }
 
 function skillMpCost(id, sk, unit = null) {
   if (!sk || sk.anim === "ultimate") return sk?.cost || 0;
-  const growth = state.gameMode === "hallBattles" && !sk.basicAttack ? Math.max(0, progressFor(id).level - 20) / 20 : 0;
+  const growth = state.gameMode === "hallBattles" && !sk.basicAttack && !sk.fixedBaseCost ? Math.max(0, progressFor(id).level - 20) / 20 : 0;
   const area = skillHitsAll(id, sk);
   const baseCost = (sk.cost || 0) * (1 + growth * (area ? 2.2 : .6));
   let multiplier = 1;
@@ -8149,7 +8166,7 @@ function combatReferenceHtml() {
     ['STAM', 'Increases maximum HP. It is not a hidden armor rating. Defense Up reduces incoming damage directly.'],
     ['AGI', 'Influences initiative and turn order. Poison scales from AGI. Quickstart only improves round-one initiative.'],
     ['ECHO', 'Supports resonance-related builds and talents. Resonance powers ultimates; it is separate from MP.'],
-    ['MP & recovery', 'Skills spend MP. Normal attacks restore 6% maximum MP, rounded to whole MP. Siphoning refunds paid MP after damaging skills, capped at 30%; ultimates do not refund MP.'],
+    ['MP & recovery', 'Skills spend MP. Normal attacks restore 6% maximum MP (Torren: 15%), rounded to whole MP. Siphoning refunds paid MP after damaging skills, capped at 30%; ultimates do not refund MP.'],
     ['Damage & weaknesses', 'The skill names its scaling stat and element. Gear, talents, buffs, critical hits, weakness and vulnerability modify the result. Multi-hit numbers belong to one action.'],
     ['Break & Guard', 'Break builds toward BROKEN and a damage opening. It does not interrupt Stage 51–60 main-boss mechanics. Personal Guard protects the next hit; defense buffs reduce incoming damage.'],
     ['Actions & control', 'Durations count actions, not necessarily full rounds. Silence restricts magic; Sleep and Stun skip turns. Stage 51–60 main bosses reject Sleep and Stun.'],
@@ -8168,9 +8185,10 @@ function updateBossMechanicDisplay() {
   const hud = document.getElementById("bossMechanicHud");
   if (!hud) return;
   const earlyAnnouncement = battle?.hallStage >= 5 && battle.hallStage <= 40 && battle.mechanicAnnouncement && performance.now() < battle.mechanicAnnouncement.until;
-  const active = mode === "battle" && (battle?.hallStage > 50 || earlyAnnouncement);
+  const active = Boolean(mode === "battle" && (battle?.hallStage > 50 || earlyAnnouncement));
   hud.classList.toggle("hidden", !active);
   document.querySelector(".game")?.classList.toggle("has-endgame-mechanics", active);
+  document.querySelector(".game")?.classList.toggle("has-early-mechanics", active && battle.hallStage <= 40);
   if (!active) return;
   const escape = value => String(value || "").replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
   const boss = battle.enemies.find(unit => unit.hp > 0 && unit.endgameBoss);
@@ -10380,6 +10398,7 @@ function skillPreview(u, sk, target = null) {
   const mpCost = skillMpCost(u.id, sk, u);
   const cost = sk.anim === "ultimate" ? "100 Resonance" : sk.basicAttack ? `0 MP / +${Math.round(basicAttackMpRecoveryRate(u.id) * 100)}% Max MP` : `${mpCost} MP`;
   const targetLabel = battleSkillTargetLabel(u.id, sk);
+  if (sk.manaRecovery) return `Restore ${prrrpManaAmount(u, sk)} MP${target ? ` (${Math.min(prrrpManaAmount(u, sk), Math.max(0, target.maxmp - target.mp))} actual)` : ""} | One other living ally | ${cost}. ${sk.desc}`;
   if (sk.dispel) return `Remove one positive buff | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (sk.statusOnly) return `Debuff / no direct damage | ${targetLabel} | ${cost}. ${sk.desc}`;
   if (sk.power < 0) return `Heal ${heal} HP | ${targetLabel} | ${cost}. ${sk.desc}`;
@@ -10463,7 +10482,8 @@ function unitHtml(u, className = "") {
 
 function chooseSkillTarget(u, sk) {
   const live = battle.enemies.filter(enemyUnit => enemyUnit.hp > 0);
-  const allies = battle.party.filter(ally => ally.hp > 0);
+  const allies = battle.party.filter(ally => ally.hp > 0 && (!sk.otherAllyOnly || ally !== u));
+  if (sk.otherAllyOnly && !allies.length) return renderBattle(`${sk.name} needs another living ally.`);
   if (sk.targetSide === "ally" && allies.length > 1) {
     battle.targetMode = true;
     battle.pendingSkill = sk;
@@ -10482,7 +10502,7 @@ function chooseSkillTarget(u, sk) {
 function renderBattleTargets(u) {
   const sk = battle.pendingSkill;
   if (sk.targetSide === "ally") {
-    battle.party.filter(ally => ally.hp > 0).forEach(ally => {
+    battle.party.filter(ally => ally.hp > 0 && (!sk.otherAllyOnly || ally !== u)).forEach(ally => {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = `${ally.name} | HP ${ally.hp}/${ally.max} | MP ${ally.mp}/${ally.maxmp}`;
@@ -10903,6 +10923,8 @@ function endgameSilenceBlocks(unit, sk) {
 
 function useSkill(u, selectedSkill, chosenTarget = null) {
   if (battle.resolving) return;
+  if (selectedSkill.otherAllyOnly && (!chosenTarget || chosenTarget === u || chosenTarget.hp <= 0 || !battle.party.includes(chosenTarget))) return renderBattle(`${selectedSkill.name} needs another living ally.`);
+  if (selectedSkill.manaRecovery && chosenTarget.mp >= chosenTarget.maxmp) return renderBattle(`${chosenTarget.name} already has full MP. No MP spent.`);
   if (endgameSilenceBlocks(u, selectedSkill)) return renderBattle(`${u.name} is Silenced. Use a weapon action or cleanse Silence.`);
   if (statusOf(u, "skillRecord")?.skillName === selectedSkill.name) return renderBattle(`${selectedSkill.name} is sealed by the Living Archive. Use another action or cleanse it.`);
   if (selectedSkill.oncePerBattle && battle.usedOnce[selectedSkill.oncePerBattle]) return renderBattle(`${selectedSkill.name} was already used this battle.`);
@@ -11015,6 +11037,10 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       log += ` ${healTargets.length > 1 ? "The party recovers" : `${healTargets[0].name} recovers`} ${totalRestored} HP.`;
       if (criticalHeals) log += ` ${criticalHeals === 1 ? "CRITICAL HEAL!" : `${criticalHeals} CRITICAL HEALS!`}`;
     } else if (!skillTargetsEnemies(sk)) {
+      if (sk.manaRecovery) {
+        const restored = restorePrrrpMana(u, target, sk);
+        log += ` ${sk.name} restores ${restored} MP to ${target.name}.`;
+      }
       if (sk.transform && activateTransformation(u, sk.transform)) {
         log += ` ${sk.transform === "mech" ? "Mech Form" : "Shadowpriest"} engaged for ${u.formTurns} actions.`;
       }
@@ -13439,7 +13465,7 @@ const statusStatHelp = [
   ["MAG", "+1 base damage per point for most magic skills, +0.3 healing before bonuses, and +1 Max MP per 2 MAG. MP costs stay fixed, so MAG increases casting endurance."],
   ["STAM", "+4 maximum HP per point. Every hero also has 30 base HP."],
   ["ECHO", "+0.15% Ultimate, Echo and transformation potency per point."],
-  ["HP / MP", "HP keeps a hero standing. MP pays skill costs; Normal Attack restores 6% Max MP."],
+  ["HP / MP", "HP keeps a hero standing. MP pays skill costs; Normal Attack restores 6% Max MP (Torren: 15%)."],
   ["CRIT", "Starts at 5%, then adds AGI, gear and talents. A critical hit deals double damage."],
   ["DMG / ACTION", "Expected damage from the strongest non-ultimate command, including average critical damage."],
   ["HEAL / ALLY", "HP restored to one ally by the strongest non-ultimate heal. Group heals restore this to each ally."]
@@ -13519,7 +13545,7 @@ function skillCatalogueHtml(id) {
   const form = id === "Glimmer" ? "mech" : id === "Kael" ? "shadowpriest" : null;
   const sections = [{ title: "Current skills", skills: normal, unit: { id, statuses: [] } }];
   if (form && normal.some(sk => sk.transform === form)) sections.push({ title: form === "mech" ? "Mech Form skills" : "Shadowpriest skills", skills: TRANSFORMED_SKILLS[form], unit: { id, form, statuses: [] } });
-  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(id)}` : sk.basicAttack ? "0 MP / restores 6% Max MP" : `${skillMpCost(id, sk, section.unit)} fixed MP`} / ${sk.element} / ${skillFormula(sk, id)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents, ECHO, Ultimate rank and form stats, but no enemy defense, weakness, Break bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
+  return sections.map(section => `<details class="skill-catalogue"><summary>${section.title}</summary><div class="skill-catalogue-list">${section.skills.map(sk => `<article><strong>${sk.name}</strong><small>${sk.anim === "ultimate" ? `100 Resonance / Rank ${ultimateRank(id)}` : sk.basicAttack ? `0 MP / restores ${Math.round(basicAttackMpRecoveryRate(id) * 100)}% Max MP` : `${skillMpCost(id, sk, section.unit)} fixed MP`} / ${sk.element} / ${skillFormula(sk, id)}</small><p>${sk.desc}</p><small>${sk.power < 0 ? "Heal / ally" : "Average damage / target"}: ${Math.round(skillExpectedOutput(id, sk, section.unit))}${skillTargetsEnemies(sk) ? ` / ${Math.round(skillExpectedOutput(id, sk, section.unit, true))} vs afflicted` : ""}</small></article>`).join("")}</div><p class="shop-note">Estimates include current gear, talents, ECHO, Ultimate rank and form stats, but no enemy defense, weakness, Break bonus or temporary buffs. Area damage is per target.</p></details>`).join("");
 }
 
 function estimatedHeroOutput(id) {
@@ -13743,7 +13769,7 @@ function resetTalents(id) {
 
 function capsHtml(id) {
   const crit = heroCritBreakdown(id);
-  return `<div class="combat-caps"><strong>${id} / Combat limits</strong><span>CRIT ${Math.round(crit.total * 100)}% / 65% max</span><span>AGI CRIT +${(crit.agilityBonus * 100).toFixed(1)}% (0.10 percentage point per AGI)</span><span>Status application: 95% max after resistance</span><span>Normal Attack: restores 6% Max MP</span><span>Extra actions: 2 per battle (shared by party)</span><span>Boss Poison: 1.5% max HP per tick; refreshes, never stacks</span></div>`;
+  return `<div class="combat-caps"><strong>${id} / Combat limits</strong><span>CRIT ${Math.round(crit.total * 100)}% / 65% max</span><span>AGI CRIT +${(crit.agilityBonus * 100).toFixed(1)}% (0.10 percentage point per AGI)</span><span>Status application: 95% max after resistance</span><span>Normal Attack: restores ${Math.round(basicAttackMpRecoveryRate(id) * 100)}% Max MP</span><span>Extra actions: 2 per battle (shared by party)</span><span>Boss Poison: 1.5% max HP per tick; refreshes, never stacks</span></div>`;
 }
 
 let gearHoverRegistry = [];

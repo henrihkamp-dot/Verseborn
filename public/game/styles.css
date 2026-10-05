@@ -7388,6 +7388,8 @@ html:not(.touch-layout) .menu {
 .boss-mechanic-hud .boss-hud-roster { grid-column: 1; grid-row: 3; }
 .boss-mechanic-hud .boss-hud-roster.is-enemy { grid-column: 2; grid-row: 3; }
 .boss-mechanic-hud .boss-hud-roster > span { grid-template-columns: 18px minmax(0, 1fr) max-content; align-items: center; gap: 4px; }
+.game.has-early-mechanics { padding-top: 146px; }
+.game.has-early-mechanics .boss-mechanic-hud { height: 138px; grid-template-rows: 18px 116px; }
 .boss-roster-role { display: block; width: 18px; height: 18px; background-repeat: no-repeat; background-size: 500% 100%; }
 @media (max-width: 600px) {
   .game.has-endgame-mechanics { padding-top: 242px; }
