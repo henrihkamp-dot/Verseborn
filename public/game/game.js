@@ -8097,6 +8097,73 @@ function drawBossTelegraphs() {
   });
 }
 
+let lexiconStage = 1;
+
+function archiveEscape(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+function enemyMoveArchiveHtml(move) {
+  const effects = [];
+  if (move.coefficient) effects.push(`${move.coefficient}x ${move.kind === 'melee' ? 'STR' : 'MAG'}`);
+  if (move.healing) effects.push(`Healing${move.healCoefficient ? ` ${move.healCoefficient}x MAG` : ''}`);
+  if (move.allTargets || move.allEnemies || move.allAllies) effects.push('Whole group');
+  if (move.multiHit) effects.push(`${move.multiHit} hits`);
+  if (move.breakPower) effects.push(`Break power ${move.breakPower}`);
+  if (move.status) effects.push(`${STATUS_DEFS[move.status.type]?.label || move.status.type}${move.status.chance != null ? ` ${Math.round(move.status.chance * 100)}%` : ''}${move.status.duration ? ` / ${Math.round(move.status.duration)} actions` : ''}`);
+  for (const buff of move.buffs || []) effects.push(`${STATUS_DEFS[buff.type]?.label || buff.type}${buff.value ? ` ${Math.round(buff.value * 100)}%` : ''}${buff.duration ? ` / ${Math.round(buff.duration)} actions` : ''}`);
+  if (move.cleanse) effects.push('Cleanse');
+  if (move.dispel) effects.push('Dispel');
+  if (move.protectAlly) effects.push('Protect an ally');
+  return `<li><div><strong>${archiveEscape(move.name)}</strong><span>${archiveEscape(move.element)} · ${move.mpCost || 0} MP</span></div><p>${archiveEscape(effects.join(' · ') || move.kind)}</p></li>`;
+}
+
+function hallLexiconHtml() {
+  const stage = Math.max(1, Math.min(60, lexiconStage));
+  const info = hallBattleInfo(stage);
+  const mechanics = {
+    guest: 'Protected Guest punishes direct attacks with a rebuke. Dispel protection, remove escorts, and Silence Veyr before Last Courtesy lands. Break does not cancel the boss attack.',
+    sanctuary: 'Renewal heals the formation. Silence its caster before resolution; dispel wards and remove the healing supports.',
+    inspection: 'Inspection Orders designate how to act. Follow the current order and avoid accumulating Violation Stamps.',
+    guidance: 'Guidance Marks identify the next astral target and may move. Cleanse the mark or prepare protection; watch the next-action announcement.',
+    root: 'Repeated damage categories build Memory Adaptation. Vary physical, magical and ultimate attacks; burst during Memory Core openings.',
+    echo: 'Echo Sigils and occult marks copy buffs and prepare delayed attacks. Cleanse the marked target and avoid handing over powerful buffs.',
+    veil: 'Beguiling Veil disrupts targeting and buffs may be inverted. Cleanse illusions and manage Sleep pressure.',
+    oath: 'Oathguard protects the boss. Break opens a damage window but does not interrupt his prepared abilities.',
+    crescendo: 'Harmonic Rings strengthen the chorus. Silence the charged boss and exploit the announced recovery window.',
+    archive: 'The Living Archive records actions and buffs, locks skills and replays effects. Vary skills and remove harmful records.'
+  };
+  return `<section class="hall-archive"><header class="archive-heading"><div><small>EMBER HALL / FIELD ARCHIVE</small><h2>Encounter Lexicon</h2></div><label>Stage<select data-lexicon-stage aria-label="Lexicon stage">${HALL_BATTLE_BLUEPRINTS.map((entry, i) => `<option value="${i + 1}" ${i + 1 === stage ? 'selected' : ''}>${i + 1} · ${archiveEscape(entry.name)}</option>`).join('')}</select></label></header><div class="archive-stage-title"><span>${String(stage).padStart(2, '0')}</span><div><h3>${archiveEscape(info.name)}</h3><p>${1 + info.waves.length} phases · ${info.boss ? 'Boss encounter' : 'Combat encounter'} · Enemy stats reflect current developer settings and New Game+.</p></div></div>${[info.enemies, ...info.waves].map((keys, phase) => `<section class="archive-phase"><h3>Phase ${phase + 1}</h3>${hallEnemiesForStage(stage, keys, phase).map(source => {
+    const unit = prepareEnemyForBattle(source, stage > 50 ? 'emberHallBattles' : state.map);
+    const profile = enemyAbilityProfile(unit);
+    const moves = Object.values(profile?.moves || {});
+    const rhythm = ENDGAME_STAGE_RHYTHMS[stage]?.[phase];
+    return `<details class="archive-enemy" ${phase === 0 ? 'open' : ''}><summary><strong>${archiveEscape(unit.name)}${unit.finalState ? ' / Enraged' : ''}</strong><span>${archiveEscape(unit.role)} · ${archiveEscape(unit.resistanceTier)} · Weak: ${archiveEscape(unit.weak)}</span></summary><dl class="archive-stats">${Object.entries({ HP: unit.max, MP: unit.maxmp, STR: unit.stats.str, MAG: unit.stats.mag, STAM: unit.stats.stam, AGI: unit.stats.agi, CRIT: `${Math.round(unit.crit * 100)}%`, EVADE: `${Math.round(unit.baseEvasion * 100)}%` }).map(([key, value]) => `<div><dt>${key}</dt><dd>${value}</dd></div>`).join('')}</dl>${unit.endgameBoss ? `<p class="archive-rule">${archiveEscape(mechanics[unit.endgameBoss] || '')} Main bosses in Stages 51–60 are immune to Stun and Sleep.</p>` : rhythm ? `<p class="archive-rule">${archiveEscape(rhythm.title)}: ${archiveEscape(rhythm.hint)}</p>` : stage >= 5 && stage <= 40 ? '<p class="archive-rule">The formation leader prepares a marked assault. Guard, cleanse the mark or interrupt; surviving supports strengthen the impact. Exploit recovery afterward.</p>' : ''}<p class="archive-rotation"><b>Rotation:</b> ${archiveEscape((profile?.pattern || []).map(key => profile.moves?.[key]?.name || key).join(' → ') || 'Situational attacks')}.</p><p class="archive-note">Healing, cleansing, control, available MP, resonance and scripted mechanics can override this pattern. Values below are base ability data; battle modifiers affect the final result.</p><ul class="archive-moves">${moves.map(enemyMoveArchiveHtml).join('')}</ul></details>`;
+  }).join('')}</section>`).join('')}</section>`;
+}
+
+function combatReferenceHtml() {
+  const entries = [
+    ['STR', 'Physical attack scaling. Torren uses STR + 10% STAM for his shield attacks.'],
+    ['MAG', 'Magic and healing scaling; also contributes to maximum MP. Burn scales from MAG.'],
+    ['STAM', 'Increases maximum HP. It is not a hidden armor rating. Defense Up reduces incoming damage directly.'],
+    ['AGI', 'Influences initiative and turn order. Poison scales from AGI. Quickstart only improves round-one initiative.'],
+    ['ECHO', 'Supports resonance-related builds and talents. Resonance powers ultimates; it is separate from MP.'],
+    ['MP & recovery', 'Skills spend MP. Normal attacks restore 6% maximum MP, rounded to whole MP. Siphoning refunds paid MP after damaging skills, capped at 30%; ultimates do not refund MP.'],
+    ['Damage & weaknesses', 'The skill names its scaling stat and element. Gear, talents, buffs, critical hits, weakness and vulnerability modify the result. Multi-hit numbers belong to one action.'],
+    ['Break & Guard', 'Break builds toward BROKEN and a damage opening. It does not interrupt Stage 51–60 main-boss mechanics. Personal Guard protects the next hit; defense buffs reduce incoming damage.'],
+    ['Actions & control', 'Durations count actions, not necessarily full rounds. Silence restricts magic; Sleep and Stun skip turns. Stage 51–60 main bosses reject Sleep and Stun.'],
+    ['Ember Hall progression', 'Complete stages to unlock later encounters, recruits and gear. Stage 51–60 victories permanently unlock dedicated Artifact purchases at Glimmer. Consumables and collectibles use bag slots; gear does not.']
+  ];
+  const legend = Object.entries(STATUS_DEFS).map(([type, def]) => {
+    const icon = bossMechanicImages[BOSS_MECHANIC_ICONS[type]] || statusIconImages[statusIconAliases[type] || type];
+    const status = { type, value: def.value || 0, remaining: def.duration || 1 };
+    const description = ['poison', 'burn', 'bleed'].includes(type) ? 'Damage over time at the start of the affected unit\'s action; can critically hit.' : type === 'harmonicRings' ? 'Strengthens Grand Crescendo. Silence or remove supports; Break does not cancel the main boss ability.' : statusDisplayData({ statuses: [status] }, status).description;
+    return `<div class="archive-legend-item">${icon ? `<img src="${archiveEscape(icon.src)}" alt="" loading="lazy">` : `<span class="archive-icon-fallback">${archiveEscape(def.short)}</span>`}<div><strong>${archiveEscape(def.label)}</strong><small>${def.negative ? 'Debuff' : def.buff ? 'Buff' : 'Combat state'}${def.duration && def.duration < 99 ? ` · base ${def.duration} actions` : ''}</small><p>${archiveEscape(description)}</p></div></div>`;
+  }).join('');
+  return `<section class="combat-reference"><header class="archive-heading"><div><small>VERSEBORN / COMBAT COMPANION</small><h2>The Battle Primer</h2></div></header><div class="reference-grid">${entries.map(([title, text]) => `<section><h3>${title}</h3><p>${text}</p></section>`).join('')}</div><h3>Role Icons</h3><div class="archive-role-legend">${Object.entries(COMBAT_ROLE_ICON_INDEX).map(([role, index]) => `<span><i style="background-image:url('${archiveEscape(combatRoleIconSheet?.image.src || '')}');background-position:${index * 25}% center"></i>${archiveEscape(role)}</span>`).join('')}</div><h3>Status & Mechanic Icons</h3><p>Percentages indicate effect strength or chance; action counters show remaining duration. Related effects may share an icon.</p><div class="archive-legend">${legend}</div></section>`;
+}
+
 function updateBossMechanicDisplay() {
   const hud = document.getElementById("bossMechanicHud");
   if (!hud) return;
@@ -14198,6 +14265,7 @@ function renderMenu() {
       const [id, field] = match;
       return `<div class="world-cell ${id === state.map ? "is-current" : ""} ${state.discoveredMaps.includes(id) ? "" : "is-undiscovered"}"><span>${x + 1}.${y + 1} / ${zoneLevelText(id)}</span><strong>${state.discoveredMaps.includes(id) ? field.name : "Undiscovered"}</strong></div>`;
     }).join("")}</div>`;
+    el.menuBody.innerHTML = combatReferenceHtml() + el.menuBody.innerHTML;
   }
   if (menuTab === "lore") {
     const fieldNotes = Object.values(maps).flatMap(field => field.spawns || []).filter(spawnPoint => spawnPoint.rare || spawnPoint.boss);
@@ -14205,6 +14273,10 @@ function renderMenu() {
     el.menuBody.innerHTML = `${sceneMemoriesHtml()}<h3>Issue Chronicle</h3><div class="menu-grid">${knownIssues.length ? knownIssues.map((q, i) => `<div class="menu-card"><strong>Issue ${i + 1}: ${q[0]}</strong><p>${q[2]}</p><p>${q[1]}</p></div>`).join("") : `<div class="menu-card"><strong>No issue recorded</strong><p>Your chronicle begins when someone entrusts you with a quest.</p></div>`}</div><h3>Rare & Miniboss Field Notes</h3><div class="menu-grid">${fieldNotes.map(spawnPoint => `<div class="menu-card"><strong>${spawnPoint.name}</strong><small>${spawnPoint.rare ? "RARE SPAWN" : "ONE-TIME MINIBOSS"} / ${state.flags[`spawn:${spawnPoint.id}`] ? "DEFEATED" : spawnPoint.available ? "ACTIVE" : "DORMANT"}</small><p>${spawnPoint.lore}</p><p>${spawnPoint.boss ? "Does not respawn." : `Rare return window: roughly ${spawnPoint.respawn}-${spawnPoint.respawn + 30}s.`}</p></div>`).join("")}</div>`;
     el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
     el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
+    const archive = document.createElement('div');
+    archive.innerHTML = hallLexiconHtml();
+    el.menuBody.prepend(archive);
+    archive.querySelector('[data-lexicon-stage]').addEventListener('change', event => { lexiconStage = Number(event.target.value); renderMenu(); });
   }
   if (menuTab === "developer") {
     el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;

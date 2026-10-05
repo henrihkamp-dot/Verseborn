@@ -7420,3 +7420,42 @@ html:not(.touch-layout) .menu {
 .damage-meter p { margin: 4px 0; }
 .damage-meter small { display: block; }
 .battle-report-exports > div { display: flex; gap: 12px; justify-content: space-between; align-items: center; margin: 8px 0; }
+.hall-archive, .combat-reference { padding: 16px 4px 28px; border-bottom: 1px solid #806339; margin-bottom: 24px; }
+.archive-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid #806339; }
+.archive-heading small { color: #c6a573; font-size: 11px; }
+.archive-heading h2 { margin: 6px 0 0; color: #ffe1a2; font-size: 26px; }
+.archive-heading label { display: grid; gap: 6px; color: #c6a573; max-width: 100%; }
+.archive-heading select { width: 360px; max-width: 100%; background: #19121e; color: #ffe1a2; border: 1px solid #b78b43; padding: 10px; font: inherit; }
+.archive-stage-title { display: flex; gap: 20px; align-items: center; padding: 24px 0; }
+.archive-stage-title > span { color: #c6a573; font-size: 38px; border-right: 1px solid #806339; padding-right: 20px; }
+.archive-stage-title h3 { margin: 0; font-size: 20px; }
+.archive-stage-title p, .archive-note { color: #c5b9cc; font-size: 12px; line-height: 1.6; }
+.archive-phase > h3 { border-bottom: 1px solid #65516a; padding-bottom: 8px; color: #e3bd74; }
+.archive-enemy { margin: 10px 0; border: 1px solid #65516a; background: #120e18e8; border-radius: 4px; padding: 14px 18px; }
+.archive-enemy summary { cursor: pointer; color: #ffe1a2; }
+.archive-enemy summary strong { font-size: 16px; }
+.archive-enemy summary > span { display: block; color: #b8c8cb; margin: 7px 0 0 16px; font-size: 12px; }
+.archive-stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(70px,1fr)); gap: 12px; padding: 14px 0; border-bottom: 1px solid #3f3547; }
+.archive-stats dt { color: #b8c8cb; font-size: 10px; }
+.archive-stats dd { margin: 5px 0 0; font-size: 17px; color: #f4e8d1; }
+.archive-rule { border-left: 3px solid #69b5ad; padding-left: 12px; line-height: 1.7; color: #d0e3df; }
+.archive-rotation { line-height: 1.7; }
+.archive-moves { list-style: none; padding: 0; margin: 14px 0 0; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); gap: 0 24px; }
+.archive-moves li { padding: 12px 0; border-top: 1px solid #3f3547; min-width: 0; }
+.archive-moves li > div { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.archive-moves li span { color: #9ecbc9; font-size: 12px; }
+.archive-moves p { color: #d5cbd9; font-size: 12px; line-height: 1.6; margin: 7px 0 0; }
+.reference-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 0 28px; }
+.reference-grid > section { padding: 16px 0; border-bottom: 1px solid #3f3547; }
+.reference-grid h3 { margin: 0 0 8px; color: #e3bd74; }
+.reference-grid p, .combat-reference > p { line-height: 1.7; color: #ddd2e1; }
+.archive-legend { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 8px 24px; }
+.archive-legend-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #3f3547; min-width: 0; }
+.archive-legend-item img, .archive-icon-fallback { width: 32px; height: 32px; flex: 0 0 32px; object-fit: contain; background: #0c0a10; border: 1px solid #b78b43; }
+.archive-icon-fallback { display: grid; place-items: center; font-size: 8px; }
+.archive-legend-item strong { font-size: 11px; overflow-wrap: anywhere; }
+.archive-legend-item small { display: block; color: #b8c8cb; font-size: 11px; margin-top: 5px; }
+.archive-legend-item p { font-size: 11px; line-height: 1.6; color: #d5cbd9; margin: 6px 0 0; }
+.archive-role-legend { display: flex; gap: 24px; flex-wrap: wrap; }
+.archive-role-legend > span { display: flex; align-items: center; gap: 8px; text-transform: capitalize; }
+.archive-role-legend i { width: 28px; height: 28px; background-size: 500% 100%; background-repeat: no-repeat; }
