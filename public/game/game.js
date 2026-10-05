@@ -103,6 +103,7 @@ const gearBrowser = {
   sortOpen: false
 };
 let autoEquipPool = "all";
+let autoEquipStrategy = "utility";
 let selectedItemCategory = "consumables";
 let selectedItemRef = null;
 let selectedSkillHero = "Verseborn";
@@ -2970,7 +2971,11 @@ function resetGearBrowser() {
 
 function autoEquipToolbarHtml(id) {
   return `<section class="gear-auto-equip" aria-label="Automatic equipment">
-    <div><strong>Auto Equip</strong><small>Role-optimized stats, damage, healing and utility</small></div>
+    <div><strong>Auto Equip</strong></div>
+    <div class="gear-auto-source" role="group" aria-label="Optimization priority">
+      <button type="button" data-auto-equip-strategy="dps" class="${autoEquipStrategy === 'dps' ? 'is-active' : ''}" aria-pressed="${autoEquipStrategy === 'dps'}">DPS</button>
+      <button type="button" data-auto-equip-strategy="utility" class="${autoEquipStrategy === 'utility' ? 'is-active' : ''}" aria-pressed="${autoEquipStrategy === 'utility'}">Utility</button>
+    </div>
     <div class="gear-auto-source" role="group" aria-label="Gear source">
       <button type="button" data-auto-equip-pool="all" class="${autoEquipPool === "all" ? "is-active" : ""}" aria-pressed="${autoEquipPool === "all"}">All gear</button>
       <button type="button" data-auto-equip-pool="unequipped" class="${autoEquipPool === "unequipped" ? "is-active" : ""}" aria-pressed="${autoEquipPool === "unequipped"}">Unequipped gear</button>
@@ -5029,6 +5034,7 @@ const AUTO_EQUIP_PROFILES = {
 };
 
 function autoEquipLoadoutScore(id) {
+  const utilityPriority = autoEquipStrategy === "utility";
   const profile = AUTO_EQUIP_PROFILES[id] || AUTO_EQUIP_PROFILES.Verseborn;
   const t = totals(id);
   const output = estimatedHeroOutput(id);
@@ -5036,9 +5042,9 @@ function autoEquipLoadoutScore(id) {
   const resistance = ["poison", "sleep", "stun"].reduce((sum, type) => sum + effectValue(id, "statusResistance", type), effectValue(id, "allStatusResistance"));
   const utility = statusProc * 100 * profile.control
     + effectValue(id, "statusChance") * 65 * profile.control
-    + effectValue(id, "statusDuration") * 30 * (profile.control + .5)
-    + effectValue(id, "buffDuration") * 35 * (profile.support + .5)
-    + gearEffects(gearByName(baseJobs[id].gear.weapon)).filter(effect => effect.type === "statusOnHit" && ["stun", "sleep"].includes(effect.status)).reduce((sum, effect) => sum + effect.value, 0) * 180 * (profile.control + .5)
+    + effectValue(id, "statusDuration") * (utilityPriority ? 30 * (profile.control + .5) : 7 * profile.control)
+    + effectValue(id, "buffDuration") * (utilityPriority ? 35 * (profile.support + .5) : 8 * profile.support)
+    + (utilityPriority ? gearEffects(gearByName(baseJobs[id].gear.weapon)).filter(effect => effect.type === "statusOnHit" && ["stun", "sleep"].includes(effect.status)).reduce((sum, effect) => sum + effect.value, 0) * 180 * (profile.control + .5) : 0)
     + effectValue(id, "blockPower") * 100 * profile.tank
     + resistance * 36 * (profile.tank + .25)
     + effectValue(id, "echoing") * 260
@@ -5048,7 +5054,7 @@ function autoEquipLoadoutScore(id) {
     + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "mpOnHit") * 1.2)
     + (state.gameMode === "hallBattles" ? 0 : effectValue(id, "battleRegen") * .16)
     + combatSustainRate(id, "leeching") * 90 * (profile.damage + .25)
-    + combatSustainRate(id, "siphoning") * 330 * (profile.damage + profile.support * .35 + .5)
+    + combatSustainRate(id, "siphoning") * (utilityPriority ? 330 * (profile.damage + profile.support * .35 + .5) : 110 * (profile.damage + profile.support * .35))
     + effectValue(id, "weaknessDamage") * 55 * profile.damage
     + effectValue(id, "poisonDamage") * 55 * (id === "Mira" ? 1 : .25);
   return output.dps * profile.damage
@@ -13543,6 +13549,23 @@ function statusEquipmentHtml(id) {
   }).join("");
 }
 
+function combinedAffixGroup(entry) {
+  if (["openingTurnProgress", "openingResonance", "echoing", "buffDuration", "statusDuration", "statusDurationReduction"].includes(entry.type)) return "Turn Management";
+  if (["statPct", "hpPct", "mpPct"].includes(entry.type)) return "Stat Increases";
+  if (["siphoning", "leeching", "hpOnHit", "mpOnHit", "battleRegen"].includes(entry.type)) return "HP & MP Recovery";
+  if (["statusOnHit", "statusChance"].includes(entry.type)) return "Status Chances";
+  if (["statusResistance", "allStatusResistance", "blockPower"].includes(entry.type)) return "Defense & Resistance";
+  return "Damage & Crit";
+}
+
+function combinedAffixesHtml(entries) {
+  const groups = ["Turn Management", "Stat Increases", "Damage & Crit", "Status Chances", "HP & MP Recovery", "Defense & Resistance"];
+  return `<div class="combined-affix-groups">${groups.map(group => {
+    const rows = entries.filter(entry => combinedAffixGroup(entry) === group).sort((a, b) => (a.label || a.type).localeCompare(b.label || b.type));
+    return rows.length ? `<section class="combined-affix-group"><h6>${group}</h6>${rows.map(entry => affixDetailHtml(entry)).join('')}</section>` : '';
+  }).join('')}</div>`;
+}
+
 function statusGearOverviewHtml(id) {
   const refs = Object.values(baseJobs[id].gear).filter(Boolean);
   const stats = Object.fromEntries(HALL_BASE_STATS.map(stat => [stat, 0]));
@@ -13562,7 +13585,7 @@ function statusGearOverviewHtml(id) {
     gearEffectLabels(gear).forEach(label => specials.push({ item: gearDisplayName(ref), label }));
   });
   const statHtml = HALL_BASE_STATS.map(stat => `<span><small>${stat.toUpperCase()}</small><strong>+${stats[stat]}</strong></span>`).join("");
-  const affixHtml = [...affixes.values()].map(entry => affixDetailHtml(entry)).join("") || `<p class="status-empty">No random affix contributions equipped.</p>`;
+  const affixHtml = affixes.size ? combinedAffixesHtml([...affixes.values()]) : `<p class="status-empty">No random affix contributions equipped.</p>`;
   const specialHtml = specials.map(entry => `<span><b>${entry.item}</b><small>${entry.label}</small></span>`).join("") || `<p class="status-empty">No unique Specials equipped.</p>`;
   return `<div class="status-gear-totals"><div class="status-gear-stat-total">${statHtml}</div><div class="status-gear-affix-total"><h5>Combined affixes</h5>${affixHtml}</div><div class="status-gear-special-total"><h5>Unique Specials</h5>${specialHtml}</div></div>`;
 }
@@ -14042,6 +14065,10 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-auto-equip]").forEach(btn => btn.onclick = () => runAutoEquip(btn.dataset.autoEquip));
+    el.menuBody.querySelectorAll("[data-auto-equip-strategy]").forEach(btn => btn.onclick = () => {
+      autoEquipStrategy = btn.dataset.autoEquipStrategy;
+      renderMenu();
+    });
     el.menuBody.querySelectorAll("[data-favorite]").forEach(input => input.onchange = () => {
       if (input.checked) state.favoriteGear[input.dataset.favorite] = true;
       else delete state.favoriteGear[input.dataset.favorite];

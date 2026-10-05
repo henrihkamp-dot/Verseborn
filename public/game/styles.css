@@ -1092,6 +1092,12 @@ canvas:focus {
 .status-gear-special-total b { color: #f0d296; font-size: 9px; }
 .status-gear-special-total small { color: #c7b89c; font-size: 8px; }
 .status-combat-detail { margin-top: 8px; }
+.combined-affix-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px 16px; }
+.combined-affix-group { min-width: 0; display: grid; align-content: start; gap: 3px; }
+.combined-affix-group h6 { margin: 0 0 3px; padding: 5px 0; border-bottom: 1px solid #604b54; color: #e1c68e; font-size: 11px; }
+.combined-affix-group .affix-detail { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 4px 7px; }
+.combined-affix-group .affix-detail small { grid-column: 2 / -1; overflow-wrap: anywhere; }
+.combined-affix-group .affix-detail b { overflow-wrap: anywhere; }
 
 .status-talents p {
   margin: 0;
