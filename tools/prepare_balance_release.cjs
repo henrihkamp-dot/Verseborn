@@ -6,6 +6,8 @@ const root = path.resolve(__dirname, '..');
 const release = process.argv[2] || '124';
 assert.match(release, /^\d+$/);
 const runtime = path.join(root, 'dist/client/game');
+fs.copyFileSync(path.join(root, 'public/game/assets/sprites/enemies-battle/manifest.json'), path.join(runtime, 'assets/sprites/enemies-battle/manifest.json'));
+execFileSync(process.execPath, [path.join(root, 'tools/build_classic_ash_wyrm.cjs')]);
 // UI sheets are displayed at 34-52px per cell; ship only that resolution.
 execFileSync(process.execPath, ['-e', `
 const sharp = require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');

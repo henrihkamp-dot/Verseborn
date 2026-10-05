@@ -51,4 +51,10 @@ assert.equal(await page.locator('.game').evaluate(e=>getComputedStyle(e).padding
 await page.evaluate(`delete battle.mechanicAnnouncement;for(let i=0;i<20;i++)updateBossMechanicDisplay();mode='walk';battle=null;`);
 assert.equal(await page.locator('.game').evaluate(e=>getComputedStyle(e).paddingTop),'0px');
 assert.deepEqual(errors,[]);console.log('PASS Lore stage selection and World icon legend in browser');
+if(process.argv.includes('--runtime')) {
+  assert.ok(await page.evaluate(`enemyAnimationSheets['Ash Wyrm'].image.complete && new Set(enemyAnimationSheets['Ash Wyrm'].frameSequences.idle).size===5`));
+  await page.evaluate(`el.menu.classList.add('hidden');hallBattleProgress().unlockedStage=54;startHallBattleStage(54);drawBattleScene();`);
+  await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/classic-ash-wyrm.png')});
+  assert.deepEqual(errors,[]);
+}
 }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});
