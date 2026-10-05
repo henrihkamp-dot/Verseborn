@@ -8524,7 +8524,7 @@ function drawAnimatedEnemy(e, px, py) {
       : "idle";
   const row = sheet.rowMap?.[animation] ?? sheet.rowMap?.idle ?? 0;
   const sequence = sheet.frameSequences?.[animation] || [0, 1, 2, 3, 4];
-  let sequenceIndex = Math.floor((tick + key.length * 3) / 18) % sequence.length;
+  let sequenceIndex = Math.floor((tick + key.length * 3) / 36) % sequence.length;
   if (attacking) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
   if (dying) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
   const column = Math.max(0, Math.min(sheet.columns - 1, sequence[sequenceIndex] ?? 0));
@@ -8581,9 +8581,8 @@ function drawEnemy(e, px, py) {
   const sourceCenterX = cellLeft + (cellRight - cellLeft) / 2;
   const idleBaseline = idleCell.y + idleCell.h - idleRowTop;
   const action = e.anim === "attack" ? Math.sin((Math.min(24, e.animTick || 0) / 24) * Math.PI) : 0;
-  const bob = e.anim === "idle" && Math.floor(tick / 16) % 3 === 1 ? -1 : 0;
   const anchorX = px + 8 - Math.round(action * 7);
-  const baseline = py + 31 + bob;
+  const baseline = py + 31;
   const destX = Math.round(anchorX + (cell.x - sourceCenterX) * scale);
   const destY = Math.round(baseline + (cell.y - (rowTop + idleBaseline)) * scale);
   ctx.drawImage(source.image, cell.x, cell.y, cell.w, cell.h, destX, destY, Math.round(cell.w * scale), Math.round(cell.h * scale));
