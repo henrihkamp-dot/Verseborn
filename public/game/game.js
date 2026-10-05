@@ -5785,7 +5785,7 @@ function statusBadgesHtml(unit) {
 
 function processTurnStart(unit) {
   const notes = [];
-  if (battle?.hallStage >= 53 && unit.encounterMechanic?.stagePending && (unit.endgameBoss ? endgameBossControlled(unit) : stageUnitControlled(unit))) interruptStageCombination(unit);
+  if ((battle?.hallStage >= 53 || battle?.hallStage >= 5 && battle.hallStage <= 40) && unit.encounterMechanic?.stagePending && (unit.endgameBoss ? endgameBossControlled(unit) : stageUnitControlled(unit))) interruptStageCombination(unit);
   if (battle?.hallStage === 52 && unit.encounterMechanic?.sanctuaryPending && stageUnitControlled(unit)) interruptSanctuaryRitual(unit);
   if (unit.endgameBoss) endgameBossTurnStart(unit);
   if (unit.protectedAlly && --unit.protectedAlly.remaining <= 0) delete unit.protectedAlly;
@@ -11771,10 +11771,34 @@ function interruptStageCombination(unit) {
 }
 
 function stageFormationRhythm() {
+  if (battle?.hallStage >= 5 && battle.hallStage <= 40) return earlyHallFormationRhythm();
   const rows = ENDGAME_STAGE_RHYTHMS[battle?.hallStage];
   if (!rows || battle.enemies.some(unit => unit.endgameBoss)) return null;
   const firstNames = hallBattleInfo(battle.hallStage).enemies.map(key => HALL_ENEMY_LIBRARY[key].name);
   return rows[battle.enemies.every(unit => firstNames.includes(unit.name)) ? 0 : 1];
+}
+
+function earlyHallFormationRhythm() {
+  const stage = battle.hallStage;
+  const info = hallBattleInfo(stage);
+  const keys = [info.enemies, ...info.waves].find(group => group.length === battle.enemies.length && group.every(key => battle.enemies.some(unit => unit.name === HALL_ENEMY_LIBRARY[key].name))) || info.enemies;
+  const leader = keys.find(key => HALL_ENEMY_LIBRARY[key].name === battle.enemies[0]?.name) || keys[0];
+  const chapters = [
+    { title: 'Anchor Chain Impact', kind: 'melee', support: 'guard', status: 'marked' },
+    { title: 'Sealed Archive', kind: 'magic', support: 'heal', status: 'marked' },
+    { title: 'Faultline Assault', kind: 'melee', support: 'break', status: 'marked' },
+    { title: 'Ancient Fire Surge', kind: 'magic', support: 'guard', status: 'marked' },
+    { title: 'Overload Protocol', kind: 'magic', support: 'guard', status: 'marked' },
+    { title: 'Unwritten Verdict', kind: 'magic', support: 'cleanse', status: 'marked' },
+    { title: 'Crownfall Assault', kind: 'melee', support: 'guard', status: 'marked' },
+    { title: 'Final Echo', kind: 'magic', support: 'heal', status: 'marked' }
+  ];
+  const chapter = chapters[Math.min(7, Math.floor((stage - 1) / 5))];
+  const followupPhase = keys !== info.enemies;
+  const support = followupPhase ? (chapter.support === 'guard' ? 'break' : 'guard') : chapter.support;
+  return { ...chapter, support, leader, early: true, interval: info.boss ? 4 : 5,
+    title: `${HALL_ENEMY_LIBRARY[leader].name}: ${chapter.title}`,
+    hint: 'Guard the marked ally, cleanse the mark, or interrupt the attacker. Defeating companions weakens the impact; attack during recovery.' };
 }
 
 function stageRhythmAction(unit) {
@@ -11784,6 +11808,7 @@ function stageRhythmAction(unit) {
   const leader = live.find(ally => ally.name === HALL_ENEMY_LIBRARY[rhythm.leader].name);
   if (!leader) return null;
   const data = endgameMechanicState(leader);
+  if (rhythm.early && unit !== leader && !data.stagePending) return null;
   if (unit !== leader) {
     if (stageUnitControlled(unit)) return enemyActionForKind(unit, 'melee');
     if (data.stagePending && rhythm.support === 'guard') return { kind: 'buff', name: 'Escort the Assault', element: 'Earth', mpCost: 12, target: leader, protectAlly: true, buffs: [{ type: 'defenseUp', value: .15, duration: 1 }] };
@@ -11802,7 +11827,16 @@ function stageRhythmAction(unit) {
     if (data.stagePending) interruptStageCombination(unit);
     return enemyActionForKind(unit, 'melee');
   }
-  if (data.stageRecovery) { data.stageRecovery = false; return enemyActionForKind(unit, 'melee'); }
+  if (data.stageRecovery) {
+    data.stageRecovery = false;
+    if (rhythm.early) {
+      endgameStatus(unit, 'physicalVulnerability', unit, { duration: 1, value: .15 });
+      endgameStatus(unit, 'magicVulnerability', unit, { duration: 1, value: .15 });
+      receptionAnnounce('Recovery Opening', `${unit.name} recovers: incoming damage +15% until its next action.`);
+      return { kind: 'utility', name: 'Recovering from the assault', element: 'Physical', mpCost: 0 };
+    }
+    return enemyActionForKind(unit, 'melee');
+  }
   if (data.stagePending) {
     const pending = data.stagePending;
     data.stagePending = null;
@@ -11816,8 +11850,9 @@ function stageRhythmAction(unit) {
     }
     const supports = live.filter(ally => ally !== unit && !stageUnitControlled(ally)).length;
     receptionAnnounce(rhythm.title, `${target.name} receives the announced impact. ${supports} active companions amplify it. The attacker now recovers.`);
-    return { ...enemyActionForKind(unit, rhythm.kind, target), name: rhythm.title, target, allTargets: false, coefficient: 1.25 + supports * .2, breakPower: rhythm.kind === 'melee' ? 3 : 1 };
+    return { ...enemyActionForKind(unit, rhythm.kind, target), name: rhythm.title, target, allTargets: false, coefficient: rhythm.early ? 1.05 + supports * .15 : 1.25 + supports * .2, breakPower: rhythm.kind === 'melee' ? 3 : 1 };
   }
+  if (rhythm.early && (unit.actionsTaken || 0) % rhythm.interval !== 1) return null;
   return { kind: 'utility', name: `${rhythm.title} - preparing`, element: rhythm.kind === 'melee' ? 'Physical' : 'Arcane', mpCost: 0, endgameEffect: 'stagePrepare', rhythm };
 }
 
@@ -12233,7 +12268,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
 }
 
 function chooseEnemyAction(unit) {
-  if (battle?.hallStage >= 53 && battle.hallStage <= 60) {
+  if (battle?.hallStage >= 5 && battle.hallStage <= 40 || battle?.hallStage >= 53 && battle.hallStage <= 60) {
     const stageAction = stageRhythmAction(unit);
     if (stageAction) return stageAction;
   }
