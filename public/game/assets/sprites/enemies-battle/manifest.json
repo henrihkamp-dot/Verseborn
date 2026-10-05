@@ -686,18 +686,19 @@
     "battleOnly": true
   },
   "Ash Wyrm": {
-    "file": "ash-wyrm-classic.webp",
-    "columns": 5,
+    "file": "ash-wyrm-lava.webp",
+    "columns": 4,
     "rows": 5,
-    "cellWidth": 352,
-    "cellHeight": 304,
-    "baseline": 286,
-    "referenceHeight": 230,
+    "cellWidth": 256,
+    "cellHeight": 256,
+    "baseline": 250,
+    "referenceHeight": 245,
     "rowMap": {
       "idle": 0,
-      "walk": 1,
+      "walk": 0,
       "melee": 2,
-      "magic": 3,
+      "magic": 1,
+      "ultimate": 3,
       "death": 4
     },
     "frameSequences": {
@@ -706,8 +707,6 @@
         1,
         2,
         3,
-        4,
-        3,
         2,
         1
       ],
@@ -715,29 +714,31 @@
         0,
         1,
         2,
-        3,
-        4
+        3
       ],
       "melee": [
         0,
         1,
         2,
-        3,
-        4
+        3
       ],
       "magic": [
         0,
         1,
         2,
-        3,
-        4
+        3
+      ],
+      "ultimate": [
+        0,
+        1,
+        2,
+        3
       ],
       "death": [
         0,
         1,
         2,
-        3,
-        4
+        3
       ]
     },
     "battleOnly": true

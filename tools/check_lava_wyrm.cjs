@@ -1,0 +1,13 @@
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const root=path.resolve(__dirname,'../dist/client/game');
+const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/octet-stream');fs.createReadStream(file).pipe(res);});
+(async()=>{await new Promise(r=>server.listen(8817,'127.0.0.1',r));let browser;try{
+browser=await chromium.launch({headless:true,channel:'msedge'});const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:8817/');await page.waitForFunction('runtimeAssetsReady',{},{timeout:120000});
+assert.ok(await page.evaluate(`enemyAnimationSheets['Ash Wyrm'].columns===4 && endgameBossVfxSheets['Ash Wyrm'].image.complete`));
+await page.evaluate(`startTitleGame(false);state.gameMode='hallBattles';mode='walk';hallBattleProgress().unlockedStage=54;startHallBattleStage(54);drawBattleScene();`);
+assert.ok(await page.evaluate(`(()=>{const wyrm=battle.enemies.find(e=>(e.sprite||e.name)==='Ash Wyrm');const fx=makeEnemyBattleEffect(wyrm,battle.party[0],{kind:'magic',name:'Lava',element:'Fire'});if(!fx.bossSheetVfx)return false;effect=fx;drawEffect();return true;})()`));
+await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/lava-ash-wyrm.png')});
+assert.deepEqual(errors,[]);console.log('PASS Ash Wyrm sprite, projectile routing and battle rendering');
+}finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

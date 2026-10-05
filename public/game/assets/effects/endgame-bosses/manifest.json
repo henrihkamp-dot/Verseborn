@@ -148,5 +148,18 @@
       "magic": 2,
       "ultimate": 3
     }
+  },
+  "Ash Wyrm": {
+    "file": "ash-wyrm-lava.webp",
+    "cellWidth": 192,
+    "cellHeight": 192,
+    "anchorX": 96,
+    "anchorY": 96,
+    "columns": 4,
+    "rows": 2,
+    "rowMap": {
+      "magic": 0,
+      "ultimate": 1
+    }
   }
 }

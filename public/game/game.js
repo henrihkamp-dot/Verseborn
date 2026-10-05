@@ -1160,7 +1160,7 @@ function loadMarlaBattleSheet() {
 
 async function loadEnemyAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-146");
+    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-149");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -1377,7 +1377,7 @@ const bossMechanicImages = {};
 const endgameBossVfxSheets = {};
 async function loadEndgameBossVfx() {
   try {
-    const response = await fetch("assets/effects/endgame-bosses/manifest.json?v=113");
+    const response = await fetch("assets/effects/endgame-bosses/manifest.json?v=149");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([name, config]) => new Promise(resolve => {
@@ -12520,7 +12520,7 @@ function makeEnemyBattleEffect(unit, target, action) {
     actionKind: action.kind,
     caster: unit.sprite || unit.name,
     enemyCaster: true,
-    bossSheetVfx: Boolean(unit.endgameBoss),
+    bossSheetVfx: Boolean(unit.endgameBoss || ((unit.sprite || unit.name) === "Ash Wyrm" && ["magic", "ultimate"].includes(vfxKind))),
     vfxKind,
     vfxTargets,
     startedAt: performance.now(),
