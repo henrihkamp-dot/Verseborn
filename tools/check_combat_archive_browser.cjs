@@ -7,6 +7,15 @@ browser=await chromium.launch({headless:true,channel:'msedge'});const page=await
 await page.goto('http://127.0.0.1:8807/');await page.waitForFunction('runtimeAssetsReady',{},{timeout:120000});
 await page.evaluate(`startTitleGame(false);state.gameMode='hallBattles';mode='walk';toggleMenu();menuTab='lore';renderMenu();`);
 await page.locator('[data-lexicon-stage]').selectOption('60');assert.ok(await page.locator('.hall-archive').innerText().then(t=>t.includes('Ilyss')));
+assert.equal(await page.getByRole('heading',{name:'Issue Chronicle',exact:true}).count(),0);
+assert.equal(await page.getByRole('heading',{name:'Rare & Miniboss Field Notes',exact:true}).count(),0);
+await page.evaluate(`const p=progressFor('Verseborn');p.rank0=rank0Choices.Verseborn[0].name;p.talents=[];selectedSkillHero='Verseborn';menuTab='skills';renderMenu();`);
+assert.ok(await page.locator('[data-reset-talents]').isEnabled());
+await page.locator('[data-reset-talents]').click();
+assert.equal(await page.evaluate(`progressFor('Verseborn').rank0 || null`),null);
+await page.locator('[data-rank0]').nth(1).click();
+assert.equal(await page.evaluate(`progressFor('Verseborn').rank0`),await page.evaluate(`rank0Choices.Verseborn[1].name`));
+await page.evaluate(`menuTab='lore';renderMenu();`);
 await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/archive-lore.png')});
 await page.evaluate(`menuTab='world';renderMenu();`);assert.ok(await page.locator('.archive-legend-item').count()>30);
 assert.ok(await page.locator('[data-tab="quests"]').isHidden());

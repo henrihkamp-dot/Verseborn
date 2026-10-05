@@ -13734,6 +13734,7 @@ function resetTalents(id) {
   if (mode === "battle") return;
   const progress = progressFor(id);
   progress.talents = [];
+  delete progress.rank0;
   progressFor(id);
   playSfx("menu");
   updatePanels();
@@ -14075,7 +14076,9 @@ function renderMenu() {
       const [heroId, name] = button.dataset.rank0.split(":");
       selectRank0(heroId, name);
     });
-    el.menuBody.querySelector("[data-reset-talents]").onclick = () => resetTalents(id);
+    const resetButton = el.menuBody.querySelector("[data-reset-talents]");
+    resetButton.disabled = !progress.talents.length && !progress.rank0;
+    resetButton.onclick = () => resetTalents(id);
   }
   if (menuTab === "gear") {
     if (!state.party.includes(selectedGearHero)) selectedGearHero = state.party[0];
@@ -14281,6 +14284,7 @@ function renderMenu() {
     el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
     el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
     const archive = document.createElement('div');
+    if (hallMenu) el.menuBody.innerHTML = sceneMemoriesHtml();
     archive.innerHTML = hallLexiconHtml();
     el.menuBody.prepend(archive);
     archive.querySelector('[data-lexicon-stage]').addEventListener('change', event => { lexiconStage = Number(event.target.value); renderMenu(); });
