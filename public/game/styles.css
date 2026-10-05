@@ -1396,6 +1396,11 @@ canvas:focus {
 .loot-icon {
   background-image: url("assets/ui/loot-icons.png");
 }
+.resource-icon { position: relative; }
+.resource-icon > b { position: absolute; bottom: 0; left: 0; right: 0; padding: 1px 0; text-align: center; font: bold 9px/1.2 "Segoe UI", sans-serif; color: #fff; text-shadow: none; border: 1px solid #bcb39a; }
+.resource-hp > b { background: #80302b; }
+.resource-mp > b { background: #235d85; }
+.resource-revive > b { background: #675019; font-size: 8px; }
 
 .icon-0 { background-position: 0% 50%; }
 .icon-1 { background-position: 25% 50%; }

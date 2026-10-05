@@ -6,6 +6,18 @@ const root = path.resolve(__dirname, '..');
 const release = process.argv[2] || '124';
 assert.match(release, /^\d+$/);
 const runtime = path.join(root, 'dist/client/game');
+// UI sheets are displayed at 34-52px per cell; ship only that resolution.
+execFileSync(process.execPath, ['-e', `
+const sharp = require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');
+const path = require('node:path');
+(async () => {
+  for (const name of ['item-icons', 'loot-icons']) {
+    await sharp(path.join(process.argv[1], 'public/game/assets/ui', name + '.png'))
+      .resize(320, 64, { fit: 'fill', kernel: 'nearest' }).webp({ lossless: true })
+      .toFile(path.join(process.argv[1], 'dist/client/game/assets/ui', name + '.webp'));
+  }
+})().catch(error => { console.error(error); process.exitCode = 1; });
+`, root]);
 assert.ok(fs.existsSync(path.join(root, 'dist/server/index.js')), 'Existing Worker required');
 const source = fs.readFileSync(path.join(root, 'public/game/game.js'), 'utf8').replace(/\.png/g, '.webp');
 for (const match of source.matchAll(/["'`](assets\/[^"'`$\n]+\.webp)["'`]/g)) {
@@ -13,6 +25,12 @@ for (const match of source.matchAll(/["'`](assets\/[^"'`$\n]+\.webp)["'`]/g)) {
 }
 fs.writeFileSync(path.join(runtime, 'game.js'), source);
 for (const file of ['index.html', 'styles.css']) fs.copyFileSync(path.join(root, 'public/game', file), path.join(runtime, file));
+const css = fs.readFileSync(path.join(root, 'public/game/styles.css'), 'utf8')
+  .replace(/(url\(["']?assets\/[^)"']+)\.png/g, '$1.webp');
+for (const match of css.matchAll(/url\(["']?(assets\/[^)"']+)["']?\)/g)) {
+  assert.ok(fs.existsSync(path.join(runtime, match[1])), `Missing runtime CSS asset: ${match[1]}`);
+}
+fs.writeFileSync(path.join(runtime, 'styles.css'), css);
 assert.ok(fs.readFileSync(path.join(runtime, 'index.html'), 'utf8').includes(`hall-release-${release}`));
 const stage = path.join(root, `.sites-artifacts/release${release}-balance-package`);
 const destination = path.join(stage, 'dist');

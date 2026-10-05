@@ -3245,6 +3245,15 @@ function pixelIconHtml(sheet, index, className = "") {
   return `<span class="pixel-icon ${sheet}-icon icon-${index} ${className}" aria-hidden="true"></span>`;
 }
 
+function inventoryItemIconHtml(name, className = "") {
+  const icon = inventoryIcon(name);
+  const info = inventoryInfo(name);
+  const resource = info.battle || info.field;
+  const label = { hp: "HP", mp: "MP", revive: "REVIVE" }[resource];
+  if (!label) return pixelIconHtml(icon.sheet, icon.index, className);
+  return `<span class="pixel-icon ${icon.sheet}-icon icon-${icon.index} ${className} resource-icon resource-${resource}" aria-label="${label}"><b>${label}</b></span>`;
+}
+
 function statLine(stats = {}) {
   return Object.entries(stats).map(([stat, value]) => `${stat.toUpperCase()} +${value}`).join(" / ") || "No stat bonus";
 }
@@ -11384,7 +11393,7 @@ function renderBattleItems(u) {
     const button = document.createElement("button");
     button.type = "button";
     const icon = inventoryIcon(name);
-    button.innerHTML = `${pixelIconHtml(icon.sheet, icon.index, "battle-item-icon")}<span>${name} x${state.inventory[name]} | ${battleItemState(u, info)}</span>`;
+    button.innerHTML = `${inventoryItemIconHtml(name, "battle-item-icon")}<span>${name} x${state.inventory[name]} | ${battleItemState(u, info)}</span>`;
     button.classList.add("battle-item-button");
     button.title = info.desc;
     setBattlePreview(button, name, `${battleItemState(u, info)} | Uses 1 item | Ends turn.`);
@@ -14217,7 +14226,7 @@ function renderMenu() {
       }
       if (entry.kind === "skill") return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}"><span class="selection-letter-icon">S</span><span><strong>${entry.sk.name}</strong><small>${entry.casterId} / ${entry.sk.cost} MP</small></span></button>`;
       const icon = inventoryIcon(entry.name);
-      return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${pixelIconHtml(icon.sheet, icon.index, "selection-row-icon")}<span><strong>${entry.name}</strong><small>${entry.kind === "stash" ? "Stored" : inventoryTypeLabel(entry.name)}</small></span><b>x${entry.amount}</b></button>`;
+      return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}">${inventoryItemIconHtml(entry.name, "selection-row-icon")}<span><strong>${entry.name}</strong><small>${entry.kind === "stash" ? "Stored" : inventoryTypeLabel(entry.name)}</small></span><b>x${entry.amount}</b></button>`;
     }).join("") || `<p class="selection-list-empty">Nothing in this list.</p>`;
     let detail = `<article class="selection-detail selection-empty"><strong>${categoryLabels[selectedItemCategory]}</strong><p>Nothing in this list.</p></article>`;
     if (selectedEntry?.kind === "item" || selectedEntry?.kind === "stash") {
@@ -14232,7 +14241,7 @@ function renderMenu() {
         return `<button type="button" class="field-target" data-field-item="${name}:${id}" ${canUse ? "" : "disabled"}><img src="${menuPortraitSource(id)}" alt=""><span>${hero.name}<small>${value}</small></span></button>`;
       }).join("")}</div>` : "";
       const trade = selectedEntry.kind === "stash" ? "Stored safely with Marla." : selectedItemCategory === "treasure" ? `Sell value: ${inventorySellPrice(name)} G each at a vendor.` : selectedItemCategory === "quest" ? "Protected quest item. Cannot be sold." : info.short || "";
-      detail = `<article class="selection-detail"><header class="selection-detail-head">${pixelIconHtml(icon.sheet, icon.index, "selection-detail-icon")}<div><small>${category}</small><strong>${name}</strong><span>x${amount}</span></div></header><p>${info.desc}</p>${trade ? `<p class="selection-location">${trade}</p>` : ""}${targets}</article>`;
+      detail = `<article class="selection-detail"><header class="selection-detail-head">${inventoryItemIconHtml(name, "selection-detail-icon")}<div><small>${category}</small><strong>${name}</strong><span>x${amount}</span></div></header><p>${info.desc}</p>${trade ? `<p class="selection-location">${trade}</p>` : ""}${targets}</article>`;
     }
     if (selectedEntry?.kind === "gear") {
       const { ref, gear } = selectedEntry;
@@ -14806,7 +14815,7 @@ function shopWareRowHtml(ware, index, purchased = false) {
   const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
   const icon = gear
     ? gearIconHtml({ ...gear, rarity: displayedRarity }, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
-    : (() => { const itemIcon = inventoryIcon(ware.name); return pixelIconHtml(itemIcon.sheet, itemIcon.index, "shop-icon"); })();
+    : (() => { const itemIcon = inventoryIcon(ware.name); return inventoryItemIconHtml(ware.name, "shop-icon"); })();
   const ownedCount = repeatableEcho || ware.artifactShop ? gearCopyCount(gear.name) : 0;
   const displayedStats = ware.stats && typeof ware.stats === "object" ? ware.stats : gear?.stats;
   const comparisonHero = gear ? gearComparisonHero(gear, ware.hallStage ? selectedShopHero : selectedGearHero) : null;
@@ -14854,7 +14863,7 @@ function renderVendor() {
   const sellList = `<div class="shop-list">${sellItems.map(([name, amount]) => {
     const info = inventoryInfo(name);
     const icon = inventoryIcon(name);
-    return `<div class="shop-row">${pixelIconHtml(icon.sheet, icon.index, "shop-icon")}<div><strong>${name} x${amount}</strong><small>${inventoryTypeLabel(name)}. ${info.desc}</small></div><span>${inventorySellPrice(name)} G</span><button type="button" data-sell-kind="item" data-sell-name="${name}">Sell 1</button></div>`;
+    return `<div class="shop-row">${inventoryItemIconHtml(name, "shop-icon")}<div><strong>${name} x${amount}</strong><small>${inventoryTypeLabel(name)}. ${info.desc}</small></div><span>${inventorySellPrice(name)} G</span><button type="button" data-sell-kind="item" data-sell-name="${name}">Sell 1</button></div>`;
   }).join("")}${sellGear.map(({ ref, gear }) => {
     const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
     const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
