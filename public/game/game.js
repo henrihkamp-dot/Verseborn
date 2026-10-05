@@ -13988,6 +13988,13 @@ function favoriteGearButton(ref) {
 }
 
 function renderMenu() {
+  const hallMenu = state.gameMode === 'hallBattles';
+  if (hallMenu && menuTab === 'quests') menuTab = 'world';
+  document.querySelector('[data-tab="quests"]')?.classList.toggle('hidden', hallMenu);
+  const guideTab = document.querySelector('[data-tab="world"]');
+  const bestiaryTab = document.querySelector('[data-tab="lore"]');
+  if (guideTab) guideTab.textContent = hallMenu ? 'Combat Guide' : 'World';
+  if (bestiaryTab) bestiaryTab.textContent = hallMenu ? 'Bestiary' : 'Lore';
   if (menuTab === "developer" && state.gameMode !== "hallBattles") menuTab = "system";
   gearHoverRegistry = [];
   hideGearHoverTooltip();
@@ -14265,7 +14272,7 @@ function renderMenu() {
       const [id, field] = match;
       return `<div class="world-cell ${id === state.map ? "is-current" : ""} ${state.discoveredMaps.includes(id) ? "" : "is-undiscovered"}"><span>${x + 1}.${y + 1} / ${zoneLevelText(id)}</span><strong>${state.discoveredMaps.includes(id) ? field.name : "Undiscovered"}</strong></div>`;
     }).join("")}</div>`;
-    el.menuBody.innerHTML = combatReferenceHtml() + el.menuBody.innerHTML;
+    el.menuBody.innerHTML = combatReferenceHtml() + (hallMenu ? '' : el.menuBody.innerHTML);
   }
   if (menuTab === "lore") {
     const fieldNotes = Object.values(maps).flatMap(field => field.spawns || []).filter(spawnPoint => spawnPoint.rare || spawnPoint.boss);
@@ -14280,7 +14287,6 @@ function renderMenu() {
   }
   if (menuTab === "developer") {
     el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;
-    el.menuBody.insertAdjacentHTML("beforeend", `<section class="battle-report-exports"><h3>Battle Reports</h3>${recentDamageMeters().map((report, index) => `<div><span>${escapeMarkup(report.name)} · ${escapeMarkup(report.result)} · ${report.actions.length} actions</span><button type="button" data-export-battle="${index}">Export Battle</button></div>`).join("") || "No completed battles recorded yet."}</section>`);
     el.menuBody.querySelectorAll(".developer-controls > section").forEach((section, index) => {
       const side = index === 0 ? "party" : "enemy";
       section.insertAdjacentHTML("beforeend", [["healing", "Healing"], ["burn", "Burn Damage"], ["poison", "Poison Damage"], ["bleed", "Bleed Damage"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join(""));
@@ -14301,7 +14307,6 @@ function renderMenu() {
     };
     el.menuBody.querySelector("[data-gear-stage]").addEventListener("input", event => { event.target.nextElementSibling.textContent = event.target.value; });
     ["[data-gear-stage]", "[data-gear-rarity]", "[data-gear-enabled]"].forEach(selector => el.menuBody.querySelector(selector).addEventListener("change", changeGearTest));
-    el.menuBody.querySelectorAll("[data-export-battle]").forEach(button => button.addEventListener("click", () => exportDamageMeter(Number(button.dataset.exportBattle))));
     el.menuBody.querySelectorAll("[data-tune-side]").forEach(input => input.addEventListener("input", () => {
       state.developerTuning ||= {};
       state.developerTuning[input.dataset.tuneSide] ||= {};
@@ -14329,11 +14334,14 @@ function renderMenu() {
     el.menuBody.querySelector("[data-endgame-hunt]")?.addEventListener("click", startEndgameHunt);
     el.menuBody.querySelector("[data-new-game-plus]")?.addEventListener("click", beginNewGamePlus);
     if (state.gameMode === "hallBattles") {
+      el.menuBody.innerHTML = '';
       el.menuBody.insertAdjacentHTML("afterbegin", `<section class="hall-save-exports"><h3>Save Files</h3>${[1, 2].map(slot => {
         const summary = saveSlotSummary(1, slot);
         return `<div><span><strong>Save Slot ${slot}</strong><small>${summary.detail || "Empty"}</small></span><button type="button" data-export-hall-save="${slot}" ${!summary.exists && slot !== activeSaveSlot ? "disabled" : ""}>Export Save</button></div>`;
       }).join("")}</section>`);
       el.menuBody.querySelectorAll("[data-export-hall-save]").forEach(button => button.addEventListener("click", () => exportHallSave(Number(button.dataset.exportHallSave))));
+      el.menuBody.insertAdjacentHTML('beforeend', `<section class="battle-report-exports"><h3>Last 10 Battle Reports</h3>${recentDamageMeters().slice(0, 10).map((report, index) => `<div><span>${escapeMarkup(report.name)} · ${escapeMarkup(report.result)} · ${report.actions.length} actions</span><button type="button" data-export-battle="${index}">Export Battle</button></div>`).join('') || 'No completed battles recorded yet.'}</section>`);
+      el.menuBody.querySelectorAll('[data-export-battle]').forEach(button => button.addEventListener('click', () => exportDamageMeter(Number(button.dataset.exportBattle))));
     }
   }
   bindGearHoverTooltips();
