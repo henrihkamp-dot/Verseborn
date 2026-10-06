@@ -50,16 +50,50 @@ async function isolatedPose(source, rect, row) {
     const pose=await isolatedPose(source,{left,top,width:Math.floor((col+1)*meta.width/4)-left,height:rowEnds[row]-top},row);
     frames.push({input:pose.input,left:col*256+Math.max(0,pose.left),top:row*256+Math.max(0,pose.top)});
   }
+  const idle=[];
+  for(let col=0;col<4;col++) {
+    const pose=frames[col];
+    idle.push(await sharp({create:{width:256,height:256,channels:4,background:'#00000000'}})
+      .composite([{input:pose.input,left:pose.left-col*256,top:pose.top}]).raw().toBuffer());
+  }
+  const base=idle[0];
+  for(let col=0;col<4;col++) {
+    let best={error:Infinity,x:0,y:0};
+    for(let dy=-12;dy<=12;dy++) for(let dx=-12;dx<=12;dx++) {
+      let error=0,count=0;
+      // Register only the torso, excluding the moving head, wings, fire and tail.
+      for(let y=125;y<190;y+=2) for(let x=55;x<135;x+=2) {
+        const a=(y*256+x)*4,b=((y+dy)*256+x+dx)*4;
+        if(base[a+3]<200)continue;
+        count++;
+        for(let c=0;c<4;c++)error+=(base[a+c]-idle[col][b+c])**2;
+      }
+      error/=Math.max(1,count);
+      if(error<best.error)best={error,x:dx,y:dy};
+    }
+    const stable=Buffer.from(base);
+    for(let y=0;y<256;y++)for(let x=0;x<256;x++) {
+      const sx=x+best.x,sy=y+best.y;
+      if(sx<0||sx>=256||sy<0||sy>=256)continue;
+      // Keep the torso and planted feet identical; animate the head/wing/flame silhouette.
+      const moving=y<125 || x>165;
+      if(moving)idle[col].copy(stable,(y*256+x)*4,(sy*256+sx)*4,(sy*256+sx)*4+4);
+    }
+    frames[col]={input:await sharp(stable,{raw:{width:256,height:256,channels:4}}).png().toBuffer(),left:col*256,top:0};
+    console.log(`Idle ${col}: torso registration ${best.x},${best.y}; fixed torso/feet`);
+  }
   const output=path.join(root,'public/game',sprites,'ash-wyrm-lava.webp');
   await sharp({create:{width:1024,height:1280,channels:4,background:'#00000000'}}).composite(frames).webp({quality:82,alphaQuality:100,effort:6}).toFile(output);
   const manifestPath=path.join(root,'public/game',sprites,'manifest.json');
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
   const entry=manifest.enemies?.['Ash Wyrm'] || manifest['Ash Wyrm'];
   if(!entry) throw Error('Missing Ash Wyrm manifest entry');
-  Object.assign(entry,{file:'ash-wyrm-lava-animated.webp',columns:4,rows:5,cellWidth:256,cellHeight:256,baseline:242,referenceHeight:224,
+  Object.assign(entry,{file:'ash-wyrm-lava-stable.webp',columns:4,rows:5,cellWidth:256,cellHeight:256,baseline:242,referenceHeight:224,
     rowMap:{idle:0,walk:0,melee:2,magic:1,ultimate:3,death:4},
     frameSequences:{idle:[0,2,3,2],walk:[0,2,3,2],melee:[0,1,2,3],magic:[0,1,2,3],ultimate:[0,1,2,3],death:[0,1,2,3]}});
   fs.copyFileSync(output,path.join(root,'public/game',sprites,'ash-wyrm-lava-animated.webp'));
+  fs.copyFileSync(output,path.join(root,'public/game',sprites,'ash-wyrm-lava-stable.webp'));
+  fs.copyFileSync(output,path.join(root,'dist/client/game',sprites,'ash-wyrm-lava-stable.webp'));
   fs.copyFileSync(output,path.join(root,'dist/client/game',sprites,'ash-wyrm-lava-animated.webp'));
   fs.copyFileSync(output,path.join(root,'public/game',sprites,'ash-wyrm-lava-fixed.webp'));
   fs.copyFileSync(output,path.join(root,'dist/client/game',sprites,'ash-wyrm-lava-fixed.webp'));

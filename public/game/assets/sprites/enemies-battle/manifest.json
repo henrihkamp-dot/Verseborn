@@ -686,7 +686,7 @@
     "battleOnly": true
   },
   "Ash Wyrm": {
-    "file": "ash-wyrm-lava-animated.webp",
+    "file": "ash-wyrm-lava-stable.webp",
     "columns": 4,
     "rows": 5,
     "cellWidth": 256,

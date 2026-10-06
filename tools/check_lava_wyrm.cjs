@@ -7,6 +7,17 @@ browser=await chromium.launch({headless:true,channel:'msedge'});const page=await
 await page.goto('http://127.0.0.1:8817/');await page.waitForFunction('runtimeAssetsReady',{},{timeout:120000});
 assert.ok(await page.evaluate(`enemyAnimationSheets['Ash Wyrm'].columns===4 && endgameBossVfxSheets['Ash Wyrm'].image.complete`));
 assert.ok(await page.evaluate(`(()=>{
+  const image=enemyAnimationSheets['Ash Wyrm'].image,c=document.createElement('canvas');
+  c.width=image.width;c.height=image.height;const context=c.getContext('2d');context.drawImage(image,0,0);
+  const data=context.getImageData(0,0,c.width,c.height).data;
+  let error=0,count=0;
+  for(let col=1;col<4;col++)for(let y=130;y<240;y++)for(let x=40;x<155;x++) {
+    const a=(y*c.width+x)*4,b=(y*c.width+x+col*256)*4;
+    for(let channel=0;channel<4;channel++){error+=Math.abs(data[a+channel]-data[b+channel]);count++;}
+  }
+  return error/count<4;
+})()`),'Idle torso and feet must remain stationary, including decoded image pixels');
+assert.ok(await page.evaluate(`(()=>{
   const sheet=enemyAnimationSheets['Ash Wyrm'];
   if(new Set(sheet.frameSequences.idle).size<3)return false;
   const calls=[],original=ctx.drawImage,oldTick=tick;
