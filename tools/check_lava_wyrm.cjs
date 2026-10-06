@@ -15,8 +15,8 @@ assert.ok(await page.evaluate(`(()=>{
     const a=(y*c.width+x)*4,b=(y*c.width+x+col*256)*4;
     for(let channel=0;channel<4;channel++){error+=Math.abs(data[a+channel]-data[b+channel]);count++;}
   }
-  return error/count<4;
-})()`),'Idle torso and feet must remain stationary, including decoded image pixels');
+  return error/count>4 && error/count<55;
+})()`),'Whole-body idle must vary naturally without a frozen torso or large displacement');
 assert.ok(await page.evaluate(`(()=>{
   const sheet=enemyAnimationSheets['Ash Wyrm'];
   if(new Set(sheet.frameSequences.idle).size<3)return false;

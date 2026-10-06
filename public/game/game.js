@@ -1160,7 +1160,7 @@ function loadMarlaBattleSheet() {
 
 async function loadEnemyAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-152");
+    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-153");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {

@@ -71,16 +71,15 @@ async function isolatedPose(source, rect, row) {
       error/=Math.max(1,count);
       if(error<best.error)best={error,x:dx,y:dy};
     }
-    const stable=Buffer.from(base);
+    const stable=Buffer.alloc(base.length);
     for(let y=0;y<256;y++)for(let x=0;x<256;x++) {
       const sx=x+best.x,sy=y+best.y;
       if(sx<0||sx>=256||sy<0||sy>=256)continue;
-      // Keep the torso and planted feet identical; animate the head/wing/flame silhouette.
-      const moving=y<125 || x>165;
-      if(moving)idle[col].copy(stable,(y*256+x)*4,(sy*256+sx)*4,(sy*256+sx)*4+4);
+      // Translate the complete pose: never splice moving anatomy onto a frozen torso.
+      idle[col].copy(stable,(y*256+x)*4,(sy*256+sx)*4,(sy*256+sx)*4+4);
     }
     frames[col]={input:await sharp(stable,{raw:{width:256,height:256,channels:4}}).png().toBuffer(),left:col*256,top:0};
-    console.log(`Idle ${col}: torso registration ${best.x},${best.y}; fixed torso/feet`);
+    console.log(`Idle ${col}: complete pose registration ${best.x},${best.y}`);
   }
   const output=path.join(root,'public/game',sprites,'ash-wyrm-lava.webp');
   await sharp({create:{width:1024,height:1280,channels:4,background:'#00000000'}}).composite(frames).webp({quality:82,alphaQuality:100,effort:6}).toFile(output);
