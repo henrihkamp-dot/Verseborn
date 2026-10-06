@@ -686,7 +686,7 @@
     "battleOnly": true
   },
   "Ash Wyrm": {
-    "file": "ash-wyrm-lava.webp",
+    "file": "ash-wyrm-lava-fixed.webp",
     "columns": 4,
     "rows": 5,
     "cellWidth": 256,
@@ -703,18 +703,10 @@
     },
     "frameSequences": {
       "idle": [
-        0,
-        1,
-        2,
-        3,
-        2,
-        1
+        0
       ],
       "walk": [
-        0,
-        1,
-        2,
-        3
+        0
       ],
       "melee": [
         0,

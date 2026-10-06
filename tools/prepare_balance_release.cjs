@@ -11,6 +11,7 @@ execFileSync(process.execPath, [path.join(root, 'tools/build_classic_ash_wyrm.cj
 for (const folder of ['assets/sprites/enemies-battle', 'assets/effects/endgame-bosses']) {
   fs.copyFileSync(path.join(root, 'public/game', folder, 'ash-wyrm-lava.webp'), path.join(runtime, folder, 'ash-wyrm-lava.webp'));
 }
+fs.copyFileSync(path.join(root, 'public/game/assets/sprites/enemies-battle/ash-wyrm-lava-fixed.webp'), path.join(runtime, 'assets/sprites/enemies-battle/ash-wyrm-lava-fixed.webp'));
 fs.copyFileSync(path.join(root, 'public/game/assets/effects/endgame-bosses/manifest.json'), path.join(runtime, 'assets/effects/endgame-bosses/manifest.json'));
 // UI sheets are displayed at 34-52px per cell; ship only that resolution.
 execFileSync(process.execPath, ['-e', `
