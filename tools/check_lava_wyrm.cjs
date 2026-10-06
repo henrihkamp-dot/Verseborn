@@ -6,6 +6,20 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+(req
 browser=await chromium.launch({headless:true,channel:'msedge'});const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.goto('http://127.0.0.1:8817/');await page.waitForFunction('runtimeAssetsReady',{},{timeout:120000});
 assert.ok(await page.evaluate(`enemyAnimationSheets['Ash Wyrm'].columns===4 && endgameBossVfxSheets['Ash Wyrm'].image.complete`));
+assert.ok(await page.evaluate(`(()=>{
+  const sheet=enemyAnimationSheets['Ash Wyrm'];
+  if(new Set(sheet.frameSequences.idle).size<3)return false;
+  const calls=[],original=ctx.drawImage,oldTick=tick;
+  ctx.drawImage=(...args)=>calls.push(args.slice(1));
+  const unit={name:'Ash Wyrm',hp:100,anim:'idle'};
+  for(let i=0;i<4;i++){tick=i*36;drawAnimatedEnemy(unit,300,150);}
+  unit.anim='attack';unit.attackStyle='magic';
+  for(let i=0;i<4;i++){unit.animTick=i*10;tick++;drawAnimatedEnemy(unit,300,150);}
+  ctx.drawImage=original;tick=oldTick;
+  return new Set(calls.slice(0,4).map(c=>c[0])).size===3
+    && calls.every(c=>c.slice(4).join(',')===calls[0].slice(4).join(','))
+    && new Set(calls.slice(4).map(c=>c[0])).size===4;
+})()`));
 await page.evaluate(`startTitleGame(false);state.gameMode='hallBattles';mode='walk';hallBattleProgress().unlockedStage=54;startHallBattleStage(54);drawBattleScene();`);
 assert.ok(await page.evaluate(`(()=>{const wyrm=battle.enemies.find(e=>(e.sprite||e.name)==='Ash Wyrm');const fx=makeEnemyBattleEffect(wyrm,battle.party[0],{kind:'magic',name:'Lava',element:'Fire'});if(!fx.bossSheetVfx)return false;effect=fx;drawEffect();return true;})()`));
 await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/lava-ash-wyrm.png')});

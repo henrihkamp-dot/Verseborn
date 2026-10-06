@@ -445,7 +445,7 @@ const enemyAnimationHeights = {
   "Draconic Guide": 65, "Memory Root Guardian": 86, Malkhius: 57,
   "Lady Morvanna": 57, "Koru-Vak, the Iron Oathkeeper": 82,
   "Selyra Quill, the Grand Cantor": 65, "Ilyss Vanthe, the First Archivist": 64,
-  "Ash Wyrm": 58,
+  "Ash Wyrm": 82,
   "Seal Bearer": 51,
   "Inkbound Auditor": 47,
   "King Maeric": 54,
@@ -1160,7 +1160,7 @@ function loadMarlaBattleSheet() {
 
 async function loadEnemyAnimationSheets() {
   try {
-    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-150");
+    const response = await fetch("assets/sprites/enemies-battle/manifest.json?v=opponents-151");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([id, config]) => new Promise(resolve => {
@@ -1377,7 +1377,7 @@ const bossMechanicImages = {};
 const endgameBossVfxSheets = {};
 async function loadEndgameBossVfx() {
   try {
-    const response = await fetch("assets/effects/endgame-bosses/manifest.json?v=149");
+    const response = await fetch("assets/effects/endgame-bosses/manifest.json?v=151");
     if (!response.ok) return;
     const manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(([name, config]) => new Promise(resolve => {
@@ -8537,6 +8537,10 @@ function drawAnimatedEnemy(e, px, py) {
   const sequence = sheet.frameSequences?.[animation] || [0, 1, 2, 3, 4];
   let sequenceIndex = Math.floor((tick + key.length * 3) / 36) % sequence.length;
   if (attacking) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.min(24, e.animTick || 0) / 5));
+  if (attacking && key === "Ash Wyrm") {
+    const timing = battleActionTiming(e.attackStyle === "ultimate" ? "ultimate" : e.attackStyle === "melee" ? "melee" : "magic");
+    sequenceIndex = Math.min(sequence.length - 1, Math.floor((e.animTick || 0) * 16 / timing.impactMs * sequence.length));
+  }
   if (dying) sequenceIndex = Math.min(sequence.length - 1, Math.floor(Math.max(0, tick - (e.deathTick || tick)) / 5));
   const column = Math.max(0, Math.min(sheet.columns - 1, sequence[sequenceIndex] ?? 0));
   const targetHeight = (enemyAnimationHeights[key] || 46) * enemyBattleScale(key) * BATTLE_COMPOSITION_SCALE;
@@ -8639,6 +8643,7 @@ function drawEffect() {
 function drawEndgameBossVfx(fx) {
   const sheet = endgameBossVfxSheets[fx.caster];
   if (!sheet) return;
+  if (fx.caster === "Ash Wyrm") return drawAshWyrmVfx(fx, sheet);
   const elapsed = Math.max(0, performance.now() - fx.startedAt);
   const impact = fx.timing.impactMs;
   const peak = fx.vfxKind === "magic" ? 3 : 2;
@@ -8666,6 +8671,22 @@ function drawEndgameBossVfx(fx) {
       sheet.cellWidth * scale, sheet.cellHeight * scale);
     ctx.restore();
   }
+  ctx.restore();
+}
+
+function drawAshWyrmVfx(fx, sheet) {
+  const elapsed = Math.max(0, performance.now() - fx.startedAt);
+  const launchMs = fx.vfxKind === "ultimate" ? 300 : 230;
+  const travel = Math.max(0, Math.min(1, (elapsed - launchMs) / Math.max(1, fx.timing.impactMs - launchMs)));
+  const impacted = elapsed >= fx.timing.impactMs;
+  const point = impacted ? {x:fx.toX,y:fx.toY} : {x:fx.fromX+(fx.toX-fx.fromX)*travel,y:fx.fromY+(fx.toY-fx.fromY)*travel};
+  const row = impacted || fx.vfxKind === "ultimate" ? 1 : 0;
+  const frame = impacted ? Math.min(2, Math.floor((elapsed-fx.timing.impactMs)/140)) : elapsed < launchMs ? 0 : travel < .7 ? 2 : 3;
+  const size = impacted ? (fx.vfxKind === "ultimate" ? 100 : 55) : fx.vfxKind === "ultimate" ? 68 : elapsed < launchMs ? 24 : 38;
+  ctx.save();
+  ctx.beginPath();ctx.rect(0,20,LOGICAL_WIDTH,BATTLE_ARENA_HEIGHT-20);ctx.clip();
+  if (impacted) ctx.globalAlpha = Math.max(0,1-(elapsed-fx.timing.impactMs)/Math.max(1,fx.timing.totalMs-fx.timing.impactMs));
+  ctx.drawImage(sheet.image,frame*sheet.cellWidth,row*sheet.cellHeight,sheet.cellWidth,sheet.cellHeight,Math.round(point.x-size/2),Math.round(point.y-size/2),size,size);
   ctx.restore();
 }
 
@@ -12514,6 +12535,9 @@ function makeEnemyBattleEffect(unit, target, action) {
     const [x, baseline] = index >= 0 ? partyBattlePosition(index, battle.party.length) : enemyBattlePosition(Math.max(0, battle.enemies.indexOf(ally)), battle.enemies.length);
     return unit.endgameBoss ? battleVfxAnchor(ally) : { x, y: baseline - 24 };
   });
+  const ashWyrm = (unit.sprite || unit.name) === "Ash Wyrm";
+  const ashHeight = (enemyAnimationHeights["Ash Wyrm"] || 58) * enemyBattleScale("Ash Wyrm") * BATTLE_COMPOSITION_SCALE;
+  const ashOrigin = {x:fromX + 8 - ashHeight * .28,y:fromBaseline + 31 - ashHeight * .72};
   if (unit.endgameBoss && partyIndex >= 0) { toX = vfxTargets[0].x; toY = vfxTargets[0].y; }
   return {
     kind: visualKind,
@@ -12530,8 +12554,8 @@ function makeEnemyBattleEffect(unit, target, action) {
     element: action.element,
     color: elementColor(action.element),
     t: 0,
-    fromX: unit.endgameBoss ? battleVfxAnchor(unit).x : fromX,
-    fromY: unit.endgameBoss ? battleVfxAnchor(unit).y : fromBaseline - 25,
+    fromX: ashWyrm ? ashOrigin.x : unit.endgameBoss ? battleVfxAnchor(unit).x : fromX,
+    fromY: ashWyrm ? ashOrigin.y : unit.endgameBoss ? battleVfxAnchor(unit).y : fromBaseline - 25,
     toX,
     toY,
     x: toX,
