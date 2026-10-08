@@ -1,0 +1,23 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const prefix=fs.readFileSync(path.join(__dirname,'test_combat.cjs'),'utf8').split("run('runQaChecks()');")[0].replace('sandbox.window = sandbox;','sandbox.fetch=async()=>({ok:false}); sandbox.window=sandbox;');
+const {run}=new Function('require','__dirname',prefix+'\nreturn {run};')(require,__dirname);
+assert.ok(run(`(()=>{
+ const source={name:'Test',stats:{mag:100,agi:200,str:999},statuses:[]};
+ const target={name:'Target',hp:1000,max:1000,statuses:[]};
+ if(dotValueFor('burn',target,source,{scaling:'str'})!==40)return false;
+ if(poisonValueFor(target,source,{scaling:'mag'})!==80)return false;
+ source.statuses=[{type:'magicUp',value:.5,remaining:3},{type:'agilityUp',value:.5,remaining:3}];
+ if(dotValueFor('burn',target,source)!==60||poisonValueFor(target,source)!==120)return false;
+ source.crit=.75;
+ applyStatus(target,'burn',source,{force:true});
+ const burn=statusOf(target,'burn');
+ if(burn.value!==60||burn.critChance!==.75)return false;
+ source.stats.mag=10;
+ applyStatus(target,'burn',source,{force:true});
+ if(burn.value!==60)return false;
+ target.statuses=[{type:'burn',value:60,remaining:3,source:{name:'Test'},critChance:1,critMultiplier:2}];
+ const before=target.hp;
+ const result=processTurnStart(target);
+ return target.hp===before-120&&result.notes.some(note=>note.includes('CRIT'));
+})()`));
+console.log('PASS Burn MAG / Poison AGI, buff scaling, stronger refresh and critical ticks');

@@ -1,0 +1,41 @@
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const root=path.resolve(__dirname,'../.sites-artifacts/release112-endgame/dist/client/game');
+const server=http.createServer((req,res)=>{const name=decodeURIComponent(req.url.split('?')[0]),file=path.resolve(root,'.'+(name==='/'?'/index.html':name));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/octet-stream');fs.createReadStream(file).pipe(res);});
+(async()=>{await new Promise(r=>server.listen(8799,'127.0.0.1',r));let browser;try{
+ browser=await chromium.launch({headless:true,channel:'msedge'});
+ const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:8799/');await page.waitForFunction('runtimeAssetsReady',{},{timeout:120000});
+ await page.evaluate(`startTitleGame(false);state.gameMode='hallBattles';mode='walk';saveGame(hallSaveKey(1));saveGame(hallSaveKey(2));updateHallMenuButton();`);
+ await page.locator('#hallMenuToggle').click();
+ assert.equal(await page.evaluate('mode'),'menu');
+ await page.locator('[data-tab="system"]').click();
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('[data-export-hall-save="2"]').click();
+ const download=await downloadPromise;
+ assert.equal(download.suggestedFilename(),'verseborn-ember-hall-slot-2.json');
+ const save=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
+ assert.equal(save.state.gameMode,'hallBattles');assert.ok(save.heroes);assert.equal(save.version,4);
+ for(const width of [1440,390]){
+   await page.setViewportSize({width,height:width===390?844:1000});await page.waitForTimeout(200);
+   assert.ok(await page.locator('#hallMenuToggle').isVisible());
+   assert.ok(await page.locator('.hall-save-exports').evaluate(el=>el.scrollWidth<=el.clientWidth));
+   await page.screenshot({path:path.resolve(__dirname,`../.sites-artifacts/hall-menu-${width}.png`)});
+ }
+ await page.locator('[data-tab="developer"]').click();
+ assert.equal(await page.locator('[data-tune-side]').count(),8);
+ await page.locator('[data-tune-side="enemy"][data-tune-stat="hp"]').fill('100');
+ assert.equal(await page.evaluate(`developerScale('enemy','hp',100)`),200);
+ await page.locator('[data-tune-side="party"][data-tune-stat="cost"]').fill('-100');
+ assert.equal(await page.evaluate(`skillMpCost('Sparky',baseJobs.Sparky.skills.find(sk=>sk.name==='Memory Flare'))`),0);
+ await page.locator('[data-gold-delta]').fill('-100');
+ const gold=await page.evaluate('state.gold');await page.locator('[data-adjust-gold]').click();
+ assert.equal(await page.evaluate('state.gold'),Math.max(0,gold-100));
+ await page.locator('[data-reset-tuning]').click();assert.equal(await page.evaluate(`developerScale('enemy','hp',100)`),100);
+ await page.screenshot({path:path.resolve(__dirname,'../.sites-artifacts/hall-developer-mobile.png')});
+ await page.locator('#hallMenuToggle').click();assert.equal(await page.evaluate('mode'),'walk');
+ assert.ok(await page.evaluate(`(()=>{mode='battle';updateHallMenuButton();const hidden=document.getElementById('hallMenuToggle').classList.contains('hidden');mode='walk';return hidden;})()`));
+ await page.evaluate(`mode='walk';state.gameMode='story';updateHallMenuButton();`);assert.ok(await page.locator('#hallMenuToggle').isHidden());
+ assert.deepEqual(errors,[]);console.log('PASS Hall-only menu, desktop/mobile layout, slot export and unchanged save format');
+ }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+require('./prepare_hall_endgame_release.cjs');
+const source = path.join(root, '.sites-artifacts/release112-endgame/dist');
+const target = path.join(root, 'dist');
+if (path.dirname(target) !== root) throw Error('Output must stay inside project');
+fs.rmSync(target, { recursive: true, force: true });
+fs.cpSync(source, target, { recursive: true });
+console.log('Compact release staged for publishing');

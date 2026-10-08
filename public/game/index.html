@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta id="viewportMeta" name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verseborn getting started</title>
+    <link rel="stylesheet" href="styles.css?v=hall-release-153">
+</head>
+<body>
+  <main class="shell">
+    <section class="game">
+      <section id="bossMechanicHud" class="boss-mechanic-hud hidden" aria-live="polite"></section>
+      <canvas id="screen" width="768" height="672" tabindex="0" aria-label="Verseborn getting started game screen"></canvas>
+      <button id="hallMenuToggle" class="hall-menu-toggle hidden" type="button" title="Menu" aria-label="Open menu" aria-expanded="false">&#9776;</button>
+      <button id="skillPointNotice" class="skill-point-notice hidden" type="button" aria-label="Open beschikbare skill points">
+        <span class="skill-point-icon" aria-hidden="true">+</span>
+        <span><strong>SKILL POINT READY</strong><small id="skillPointNoticeDetail"></small></span>
+      </button>
+      <div class="hud">
+        <div class="hud-location">
+          <strong id="chapter">Issue 1</strong>
+          <span id="place">The Drunk Lantern</span>
+        </div>
+        <div class="hud-battle-resonance" aria-label="Party Resonance">
+          <span>Party Resonance</span>
+          <div class="battle-resonance-track"><i id="battleResonance"></i></div>
+        </div>
+        <div class="hud-enemy-resonance" aria-label="Enemy Resonance">
+          <span>Enemy Resonance</span>
+          <div class="battle-resonance-track enemy-resonance-track"><i id="enemyBattleResonance"></i></div>
+        </div>
+        <div id="hint">Klik in het spel. Beweeg met WASD of de pijlen.</div>
+      </div>
+      <div id="dialogue" class="dialogue hidden">
+        <div id="dialoguePortraits" class="dialogue-portraits hidden" aria-hidden="true">
+          <figure id="portraitLeft" class="dialogue-portrait portrait-left">
+            <img id="portraitLeftImage" alt="">
+            <figcaption id="portraitLeftName"></figcaption>
+          </figure>
+          <figure id="portraitRight" class="dialogue-portrait portrait-right">
+            <img id="portraitRightImage" alt="">
+            <figcaption id="portraitRightName"></figcaption>
+          </figure>
+        </div>
+        <div class="dialogue-copy">
+          <button id="dialogueSkip" class="dialogue-skip hidden" type="button">Skip</button>
+          <div id="speaker"></div>
+          <p id="line"></p>
+          <span class="dialogue-continue desktop-dialogue-continue">Z / Enter</span>
+          <span class="dialogue-continue mobile-dialogue-continue">Tap to continue</span>
+        </div>
+      </div>
+      <div id="battle" class="battle hidden">
+        <div id="battlePreview" class="battle-preview hidden"></div>
+        <div class="battle-top">
+          <strong id="battleName">Battle</strong>
+          <div class="battle-history-anchor" tabindex="0" aria-label="Recent battle actions"><span id="battleLog">Kies een actie.</span><div id="damageMeter" class="damage-meter" role="log"></div></div>
+          <div id="turnOrder" class="turn-order" aria-label="Turn order"></div>
+        </div>
+        <div id="partyRows" class="party-rows"></div>
+        <div id="enemyRows" class="enemy-rows"></div>
+        <div id="actions" class="actions"></div>
+      </div>
+      <div id="battleResult" class="battle-result hidden" role="dialog" aria-modal="true" aria-live="assertive">
+        <div id="battleResultCard" class="battle-result-card">
+          <img id="battleResultArt" alt="">
+          <div id="battleResultRewards" class="battle-result-rewards hidden"></div>
+          <button id="battleResultContinue" type="button" aria-label="Continue"></button>
+        </div>
+      </div>
+      <div id="menu" class="menu hidden">
+        <div class="menu-tabs">
+          <button type="button" data-tab="status">Status</button>
+          <button type="button" data-tab="party">Party</button>
+          <button type="button" data-tab="skills">Skills</button>
+          <button type="button" data-tab="gear">Gear</button>
+          <button type="button" data-tab="items">Items</button>
+          <button type="button" data-tab="quests">Quests</button>
+          <button type="button" data-tab="world">World</button>
+          <button type="button" data-tab="lore">Lore</button>
+          <button type="button" data-tab="system">System</button>
+          <button type="button" data-tab="developer" id="hallDeveloperTab" class="hidden">Developer</button>
+        </div>
+        <div id="menuBody" class="menu-body"></div>
+      </div>
+    </section>
+
+    <div class="gamepad" aria-label="Spelbesturing">
+      <div class="dpad">
+        <button type="button" data-control="up" aria-label="Omhoog">^</button>
+        <button type="button" data-control="left" aria-label="Links">&lt;</button>
+        <button type="button" data-control="down" aria-label="Omlaag">v</button>
+        <button type="button" data-control="right" aria-label="Rechts">&gt;</button>
+      </div>
+      <div class="command-pad">
+        <button class="touch-menu-control" type="button" data-control="menu" aria-label="Open menu">Menu</button>
+        <button class="touch-back-control" type="button" data-control="cancel" aria-label="Back or cancel">Back</button>
+        <button class="touch-confirm-control" type="button" data-control="confirm" aria-label="Confirm or interact">Confirm</button>
+        <button id="musicToggle" type="button" data-control="music" aria-label="Muziek pauzeren" title="Muziek aan/uit">&#9835;</button>
+      </div>
+    </div>
+    <button id="fullscreenToggle" class="mobile-fullscreen-control" type="button" data-control="fullscreen" aria-label="Toggle fullscreen" title="Fullscreen">&#x26F6;</button>
+
+    <aside class="panel" aria-label="Spelstatus">
+      <div class="status-brand">
+        <h1>Verseborn</h1>
+        <span>Getting Started</span>
+      </div>
+      <div class="status-resources">
+        <div class="meter">
+          <span>Resonance</span>
+          <div><i id="resonanceBar"></i></div>
+        </div>
+        <div class="wallet">
+          <span>Gold</span>
+          <strong id="gold">180 G</strong>
+        </div>
+      </div>
+      <div class="quest">
+        <span>Quest</span>
+        <strong id="questTitle">No active quest</strong>
+        <p id="questText">Speak with Marla at the counter.</p>
+      </div>
+      <div class="party" id="partyPanel"></div>
+      <div class="quest story-beat">
+        <span>JRPG Story Beat</span>
+        <strong id="beatTitle">Opening</strong>
+        <p id="beatText">Classic chapter title, short dialogue, then playable exploration.</p>
+      </div>
+      <div class="codex">
+        <div class="codex-head">
+          <strong>Codex</strong>
+          <button id="codexPrev" type="button" aria-label="Vorige codex kaart">&lt;</button>
+          <button id="codexNext" type="button" aria-label="Volgende codex kaart">&gt;</button>
+        </div>
+        <img id="codexImage" alt="Verseborn character sheet">
+        <div id="codexName"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="game.js?v=hall-release-153"></script>
+</body>
+</html>

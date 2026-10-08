@@ -1,0 +1,236 @@
+{
+  "Verseborn": {
+    "file": "verseborn.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 384,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 156,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "Mira": {
+    "file": "mira.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 160,
+    "baseline": 146,
+    "referenceHeight": 123,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "Sparky": {
+    "file": "sparky.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 576,
+    "cellHeight": 224,
+    "baseline": 210,
+    "referenceHeight": 127,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "Glimmer": {
+    "file": "glimmer.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 416,
+    "cellHeight": 256,
+    "baseline": 242,
+    "referenceHeight": 152,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "GlimmerMech": {
+    "file": "glimmer-mech.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 384,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 186,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "Kael": {
+    "file": "kael.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 416,
+    "cellHeight": 320,
+    "baseline": 306,
+    "referenceHeight": 193,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 1,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "KaelShadow": {
+    "file": "kael-shadow.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 288,
+    "baseline": 274,
+    "referenceHeight": 200,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "Torren": {
+    "file": "torren.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 352,
+    "cellHeight": 224,
+    "baseline": 210,
+    "referenceHeight": 147,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  },
+  "Seerin": {
+    "file": "seerin.png",
+    "columns": 5,
+    "rows": 6,
+    "cellWidth": 384,
+    "cellHeight": 224,
+    "baseline": 210,
+    "referenceHeight": 152,
+    "idleAnchorOffsets": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "block": 2,
+      "magic": 2,
+      "ultimate1": 3,
+      "ultimate2": 4,
+      "death": 5
+    },
+    "directFrames": true
+  }
+}
