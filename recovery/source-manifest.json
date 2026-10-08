@@ -1,0 +1,4244 @@
+{
+  "status": "incomplete",
+  "sourceRelease": 153,
+  "sourceCommit": "09c8bb00502d117910a1ee46e7d0ed5e154e0fa4",
+  "expectedFiles": 605,
+  "verifiedFiles": 27,
+  "files": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "4252728c3986c63912aa143609f2a950f7599a3e",
+      "size": 493,
+      "imported": true
+    },
+    {
+      "path": ".openai/hosting.json",
+      "mode": "100644",
+      "sha": "e442e1d2d0276a805a5286cd181d94df02835374",
+      "size": 91,
+      "imported": true
+    },
+    {
+      "path": "ENDGAME_ABILITIES_126.md",
+      "mode": "100644",
+      "sha": "6fc905e62d9059791cd95f0596ebc9c1b0845f03",
+      "size": 65543,
+      "imported": true
+    },
+    {
+      "path": "MYTHIC_GEAR_REVIEW.md",
+      "mode": "100644",
+      "sha": "0eb8867d9ff066d8403590a638b8a391eab0a41f",
+      "size": 5876,
+      "imported": true
+    },
+    {
+      "path": "VERSEBORN_DEPLOYMENT.md",
+      "mode": "100644",
+      "sha": "ee498f4cbc83906950afe3539203960504495d78",
+      "size": 1949,
+      "imported": true
+    },
+    {
+      "path": "app/globals.css",
+      "mode": "100644",
+      "sha": "5363670cd15969bbf3d943223ddfbad43e490078",
+      "size": 433,
+      "imported": true
+    },
+    {
+      "path": "app/layout.tsx",
+      "mode": "100644",
+      "sha": "7a3b84747fd2c66dbc45a0424aa0697bdac9a41d",
+      "size": 697,
+      "imported": true
+    },
+    {
+      "path": "app/page.tsx",
+      "mode": "100644",
+      "sha": "a7fbee497b0d2413dfcad18b67e4788b66dfe097",
+      "size": 409,
+      "imported": true
+    },
+    {
+      "path": "docs/boss-control-recovery.md",
+      "mode": "100644",
+      "sha": "cb20c9d07e66f93a19541622143016346452a4cf",
+      "size": 1308,
+      "imported": true
+    },
+    {
+      "path": "docs/early-hall-encounter-rhythm.md",
+      "mode": "100644",
+      "sha": "96aa77918e506376fe908080e7c0bee74e9b0532",
+      "size": 1634,
+      "imported": true
+    },
+    {
+      "path": "docs/endgame-encounter-rhythm.md",
+      "mode": "100644",
+      "sha": "0159a6d504c932b90ddaa0271e75eaa7c8d07775",
+      "size": 4308,
+      "imported": true
+    },
+    {
+      "path": "eslint.config.mjs",
+      "mode": "100644",
+      "sha": "1cba7182aaacb2fd11c0810a8c49d027d55138b7",
+      "size": 345,
+      "imported": true
+    },
+    {
+      "path": "next.config.ts",
+      "mode": "100644",
+      "sha": "b22af960af499f682e3f73236f8ae8a6bde38da1",
+      "size": 104,
+      "imported": true
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "sha": "ee6ce366fe7a3ca3c25bc8f94636923ede9cfd7b",
+      "size": 1013,
+      "imported": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "mode": "100644",
+      "sha": "357fe0ed183f21955e941f4d3fb9deedd0daea70",
+      "size": 201771,
+      "imported": true
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "mode": "100644",
+      "sha": "562dd84a3beddb4be49618a5a33cca4003340ff8",
+      "size": 81,
+      "imported": true
+    },
+    {
+      "path": "public/favicon.svg",
+      "mode": "100644",
+      "sha": "ca747cb66b233fedec5ff0c84f97bb4631c05dbf",
+      "size": 712,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/01_Glimmer_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "617c2f3cb1053dcbf76031cdef421bfe687f6696",
+      "size": 2557574,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/02_Kael_Ironhand_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "916699363f2a9a10252dadf3ca2fefb21840cbf4",
+      "size": 2265724,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/03_Mira_Veln_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "0404e4568a126202c7a3763895471da3821841f3",
+      "size": 2160403,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/04_Seerin_Vahl_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "23a6182d607a586b8e67027dae4c41045a2696bf",
+      "size": 2181547,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/05_Sparky_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "f338c5e09bb78ab35ba0ed4b337e3bfe30bf0390",
+      "size": 2254920,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/06_Torren_Stonekin_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "47c9455c097ba1eb5f8f2591f7945445b9ef43dc",
+      "size": 2603858,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "006a29d478cf309f4991e0a07d3cf32095b9a0fb",
+      "size": 2227761,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/08_Baron_Revus_Veln_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "ba750d2186a5d3de355c889d6bf6a9e03dcf3507",
+      "size": 2215619,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/10_Prince_Lucan_Cindralis_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "0c8aa277aae2994d5f1ee7ac5a35142f1487e723",
+      "size": 2457183,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/13_Nyx_Vael_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "f864c9675f8740a244ba70a349140a01bc61eae4",
+      "size": 2894285,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/14_Rava_Cinderhorn_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "f08ffa93da39262c33be066f1c6b5d0d09a93405",
+      "size": 2870135,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/15_Tibby_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "1e905d4798d4256f021ee005c7df5d8249ddc8b5",
+      "size": 2965448,
+      "imported": true
+    },
+    {
+      "path": "public/game/assets/16_Tja_Frost_Dandy_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "d08c847bdb1be48032fbe56e1a0ebade3638084c",
+      "size": 2793398,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/17_Grumm_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "15d538c79364afb6f4e793ac9acffb9d82dd9619",
+      "size": 2821386,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/18_Kaeldrin_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "907c5964e6005c4713b572723f8587566b3b59c6",
+      "size": 2821005,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/19_Lysra_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "b673dc9eec439de5f14536223f68de84f4d6cce5",
+      "size": 2662565,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/20_Shade_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "0e27f70bb68b269999d41095935b29e0b4725be0",
+      "size": 2644721,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/22_Marli_Clean_Quest_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "9bf9e3aa365741a9da4c316744aee054d118ee34",
+      "size": 2604033,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/battle-jrpg-2.mp3",
+      "mode": "100644",
+      "sha": "8d5470bb229cbe9fc842ef897f51d409202783b9",
+      "size": 4463359,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/battle-jrpg.mp3",
+      "mode": "100644",
+      "sha": "c6371236c88a3bce00e04d9fb61d6c0f2b65b339",
+      "size": 1607486,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/cutscenes.mp3",
+      "mode": "100644",
+      "sha": "c5b7fdd4eaa4fc2da56771f471084c4c3a11a67c",
+      "size": 4198526,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/ember-hall-boss-battle.mp3",
+      "mode": "100644",
+      "sha": "a938168d45be5c84b752891e89d635763383137a",
+      "size": 4546300,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/inhouse-jrpg.mp3",
+      "mode": "100644",
+      "sha": "9990b56ea46fe68e18d6c5313f0db788bfac2f08",
+      "size": 3413810,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/overworld-jrpg.mp3",
+      "mode": "100644",
+      "sha": "dadc10d1a558234c8a72c9d44938b529e58578ad",
+      "size": 4218390,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/audio/verseborn-title.mp3",
+      "mode": "100644",
+      "sha": "55ba8045ebbe58347d1ca874206368b2b3f4ca45",
+      "size": 4803101,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/ash-quarter.png",
+      "mode": "100644",
+      "sha": "6b2d48b98db46d80ddb63150ce681a49fb88a249",
+      "size": 2723647,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/cinder-cataclysm.webp",
+      "mode": "100644",
+      "sha": "5596dd0e41a6a353943928a0981e115435fd77d1",
+      "size": 430072,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/cinder-ruins.webp",
+      "mode": "100644",
+      "sha": "052267a01efbb595abc0294b98c68889191d89f7",
+      "size": 413818,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/cinder-sunset.webp",
+      "mode": "100644",
+      "sha": "eebe726881f0a169233150da15e81a527a5b57ee",
+      "size": 439174,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/cinder-terrace.webp",
+      "mode": "100644",
+      "sha": "17878125f5c249b55d490ed7ab782a2fcaa0558a",
+      "size": 419484,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/ember-hall.png",
+      "mode": "100644",
+      "sha": "9aec7c5336bcfff44430dac9918f56c572d57caa",
+      "size": 2709825,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/fallen-dawn.webp",
+      "mode": "100644",
+      "sha": "72967d84cff91ee2118c770d9325881b1adb9a9d",
+      "size": 376448,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/false-dawn.png",
+      "mode": "100644",
+      "sha": "b9de88410fd1f300f8da517d8cb4577c7ee6994a",
+      "size": 2613818,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/guildspire-marble.webp",
+      "mode": "100644",
+      "sha": "e6732a09356fd3413ab0540b6114987f0aa08ebf",
+      "size": 398650,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/guildspire.png",
+      "mode": "100644",
+      "sha": "a98b40d90680e6f1fcc0cf2331fb6ad1c66fae52",
+      "size": 3086540,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/lantern-stage.webp",
+      "mode": "100644",
+      "sha": "97689899703f5fd1138983c26768aa6949911630",
+      "size": 356458,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/lantern-tavern.webp",
+      "mode": "100644",
+      "sha": "097b68d1eb18805c6b4173b5fc68c4b094fd47ab",
+      "size": 326920,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/reverie-garden.webp",
+      "mode": "100644",
+      "sha": "c3968ec021dc89e35940bcd579df52d095c4372d",
+      "size": 418924,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/reverie-library.webp",
+      "mode": "100644",
+      "sha": "e2fcf9ffd99dbde67752771ec6e5585855816b1e",
+      "size": 427896,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/battles/reverie.png",
+      "mode": "100644",
+      "sha": "0c5d0852152ef60a3860e673bc58e829e0011b14",
+      "size": 2752158,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Glimmer.webp",
+      "mode": "100644",
+      "sha": "7322e30d31e6ca1f8b120bc8e6f059a81461a70d",
+      "size": 2002342,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/GlimmerMech.webp",
+      "mode": "100644",
+      "sha": "bff2aa0514581b2ab2ce68309bffe8214fdd03a4",
+      "size": 2173464,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Kael.webp",
+      "mode": "100644",
+      "sha": "431b2561774cef176dcdc6bd1a8a62bcf3be709a",
+      "size": 1680572,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/KaelShadow.webp",
+      "mode": "100644",
+      "sha": "e02b556cc2b4a86f246476fb305bdaafa1b15efe",
+      "size": 1873624,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Mira.webp",
+      "mode": "100644",
+      "sha": "20e558cd55e1a4fff6997fbf0468ceaf3346752b",
+      "size": 1547138,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Seerin.webp",
+      "mode": "100644",
+      "sha": "06d9650400bb5f8d3bb05b3d6068d81bce710b7a",
+      "size": 1696368,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Sparky.webp",
+      "mode": "100644",
+      "sha": "4f69587de553cd535cf98ed565e8e6748fd8530b",
+      "size": 1360376,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Torren.webp",
+      "mode": "100644",
+      "sha": "8b4fe221c8c5b536fe7d34fee482fdd4e2189c4a",
+      "size": 1691750,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/Verseborn.webp",
+      "mode": "100644",
+      "sha": "537c82ab0135f0330d901c13b9acd56b09cfaeb6",
+      "size": 1541708,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/characters/manifest.json",
+      "mode": "100644",
+      "sha": "9d5a59bc8dedd056b7d89e90f2bcf45b84d739ec",
+      "size": 12129,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/echo-projectiles.png",
+      "mode": "100644",
+      "sha": "59afe11efb18bc0ec7a91a5a2e445987ca94825b",
+      "size": 1735209,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/ash-wyrm-lava-animated.webp",
+      "mode": "100644",
+      "sha": "0a5a84e30fcdd1213c40c3a97e34b8c5938d5473",
+      "size": 149488,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/ash-wyrm-lava-source.png",
+      "mode": "100644",
+      "sha": "9215d6f5d59602caef872754012b715785887eb9",
+      "size": 2182548,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/ash-wyrm-lava.webp",
+      "mode": "100644",
+      "sha": "925204bd83a959e40780f8c2e0d373260059d44c",
+      "size": 107068,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/concierge-veyr.webp",
+      "mode": "100644",
+      "sha": "15930bc66bd2aaa9f7669354c0674a08006e70a6",
+      "size": 406806,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/draconic-guide.webp",
+      "mode": "100644",
+      "sha": "0072e58dce8f201bc3a2e7de05232a88ef88a342",
+      "size": 402110,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/guild-inspector-voss.webp",
+      "mode": "100644",
+      "sha": "af301ccf3ef19d30a215974c769aedefe62e8a42",
+      "size": 430476,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/ilyss-vanthe.webp",
+      "mode": "100644",
+      "sha": "fc6b00f0f038594779a32f839da479f350ccb2c6",
+      "size": 384540,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/koru-vak.webp",
+      "mode": "100644",
+      "sha": "26b8889dcd331eb7ab4ea0b8d52a456d688f625d",
+      "size": 346226,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/lady-morvanna.webp",
+      "mode": "100644",
+      "sha": "320fa7eea513817581ff263d228d601abb2b7d43",
+      "size": 339030,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/malkhius.webp",
+      "mode": "100644",
+      "sha": "d44aef93cabcba9a8112637682b043530db095d2",
+      "size": 332360,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/manifest.json",
+      "mode": "100644",
+      "sha": "548ee6fc1446e32d5efc77f38da4818394d565dc",
+      "size": 3368,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/memory-root-guardian.webp",
+      "mode": "100644",
+      "sha": "4abfeb22b42898c93fb4098234115a04ae9789e7",
+      "size": 438232,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/selyra-quill.webp",
+      "mode": "100644",
+      "sha": "2c92d60094169edb6fbfa076cdb9dafe791215b9",
+      "size": 482480,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/effects/endgame-bosses/sister-maelin.webp",
+      "mode": "100644",
+      "sha": "8729f94f2d9800e004311159689d4023755d23b3",
+      "size": 387498,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/location_EmberHall_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "8427cbe864c1c6a5f51cd5e54f0540a8e98ccf32",
+      "size": 2875623,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/location_Guildspire_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "573bdec1c47cc0ae9976a33cb3cb7e308b2c5aaa",
+      "size": 2594008,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/location_TheDrunkenLantern_Manga_Sheet.png",
+      "mode": "100644",
+      "sha": "3f5a4b1553c40647c48245e04fe860f2fa9d76f6",
+      "size": 2708049,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/alarm.png",
+      "mode": "100644",
+      "sha": "b981f3aa071ac3b6eec933c5bed6760c95610b33",
+      "size": 2876260,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/ash-route.png",
+      "mode": "100644",
+      "sha": "825bc84c22c6f36a489fdbf4c9e62c9614f38e98",
+      "size": 2840797,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/ash.png",
+      "mode": "100644",
+      "sha": "d571c1f7672ba4cd0497142dc98ed8e3c86f55e9",
+      "size": 2629145,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/dawn-route.png",
+      "mode": "100644",
+      "sha": "fee15b002d632549ee99e4bcde3dc79e2fc4668e",
+      "size": 2616286,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/ember-route.png",
+      "mode": "100644",
+      "sha": "5fa752e0419f7f5eee23b19ba4db97cd4f7fe8bc",
+      "size": 3075907,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/ember.png",
+      "mode": "100644",
+      "sha": "dc46922ebedd1a1b5c1395e3f623b6261d5e94c1",
+      "size": 2697331,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/guildspire-route.png",
+      "mode": "100644",
+      "sha": "fa5644e138c603918ec3b71d230501086804164e",
+      "size": 3152520,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/guildspire.png",
+      "mode": "100644",
+      "sha": "1b918682f349edbddb5b30a4989651bf8a0886be",
+      "size": 2652499,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/lantern.png",
+      "mode": "100644",
+      "sha": "be09dd784641345c7bab5b84969126803183baf0",
+      "size": 2575337,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/reverie-route.png",
+      "mode": "100644",
+      "sha": "b83137cd8176c99af4d5dd402f0a9461e07ce369",
+      "size": 2211953,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/reverie.png",
+      "mode": "100644",
+      "sha": "e2298b26be9911251dcd6e66f39b18df0cb447fb",
+      "size": 2277695,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/alarm.png",
+      "mode": "100644",
+      "sha": "ed197194c8d5ed71fa1103003466089c7a788bb4",
+      "size": 1084325,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/ash-route.png",
+      "mode": "100644",
+      "sha": "9e9f8eba5ef205d66a9d66c3b0955513b458f92e",
+      "size": 2293369,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/ash.png",
+      "mode": "100644",
+      "sha": "451975c2f6308f12bcc874b7084772e9881b9140",
+      "size": 1151800,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/dawn-route.png",
+      "mode": "100644",
+      "sha": "833304517e5cf3e79a18fefcf7979509e6105d92",
+      "size": 1997034,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/ember-hall-battle.png",
+      "mode": "100644",
+      "sha": "f654a0871968f48de2b77881337dcda6fac4125a",
+      "size": 3311088,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/ember-route.png",
+      "mode": "100644",
+      "sha": "28ef6c055276d6382e95468c94949d051d657c96",
+      "size": 2219627,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/ember.png",
+      "mode": "100644",
+      "sha": "f6fe35155bfc33ee5cbcfedc2f3b1d321be92e27",
+      "size": 1051010,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/guildspire-route.png",
+      "mode": "100644",
+      "sha": "dd4c568cb6c0b6ef92eb85489c4fb09d7af42cd5",
+      "size": 2388377,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/guildspire.png",
+      "mode": "100644",
+      "sha": "79a30b01d0299287940e235108991cb53cb2c2f2",
+      "size": 1068809,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/lantern.png",
+      "mode": "100644",
+      "sha": "be8414428fe85b31f1ea4588fd2a0469c8100208",
+      "size": 1024786,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/reverie-route.png",
+      "mode": "100644",
+      "sha": "9920db134cfc2798a96d02563548d64f3239557b",
+      "size": 1633204,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/reverie.png",
+      "mode": "100644",
+      "sha": "88395ffa6b0bec62caba656a04111d4bbf2561e3",
+      "size": 922016,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/runtime/title-screen.png",
+      "mode": "100644",
+      "sha": "4c9cac82a3f13b753184c0f79e3f2adf45d2fe50",
+      "size": 3191995,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-1.webp",
+      "mode": "100644",
+      "sha": "b91e7620f69077ee210fbcf419f122af2ce1c8c9",
+      "size": 649388,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-10.webp",
+      "mode": "100644",
+      "sha": "b91e7620f69077ee210fbcf419f122af2ce1c8c9",
+      "size": 649388,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-2.webp",
+      "mode": "100644",
+      "sha": "8423924b51ba4f250af06afab729133294d0044b",
+      "size": 555456,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-3.webp",
+      "mode": "100644",
+      "sha": "56eabb1b0205c5f1bde523e091928814dab34ae8",
+      "size": 579220,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-4.webp",
+      "mode": "100644",
+      "sha": "04461792b40ba2a09b97bf3def1677a07dc4ada3",
+      "size": 578498,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-5.webp",
+      "mode": "100644",
+      "sha": "eacbe62d4787ddddd1d23ce55f0ddaa091bc6dc4",
+      "size": 598556,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-6.webp",
+      "mode": "100644",
+      "sha": "3d484d4b49873e89da85761e86c68252e1366427",
+      "size": 592648,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-7.webp",
+      "mode": "100644",
+      "sha": "e8fb030fdbf3d7279b0d38086d4cca4888710d39",
+      "size": 586956,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-8.webp",
+      "mode": "100644",
+      "sha": "cc49174310ce214ddd70a4b511c4ad11b0bf5bcb",
+      "size": 607004,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-idle-9.webp",
+      "mode": "100644",
+      "sha": "fbc650e56ef9a99445839a490afbdfacb5013494",
+      "size": 607392,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/maps/title-screen.png",
+      "mode": "100644",
+      "sha": "f09270ee23816f9d26bcb867e348ab974e207152",
+      "size": 2406551,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/background.webp",
+      "mode": "100644",
+      "sha": "7cdac6798c97f66ebf61f0731f96144617c27e28",
+      "size": 114114,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/frames.webp",
+      "mode": "100644",
+      "sha": "7f43e78aac2292d1627faf99655723618f524b29",
+      "size": 218210,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/icons.webp",
+      "mode": "100644",
+      "sha": "7a05edc280cc93da8a857af445b425487e444e67",
+      "size": 352854,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/ornaments.webp",
+      "mode": "100644",
+      "sha": "25f715a784e0afb504065e1466512c59675a5f55",
+      "size": 510040,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/parchment.webp",
+      "mode": "100644",
+      "sha": "8daec08845c6ba25d1730434d7914295c5bd129f",
+      "size": 110288,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-glimmer.webp",
+      "mode": "100644",
+      "sha": "33f96b5bad046bbb3c5f167f248b23219624e34e",
+      "size": 156736,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-kael.webp",
+      "mode": "100644",
+      "sha": "241c92ddb29e1dd3012cc7365175572ad08911c3",
+      "size": 76598,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-mira.webp",
+      "mode": "100644",
+      "sha": "b07fa21331dbc76b05b7d655d2a170a5b2cd7e96",
+      "size": 124526,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-seerin.webp",
+      "mode": "100644",
+      "sha": "1b264fffd1b49aeed1b155baab046b21c267b51a",
+      "size": 125226,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-sparky.webp",
+      "mode": "100644",
+      "sha": "a76234d0a9131bd1fe512ed8ebeb9bb34ba0fd2b",
+      "size": 100604,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-torren.webp",
+      "mode": "100644",
+      "sha": "e35111e131261b7d28f2fc3f3b279303aa2b8452",
+      "size": 135668,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/portrait-verseborn.webp",
+      "mode": "100644",
+      "sha": "f158147f9389b9b16d3853bbb45ba93541f36b39",
+      "size": 102626,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/menu/stage-thumbnails.webp",
+      "mode": "100644",
+      "sha": "515c01161dd143e5a6969e60d16ad5fe65ba2cac",
+      "size": 323578,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/enemies/archive-custodian.png",
+      "mode": "100644",
+      "sha": "8d8427c739242a15bf64f2c9b7b26cd1cf52f189",
+      "size": 1682000,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/enemies/dawn-gate-sentinel.png",
+      "mode": "100644",
+      "sha": "126aeaa22fc35b1b5a9071309aa7cfd7cc89e28b",
+      "size": 1865919,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/enemies/dock-foreman.png",
+      "mode": "100644",
+      "sha": "f5e8d15d16ee49dc2a5da0d1ff7dd8e6785b3a87",
+      "size": 2003711,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/glimmer.png",
+      "mode": "100644",
+      "sha": "3d98119e10c2e08d931c5317ec3a0ff22d0019a1",
+      "size": 2496313,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/harl.png",
+      "mode": "100644",
+      "sha": "3e8d5b11135459c7217573a98c06c9207f3d6cbe",
+      "size": 2603853,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/jory.png",
+      "mode": "100644",
+      "sha": "74d1e360b2ee1f76851f3e081bdbaa1cf68f7ad6",
+      "size": 2609608,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/kael.png",
+      "mode": "100644",
+      "sha": "3efa121f5bf190e17e2c2bbc75d20c8a7adf0934",
+      "size": 2140431,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/kaeldrin.png",
+      "mode": "100644",
+      "sha": "8e44e63cfbf30d50e4452cc3621600f1f01deb05",
+      "size": 2807745,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/lyrsa.png",
+      "mode": "100644",
+      "sha": "b8c3c7047b8c127c568b1ab9ebdf0cb50b6e4c1a",
+      "size": 2600650,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/marla.png",
+      "mode": "100644",
+      "sha": "c90592bcecdec4ea185a5c99efbebfe8f015e228",
+      "size": 2558196,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/mira.png",
+      "mode": "100644",
+      "sha": "62ab93edd92680c56e70a72f15dc88d74c51d163",
+      "size": 2014120,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/nyx.png",
+      "mode": "100644",
+      "sha": "32607cd7cfef1a496a5c251a338e2c2ce3beb083",
+      "size": 2503983,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/rava.png",
+      "mode": "100644",
+      "sha": "8165879940def4d6b30191c2e91c7d2974102c35",
+      "size": 2527969,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/seerin.png",
+      "mode": "100644",
+      "sha": "d3d9f06472d92a1951d79a825f8f22a557afdcc7",
+      "size": 2285609,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/sparky.png",
+      "mode": "100644",
+      "sha": "24e66bc9218809c7a85df0322ae16979073a1ff3",
+      "size": 2178273,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/torren.png",
+      "mode": "100644",
+      "sha": "290fbc9d4774f74c08b143e87a2d8b80a5002275",
+      "size": 2262314,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/portraits/verseborn.png",
+      "mode": "100644",
+      "sha": "6a9eb229a3576d1b8f465521c95e619bb81a672a",
+      "size": 1906981,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/central-hall.webp",
+      "mode": "100644",
+      "sha": "933b8dd0220dcaa2cfa16c7fae8b7023399c6b60",
+      "size": 274114,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/glimmer-lab.webp",
+      "mode": "100644",
+      "sha": "9d41570e35e3eea60574a2e04149aeb40575551c",
+      "size": 271930,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/kael-library.webp",
+      "mode": "100644",
+      "sha": "b11512349897456ea8ed999bd1e597a5d9c73256",
+      "size": 238654,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/music-studio.webp",
+      "mode": "100644",
+      "sha": "4ff3cdc766c02f156fd79a062178ddad11d5543b",
+      "size": 270122,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/relaxation-lounge.webp",
+      "mode": "100644",
+      "sha": "09ddf00af2df68c1c85ef1b456f8b19abc29ac50",
+      "size": 260614,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/sparky-coop.webp",
+      "mode": "100644",
+      "sha": "7a6191bc8a6b272e6bdd5b9440015ecf99a8c384",
+      "size": 271288,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/torren-kitchen.webp",
+      "mode": "100644",
+      "sha": "f0e59984f27b2cdb25a658a77325c9c12fd406db",
+      "size": 254100,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/scenes/training-room.webp",
+      "mode": "100644",
+      "sha": "9980dabee1d02369e6614fe05f72fb6b12342aec",
+      "size": 251080,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/glimmer.png",
+      "mode": "100644",
+      "sha": "21a8b6bc69cf1e91e7b61f99c5ba76d29e1fda77",
+      "size": 358770,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/grumm.png",
+      "mode": "100644",
+      "sha": "e4ba65749893568af89f6de974b15951852fbd35",
+      "size": 2555295,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/harl.png",
+      "mode": "100644",
+      "sha": "97bf8e15e06121dc68a17f946fc190bc0ab50b18",
+      "size": 1956895,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/jory.png",
+      "mode": "100644",
+      "sha": "8af9aff9d1443fe63dda93d31f22a4f3760e58cd",
+      "size": 2239020,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/kael.png",
+      "mode": "100644",
+      "sha": "d903b0bc78dcff2b59d39d2eefb4da3bebec4040",
+      "size": 369059,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/kaeldrin.png",
+      "mode": "100644",
+      "sha": "c4de98e7f11c9b09bbaeb5cabab210b9b84d5227",
+      "size": 2507396,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/lyrsa.png",
+      "mode": "100644",
+      "sha": "b6566a52822c294368d04c18270f393bf78564d4",
+      "size": 2846817,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/marla-battle.png",
+      "mode": "100644",
+      "sha": "44cc63dc7531ec0d71b698e967e580634e57be2e",
+      "size": 2646063,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/marla.png",
+      "mode": "100644",
+      "sha": "6f4867e90c0a675901b3405488546e4c6a45b426",
+      "size": 455922,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/mira.png",
+      "mode": "100644",
+      "sha": "304aac0a8ae58fb68758feb291cf7a77f95e099a",
+      "size": 332550,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/nyx.png",
+      "mode": "100644",
+      "sha": "9a5f7758571a647e5267ffc7c77474f4f1a1dc7d",
+      "size": 2119221,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/rava.png",
+      "mode": "100644",
+      "sha": "2c8355935880e702cd4973dd9d1b273701b36724",
+      "size": 1891186,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/seerin.png",
+      "mode": "100644",
+      "sha": "c7b1c8e32cf263c60d89659605c1deedeac529da",
+      "size": 409654,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/shade.png",
+      "mode": "100644",
+      "sha": "763cb32d70dadc96162845f4bd298417804e80fa",
+      "size": 1766416,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/sparky.png",
+      "mode": "100644",
+      "sha": "ba6045d7abb155acafa82264308531b5c57fe5e3",
+      "size": 295332,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/torren.png",
+      "mode": "100644",
+      "sha": "280359493c71d94de92c3848af3f224d1a3cf94e",
+      "size": 478263,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/animation/verseborn.png",
+      "mode": "100644",
+      "sha": "0816cf416bcba54542e11518594ad9f99ae2ebd5",
+      "size": 379904,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/glimmer-mech.png",
+      "mode": "100644",
+      "sha": "b09011cba7e48aca69048bfea4f405b03d691430",
+      "size": 2606799,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/glimmer.png",
+      "mode": "100644",
+      "sha": "74e9cadd598da3c45439c0ef7d292a5fe26d0199",
+      "size": 2461362,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/kael-shadow.png",
+      "mode": "100644",
+      "sha": "c302b46b0f93f92254159b1c3613105ccc247411",
+      "size": 2624310,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/kael.png",
+      "mode": "100644",
+      "sha": "fb7f19a2d7957a7f500f5d329a9638655332469b",
+      "size": 2024783,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/manifest.json",
+      "mode": "100644",
+      "sha": "e151771ccba9a83a1f6390fa40de060fe958265f",
+      "size": 5479,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/mira.png",
+      "mode": "100644",
+      "sha": "69a8636d4487b8743f70aadb30ce07d6475b603d",
+      "size": 1973031,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/seerin.png",
+      "mode": "100644",
+      "sha": "7a13d6bb5dad4a467d881b9bebe0374d1a07ba3e",
+      "size": 2679243,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/sparky.png",
+      "mode": "100644",
+      "sha": "ba32e1fc96a8c326483e0ca656a2264d18ec0ae9",
+      "size": 2023142,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/torren.png",
+      "mode": "100644",
+      "sha": "cce5e832b51ccd66b276ecf6ed9a81a34bbb9c28",
+      "size": 2611429,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle-v2/verseborn.png",
+      "mode": "100644",
+      "sha": "f0d746585d47177f51672423c5d8d2dc1412a6cd",
+      "size": 2232343,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/glimmer-mech.png",
+      "mode": "100644",
+      "sha": "a049127a26fa0cd4df9e155d1f329453432f6a74",
+      "size": 2609444,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/glimmer.png",
+      "mode": "100644",
+      "sha": "63a3075fec92c26898976c583719afc281eda5c6",
+      "size": 2217538,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/kael-shadow.png",
+      "mode": "100644",
+      "sha": "acf89e515c6fd47194c56dcdc25ae12d0bef994b",
+      "size": 2085667,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/kael.png",
+      "mode": "100644",
+      "sha": "e9b72329df2a05cf0f220ffddb15eafc560661d9",
+      "size": 2374502,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/manifest.json",
+      "mode": "100644",
+      "sha": "920d0dee822c0d3267cb7d130203850d72f9a926",
+      "size": 3893,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/mira.png",
+      "mode": "100644",
+      "sha": "f69147d28c7c4eb9f86e387da2ebc8290d339e39",
+      "size": 1612905,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/seerin.png",
+      "mode": "100644",
+      "sha": "d064c19e2070c480c3082b3d785da451114b56eb",
+      "size": 2117249,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/sparky.png",
+      "mode": "100644",
+      "sha": "16c2bbabaa95bdf0ff8d311e90a02590eada9520",
+      "size": 2055445,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/torren.png",
+      "mode": "100644",
+      "sha": "69951bacc7ff7505fe44f487ef8460496e359956",
+      "size": 2139751,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/battle/verseborn.png",
+      "mode": "100644",
+      "sha": "4e722f3b303e2eae77e26a724c7b21393f501751",
+      "size": 1358122,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/chests.png",
+      "mode": "100644",
+      "sha": "2b1d0e252055bf04f59ad1ba83a00044d4829b8a",
+      "size": 2768573,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/archive-custodian.png",
+      "mode": "100644",
+      "sha": "e15e6681ecd675c29bf1466edced467e96b2aeb8",
+      "size": 1913414,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/ash-wyrm.png",
+      "mode": "100644",
+      "sha": "487c8353ff0d3a3b2b388e4d32b1adc790532280",
+      "size": 2589505,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/clergy-seal-patrol.png",
+      "mode": "100644",
+      "sha": "062889a6c89e5081ddc422583e437e35b63932c4",
+      "size": 2198710,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/cracked-armory-pillar.png",
+      "mode": "100644",
+      "sha": "4e505520eea9d21cd9da7af0b968704543ef2454",
+      "size": 2488083,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/dawn-gate-sentinel.png",
+      "mode": "100644",
+      "sha": "144ad54276ed62849878bf1a34ce8c636ebb73f2",
+      "size": 2050357,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/dock-foreman.png",
+      "mode": "100644",
+      "sha": "2460ecd1a476c2fcc1e908c311af1a0404bd5275",
+      "size": 1942028,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-animation/inkbound-auditor.png",
+      "mode": "100644",
+      "sha": "2b0565444f07a456075f1e5469e14ae6bbe29416",
+      "size": 1851636,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-attack-runtime.png",
+      "mode": "100644",
+      "sha": "70ad2a60b6b379df6bbe69026e3fe9bfe29c285b",
+      "size": 25053,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/angry-gnome-mob.webp",
+      "mode": "100644",
+      "sha": "1d42c8b5b2759eba32c90be56d03df8f5d16611f",
+      "size": 2006852,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/archive-custodian.webp",
+      "mode": "100644",
+      "sha": "0fa7cbea7d274f672feebc54e55c79b4047cd7c6",
+      "size": 1560980,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-quarter-thugg.webp",
+      "mode": "100644",
+      "sha": "e0c23c4b77bce1a3fe1df098320346ddc50065c1",
+      "size": 1730284,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-classic.webp",
+      "mode": "100644",
+      "sha": "2f1884dfd8c27ced86e6eb386289ef83fb8c0751",
+      "size": 1965306,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-lava-animated.webp",
+      "mode": "100644",
+      "sha": "5369aa58519f653c081fa72475d138f5b245a661",
+      "size": 441950,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-lava-clean-source.png",
+      "mode": "100644",
+      "sha": "ab5a63059693c8d3c30144e63355593b9ec5bd83",
+      "size": 3046399,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-lava-fixed.webp",
+      "mode": "100644",
+      "sha": "5369aa58519f653c081fa72475d138f5b245a661",
+      "size": 441950,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-lava-source.png",
+      "mode": "100644",
+      "sha": "ae1c24d5e4f4e0f76bf7d514cb1b40b7ba486fbb",
+      "size": 3411990,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-lava-stable.webp",
+      "mode": "100644",
+      "sha": "5369aa58519f653c081fa72475d138f5b245a661",
+      "size": 441950,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm-lava.webp",
+      "mode": "100644",
+      "sha": "5369aa58519f653c081fa72475d138f5b245a661",
+      "size": 441950,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ash-wyrm.webp",
+      "mode": "100644",
+      "sha": "d058be20e5910bb5713feb20c120cbb2ddbea830",
+      "size": 1242454,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/baron-revus-veln.webp",
+      "mode": "100644",
+      "sha": "f98503db730e91a062c24c68fe83a452e04a3696",
+      "size": 1886080,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/berend-blimpstone.webp",
+      "mode": "100644",
+      "sha": "67e04b32ce07a18d189c97973b12596aa3947eda",
+      "size": 2058514,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/brokk.webp",
+      "mode": "100644",
+      "sha": "c511444a6fff73ceffb405f3d4372efa52850b7d",
+      "size": 1849918,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/clergy-seal-patrol.webp",
+      "mode": "100644",
+      "sha": "93f9ad7f7f6c13b20a6491b2958be606710201d8",
+      "size": 1358730,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/clock-goblin.webp",
+      "mode": "100644",
+      "sha": "50e618003ae806e01c5c6dbf5dd40c22659afd14",
+      "size": 2092166,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/concierge-veyr.webp",
+      "mode": "100644",
+      "sha": "b0ef6746258e3eec3bb2bbf6135d64dabe63776a",
+      "size": 499154,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/corrupt-clergy.webp",
+      "mode": "100644",
+      "sha": "070824e5ed5b3642e64ae2a7d3c1d9e5f5c6e2c8",
+      "size": 1938810,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/cracked-armory-pillar.webp",
+      "mode": "100644",
+      "sha": "4f138b4ffc9e1707de17b214fc48a6911569d341",
+      "size": 1537252,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/dawn-gate-sentinel.webp",
+      "mode": "100644",
+      "sha": "5964423d06ed875276df5cab04838cc79a11b6b4",
+      "size": 1452222,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/dock-foreman.webp",
+      "mode": "100644",
+      "sha": "395441d813606e4d5d849496818e927b65f3947d",
+      "size": 1238422,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/draconic-guide.webp",
+      "mode": "100644",
+      "sha": "990895942ad5bf310f06ecb8daea93f201d99949",
+      "size": 578562,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/elder-plumpin.webp",
+      "mode": "100644",
+      "sha": "209762589ccf978d482750a24976aedbdea1422d",
+      "size": 2265108,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ember-leviathan.webp",
+      "mode": "100644",
+      "sha": "ee1a4c3ba5b7e9fe02efde7c3a545ec3da5e1b87",
+      "size": 2277866,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/frostmile-wyrm.webp",
+      "mode": "100644",
+      "sha": "c2827afb7d2dd873b95910a091c4d9ed2ba5802e",
+      "size": 2346368,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/gorg.webp",
+      "mode": "100644",
+      "sha": "f936c70cd6edab41046a5a9d1f57a7300200f1cf",
+      "size": 2157662,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/grumm.webp",
+      "mode": "100644",
+      "sha": "065d4190e6dfc0a7e65607a6c5e7d7751c229c1f",
+      "size": 1767670,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/guild-inspector-voss.webp",
+      "mode": "100644",
+      "sha": "35beb5e303c1a6976367681a5ab3b209c0343bc1",
+      "size": 486742,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/high-administrator-thaddeus.webp",
+      "mode": "100644",
+      "sha": "e2cc15dc96f54616414124cf0849e56b774ef681",
+      "size": 2346008,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/ilyss-vanthe.webp",
+      "mode": "100644",
+      "sha": "c4647f817279d63eb225fc4766265a89a0c0b9f3",
+      "size": 606032,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/inkbound-auditor.webp",
+      "mode": "100644",
+      "sha": "56ba96045ab8b31789dafefe06710c05c9f84599",
+      "size": 1067430,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/jory-bellwick.webp",
+      "mode": "100644",
+      "sha": "3932fd809f91969726a401d1fbfc24715e8eb535",
+      "size": 1964396,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/kaeldrin.webp",
+      "mode": "100644",
+      "sha": "17efacf9c6c56de8ad9199dfc7ef157cc73dd493",
+      "size": 1858908,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/king-maeric.webp",
+      "mode": "100644",
+      "sha": "4602894b2aeabf8648e0d4e426f3b13e2f6df923",
+      "size": 1934982,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/koru-vak.webp",
+      "mode": "100644",
+      "sha": "fd34350d469eb7929f014f51ac8d9b039cbdedcb",
+      "size": 559754,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/lady-morvanna.webp",
+      "mode": "100644",
+      "sha": "275e45e462bc2bdf82045b6f52987fd550f4c431",
+      "size": 467682,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/lord-sprocket.webp",
+      "mode": "100644",
+      "sha": "f4d85d9280cca4ef9f3ebf1bcd2a8db39f418b1d",
+      "size": 2157350,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/lysra.webp",
+      "mode": "100644",
+      "sha": "18db73e9f596a0cdc63beb1f0a6c18c0bd4967d3",
+      "size": 2049966,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/malkhius.webp",
+      "mode": "100644",
+      "sha": "c3f89a3f2c70fd7de42338e458d25ba5ea908231",
+      "size": 409464,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/manifest.json",
+      "mode": "100644",
+      "sha": "731efc803386b5e8b283cf6e17f38a7fe64afc91",
+      "size": 49488,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/marla.webp",
+      "mode": "100644",
+      "sha": "ec3ef4647f3047f84cfbf9c5bda53821c2ba7e8e",
+      "size": 1700186,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/memory-root-guardian.webp",
+      "mode": "100644",
+      "sha": "87baa67d189f95d05b29bb0204ae33bdff1d0d72",
+      "size": 678424,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/nyx-vael.webp",
+      "mode": "100644",
+      "sha": "3f9dd6b22ee1fadd77e83e8692cd1eb91f23e011",
+      "size": 1755222,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/prince-lucan-cindralis.webp",
+      "mode": "100644",
+      "sha": "2ad22e987dee101880422d2faa97e80fa4aed032",
+      "size": 1980282,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/rava.webp",
+      "mode": "100644",
+      "sha": "0aca498d55f69ab36456ad30065092248695b5a4",
+      "size": 1258606,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/red-dragon-lord.webp",
+      "mode": "100644",
+      "sha": "3e4dfca66bf6f35e6b9f11138bb81ec2c4d17f5c",
+      "size": 2053588,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/saint-justin.webp",
+      "mode": "100644",
+      "sha": "4f84320db3cff0ae4197937ceb55ca6adc943c80",
+      "size": 2208968,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/selyra-quill.webp",
+      "mode": "100644",
+      "sha": "6262faffa6a03f6941041fcd721dbdd7f9900be2",
+      "size": 564494,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/shade.webp",
+      "mode": "100644",
+      "sha": "26643a7d1357b5583f48509a4866ec20e44c9404",
+      "size": 1506890,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/sir-reginald.webp",
+      "mode": "100644",
+      "sha": "48cf9ced9f96d2ee900f1295771ee08bde0f7be8",
+      "size": 2226862,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/sister-maelin.webp",
+      "mode": "100644",
+      "sha": "66b644e4bd3fef40a0b64bd6aa4a5f69d97f21f3",
+      "size": 559738,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/slobbo.webp",
+      "mode": "100644",
+      "sha": "7d7b43c2e90f49bd969157c0c408cc7a4bf74441",
+      "size": 2232638,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/solinar-enraged.webp",
+      "mode": "100644",
+      "sha": "70b23550b38e6c444db87ba6d14183b090a6079a",
+      "size": 2766926,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/solinar.webp",
+      "mode": "100644",
+      "sha": "9f78d74f47619e09cfd6426577de754ab16c254b",
+      "size": 2305870,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/tibby.webp",
+      "mode": "100644",
+      "sha": "7820a2df692853dbf3ccb6d77a26d1c76ad8ce30",
+      "size": 2111192,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-battle/tja.webp",
+      "mode": "100644",
+      "sha": "a24319ae1449f1fc0cfa07a7c257f56c9c37b501",
+      "size": 1782968,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-field-runtime.png",
+      "mode": "100644",
+      "sha": "63e1849fb26d37cc0be9f227b4c91117d6372c5c",
+      "size": 8734,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/enemies-runtime.png",
+      "mode": "100644",
+      "sha": "efd40e8f734766fedc276fe77a5aaeaea8ac6305",
+      "size": 23610,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/glimmer-runtime.png",
+      "mode": "100644",
+      "sha": "eeeb74a4c12fc25399d908ff7e4278c6668accfd",
+      "size": 10295,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/glimmer-walk-runtime.png",
+      "mode": "100644",
+      "sha": "bfbfc0ce1299be5e44cc1755467a420f5c6ca919",
+      "size": 5945,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/kael-runtime.png",
+      "mode": "100644",
+      "sha": "68f113fe366271df1344ee8295da1666f7322c98",
+      "size": 13658,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/kael-walk-runtime.png",
+      "mode": "100644",
+      "sha": "05f8d730a026f73cc89b60414ffcec7966dcaf22",
+      "size": 8022,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/mira-runtime.png",
+      "mode": "100644",
+      "sha": "df37d88ac82c0b5cd1c289ecb6da671e777e1572",
+      "size": 12216,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/mira-walk-runtime.png",
+      "mode": "100644",
+      "sha": "bfa4c4b823c54410e6abeaa126e08aff522bb361",
+      "size": 7875,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/npcs-runtime.png",
+      "mode": "100644",
+      "sha": "aac263af81c736efbaf6095f371c08e3798af3cf",
+      "size": 16476,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/seerin-runtime.png",
+      "mode": "100644",
+      "sha": "a6101648b896a44f0e98fc5dc129bdeb7c842d17",
+      "size": 12620,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/seerin-walk-runtime.png",
+      "mode": "100644",
+      "sha": "e3a2bb285443107a2d9624c9332711eecc73d7e4",
+      "size": 10684,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/sparky-runtime.png",
+      "mode": "100644",
+      "sha": "82264c07ef0d9922bb6be5bd62916e7387874e62",
+      "size": 8063,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/sparky-walk-runtime.png",
+      "mode": "100644",
+      "sha": "86b109d0a95152b9a04a8e268349931cb84dac40",
+      "size": 6416,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/torren-runtime.png",
+      "mode": "100644",
+      "sha": "6f686fda1ad4c8f289cc31756f465bcd3f793ec2",
+      "size": 18514,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/torren-walk-runtime.png",
+      "mode": "100644",
+      "sha": "7492c67a65a80e4378658344d88fd76d8c9ad7e2",
+      "size": 11375,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/verseborn-runtime.png",
+      "mode": "100644",
+      "sha": "91bf013f57e8279a63dc3f4997da339170485984",
+      "size": 14689,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/sprites/verseborn-walk-runtime.png",
+      "mode": "100644",
+      "sha": "3bcf6244217a6e06244a85da2ab69b20ddb5b5d1",
+      "size": 9486,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/battle-defeat.png",
+      "mode": "100644",
+      "sha": "e6d41cdad08b435e36580bfabdb6a0578ae12b0a",
+      "size": 1225956,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/battle-victory.png",
+      "mode": "100644",
+      "sha": "aec26ff72d1fb76b189d05fc18f95eeeee371b62",
+      "size": 1459813,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/active-frame.webp",
+      "mode": "100644",
+      "sha": "350a98c3c01c750c2b94799b43dbcb4043d231ad",
+      "size": 5658,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/beguilingVeil.webp",
+      "mode": "100644",
+      "sha": "6c13704b97f48e8dc56e36a1dde6ffeab1831d95",
+      "size": 5284,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/brokenOath.webp",
+      "mode": "100644",
+      "sha": "13126983fdce8ee923b1de65879ba76f9026673d",
+      "size": 5842,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/buffRecord.webp",
+      "mode": "100644",
+      "sha": "b9e80a25a64d30b91b83711598c7e38959cd00ef",
+      "size": 5480,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/detail-panel.webp",
+      "mode": "100644",
+      "sha": "1f0ab78621a3d4dac9dc8d02a8d852989bb709e8",
+      "size": 48974,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/echoSigil.webp",
+      "mode": "100644",
+      "sha": "b082bbf07f1bc51711bd7dab919849fa57ae5238",
+      "size": 4944,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-aura.webp",
+      "mode": "100644",
+      "sha": "187e464df3610bf670962e6eaf451547ae04f4b6",
+      "size": 12214,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-brokenShield.webp",
+      "mode": "100644",
+      "sha": "e59955e0b468434cba171170926d474611988335",
+      "size": 17074,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-core.webp",
+      "mode": "100644",
+      "sha": "721b5ac260b36d5b0ff9902a7968881c1e457f74",
+      "size": 15302,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-echo.webp",
+      "mode": "100644",
+      "sha": "71e54ef999bdacbf878b9df3a572644f50d359cf",
+      "size": 13196,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-guidance.webp",
+      "mode": "100644",
+      "sha": "6ca751d58285c08dc95646d05785b0dd4cb57cbb",
+      "size": 14242,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-impact.webp",
+      "mode": "100644",
+      "sha": "d8c146579a4028dc62ab5e02832fbe84692c6ba6",
+      "size": 12398,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-lock.webp",
+      "mode": "100644",
+      "sha": "fbdb4f989c710b95207f5fa4cd9114adcf0fb5b1",
+      "size": 15874,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-rings.webp",
+      "mode": "100644",
+      "sha": "e7e2c55fa23dfc808685b64009c53bd8edf90659",
+      "size": 12624,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-roots.webp",
+      "mode": "100644",
+      "sha": "72e81f908651df00b2fb98b1b5e7d98c59131b4f",
+      "size": 18020,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-sanctuary.webp",
+      "mode": "100644",
+      "sha": "562a0317c10098f3c3232f88b716e7a9c1211268",
+      "size": 11834,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-veil.webp",
+      "mode": "100644",
+      "sha": "4c37c5df4ae871a00f2a9428e641f0001c47604d",
+      "size": 15172,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/effect-violation.webp",
+      "mode": "100644",
+      "sha": "f8e829716daf99c999aa26c268919908befa325a",
+      "size": 15866,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/guidanceMark.webp",
+      "mode": "100644",
+      "sha": "fdfddd9fc95686641734e8adcb6c4a7e1ca66bd7",
+      "size": 5118,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/harmonicRings.webp",
+      "mode": "100644",
+      "sha": "49bbfd843e7795953708ea4ca3c049857299d617",
+      "size": 6212,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/inspectionOrder.webp",
+      "mode": "100644",
+      "sha": "4795b92959006fd39c1ed7b762d8fe0568a9b97e",
+      "size": 4188,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/manifest.json",
+      "mode": "100644",
+      "sha": "0a132498b6c4573655134bce7688e32fe52c39db",
+      "size": 1269,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/memoryAdaptation.webp",
+      "mode": "100644",
+      "sha": "bed8a96ef6ccbd6fc473a881e05f0d1290bbd872",
+      "size": 5244,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/memoryCore.webp",
+      "mode": "100644",
+      "sha": "0958ab4604c211ba18b0323ebab2082a044afe27",
+      "size": 5780,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/memoryRecord.webp",
+      "mode": "100644",
+      "sha": "b259e82e29bf74ebe7d1099deab43c701490938d",
+      "size": 6088,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/normal-frame.webp",
+      "mode": "100644",
+      "sha": "93ed7d3e818e118bb818de8516e87b2afc7bafd1",
+      "size": 4156,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/oathguard.webp",
+      "mode": "100644",
+      "sha": "5b8d91143be4f3f19f046034ea486a0db5f9c184",
+      "size": 5274,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/protectedGuest.webp",
+      "mode": "100644",
+      "sha": "d2be49d73f8169ea54327c49315622e9cb90ffad",
+      "size": 5410,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/rootBind.webp",
+      "mode": "100644",
+      "sha": "64b8650c769dcbff5c38cc6be5e3a94b2f59b2aa",
+      "size": 5684,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/sanctuary.webp",
+      "mode": "100644",
+      "sha": "fcf88f5b856a441e6e24e8142fa44c99c80c29f1",
+      "size": 4654,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/skillRecord.webp",
+      "mode": "100644",
+      "sha": "bee4b604d3f93636d3a16123fbc3039f18550f1b",
+      "size": 6066,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/violationStamp.webp",
+      "mode": "100644",
+      "sha": "957e61257eb7ef4d49493d6f6c452c260de9a1d8",
+      "size": 4834,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/boss-mechanics/warning-banner.webp",
+      "mode": "100644",
+      "sha": "9f01f7d37d1be69c5fa37a4a19849852b100eb65",
+      "size": 55256,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/break-icons.png",
+      "mode": "100644",
+      "sha": "569e43e155ff43258439d89cb977ebcd77b6038e",
+      "size": 1492248,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/combat-role-icons.png",
+      "mode": "100644",
+      "sha": "85e792c31c64b7c30202c3399fe40a4c66a25f2d",
+      "size": 252960,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-drop.png",
+      "mode": "100644",
+      "sha": "4711a7249ecb7a926b2e0e5234e63a750f0919ef",
+      "size": 1135141,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-glimmer.png",
+      "mode": "100644",
+      "sha": "f22158ddad66e4b58437b646b8ed857ffa4713c4",
+      "size": 929756,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-icons.png",
+      "mode": "100644",
+      "sha": "9bf11ea2b48f0a8da5e9b491793d40e2efd7c97b",
+      "size": 1060541,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-kael.png",
+      "mode": "100644",
+      "sha": "d7f27c2c66489036e1ff883bbb901a8d4d3ac998",
+      "size": 875200,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-mira.png",
+      "mode": "100644",
+      "sha": "404e55ab3efb17899e5958c33a54349474c7eaad",
+      "size": 934276,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-seerin.png",
+      "mode": "100644",
+      "sha": "8f0c0b4d27f8617d3e5d11856e5e375c75729a35",
+      "size": 1067758,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-sparky.png",
+      "mode": "100644",
+      "sha": "5513a7b7c96286b3c40d57d440d55c60d8053ae5",
+      "size": 914278,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-torren.png",
+      "mode": "100644",
+      "sha": "5e6000bbac165be5c9e7d05454286863d274efb5",
+      "size": 1251309,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-verseborn.png",
+      "mode": "100644",
+      "sha": "9bf11ea2b48f0a8da5e9b491793d40e2efd7c97b",
+      "size": 1060541,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-artifact-armour.webp",
+      "mode": "100644",
+      "sha": "1509d34eaf3b522cef35d6fb1f25b2e53c6835ec",
+      "size": 25186,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-artifact-helmet.webp",
+      "mode": "100644",
+      "sha": "c8a76c22d5f8c09e6bd58e84b3540543b1f6a45f",
+      "size": 21038,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-artifact-necklace.webp",
+      "mode": "100644",
+      "sha": "29ef892d826cfc677822bba6b6acc0bc6ab31c80",
+      "size": 30970,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-artifact-ring.webp",
+      "mode": "100644",
+      "sha": "7db9dfe3a55b8c53aca9957c0f08c6cd4983f604",
+      "size": 33530,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-artifact-weapon.webp",
+      "mode": "100644",
+      "sha": "9817b72d054fd7f3b84a2387342ded65d143ff03",
+      "size": 17848,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-epic-armour.webp",
+      "mode": "100644",
+      "sha": "07b3272194b0abf3651b70f0c452cde9fb799ef6",
+      "size": 19952,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-epic-helmet.webp",
+      "mode": "100644",
+      "sha": "b7364c7c1205cc9649e4f419747d0c1a5a2afd96",
+      "size": 16156,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-epic-necklace.webp",
+      "mode": "100644",
+      "sha": "d8d5ecd89979fb94923f99abbcce90730f0d2661",
+      "size": 18148,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-epic-ring.webp",
+      "mode": "100644",
+      "sha": "ba085b7405286b49f4548b90c112dbf5b6086850",
+      "size": 23196,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-epic-weapon.webp",
+      "mode": "100644",
+      "sha": "6712b504a41c4e56c050345e294a2ebd0a41124b",
+      "size": 13694,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-legendary-armour.webp",
+      "mode": "100644",
+      "sha": "5f68a61d34be07157898bffab5bae0e2e7e43389",
+      "size": 21554,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-legendary-helmet.webp",
+      "mode": "100644",
+      "sha": "c104abf9208261ef3a6050cdfeabcc868ab5ff2b",
+      "size": 17140,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-legendary-necklace.webp",
+      "mode": "100644",
+      "sha": "37ca2020af97f60a835463707569627520b7e3d1",
+      "size": 28452,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-legendary-ring.webp",
+      "mode": "100644",
+      "sha": "2ba883fed517fd563c8e42d75461c5c9aa92b47d",
+      "size": 28358,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-legendary-weapon.webp",
+      "mode": "100644",
+      "sha": "b1f2a3abc9e693a3aae691b44e94a741d27ee557",
+      "size": 12640,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-mythic-armour.webp",
+      "mode": "100644",
+      "sha": "35914271d74f3c7116fc62e1e650264b7a136711",
+      "size": 24074,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-mythic-helmet.webp",
+      "mode": "100644",
+      "sha": "e527279df51b246a88ab3a77021c398a85b8c5b0",
+      "size": 17878,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-mythic-necklace.webp",
+      "mode": "100644",
+      "sha": "a8e784399d9ddc7eda4cd2958a348f3f36825d17",
+      "size": 25194,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-mythic-ring.webp",
+      "mode": "100644",
+      "sha": "43bc17f4607db1cd561548a06cb457fcc06aa02b",
+      "size": 28628,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-mythic-weapon.webp",
+      "mode": "100644",
+      "sha": "cb35f0a864cf4dbbc65ef50f9658001e9a73169e",
+      "size": 16162,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-rare-armour.webp",
+      "mode": "100644",
+      "sha": "5c0559563e69f1263a29bdbb0c924bcc38f5b33d",
+      "size": 17394,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-rare-helmet.webp",
+      "mode": "100644",
+      "sha": "cc9d14e6a9aa22361145a2956f64024db34d592f",
+      "size": 14446,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-rare-necklace.webp",
+      "mode": "100644",
+      "sha": "ce5bedabda0ac07849bdc95ba5b0f73f94080b74",
+      "size": 15050,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-rare-ring.webp",
+      "mode": "100644",
+      "sha": "601a77b37a71c74f1552c752275eeb081302e97d",
+      "size": 18960,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/dps-rare-weapon.webp",
+      "mode": "100644",
+      "sha": "308b876a2f6d8513938cbca7d2d0f7ee6e3acd47",
+      "size": 8554,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-artifact-armour.webp",
+      "mode": "100644",
+      "sha": "881652a7887d5e0a1ea0f8bf42525e3a411cd682",
+      "size": 27806,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-artifact-helmet.webp",
+      "mode": "100644",
+      "sha": "bd8d48e465f4a61bad808190bccdde51f51bce8a",
+      "size": 22224,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-artifact-necklace.webp",
+      "mode": "100644",
+      "sha": "55c3ab0cdc2b9071ddc6825892fc8c25146cce5c",
+      "size": 37118,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-artifact-ring.webp",
+      "mode": "100644",
+      "sha": "da9953a3c3793e72512a6c58a16a0115042d6bfa",
+      "size": 36386,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-artifact-weapon.webp",
+      "mode": "100644",
+      "sha": "d3f8bc35931c74a4fb12002912f6252f8e20d72f",
+      "size": 22294,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-epic-armour.webp",
+      "mode": "100644",
+      "sha": "dcf064e4ebcc80a7bd898f8f0b4fc4f0fcbc9f94",
+      "size": 16906,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-epic-helmet.webp",
+      "mode": "100644",
+      "sha": "6dbdc29b0e86e28ea7633835fa8fe43ebe1517ef",
+      "size": 18440,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-epic-necklace.webp",
+      "mode": "100644",
+      "sha": "fffb83b97ceadf039d65b7b8bf9a9edebcfbbf12",
+      "size": 24610,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-epic-ring.webp",
+      "mode": "100644",
+      "sha": "b112a5b9adddc81ff2297c0ac34c74a331a963b0",
+      "size": 25544,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-epic-weapon.webp",
+      "mode": "100644",
+      "sha": "b1b13a0ad8ef451385694fb038b2101996ea1ac8",
+      "size": 11520,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-legendary-armour.webp",
+      "mode": "100644",
+      "sha": "0a5b365d08c084010ee3cb01582c8c2d4be573cb",
+      "size": 19532,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-legendary-helmet.webp",
+      "mode": "100644",
+      "sha": "3c9e78ebb98f3c8a8e0c9936a4a00d33109d579a",
+      "size": 17480,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-legendary-necklace.webp",
+      "mode": "100644",
+      "sha": "8ffa4a6918a7ac0fb144b7b76bd57e74383ce509",
+      "size": 31978,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-legendary-ring.webp",
+      "mode": "100644",
+      "sha": "ab061de34e78d724bfd9373fb35857b5fdb6292b",
+      "size": 29680,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-legendary-weapon.webp",
+      "mode": "100644",
+      "sha": "ceff16cb631a369b951f16da41ef26f5e9ba9f9a",
+      "size": 11816,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-mythic-armour.webp",
+      "mode": "100644",
+      "sha": "cc4b87733fe9191d9d5f2d39bf2cb2c601cb00b9",
+      "size": 23448,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-mythic-helmet.webp",
+      "mode": "100644",
+      "sha": "c4b3287b60b14c488e70bd5b94ed07023b77f869",
+      "size": 18804,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-mythic-necklace.webp",
+      "mode": "100644",
+      "sha": "616c304517ec65d5e7ff89c3a0ede46e77efbcb8",
+      "size": 30502,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-mythic-ring.webp",
+      "mode": "100644",
+      "sha": "55b7305744a388eaac0d57af84bcbddd4095fbc7",
+      "size": 31340,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-mythic-weapon.webp",
+      "mode": "100644",
+      "sha": "8af6a0b7e6cf27fcc1e12bedbae4ea8ed59ffbc6",
+      "size": 15782,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-rare-armour.webp",
+      "mode": "100644",
+      "sha": "06db75104f060d0ae3a9cf3730b5788edcf03916",
+      "size": 16128,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-rare-helmet.webp",
+      "mode": "100644",
+      "sha": "f45e779acbd0ff838bc4667bd94736797f986276",
+      "size": 16166,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-rare-necklace.webp",
+      "mode": "100644",
+      "sha": "8a3d1d9cd3decf9d34f2bbcb83c8d4722218524d",
+      "size": 19420,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-rare-ring.webp",
+      "mode": "100644",
+      "sha": "db5714c42abc762387104e0d1867e82f70b6c785",
+      "size": 22060,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/heal-rare-weapon.webp",
+      "mode": "100644",
+      "sha": "3be0f5ebfcc25ebc2e3384414f0eea83f445805b",
+      "size": 7074,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-artifact-armour.webp",
+      "mode": "100644",
+      "sha": "f035bcc19a2a326f44f2f23f5eb8599fe61c91a2",
+      "size": 26382,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-artifact-helmet.webp",
+      "mode": "100644",
+      "sha": "be0650eb86f08d44b8a23bbb8387e97e97f42c59",
+      "size": 20356,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-artifact-necklace.webp",
+      "mode": "100644",
+      "sha": "1527ca54fa9edcf1963d2de8721ce25e3591948b",
+      "size": 32168,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-artifact-ring.webp",
+      "mode": "100644",
+      "sha": "e43b02ca191dd9226d16d910c50ed7dca6df5e0e",
+      "size": 30198,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-artifact-weapon.webp",
+      "mode": "100644",
+      "sha": "ad50cf3350d774a6d617611fac25a039551c235e",
+      "size": 17610,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-epic-armour.webp",
+      "mode": "100644",
+      "sha": "55522a6a8ec3076bcdc93634e94f60f59dea3955",
+      "size": 20388,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-epic-helmet.webp",
+      "mode": "100644",
+      "sha": "963373225da56364d432bd3392298ce48c311c4c",
+      "size": 14942,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-epic-necklace.webp",
+      "mode": "100644",
+      "sha": "b55da78fa6e4267dd1c194861ecb29d97ff9d842",
+      "size": 25640,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-epic-ring.webp",
+      "mode": "100644",
+      "sha": "035de9e24c66a41ea7e6f722679cf1d098f7bb29",
+      "size": 27866,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-epic-weapon.webp",
+      "mode": "100644",
+      "sha": "824d9feba3b26b0d7c525fda00577eccee7def21",
+      "size": 10884,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-legendary-armour.webp",
+      "mode": "100644",
+      "sha": "068f87dbc3fdd985b3a5261482926d661ecf8ef0",
+      "size": 22642,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-legendary-helmet.webp",
+      "mode": "100644",
+      "sha": "7879d3d3d1c5caa83bb05bc32f7ded2018c52e63",
+      "size": 17778,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-legendary-necklace.webp",
+      "mode": "100644",
+      "sha": "1021388ce95dfdaa476911a6a76d9f47965815fb",
+      "size": 24804,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-legendary-ring.webp",
+      "mode": "100644",
+      "sha": "53f021cf02a8edc6c62d96947af4e7faa53feb03",
+      "size": 28478,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-legendary-weapon.webp",
+      "mode": "100644",
+      "sha": "51918cb6c370448001729671244181670668aa40",
+      "size": 9832,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-mythic-armour.webp",
+      "mode": "100644",
+      "sha": "a0825b6ee106327a8294ada06ddddfe843bafe71",
+      "size": 22598,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-mythic-helmet.webp",
+      "mode": "100644",
+      "sha": "8c4e70e5efaa2d60c9cfa093d1c99a0eb6ae0461",
+      "size": 17496,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-mythic-necklace.webp",
+      "mode": "100644",
+      "sha": "4b22ccc06e6ac625cc6e7fc8af082a734fef687e",
+      "size": 27818,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-mythic-ring.webp",
+      "mode": "100644",
+      "sha": "7b9145b023c36694b9f551db788936d24f3f178c",
+      "size": 28048,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-mythic-weapon.webp",
+      "mode": "100644",
+      "sha": "1fafaf89b6996627763e988ef11dc74b51e393e6",
+      "size": 15996,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-rare-armour.webp",
+      "mode": "100644",
+      "sha": "4bcb686f22b7c87d1de8ec80eb05ee234a502720",
+      "size": 18918,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-rare-helmet.webp",
+      "mode": "100644",
+      "sha": "2366181594a3ae2465fe96f192ad3d46584c628d",
+      "size": 17282,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-rare-necklace.webp",
+      "mode": "100644",
+      "sha": "2aae269416f01688f5eb078ea792dcd20544bf07",
+      "size": 20132,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-rare-ring.webp",
+      "mode": "100644",
+      "sha": "21bcd481f6ede4376279dabde1a941f13e4247ed",
+      "size": 20490,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/tank-rare-weapon.webp",
+      "mode": "100644",
+      "sha": "de7d04ab2c15a065305055561a1dfc76f99c7a90",
+      "size": 7446,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-artifact-armour.webp",
+      "mode": "100644",
+      "sha": "5605dc5bb0ddc53a75f2855a1ae48c240ef78e2a",
+      "size": 25220,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-artifact-helmet.webp",
+      "mode": "100644",
+      "sha": "b13b28070742383bb3f9c302d5f3e489523986ff",
+      "size": 24086,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-artifact-necklace.webp",
+      "mode": "100644",
+      "sha": "b33559a1ed5142c1d6ef949071f896c4a1099030",
+      "size": 30852,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-artifact-ring.webp",
+      "mode": "100644",
+      "sha": "5cb82d00676a573592688b81e8df9abd742747c3",
+      "size": 33770,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-artifact-weapon.webp",
+      "mode": "100644",
+      "sha": "a76387454d4c1e444d7806f95555b854f8c0275a",
+      "size": 22668,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-epic-armour.webp",
+      "mode": "100644",
+      "sha": "5918e9198ac2bcb6dbb65ca05e1128a1e006984b",
+      "size": 19422,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-epic-helmet.webp",
+      "mode": "100644",
+      "sha": "4c38c9ee03bc24b9a0297b6bd2511e1751006ab7",
+      "size": 15590,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-epic-necklace.webp",
+      "mode": "100644",
+      "sha": "8875428363bee14c8b51842603880d23ee506343",
+      "size": 22406,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-epic-ring.webp",
+      "mode": "100644",
+      "sha": "8e87489207dc97e5ca5e5e48111774c668c38d99",
+      "size": 26750,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-epic-weapon.webp",
+      "mode": "100644",
+      "sha": "0c4e28125ffd457aae3ad331f767951cea2f129f",
+      "size": 17284,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-legendary-armour.webp",
+      "mode": "100644",
+      "sha": "b193c32d8580759c13547291ff3b4eda90819ee4",
+      "size": 22106,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-legendary-helmet.webp",
+      "mode": "100644",
+      "sha": "6f3984ccef4ea8888acddf159272a9d4bc077f29",
+      "size": 20686,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-legendary-necklace.webp",
+      "mode": "100644",
+      "sha": "b4ecc3cfe2dd8031d4cb7f9ae6810bbd9f1c512b",
+      "size": 25868,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-legendary-ring.webp",
+      "mode": "100644",
+      "sha": "255290fe96510f8d9132502e9c1cbc017ae6655b",
+      "size": 27760,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-legendary-weapon.webp",
+      "mode": "100644",
+      "sha": "cef062971d6fdce9238a4bb28fee66db6fae35c0",
+      "size": 15404,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-mythic-armour.webp",
+      "mode": "100644",
+      "sha": "0ee902b1b169a3701c88ba99a3f91cfba6b1fe1f",
+      "size": 21436,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-mythic-helmet.webp",
+      "mode": "100644",
+      "sha": "6a1a986eb03076c521eea7afe3daca6bd3ff6d0d",
+      "size": 19874,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-mythic-necklace.webp",
+      "mode": "100644",
+      "sha": "796b9ba236ab09efe0fe75ebbd9924adf17a5a3d",
+      "size": 28518,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-mythic-ring.webp",
+      "mode": "100644",
+      "sha": "b9eaab2b724c728e20a5542aba792fd5fe29d4a6",
+      "size": 30346,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-mythic-weapon.webp",
+      "mode": "100644",
+      "sha": "5e626669d85b0f58f9bd8337dec004b867c25091",
+      "size": 20786,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-rare-armour.webp",
+      "mode": "100644",
+      "sha": "276a6c403940d7fe014b9c4bf9548e4a3a8c92e3",
+      "size": 18602,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-rare-helmet.webp",
+      "mode": "100644",
+      "sha": "267c511bd7209cf07ff22bd927e28c31218bf07b",
+      "size": 14498,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-rare-necklace.webp",
+      "mode": "100644",
+      "sha": "886cf4d03fb4f7f16e308c91834b93b033b71c38",
+      "size": 18070,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-rare-ring.webp",
+      "mode": "100644",
+      "sha": "853af2e778032ccec93a4af665f384ba0e1b900d",
+      "size": 22412,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/gear-visuals/utility-rare-weapon.webp",
+      "mode": "100644",
+      "sha": "12ca11433add0d6b3dc6e974a650a6b1de872786",
+      "size": 11324,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/item-icons.png",
+      "mode": "100644",
+      "sha": "a7ecccf929c3b3e7f312dc93b413bc3165de69af",
+      "size": 965525,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/loot-icons.png",
+      "mode": "100644",
+      "sha": "cb3d32448b71cf44aaccc859d7696a514a76c585",
+      "size": 1001394,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/stage-selector-sheet.webp",
+      "mode": "100644",
+      "sha": "486d39a1387ae06264443aa2ed6e35c869410a80",
+      "size": 468554,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/agilityDown.webp",
+      "mode": "100644",
+      "sha": "ab06bf5c58116a3b45279df2cbada51a9643fc40",
+      "size": 11756,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/agilityUp.webp",
+      "mode": "100644",
+      "sha": "a4b6c0576f5f502dac26444b668ec339ebaa4a90",
+      "size": 12894,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/barrier.webp",
+      "mode": "100644",
+      "sha": "3722c6cebf2db5519e400d101aec8de14da134fa",
+      "size": 13894,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/bleed.webp",
+      "mode": "100644",
+      "sha": "e73d62eb2c0734948d9b049376b8b3fefd168ee7",
+      "size": 9106,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/broken.webp",
+      "mode": "100644",
+      "sha": "0fefbde8176c4da5bea9c7eaeb73e6fcd73b015e",
+      "size": 13018,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/burn.webp",
+      "mode": "100644",
+      "sha": "982a9baa70ee9ffb824a9fbd2bc334e64c03d6d6",
+      "size": 9384,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/combatDrone.webp",
+      "mode": "100644",
+      "sha": "fa094dd4463690226877169573c1e8c0ea03a4ee",
+      "size": 12154,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/critExposed.webp",
+      "mode": "100644",
+      "sha": "145b184a792fff577821ba109cfaeb441c628ddd",
+      "size": 13918,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/critUp.webp",
+      "mode": "100644",
+      "sha": "60266654ffc5b9604d49318069632c73eef6d9aa",
+      "size": 13906,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/damageUp.webp",
+      "mode": "100644",
+      "sha": "bef530d52960e07a33bc6e6c130ba1b10c7bbdc6",
+      "size": 14456,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/defenseDown.webp",
+      "mode": "100644",
+      "sha": "b809d1888c840c548d92df5d2bd0a667e0a2a655",
+      "size": 12376,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/defenseUp.webp",
+      "mode": "100644",
+      "sha": "136b7350b8e3711006ed6294081d4cfa611df8c2",
+      "size": 13328,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/disrupted.webp",
+      "mode": "100644",
+      "sha": "c7ab2b80154b8fb9097341c936c413c507080d3d",
+      "size": 13678,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/echoPower.webp",
+      "mode": "100644",
+      "sha": "573903de4e4e623e2f4dab5e95c29a1425198108",
+      "size": 15526,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/evasion.webp",
+      "mode": "100644",
+      "sha": "6e2d62a35255430d6f7ab7924b4a55dc39d42192",
+      "size": 13788,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/holyFollowUp.webp",
+      "mode": "100644",
+      "sha": "11602584e4c3084775f9b7361278a09b2e9cc996",
+      "size": 14668,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/holyVulnerability.webp",
+      "mode": "100644",
+      "sha": "f07921127dae605583c39a30cbd28362a4d18b1a",
+      "size": 14692,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/magicDefenseDown.webp",
+      "mode": "100644",
+      "sha": "8c98ae2c8a88951d31f99822a3243b7e423ebce3",
+      "size": 13084,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/magicUp.webp",
+      "mode": "100644",
+      "sha": "3f1b37e53f039bef3176fdcb462c011405418ea8",
+      "size": 14312,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/magicVulnerability.webp",
+      "mode": "100644",
+      "sha": "f41debca1bee57db92829429ff455fe6bd8432e8",
+      "size": 14228,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/marked.webp",
+      "mode": "100644",
+      "sha": "05ad3f24f9d50f655d6bd78c6c706878b36cb1bf",
+      "size": 11782,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/mechGuard.webp",
+      "mode": "100644",
+      "sha": "a60f784582509625a29880e4c833d08fbc45d884",
+      "size": 13870,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/overheated.webp",
+      "mode": "100644",
+      "sha": "a586252500a7a0eb002da740677a7b61d423bd74",
+      "size": 13022,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/physicalVulnerability.webp",
+      "mode": "100644",
+      "sha": "19cc9e08147db7f3f1f024118ef43e54b8c97307",
+      "size": 10716,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/poison.webp",
+      "mode": "100644",
+      "sha": "613a62a643dcba145cd2beede35f6f455f5f5f97",
+      "size": 11150,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/resonanceLocked.webp",
+      "mode": "100644",
+      "sha": "6732032e1f6993efdc50c4cb9978cfa01a00f5d8",
+      "size": 12138,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/shadowExposed.webp",
+      "mode": "100644",
+      "sha": "3d4477a08b68b896aa89244eee1ee1380f08ccc5",
+      "size": 11368,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/shadowUp.webp",
+      "mode": "100644",
+      "sha": "4f46b591b691a6113a5d151eb88d3e0e7ba42b9d",
+      "size": 14242,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/silence.webp",
+      "mode": "100644",
+      "sha": "efe81826df9e608894f7e97a98891a041532f8cd",
+      "size": 12290,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/sleep.webp",
+      "mode": "100644",
+      "sha": "143b56eb9a275b44a7519414f87fde3ba2b3dc31",
+      "size": 11454,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/strengthUp.webp",
+      "mode": "100644",
+      "sha": "2d3c69674947eba36b7e0fff646270b3d2514df6",
+      "size": 14352,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/stun.webp",
+      "mode": "100644",
+      "sha": "7022340501d3aaf34316f655dabbee42300d8041",
+      "size": 13140,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/stunFocus.webp",
+      "mode": "100644",
+      "sha": "ba125e4e81ec5180a607759ae4b4a3214cf63e89",
+      "size": 14216,
+      "imported": false
+    },
+    {
+      "path": "public/game/assets/ui/status/vampiric.webp",
+      "mode": "100644",
+      "sha": "be88c66ba266bbc910b19e9edc84798d8735eebf",
+      "size": 13134,
+      "imported": false
+    },
+    {
+      "path": "public/game/game.js",
+      "mode": "100644",
+      "sha": "c5163e56b2ff5003953f78847408742d7b4a4e5e",
+      "size": 949669,
+      "imported": false
+    },
+    {
+      "path": "public/game/index.html",
+      "mode": "100644",
+      "sha": "b786b0f980a7927bb78d8bc6975b30a256d3ffd6",
+      "size": 7198,
+      "imported": false
+    },
+    {
+      "path": "public/game/styles.css",
+      "mode": "100644",
+      "sha": "9c5c3da5eeda52cf4e03478e1bb59a1d582f0f34",
+      "size": 164872,
+      "imported": false
+    },
+    {
+      "path": "public/og.png",
+      "mode": "100644",
+      "sha": "37d94601cde040a71576940d8d046c875e3b2410",
+      "size": 98443,
+      "imported": false
+    },
+    {
+      "path": "tools/analyze_battle_sheets.py",
+      "mode": "100644",
+      "sha": "68ee064af220e221edef4b88153f724bdd4922b7",
+      "size": 1356,
+      "imported": false
+    },
+    {
+      "path": "tools/audit_balance_saves.cjs",
+      "mode": "100644",
+      "sha": "f48e65e5e8179e617f48e745cc90b02eb0120e6d",
+      "size": 1888,
+      "imported": false
+    },
+    {
+      "path": "tools/audit_battle_assets.cjs",
+      "mode": "100644",
+      "sha": "1338276f54c6658bf25bae980be10f488bb6085a",
+      "size": 3986,
+      "imported": false
+    },
+    {
+      "path": "tools/audit_damage_stacking.cjs",
+      "mode": "100644",
+      "sha": "e6bf3e531f1d0e4f4a652a60878115117ae22c15",
+      "size": 4383,
+      "imported": false
+    },
+    {
+      "path": "tools/audit_mechanic_transparency.py",
+      "mode": "100644",
+      "sha": "7a219db3ae277a3e0bca881dcc7ba6d403472376",
+      "size": 1365,
+      "imported": false
+    },
+    {
+      "path": "tools/build_battle_sprites.py",
+      "mode": "100644",
+      "sha": "21ad6ab8421f5d18e5dd7eb9cbcd481e683ea97f",
+      "size": 17207,
+      "imported": false
+    },
+    {
+      "path": "tools/build_battle_sprites_v2.py",
+      "mode": "100644",
+      "sha": "8ea5414c20fbcc70c42d9245af26352fb28c68f2",
+      "size": 19804,
+      "imported": false
+    },
+    {
+      "path": "tools/build_boss_mechanic_assets.py",
+      "mode": "100644",
+      "sha": "92f5e6d7983e9111e8ea8dc0ac658a35b0429721",
+      "size": 5854,
+      "imported": false
+    },
+    {
+      "path": "tools/build_character_vfx.cjs",
+      "mode": "100644",
+      "sha": "540d1c622fee24d96abe4452d4325ea14d277381",
+      "size": 8812,
+      "imported": false
+    },
+    {
+      "path": "tools/build_classic_ash_wyrm.cjs",
+      "mode": "100644",
+      "sha": "bb52ea2990c2cd8088516ae54583241354582fb9",
+      "size": 1541,
+      "imported": false
+    },
+    {
+      "path": "tools/build_endgame_vfx.py",
+      "mode": "100644",
+      "sha": "8fcbf33b3c8a003679af1b33843a131f264bc6a3",
+      "size": 4997,
+      "imported": false
+    },
+    {
+      "path": "tools/build_enemy_battle_sprites.py",
+      "mode": "100644",
+      "sha": "819d8600c1a0ce6de469373ecfcbe6a6ddaa7e38",
+      "size": 13422,
+      "imported": false
+    },
+    {
+      "path": "tools/build_enemy_sprites_v2.py",
+      "mode": "100644",
+      "sha": "2fbee57e8644493962bfadacc0c095b58aed2fde",
+      "size": 5608,
+      "imported": false
+    },
+    {
+      "path": "tools/build_gear_visuals.py",
+      "mode": "100644",
+      "sha": "fe592e9e88530bd56e81583c4d92f4f7a245a210",
+      "size": 4831,
+      "imported": false
+    },
+    {
+      "path": "tools/build_hall_endgame_sprites.py",
+      "mode": "100644",
+      "sha": "1d70aac14109671b4511c8096a7eebedfc16dbe8",
+      "size": 8169,
+      "imported": false
+    },
+    {
+      "path": "tools/build_lava_ash_wyrm.cjs",
+      "mode": "100644",
+      "sha": "29d305272b9aa460543de6e5e8630da58d346cfe",
+      "size": 7329,
+      "imported": false
+    },
+    {
+      "path": "tools/build_status_icons.cjs",
+      "mode": "100644",
+      "sha": "30ebd8795d3cf6623d52e21899ebcd5cfaa6cd28",
+      "size": 2322,
+      "imported": false
+    },
+    {
+      "path": "tools/capture_battle_sprite_previews.cjs",
+      "mode": "100644",
+      "sha": "7a62613b72252c8c2d8fa0d4411d7d8abf8bd880",
+      "size": 3110,
+      "imported": false
+    },
+    {
+      "path": "tools/capture_hall_qa.cjs",
+      "mode": "100644",
+      "sha": "f895d1375a2e4e93279d57aa0cc2170d7bcc8e82",
+      "size": 5659,
+      "imported": false
+    },
+    {
+      "path": "tools/check_boss_banner_browser.cjs",
+      "mode": "100644",
+      "sha": "15241d3676059f9f3eb5755f443c81e3d9836fab",
+      "size": 4284,
+      "imported": false
+    },
+    {
+      "path": "tools/check_combat_archive_browser.cjs",
+      "mode": "100644",
+      "sha": "646d7730286402cf56934180d5b266c2a20c6794",
+      "size": 6188,
+      "imported": false
+    },
+    {
+      "path": "tools/check_gear_visuals.cjs",
+      "mode": "100644",
+      "sha": "a9072e34a6a338457e4b11f23a1e9405ae86eb42",
+      "size": 2641,
+      "imported": false
+    },
+    {
+      "path": "tools/check_glimmer_artifact_browser.cjs",
+      "mode": "100644",
+      "sha": "8643b15d34c0fcb3b9e512d64d7cba860a16d9b1",
+      "size": 3426,
+      "imported": false
+    },
+    {
+      "path": "tools/check_hall_endgame_browser.cjs",
+      "mode": "100644",
+      "sha": "97e233bc88bc52113c9973a07f901cc629d341b3",
+      "size": 6098,
+      "imported": false
+    },
+    {
+      "path": "tools/check_hall_menu_browser.cjs",
+      "mode": "100644",
+      "sha": "80b72e3191d1323262292f0127b347e6801676ee",
+      "size": 3977,
+      "imported": false
+    },
+    {
+      "path": "tools/check_lava_wyrm.cjs",
+      "mode": "100644",
+      "sha": "c11d0278a3bff280a893c40a65a80adc0e8f1edd",
+      "size": 3484,
+      "imported": false
+    },
+    {
+      "path": "tools/export_endgame_abilities.cjs",
+      "mode": "100644",
+      "sha": "9734bb48a230776249d129d07aa96f660a001c68",
+      "size": 7736,
+      "imported": false
+    },
+    {
+      "path": "tools/inspect_mechanic_components.py",
+      "mode": "100644",
+      "sha": "e541ac461f1ce5fb3fed01cd95e425d2bb0feb27",
+      "size": 962,
+      "imported": false
+    },
+    {
+      "path": "tools/package_gear_art_preview.cjs",
+      "mode": "100644",
+      "sha": "4e14d24a4510ca547d43471e3c596b7a4c250c00",
+      "size": 1658,
+      "imported": false
+    },
+    {
+      "path": "tools/prepare_balance_release.cjs",
+      "mode": "100644",
+      "sha": "187247061ab32f5c8c7fb99b98153f70a7c2a270",
+      "size": 4606,
+      "imported": false
+    },
+    {
+      "path": "tools/prepare_hall_endgame_release.cjs",
+      "mode": "100644",
+      "sha": "8bd1914b9e309ea557ceb8eded2f117cf41aff40",
+      "size": 1824,
+      "imported": false
+    },
+    {
+      "path": "tools/review_endgame_frames.py",
+      "mode": "100644",
+      "sha": "a698b1447f9ce3dd66430dc6668f6d1b476e8c14",
+      "size": 1306,
+      "imported": false
+    },
+    {
+      "path": "tools/serve_vfx_preview.cjs",
+      "mode": "100644",
+      "sha": "19a0ff29dc35774a68391f30febdc84f47fc4104",
+      "size": 1767,
+      "imported": false
+    },
+    {
+      "path": "tools/simulate_hall_early.cjs",
+      "mode": "100644",
+      "sha": "2df7321470d786942470eb5efb7c53932c8b9607",
+      "size": 5329,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/angry-gnome-mob.png",
+      "mode": "100644",
+      "sha": "5c8ab211667d562d6fe36a03c3313c5f194b2b05",
+      "size": 2939638,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/ash-quarter-thugg.png",
+      "mode": "100644",
+      "sha": "7285b38b4b02c2782776bfb74e596bb143662b9c",
+      "size": 2565783,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/baron-revus-veln.png",
+      "mode": "100644",
+      "sha": "ca553d5bda29c9fdb3e3891c0f7740effadfa8ed",
+      "size": 2744088,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/berend-blimpstone.png",
+      "mode": "100644",
+      "sha": "153709dab366201360cf8e8e0a118ef6f34cc501",
+      "size": 3028835,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/brokk.png",
+      "mode": "100644",
+      "sha": "7927e649f7a5861eaa565e31bc22560bd1cf7df8",
+      "size": 2703069,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/clock-goblin.png",
+      "mode": "100644",
+      "sha": "678be4f48fd69ae2bb4ff16b9e767c9892b7e2c6",
+      "size": 2882722,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/corrupt-clergy.png",
+      "mode": "100644",
+      "sha": "ff3682d8f389b46727fac977e96f5e2958603205",
+      "size": 2800337,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/elder-plumpin.png",
+      "mode": "100644",
+      "sha": "b750ea47523f8b3b9f522ed794029b930b0344a1",
+      "size": 3127966,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/ember-leviathan.png",
+      "mode": "100644",
+      "sha": "6044ad1eee9b7b08c87e3b23aea31f4a92358b32",
+      "size": 3140153,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/frostmile-wyrm.png",
+      "mode": "100644",
+      "sha": "b58ee2a5e61e92beb485c2c5457d75a035b0d832",
+      "size": 3422280,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/gorg.png",
+      "mode": "100644",
+      "sha": "d2271102732019a6ebf89ac1a3e1219754026633",
+      "size": 2988430,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/grumm.png",
+      "mode": "100644",
+      "sha": "392921b2c3b64015e76f0c1584a6dbdace2b6f5d",
+      "size": 2646016,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/high-administrator-thaddeus.png",
+      "mode": "100644",
+      "sha": "759a4718b5a98d87f80abb02b4b3c116c1e140a9",
+      "size": 3340778,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/jory-bellwick.png",
+      "mode": "100644",
+      "sha": "d1c879b8acde9f31585a6ebb894d782d56fb347c",
+      "size": 2837041,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/kaeldrin.png",
+      "mode": "100644",
+      "sha": "3d4f3e3942ce7c7261f210e1587483778d563c40",
+      "size": 2805693,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/king-maeric.png",
+      "mode": "100644",
+      "sha": "20d78b281d1524296e0bd97dfc50a7fb911fc9c9",
+      "size": 2839189,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/lord-sprocket.png",
+      "mode": "100644",
+      "sha": "4511cda940b135f0ffbfc0614ccd8b37ad5ed9e0",
+      "size": 3011336,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/lysra.png",
+      "mode": "100644",
+      "sha": "d0151324a4d0549b6b5938d63bc1fa16ef7e7f63",
+      "size": 3060022,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/marla.png",
+      "mode": "100644",
+      "sha": "c5f052f7fa95afac82f679c99669071180c2f11d",
+      "size": 2562971,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/nyx-vael.png",
+      "mode": "100644",
+      "sha": "cc50dc2037c5d6ce0ecb871a4eb428dd7bed2e7e",
+      "size": 2649368,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/prince-lucan-cindralis.png",
+      "mode": "100644",
+      "sha": "e10ed2cccb991db8816a889ae31fb8a766c28165",
+      "size": 2889230,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/red-dragon-lord.png",
+      "mode": "100644",
+      "sha": "c4c50a3cfe1c81c314a7f034bf749ffaf7297f31",
+      "size": 2867103,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/saint-justin.png",
+      "mode": "100644",
+      "sha": "ebef5057d72047f6d74aabd03ae0510af3785a47",
+      "size": 3192071,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/shade.png",
+      "mode": "100644",
+      "sha": "a555ec27261d8e37cf8aacea94c55d4ba77b3e3a",
+      "size": 2344694,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/sir-reginald.png",
+      "mode": "100644",
+      "sha": "766a5f78a758b5919fa8ac693f54dc531625f1d1",
+      "size": 3142555,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/slobbo.png",
+      "mode": "100644",
+      "sha": "0567bb94f349045e57b96933aa3c0227de51033b",
+      "size": 3149842,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/solinar-enraged.png",
+      "mode": "100644",
+      "sha": "b8c3568ed44e37ade0d655728502f63a653b849b",
+      "size": 3734756,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/solinar.png",
+      "mode": "100644",
+      "sha": "873ccf5560ef12417a2e4aff87d247c9068b3720",
+      "size": 3246794,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/tibby.png",
+      "mode": "100644",
+      "sha": "2aeec9ca82dcf2af8049b1ded9dd8a5a3c559812",
+      "size": 2975712,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/enemies-v2/tja.png",
+      "mode": "100644",
+      "sha": "f97157df6fcaa12f1d3215d1b1effe6b621c885a",
+      "size": 2547735,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/glimmer-mech.png",
+      "mode": "100644",
+      "sha": "6773a014e2d45b8424c7e46a77eca77900d2f80f",
+      "size": 3107092,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/glimmer.png",
+      "mode": "100644",
+      "sha": "fc4e64bdb7468aef3abad037e34c9c6eaee2dac1",
+      "size": 2480319,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/kael-shadow.png",
+      "mode": "100644",
+      "sha": "2db8542cd1e6c3b13851665fc9d9f2ee4bc074c8",
+      "size": 2648859,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/kael.png",
+      "mode": "100644",
+      "sha": "e91684697bcae5ba5f34599501b9f3092a546f2b",
+      "size": 2110279,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/mira.png",
+      "mode": "100644",
+      "sha": "dd828d268119e1333d1b504bdb307da443d85942",
+      "size": 2004422,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/seerin.png",
+      "mode": "100644",
+      "sha": "58346681fe240a664c1b3d930098ee7741ac3f1c",
+      "size": 2710986,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/sparky.png",
+      "mode": "100644",
+      "sha": "51c2b47649ba635d55202c1ba7c134ceda095e0b",
+      "size": 2075899,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/torren.png",
+      "mode": "100644",
+      "sha": "3157dd4bc51ff547ab0452afd2841664e86c40fe",
+      "size": 2617569,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party-v2/verseborn.png",
+      "mode": "100644",
+      "sha": "4966498e050e8df4dd8aa856d2c314d06eb03157",
+      "size": 2257855,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/glimmer-mech.png",
+      "mode": "100644",
+      "sha": "96e857effdadb094d4e1de5bb5aeab6654abfc45",
+      "size": 3578731,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/glimmer.png",
+      "mode": "100644",
+      "sha": "f5b2faa22fc605a6a3a150eb96b09c1882ab42b9",
+      "size": 3118200,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/kael-shadow.png",
+      "mode": "100644",
+      "sha": "1d208d7033c873084d065eb2839c826c585b431c",
+      "size": 2744764,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/kael.png",
+      "mode": "100644",
+      "sha": "0908f9ca39b13530373524ca2cee044feb710afc",
+      "size": 2825955,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/mira.png",
+      "mode": "100644",
+      "sha": "4110ef7231809f6d666161ce2bba8e8d4f85cc2f",
+      "size": 3049316,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/seerin.png",
+      "mode": "100644",
+      "sha": "850cba518bc8033e521d2bede4c40a5895b6c6b2",
+      "size": 2976250,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/sparky.png",
+      "mode": "100644",
+      "sha": "45ffb8be6701bb062c71fa0e9e864ea9cac771b9",
+      "size": 3032674,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/torren.png",
+      "mode": "100644",
+      "sha": "4520f08bf01823442f564432dff7a46c31ea7a49",
+      "size": 2996460,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/party/verseborn-derived.png",
+      "mode": "100644",
+      "sha": "f8ec64b9fe1680c4824a7bcc0739eba3da828665",
+      "size": 1587506,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Glimmer.png",
+      "mode": "100644",
+      "sha": "c43105ba73bea86624b8a535f42b14205a25facd",
+      "size": 2949651,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/GlimmerMech.png",
+      "mode": "100644",
+      "sha": "0bae4e1075b65af828fb161e283c78cfe1b4e0a4",
+      "size": 3202480,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Kael.png",
+      "mode": "100644",
+      "sha": "2afae3e3e6180a290ccc95e13dba4e87f8199443",
+      "size": 2497194,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/KaelShadow.png",
+      "mode": "100644",
+      "sha": "3a844c17abf2b75ba7e58ca4a393ba18b6f451da",
+      "size": 2836364,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Mira.png",
+      "mode": "100644",
+      "sha": "41f9e8e5954742164f87d6495cfc857d687301db",
+      "size": 2381849,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Seerin.png",
+      "mode": "100644",
+      "sha": "6e1f6a9bed338c6ebd1313ef18ed64878d4c10e3",
+      "size": 2473463,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Sparky.png",
+      "mode": "100644",
+      "sha": "e1a9748863b07b18ad837b47d1cafb45f6f658ec",
+      "size": 2135098,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Torren.png",
+      "mode": "100644",
+      "sha": "5c675a566cdded8a2d128b441b21341b314a4d2e",
+      "size": 2504949,
+      "imported": false
+    },
+    {
+      "path": "tools/sprite_sources/vfx/Verseborn.png",
+      "mode": "100644",
+      "sha": "c6ffad5963e835616eeb5b84901faa6b1a6847d2",
+      "size": 2410113,
+      "imported": false
+    },
+    {
+      "path": "tools/stage_hall_endgame_release.cjs",
+      "mode": "100644",
+      "sha": "ea5306c9e28e5615b8f0dbba5516ecf02c94df73",
+      "size": 511,
+      "imported": false
+    },
+    {
+      "path": "tools/test_balance_revamp.cjs",
+      "mode": "100644",
+      "sha": "b141b05139f622f7434391fbbe5d8de71e7bf3ec",
+      "size": 5978,
+      "imported": false
+    },
+    {
+      "path": "tools/test_bleed_buff.cjs",
+      "mode": "100644",
+      "sha": "3d72751b6c44cad4f9ce7e85336ca59184e75c08",
+      "size": 1252,
+      "imported": false
+    },
+    {
+      "path": "tools/test_boss_control_recovery.cjs",
+      "mode": "100644",
+      "sha": "cd0175f00a26bbdf937a1540e4bda2e1c96f4448",
+      "size": 4596,
+      "imported": false
+    },
+    {
+      "path": "tools/test_boss_immunity.cjs",
+      "mode": "100644",
+      "sha": "fce61e0ec95d487e913ff9ca566c0a8072a5b0ff",
+      "size": 3068,
+      "imported": false
+    },
+    {
+      "path": "tools/test_boss_pressure.cjs",
+      "mode": "100644",
+      "sha": "9f20f178029fd725ad3f969df7d381ab38f2a0de",
+      "size": 1467,
+      "imported": false
+    },
+    {
+      "path": "tools/test_character_vfx.cjs",
+      "mode": "100644",
+      "sha": "c5219cc8619ed65a9fa7017e87dae3a8f4ab7b1b",
+      "size": 9293,
+      "imported": false
+    },
+    {
+      "path": "tools/test_combat.cjs",
+      "mode": "100644",
+      "sha": "4d0043a8967330e928b8905028da196e886800f0",
+      "size": 77645,
+      "imported": false
+    },
+    {
+      "path": "tools/test_combat_archive.cjs",
+      "mode": "100644",
+      "sha": "348a3b928e8ccde3ccea5a2daadf22b4088b5f53",
+      "size": 1027,
+      "imported": false
+    },
+    {
+      "path": "tools/test_damage_meter.cjs",
+      "mode": "100644",
+      "sha": "ae96013408771e4470f34eeb7047809ce3bc9de7",
+      "size": 2010,
+      "imported": false
+    },
+    {
+      "path": "tools/test_developer_gear.cjs",
+      "mode": "100644",
+      "sha": "e1e0f9ad4e964ed76ccdd509afc8fc0273ea52a5",
+      "size": 3110,
+      "imported": false
+    },
+    {
+      "path": "tools/test_developer_tuning.cjs",
+      "mode": "100644",
+      "sha": "fefb139918b0d0fec7727dfbcbaecc6753b16ee1",
+      "size": 1405,
+      "imported": false
+    },
+    {
+      "path": "tools/test_dot_scaling.cjs",
+      "mode": "100644",
+      "sha": "2f6890bb8d29cb2f891f2099dcd78785de4d1ce2",
+      "size": 1505,
+      "imported": false
+    },
+    {
+      "path": "tools/test_early_hall_rhythms.cjs",
+      "mode": "100644",
+      "sha": "17bb225c5850cd7b3846b0f09083bc70fd0dea32",
+      "size": 1950,
+      "imported": false
+    },
+    {
+      "path": "tools/test_endgame_gold.cjs",
+      "mode": "100644",
+      "sha": "7dfaedb06cde099cb9af7112d4cbf3aefe398097",
+      "size": 1323,
+      "imported": false
+    },
+    {
+      "path": "tools/test_endgame_pressure.cjs",
+      "mode": "100644",
+      "sha": "d0fc85c65e89feb63ea76f59d195c67e2971869d",
+      "size": 4995,
+      "imported": false
+    },
+    {
+      "path": "tools/test_enemy_ai.cjs",
+      "mode": "100644",
+      "sha": "063536fa9879a2b18cc14434e5b14463a4177b30",
+      "size": 11934,
+      "imported": false
+    },
+    {
+      "path": "tools/test_enemy_battle.cjs",
+      "mode": "100644",
+      "sha": "c44c09f6f475b7238e3a7d9a92e96ee7083a0362",
+      "size": 2648,
+      "imported": false
+    },
+    {
+      "path": "tools/test_enemy_idle.cjs",
+      "mode": "100644",
+      "sha": "aa2ccee346d908a04d41ff92d428b6923f04535d",
+      "size": 1301,
+      "imported": false
+    },
+    {
+      "path": "tools/test_focused_evasion_sustain.cjs",
+      "mode": "100644",
+      "sha": "3a645d53652043101c93b80458d380395b89423b",
+      "size": 10705,
+      "imported": false
+    },
+    {
+      "path": "tools/test_focused_hall_gear_generation.cjs",
+      "mode": "100644",
+      "sha": "ee2f985130788f2944be86314ecc039616028d64",
+      "size": 10291,
+      "imported": false
+    },
+    {
+      "path": "tools/test_focused_hall_utility_shop_status.cjs",
+      "mode": "100644",
+      "sha": "c0a7af99b8f67f90c5a814553ce8af3555be64c1",
+      "size": 6948,
+      "imported": false
+    },
+    {
+      "path": "tools/test_focused_roles_break_gear_phase.cjs",
+      "mode": "100644",
+      "sha": "27778f86bead8c5d71e5a72d5ceb397d67d84b5c",
+      "size": 6488,
+      "imported": false
+    },
+    {
+      "path": "tools/test_focused_seerin_identity.cjs",
+      "mode": "100644",
+      "sha": "a9ca2468ef2996148e08d67155ba972aaff25c70",
+      "size": 4502,
+      "imported": false
+    },
+    {
+      "path": "tools/test_gear_overview_modes.cjs",
+      "mode": "100644",
+      "sha": "baafaee2a1d9514ca28b07f523676f2057d7292a",
+      "size": 1614,
+      "imported": false
+    },
+    {
+      "path": "tools/test_glimmer_artifacts.cjs",
+      "mode": "100644",
+      "sha": "53c6188c3c3c5aa3048c6c8099b74e229fe18c39",
+      "size": 4286,
+      "imported": false
+    },
+    {
+      "path": "tools/test_hall_early.cjs",
+      "mode": "100644",
+      "sha": "f497cb774c4af4786c99bd78f98978ec6fd4f7b5",
+      "size": 8374,
+      "imported": false
+    },
+    {
+      "path": "tools/test_hall_endgame.cjs",
+      "mode": "100644",
+      "sha": "1cc4ceac6c981155ea9c895d0070ed19a7dde3f1",
+      "size": 13518,
+      "imported": false
+    },
+    {
+      "path": "tools/test_hall_inventory.cjs",
+      "mode": "100644",
+      "sha": "1f8ccad4b48cb6b3d2c182dfca24ccb49b69323b",
+      "size": 4530,
+      "imported": false
+    },
+    {
+      "path": "tools/test_hall_progression_overhaul.cjs",
+      "mode": "100644",
+      "sha": "5a71464080a9e940e6590036bed8877514eefa35",
+      "size": 9075,
+      "imported": false
+    },
+    {
+      "path": "tools/test_hall_start_context.cjs",
+      "mode": "100644",
+      "sha": "ecdf81804777985bf78a188c9202f2bc6766565a",
+      "size": 2276,
+      "imported": false
+    },
+    {
+      "path": "tools/test_rank0_release104.cjs",
+      "mode": "100644",
+      "sha": "614ea96a249b09951a5e242e12c2472445f4bb8b",
+      "size": 12545,
+      "imported": false
+    },
+    {
+      "path": "tools/test_reception.cjs",
+      "mode": "100644",
+      "sha": "1b3d57672fa041a0ceda6de3167d8fc021feee24",
+      "size": 3255,
+      "imported": false
+    },
+    {
+      "path": "tools/test_report_loadout.cjs",
+      "mode": "100644",
+      "sha": "fcd0448eed4ccc17e2f6182c800d17024274fb7e",
+      "size": 1088,
+      "imported": false
+    },
+    {
+      "path": "tools/test_return_opening.cjs",
+      "mode": "100644",
+      "sha": "22608011ff3d8ab794d92d5852420b086b52cf05",
+      "size": 1215,
+      "imported": false
+    },
+    {
+      "path": "tools/test_sanctuary.cjs",
+      "mode": "100644",
+      "sha": "5f0d3fd8e69564aae10a53de542f4082e4e5b661",
+      "size": 2872,
+      "imported": false
+    },
+    {
+      "path": "tools/test_save_slots.cjs",
+      "mode": "100644",
+      "sha": "2a651084849060a8d5fcf92313f3fba97d7034d2",
+      "size": 4521,
+      "imported": false
+    },
+    {
+      "path": "tools/test_spacing.cjs",
+      "mode": "100644",
+      "sha": "be23c87f5efc47432265e4ce1ced3dcaa86de221",
+      "size": 2400,
+      "imported": false
+    },
+    {
+      "path": "tools/test_sparky_memory_flare.cjs",
+      "mode": "100644",
+      "sha": "e6baea98774144d350a268d8a67d389d29070298",
+      "size": 1838,
+      "imported": false
+    },
+    {
+      "path": "tools/test_stage_rhythms.cjs",
+      "mode": "100644",
+      "sha": "db6782c4dd4dfe84997b861f692698ba0e4f2c36",
+      "size": 5394,
+      "imported": false
+    },
+    {
+      "path": "tools/test_status_icons.cjs",
+      "mode": "100644",
+      "sha": "fb854cbb9703db8a5c8ee803ba22355d8e3235ae",
+      "size": 3177,
+      "imported": false
+    },
+    {
+      "path": "tools/test_status_rounding.cjs",
+      "mode": "100644",
+      "sha": "051eaf6a9f44bd5a47f9df55267a400e9e6156ae",
+      "size": 1099,
+      "imported": false
+    },
+    {
+      "path": "tools/test_talent_rework.cjs",
+      "mode": "100644",
+      "sha": "09cf54fa6b9c7b73af971771b4913ee356c8c455",
+      "size": 22766,
+      "imported": false
+    },
+    {
+      "path": "tools/test_targeted_stacking.cjs",
+      "mode": "100644",
+      "sha": "009021855288221e27fd35ac9ca74d74216d334a",
+      "size": 5318,
+      "imported": false
+    },
+    {
+      "path": "tools/test_torren_hp_adjustment.cjs",
+      "mode": "100644",
+      "sha": "26447339ae08dccdad70f8eb6fda3969b3b70ec1",
+      "size": 1921,
+      "imported": false
+    },
+    {
+      "path": "tools/test_torren_mana.cjs",
+      "mode": "100644",
+      "sha": "2e884fb6c2ded4514f899621b14db56cd581fe94",
+      "size": 2250,
+      "imported": false
+    },
+    {
+      "path": "tools/validate_battle_sprites_v2.py",
+      "mode": "100644",
+      "sha": "77acfb7ead34646db2f7d2fd2dcd98e972e69f68",
+      "size": 2759,
+      "imported": false
+    },
+    {
+      "path": "tools/vfx_components.cjs",
+      "mode": "100644",
+      "sha": "4411edf0bff0f761ab66428b9ed30227d1c6f83c",
+      "size": 1706,
+      "imported": false
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "100644",
+      "sha": "61f2cc38590272f5af601222a7be58add968f2bd",
+      "size": 718,
+      "imported": false
+    },
+    {
+      "path": "vite.config.ts",
+      "mode": "100644",
+      "sha": "b2c8dbb9beed83e6ea6b887eb074e70d3635826d",
+      "size": 1732,
+      "imported": false
+    }
+  ]
+}
