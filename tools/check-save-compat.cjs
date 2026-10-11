@@ -7,7 +7,7 @@ const {chromium}=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-run
  try{for(const name of files){
   const file=path.join(directory,name),original=fs.readFileSync(file,'utf8'),data=JSON.parse(original);
   const page=await browser.newPage();
-  await page.goto('http://127.0.0.1:8744/');await page.waitForFunction(()=>runtimeAssetsReady&&emberHallWorld.ready);
+  await page.goto(process.env.HALL_TEST_URL||'http://127.0.0.1:8744/');await page.waitForFunction(()=>runtimeAssetsReady&&emberHallWorld.ready);
   const result=await page.evaluate(raw=>{
    const key=hallSaveKey(1);localStorage.setItem(key,raw);const loaded=loadGame(key);
    const snapshot=()=>({party:[...state.party],gold:state.gold,progress:JSON.parse(JSON.stringify(state.heroProgress)),gear:Object.fromEntries(Object.entries(baseJobs).map(([id,h])=>[id,{...h.gear}])),hall:JSON.parse(JSON.stringify(state.hallBattles))});
