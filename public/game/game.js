@@ -10228,6 +10228,8 @@ function runCurrentTurn(log) {
     ? battle.party.find(member => member.id === turn.id)
     : battle.enemies[turn.index];
   const start = processTurnStart(unit);
+  const scheduledBattle = battle;
+  const stillCurrentBattle = () => battle === scheduledBattle && mode === "battle" && !battle.ended;
   if (turn.side === "party" && unit.hp <= 0) markBattleUnitDown(unit);
   battle.turnStartMessage = start.notes.length ? `${unit.name}: ${start.notes.join(" ")}` : "";
   if (start.notes.length) log = `${log} ${unit.name}: ${start.notes.join(" ")}`;
@@ -10235,18 +10237,18 @@ function runCurrentTurn(log) {
   if (partyIsDefeated()) return triggerPartyDefeat(log);
   if (unit.hp <= 0 && turn.side === "enemy" && battle.enemies.every(enemyUnit => enemyUnit.hp <= 0)) {
     renderBattle(log);
-    return setTimeout(() => winBattle(log), 520);
+    return setTimeout(() => { if (stillCurrentBattle()) winBattle(log); }, 520);
   }
   if (start.skip) {
     if (!battle.meterActionRecorded) recordDamageMeterAction(`${unit.name}: ${start.notes.join(" ") || "Turn skipped."}`);
     battle.resolving = true;
     renderBattle(log);
-    return setTimeout(() => finishTurn(log), 620);
+    return setTimeout(() => { if (stillCurrentBattle()) finishTurn(log); }, 620);
   }
   if (turn.side === "enemy") {
     battle.resolving = true;
     renderBattle(`${log} ${turn.name} prepares to act...`);
-    setTimeout(() => resolveEnemyTurn(turn, log), 680);
+    setTimeout(() => { if (stillCurrentBattle()) resolveEnemyTurn(turn, log); }, 680);
     return;
   }
   battle.resolving = false;

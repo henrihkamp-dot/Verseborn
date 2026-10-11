@@ -7,7 +7,7 @@ fs.mkdirSync(output, { recursive: true });
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } }), errors = [];
-    page.on('pageerror', error => errors.push(error.message));
+    page.on('pageerror', error => errors.push(error.stack));
     await page.goto(process.env.HALL_TEST_URL || 'http://127.0.0.1:8744/');
     await page.waitForFunction(() => runtimeAssetsReady && emberHallWorld.ready);
     assert.equal(await page.evaluate(() => mode), 'title');
