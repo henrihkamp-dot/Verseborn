@@ -7174,7 +7174,7 @@ function drawRecruitScene() {
     const isActing = actor.actionUntil > tick;
     const progress = isActing ? Math.min(1, Math.max(0, (tick - actor.actionStarted) / Math.max(1, actor.actionUntil - actor.actionStarted))) : 0;
     const pose = recruitScenePoseAt(actor, progress, isActing);
-    const idleBob = pose.anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
+    const idleBob = state.gameMode !== "hallBattles" && pose.anim === "idle" && Math.floor((tick + index * 7) / 22) % 2 ? -1 : 0;
     const drawX = fieldScreenX(actor.x) + pose.x;
     const drawY = actor.baseline + pose.y;
     drawFieldShadow(drawX, actor.baseline + 1, actor.id === "Sparky" ? 6 : 8);
