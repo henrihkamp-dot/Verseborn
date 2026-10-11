@@ -14,7 +14,7 @@ const { chromium } = require('C:/Users/Henri/.cache/codex-runtimes/codex-primary
       window.diagonalCalls = [];
       const original = ctx.drawImage;
       ctx.drawImage = function(image, ...args) {
-        if (image === emberHallWorld.images.VersebornDiagonal) diagonalCalls.push(args);
+        if (image === emberHallWorld.images.VersebornWalk) diagonalCalls.push(args);
         return original.call(this, image, ...args);
       };
     });
@@ -25,7 +25,7 @@ const { chromium } = require('C:/Users/Henri/.cache/codex-runtimes/codex-primary
       const state = await page.evaluate(() => ({ facing: emberHallWorld.player.facing, collision: emberHallWorld.collision(emberHallWorld.player.x, emberHallWorld.player.y), rows: diagonalCalls.map(a => a[1]), frames: diagonalCalls.map(a => a[0]) }));
       await page.keyboard.up(horizontal); await page.keyboard.up(vertical);
       assert.equal(state.facing, direction); assert.equal(state.collision, false);
-      assert.ok(state.rows.includes((direction - 4) * 100));
+      assert.ok(state.rows.includes((direction < 6 ? 3 : 4) * 128));
       assert.ok(new Set(state.frames).size > 1);
       await page.screenshot({ path: path.resolve(`../../previews/verseborn-diagonal-${direction}.png`) });
     }

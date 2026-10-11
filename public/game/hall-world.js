@@ -48,13 +48,11 @@
   const ready=Promise.all(['Verseborn',...actors.map(a=>a.id),'hall','effects','hearths'].map(name=>new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error(name+' asset missing'));image.src='assets/hall/'+(['hall','effects','hearths'].includes(name)?name:name.toLowerCase()+'-clean-v3')+'.webp';
   })));
-  const sideReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornSide=image;resolve();};image.onerror=()=>reject(Error('Side walk asset missing'));image.src='assets/hall/verseborn-side-v6.webp';});
+  const walkReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornWalk=image;resolve();};image.onerror=()=>reject(Error('Verseborn walk asset missing'));image.src='assets/hall/verseborn-walk-v2.webp';});
   const actionsReady=Promise.all(actors.map(actor=>new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>{images[actor.id+'Action']=image;resolve();};image.onerror=()=>reject(Error(actor.id+' action asset missing'));image.src='assets/hall/'+actor.id.toLowerCase()+'-action-'+(actor.id==='Kael'?'v9':'v8')+'.webp';
   })));
-  const frontReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornFront=image;resolve();};image.onerror=()=>reject(Error('Front walk asset missing'));image.src='assets/hall/verseborn-front-v10.webp';});
   const luteReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornLute=image;resolve();};image.onerror=()=>reject(Error('Lute animation asset missing'));image.src='assets/hall/verseborn-lute-v1.webp';});
-  const diagonalReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornDiagonal=image;resolve();};image.onerror=()=>reject(Error('Diagonal walk asset missing'));image.src='assets/hall/verseborn-diagonal-v1.webp';});
   const oldDraw=drawTileMap,oldInteract=interact,oldSprite=drawSprite;
   let active=false,last=performance.now(),target=null,route=[],scene=null,pendingActor=null,suppressClick=false;
   const inHall=()=>active&&state.gameMode==='hallBattles'&&state.map==='emberHallBattles';
@@ -108,24 +106,17 @@
       const size=actor.size,index=Math.max(0,Math.min(15,col));
       ctx.drawImage(images.VersebornLute,index%4*100,Math.floor(index/4)*100,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);return;
     }
-    if(actor.id==='Verseborn'&&row>=4&&row<=7&&images.VersebornDiagonal){
-      const size=actor.size,index=actor.poseFrame??(player.walking?Math.floor(player.phase*1.7)%8:2);
-      ctx.drawImage(images.VersebornDiagonal,index*100,(row-4)*100,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);return;
-    }
-    if(actor.id==='Verseborn'&&row===0&&images.VersebornFront){
-      const image=images.VersebornFront,size=actor.size,index=actor.poseFrame??(player.walking?Math.floor(player.phase*1.7)%8:2);
-      ctx.drawImage(image,index*100,0,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);return;
+    if(actor.id==='Verseborn'&&row>=0&&row<=7&&images.VersebornWalk){
+      const size=actor.size,index=actor.poseFrame??(player.walking?Math.floor(player.phase)%8:8);
+      const sheetRow=[0,1,2,2,3,3,4,4][row];
+      ctx.save();ctx.translate(Math.round(actor.x-camera.x),Math.round(actor.y-camera.y-size*.94));
+      if([2,4,6].includes(row))ctx.scale(-1,1);
+      ctx.drawImage(images.VersebornWalk,index*128,sheetRow*128,128,128,-size/2,0,size,size);ctx.restore();return;
     }
     if(row===4&&images[actor.id+'Action']){
       const image=images[actor.id+'Action'],size=actor.size,index=col%16;
       ctx.save();if(actor.clipY){ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,actor.clipY-camera.y);ctx.clip();}
       ctx.drawImage(image,index%4*100,Math.floor(index/4)*100,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);ctx.restore();return;
-    }
-    if(actor.id==='Verseborn'&&(row===2||row===3)&&images.VersebornSide){
-      const image=images.VersebornSide,size=actor.size;
-      ctx.save();ctx.translate(Math.round(actor.x-camera.x),Math.round(actor.y-camera.y-size*.94));
-      if(row===3)ctx.scale(-1,1);
-      ctx.drawImage(image,(actor.poseFrame??(player.walking?Math.floor(player.phase*1.7)%8:2))*100,0,100,100,-size/2,0,size,size);ctx.restore();return;
     }
     const image=images[actor.id];if(!image)return;
     const cols=actor.id==='Verseborn'?4:8,rows=actor.id==='Verseborn'?4:5;
@@ -134,7 +125,7 @@
     ctx.drawImage(image,col*cw,row*ch,cw,ch,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);ctx.restore();
   }
   function walkFrame(id,row,phase){
-    const frame=Math.floor(phase)%(id==='Verseborn'?4:8);
+    const frame=Math.floor(phase)%8;
     if(id==='Mira'&&row===2)return [0,1,2,4,5,6,7,5][frame];
     return frame;
   }
@@ -155,10 +146,10 @@
     if(inHall()&&activeRecruitScene&&images[id]){
       const actor={id,x:px+8+camera.x,y:py+32+camera.y,size:actors.find(a=>a.id===id)?.size||24};
       if(id==='Verseborn'){
-        if(['walk','idle'].includes(anim)){actor.size=36;actor.poseFrame=anim==='walk'?Math.floor(frame/5)%8:2;const row={0:0,1:3,2:1,3:2}[dir]??0;drawActor(actor,row,row===1?actor.poseFrame%4:actor.poseFrame);return;}
+        if(['walk','idle'].includes(anim)){actor.size=36;actor.poseFrame=anim==='walk'?Math.floor(frame/8)%8:8;const row={0:0,1:3,2:1,3:2}[dir]??0;drawActor(actor,row,actor.poseFrame);return;}
         const entry=activeRecruitScene.actors.find(a=>a.id===id);
         const progress=entry?Math.max(0,Math.min(1,(tick-entry.actionStarted)/Math.max(1,entry.actionUntil-entry.actionStarted))):0;
-        drawActor({...actor,size:36,poseFrame:2},anim==='magic'||anim==='ultimate'?8:0,Math.min(15,Math.floor(progress*16)));return;
+        drawActor({...actor,size:36,poseFrame:8},anim==='magic'||anim==='ultimate'?8:0,Math.min(15,Math.floor(progress*16)));return;
       }
       const row=anim==='walk'?({0:0,1:3,2:1,3:2}[dir]||0):4;
       const entry=activeRecruitScene.actors.find(a=>a.id===id);
@@ -224,10 +215,10 @@
       const {entry,pose,isActing,progress,x,y}=actor,size=actors.find(a=>a.id===entry.id)?.size||36;
       drawFieldShadow(x,y+1,entry.id==='Sparky'?6:8);
       const row=pose.anim==='walk'?({0:0,1:3,2:1,3:2}[pose.facing]??0):entry.id==='Verseborn'?0:4;
-      const phase=isActing?Math.floor((tick-entry.actionStarted)/5):0;
+      const phase=isActing?Math.floor((tick-entry.actionStarted)/(entry.id==='Verseborn'?8:5)):0;
       const lute=entry.id==='Verseborn'&&['magic','ultimate'].includes(pose.anim);
       if(lute)drawActor({id:entry.id,x,y,size},8,Math.min(15,Math.floor(progress*16)));
-      else drawActor({id:entry.id,x,y,size,poseFrame:pose.anim==='walk'?phase%8:2},row,phase%(row===4?16:entry.id==='Verseborn'&&row===1?4:8));
+      else drawActor({id:entry.id,x,y,size,poseFrame:pose.anim==='walk'?phase%8:8},row,phase%(row===4?16:8));
       if(!lute)drawRecruitSceneEffect(entry,x,y,progress,isActing);
       if(entry.emote&&isActing)drawText(entry.emote,x,y-size-4,'#fff0a8',10,'center');
     }
@@ -331,7 +322,7 @@
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
   window.emberHallWorld={player,actors,resonance,walls,floors,collision,images,trigger,navigate,nearby,residents,get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
-  Promise.all([ready,sideReady,frontReady,luteReady,diagonalReady,actionsReady,engineReady]).then(()=>{
+  Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
     maps.emberHallBattles.name='Ember Hall';
     RECRUIT_SCENE_ROOM_NAMES['trial-room']='Ember Hall';
