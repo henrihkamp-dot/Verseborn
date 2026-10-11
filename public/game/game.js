@@ -2809,6 +2809,8 @@ function gearAffixFacet(entry) {
   if (entry.type === "hpPct") return { key: "statPct:hp", label: "HP %" };
   if (entry.type === "statusOnHit") return { key: `status:${entry.status}`, label: entry.status[0].toUpperCase() + entry.status.slice(1) };
   if (entry.type === "statusResistance") return { key: `resist:${entry.status}`, label: `${entry.status[0].toUpperCase() + entry.status.slice(1)} Resistance` };
+  if (entry.type === "statusSeverityReduction") return { key: `severity:${entry.status}`, label: entry.status === "debuff" ? "Stat-debuff Severity Reduction" : `${entry.status[0].toUpperCase() + entry.status.slice(1)} Damage Reduction` };
+  if (entry.type === "specificDurationReduction") return { key: `duration:${entry.status}`, label: `${entry.status[0].toUpperCase() + entry.status.slice(1)} Duration Reduction` };
   const labels = {
     critChance: "Crit",
     afflictedDamage: "Afflicted Damage",
@@ -2817,6 +2819,8 @@ function gearAffixFacet(entry) {
     poisonReduction: "Poison Reduction",
     statusChance: "Status Chance",
     allStatusResistance: "All Status Resistance",
+    statusDurationReduction: "Negative Duration Reduction",
+    firstControlDurationReduction: "First Control Protection",
     echoing: "Echoing",
     openingTurnProgress: "Opening Speed",
     buffDuration: "Buff Duration",
@@ -4116,7 +4120,7 @@ function loadGame(saveKey = activeSaveKey()) {
   state.heroProgress ||= {};
   state.gearAffixes ||= {};
   state.gearRarities ||= {};
-  state.ownedGear = Array.isArray(state.ownedGear) ? state.ownedGear.filter(name => gearByName(name)) : [];
+  state.ownedGear = Array.isArray(state.ownedGear) ? state.ownedGear.filter(name => window.StatusSystem ? typeof name === "string" : gearByName(name)) : [];
   state.gearCopies ||= {};
   state.discoveredMaps = Array.isArray(state.discoveredMaps) ? state.discoveredMaps.filter(id => maps[id]) : ["lantern"];
   state.flags ||= {};
@@ -4132,13 +4136,15 @@ function loadGame(saveKey = activeSaveKey()) {
       if (!name || gearByName(name)) baseJobs[id].gear[slot] = name || null;
     });
   });
-  migrateEchoForgeInstances();
-  migratePlatinumGear();
-  migrateHallSustainAffixes();
-  migrateGenericBreakGearAffixes();
-  const migratedHallBaseStats = migrateHallBaseStatsV1();
-  upgradeOwnedLegendaryGear();
-  const cleanedHallGear = migrateHallEquippedOnlyV1();
+  let migratedHallBaseStats = false;
+  if (!window.StatusSystem) {
+    migrateEchoForgeInstances();
+    migratePlatinumGear();
+    migrateHallSustainAffixes();
+    migrateGenericBreakGearAffixes();
+    migratedHallBaseStats = migrateHallBaseStatsV1();
+    upgradeOwnedLegendaryGear();
+  }
   sideQuests.forEach(quest => {
     const saved = data.questState?.[quest.id];
     if (!saved) return;
@@ -4157,7 +4163,7 @@ function loadGame(saveKey = activeSaveKey()) {
     });
   });
   sanitizeWorldSpawns();
-  if (migratedHallBaseStats || cleanedHallGear) {
+  if (migratedHallBaseStats) {
     const heroes = Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, {
       hp: hero.hp,
       mp: hero.mp,
@@ -5602,7 +5608,8 @@ function applyStatus(target, type, source, options = {}) {
   const existing = statusOf(target, type);
   const poisonDurations = { weak: 3, normal: 4, strong: 5 };
   if (type === "poison" && !options.duration) duration = statusDurationFor(source, type, poisonDurations[options.potency || "normal"]);
-  if (def.negative && target.id) duration = Math.max(1, duration - effectValue(target.id, "statusDurationReduction"));
+  const unshortened = duration;
+  if (def.negative && (target.id || window.StatusSystem && target.sparringId)) duration = Math.max(1, duration - (window.StatusSystem ? StatusSystem.durationReduction(target, type, duration) : effectValue(target.id, "statusDurationReduction")));
   duration = Math.max(1, Math.round(duration));
   if (bossControl) {
     duration = 1;
@@ -5610,6 +5617,7 @@ function applyStatus(target, type, source, options = {}) {
   }
   let value = ["poison", "burn", "bleed"].includes(type) ? (Number.isFinite(options.value) ? options.value : dotValueFor(type, target, source, options)) : options.value ?? def.value;
   if (def.negative && source?.id && !["poison", "burn", "bleed"].includes(type) && Number.isFinite(value)) value *= 1 + typedTalentValue(source.id, "debuffPotency");
+  if (def.negative && (target.id || target.sparringId) && !["poison", "burn", "bleed"].includes(type) && Number.isFinite(value) && window.StatusSystem) value *= 1 - StatusSystem.severityReduction(target, type);
   const coefficient = type === "poison" ? options.coefficient ?? ({ weak: .3, normal: .4, strong: .5 }[options.potency || "normal"]) : null;
   const critEnabled = ["burn", "poison", "bleed"].includes(type);
   const critChance = critEnabled ? Math.max(0, Math.min(source?.id ? .65 : .75,
@@ -5643,7 +5651,7 @@ function applyStatus(target, type, source, options = {}) {
     battle.attackStatuses ||= [];
     battle.attackStatuses.push(`${target.name}: ${def.label}`);
   }
-  return { applied: true, message: def.label };
+  return { applied: true, message: def.label, duration, shortened: Math.max(0, unshortened - duration) };
 }
 
 const CLEANSE_PRIORITY = {
@@ -5754,20 +5762,20 @@ function effectiveAgility(unit, base) {
 function applySkillStatuses(source, target, sk) {
   const applications = [];
   const status = sk.status && sk.name === "Scramble Signal" ? { ...sk.status, duration: sk.status.duration + typedTalentValue(source.id, "scrambleDuration") } : sk.status;
-  if (status) applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
-  if (source?.id === "Seerin" && sk.name === "Starflame Cut" && typedTalentValue(source.id, "starflameBrand")) applications.push(applyStatus(target, "holyVulnerability", source, { duration: 2, value: .2, force: true }));
+  if (status) applications.push(applyStatus(target, status.type, source, { ...status, applicationKey: `skill:${sk.name}:${status.type}`, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
+  if (source?.id === "Seerin" && sk.name === "Starflame Cut" && typedTalentValue(source.id, "starflameBrand")) applications.push(applyStatus(target, "holyVulnerability", source, { duration: 2, value: .2, chance: 1, applicationKey: "talent:starflameBrand" }));
   if (source?.id === "Sparky" && ["Ember Nip", "Memory Flare"].includes(sk.name) && !sk.status && typedTalentValue(source.id, "emberNipBurn")) applications.push(applyStatus(target, "burn", source, { duration: 4, chance: 1, scaling: skillScaling(sk), element: sk.element }));
   (sk.extraStatuses || []).forEach(status => applications.push(applyStatus(target, status.type, source, { ...status, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element })));
-  if (source?.id && sk.element === "Tech" && !sk.statusOnly && (sk.power > 0 || sk.coefficient) && Math.random() < typedTalentValue(source.id, "techDisrupt")) {
-    applications.push(applyStatus(target, "disrupted", source, { force: true, duration: 2, value: .15 }));
+  if (source?.id && sk.element === "Tech" && !sk.statusOnly && (sk.power > 0 || sk.coefficient) && typedTalentValue(source.id, "techDisrupt")) {
+    applications.push(applyStatus(target, "disrupted", source, { chance: typedTalentValue(source.id, "techDisrupt"), duration: 2, value: .15, applicationKey: "talent:techDisrupt" }));
   }
-  if (source?.id && sk.element === "Shadow" && typedTalentValue(source.id, "shadowResistanceDown") && Math.random() < .5) {
-    applications.push(applyStatus(target, "magicVulnerability", source, { chance: 1, duration: 2, value: typedTalentValue(source.id, "shadowResistanceDown") }));
+  if (source?.id && sk.element === "Shadow" && typedTalentValue(source.id, "shadowResistanceDown")) {
+    applications.push(applyStatus(target, "magicVulnerability", source, { chance: .5, duration: 2, value: typedTalentValue(source.id, "shadowResistanceDown"), applicationKey: "talent:shadowResistanceDown" }));
   }
   if (source?.id === "Verseborn" && applications.some(result => result.applied) && typedTalentValue(source.id, "debuffAgility")) {
     applications.push(applyStatus(target, "agilityDown", source, { chance: 1, duration: 3, value: typedTalentValue(source.id, "debuffAgility") }));
   }
-  if (source?.id && (sk.power > 0 || sk.coefficient)) {
+  if (!window.StatusSystem && source?.id && (sk.power > 0 || sk.coefficient)) {
     ["poison", "sleep", "stun"].forEach(type => {
       const chance = skillStatusOnHitChance(source, sk, type);
       if (chance > 0) applications.push(applyStatus(target, type, source, { chance, potency: type === "poison" ? "weak" : undefined, duration: type === "poison" ? 3 : undefined, scaling: skillScaling(sk), damageKind: sk.anim, element: sk.element }));
@@ -5847,7 +5855,7 @@ function processTurnStart(unit) {
     if (critical) amount = Math.max(1, Math.round(amount * (dot.critMultiplier || 2)));
     if (type === "burn" && dot.source?.id === "Sparky" && unlockedRank0("Sparky").some(entry => entry.passive === "doubleBurn")) amount *= 2;
     if (type === "poison" && unit.resistanceTier === "boss") amount = Math.min(amount, Math.max(1, Math.floor(unit.max * .03)));
-    if (unit.id) amount = Math.max(1, Math.round(amount * (1 - affixValue(unit.id, "poisonReduction"))));
+    if (unit.id || window.StatusSystem && unit.sparringId) amount = Math.max(1, Math.round(amount * (1 - (window.StatusSystem ? StatusSystem.dotReduction(unit, type) : affixValue(unit.id, "poisonReduction")))));
     amount = developerScale(dot.source?.id ? "party" : "enemy", "damage", amount);
     amount = developerScale(dot.source?.id ? "party" : "enemy", type, amount);
     unit.hp = Math.max(0, unit.hp - amount);
@@ -8212,6 +8220,9 @@ function combatReferenceHtml() {
     ['Damage & weaknesses', 'The skill names its scaling stat and element. Gear, talents, buffs, critical hits, weakness and vulnerability modify the result. Multi-hit numbers belong to one action.'],
     ['Break & Guard', 'Break builds toward BROKEN and a damage opening. It does not interrupt Stage 51–60 main-boss mechanics. Personal Guard protects the next hit; defense buffs reduce incoming damage.'],
     ['Actions & control', 'Durations count actions, not necessarily full rounds. Silence restricts magic; Sleep and Stun skip turns. Stage 51–60 main bosses reject Sleep and Stun.'],
+    ['Gear status procs', 'Matching gear sources combine into one roll per status per target, including multi-hit and area attacks. Basic, weapon, spell, critical and Break triggers remain distinct. Native skill effects have their own attempts.'],
+    ['Status defense', 'Application resistance changes whether a status lands. Duration reduction shortens a landed status, with a one-action minimum. Severity reduction weakens only the named DoT or scalable debuff. Combined gear application resistance is capped at 60%; broad gear protection at 30%.'],
+    ['Enemy status identities', 'Resistance depends on the enemy, not just its level. Shade strongly resists Sleep but is susceptible to Stun; the Archive Custodian resists soft debuffs but has normal control susceptibility. Status profiles are recorded with enemy stats.'],
     ['Ember Hall progression', 'Complete stages to unlock later encounters, recruits and gear. Stage 51–60 victories permanently unlock dedicated Artifact purchases at Glimmer. Consumables and collectibles use bag slots; gear does not.']
   ];
   const legend = Object.entries(STATUS_DEFS).map(([type, def]) => {
@@ -9703,7 +9714,7 @@ function hallEncounterDetails(info) {
     : Object.entries(counts).map(([name, amount]) => amount > 1 ? `${name} x${amount}` : name).join(" + ");
   const weaknesses = [...new Set(profiles.map(profile => profile.weak))].join(" / ");
   const traits = [];
-  if (info.boss) traits.push("Boss pattern and high status resistance");
+  if (info.boss) traits.push("Boss pattern and selective status resistances");
   else if (profiles.some(profile => profile.node >= 3)) traits.push("Elite attack pattern");
   if (profiles.some(profile => enemyAbilityProfiles[profile.name]?.heal)) traits.push("Enemy healing");
   if (profiles.some(profile => profile.name === "Nyx Vael")) traits.push("Sleep pressure");
@@ -10839,6 +10850,7 @@ function applyWeaponBasicAttackEffect(source, target) {
   const duration = (basic.duration || 2) + typedTalentValue(source.id, "basicDebuffDuration");
   if (typedTalentValue(source.id, "weaponSongBoost")) source.nextSongBoost = Math.max(source.nextSongBoost || 0, typedTalentValue(source.id, "weaponSongBoost"));
   if (basic.type === "status" && target?.hp > 0) {
+    if (window.StatusSystem) return "";
     const result = applyStatus(target, basic.status, source, { ...basic, duration, force: true, scaling: basic.status === "poison" ? "str" : "mag" });
     return result.applied ? basic.label : "";
   }
@@ -11073,6 +11085,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     if (!battle || mode !== "battle") return;
     battle.attackDamage = [];
     if (u.id === "Seerin" && typedTalentValue(u.id, "bulwarkTaunt")) u.holdTheLine = true;
+    window.StatusSystem?.begin(u, sk);
     let feedbackUsed = false;
     let purifyingUsed = false;
     const refreshedBurns = new Set();
@@ -11285,21 +11298,22 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           battle.enemyResonance = Math.max(0, battle.enemyResonance - drain);
           statusNotes.push(`Feedback Loop: Resonance -${drain}`);
         }
-        if (u.id === "Glimmer" && u.form === "mech" && hitTarget === target && typedTalentValue(u.id, "mechEmp") && hitTarget.hp > 0) applyStatus(hitTarget, "disrupted", u, { duration: 2, value: .2, force: true });
+        if (u.id === "Glimmer" && u.form === "mech" && hitTarget === target && typedTalentValue(u.id, "mechEmp") && hitTarget.hp > 0) applyStatus(hitTarget, "disrupted", u, { duration: 2, value: .2, chance: 1, applicationKey: "talent:mechEmp" });
         if (u.id === "Sparky" && sk.element === "Ancient Fire" && typedTalentValue(u.id, "burnRefresh") && !refreshedBurns.has(hitTarget)) {
           const burn = statusOf(hitTarget, "burn");
           if (burn) { burn.remaining = burn.initialRemaining; refreshedBurns.add(hitTarget); }
         }
         const resonanceControl = applyEnemyResonanceControl(u, hitTarget, sk);
         if (resonanceControl) statusNotes.push(resonanceControl);
-        if (critical && hitTarget.hp > 0 && typedTalentValue(u.id, "critBleed") && Math.random() < typedTalentValue(u.id, "critBleed")) {
-          const bleed = applyStatus(hitTarget, "bleed", u, { force: true, duration: 3, scaling: "str" });
+        if (critical && hitTarget.hp > 0 && typedTalentValue(u.id, "critBleed")) {
+          const bleed = applyStatus(hitTarget, "bleed", u, { chance: typedTalentValue(u.id, "critBleed"), duration: 3, scaling: "str", applicationKey: "talent:critBleed" });
           if (bleed.message) statusNotes.push(bleed.message);
         }
         if (sk.basicAttack) {
           const weaponNote = applyWeaponBasicAttackEffect(u, hitTarget);
           if (weaponNote) statusNotes.push(weaponNote);
         }
+        if (hitTarget.hp > 0) window.StatusSystem?.queue(u, hitTarget, sk, { critical, broken: Boolean(statusOf(hitTarget, "broken")) });
         if (statusNotes.length) log += ` ${hitTarget.name}: ${statusNotes.join(" / ")}.`;
         if (hitTarget.hp <= 0 && !hitTarget.defeatUntil) {
           hitTarget.hp = 0;
@@ -11418,6 +11432,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
     }
 
+    if (window.StatusSystem) log += StatusSystem.finish();
     log += finishMechTalentAction(u);
     transferDeadSparkyBurns();
     if (sk.grantsWard) battle.ward = true;
@@ -12731,6 +12746,7 @@ function resolveEnemyTurn(turn, prev) {
   setTimeout(() => {
     if (!battle || mode !== "battle" || e.hp <= 0) return;
     battle.attackDamage = [];
+    window.StatusSystem?.begin(e, action);
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
@@ -12859,6 +12875,7 @@ function resolveEnemyTurn(turn, prev) {
           defenseText += ` ${lastBastion.name}'s Last Bastion leaves ${defender.name} at 1 HP.`;
         }
         defender.hp = Math.max(0, defender.hp - dmg);
+        if (e.sparringId && defender.hp > 0 && dmg > 0) window.StatusSystem?.queue(e, defender, { ...action, power: 1, anim: action.kind }, { critical: rolled.critical, broken: Boolean(statusOf(defender, "broken")) });
         const thorns = personallyGuarded ? typedTalentValue(defender.id, "thorns") : 0;
         if (thorns && action.kind === "melee" && e.hp > 0 && dmg > 0) {
           const reflected = developerScale("party", "damage", Math.max(1, Math.round(dmg * thorns)));
@@ -12895,6 +12912,7 @@ function resolveEnemyTurn(turn, prev) {
       e.defeatUntil = tick + (enemyAnimationSheetFor(e) ? 30 : 12);
     }
     updatePanels();
+    if (window.StatusSystem) actionLog += StatusSystem.finish();
     finishAttackDamageSummary(actionLog);
     renderBattle(actionLog);
     if (partyIsDefeated()) return triggerPartyDefeat(actionLog);
@@ -14887,7 +14905,7 @@ function rerollGearAffix(ref, index) {
   if (!Number.isInteger(index) || !entries[index]) return false;
   const gear = gearByName(ref);
   const pool = gearAffixPool(gear);
-  const candidates = pool.filter(candidate => !entries.some(entry => entry.key === candidate.key));
+  const candidates = pool.filter(candidate => !entries.some(entry => entry.key === candidate.key) && (!window.StatusSystem || StatusSystem.allowed(candidate, entries.filter((_, slot) => slot !== index), gear, gearRarity(ref))));
   if (!candidates.length) return false;
   const chosen = candidates[Math.floor(Math.random() * candidates.length)];
   const replacement = { ...chosen, value: randomAffixValue(chosen) };
@@ -15573,7 +15591,7 @@ function runQaChecks() {
     check("buff-multipliers", Math.abs(outgoingDamageMultiplier(qaHero, "melee") - 1.4) < .0001);
     applyStatus(qaHero, "agilityUp", qaHero, { force: true, duration: 3 });
     check("agility-buff", effectiveAgility(qaHero, 20) === 25);
-    check("boss-status-rates", STATUS_TIER_CHANCES.boss.poison === .5 && STATUS_TIER_CHANCES.boss.sleep === .1 && STATUS_TIER_CHANCES.boss.stun === .2);
+    check("boss-status-rates", window.StatusSystem ? StatusSystem.enemyProfile({ name: "Nyx Vael", resistanceTier: "boss" }).poison > StatusSystem.enemyProfile({ name: "Nyx Vael", resistanceTier: "boss" }).sleep : STATUS_TIER_CHANCES.boss.poison === .5 && STATUS_TIER_CHANCES.boss.sleep === .1 && STATUS_TIER_CHANCES.boss.stun === .2);
     const poisonScaleSource = { atk: 100, stats: { str: 100, mag: 100, agi: 100 } };
     const poisonScaleTarget = { max: 100, resistanceTier: "normal" };
     check("poison-potency-scaling", ["weak", "normal", "strong"].map(potency => poisonValueFor(poisonScaleTarget, poisonScaleSource, { potency, damageKind: "melee" })).join(",") === "30,40,50");

@@ -22,7 +22,9 @@
     { id: 'clarity', name: 'Blessing of Clarity', desc: 'Active skills cost 10% less MP for the stage.', discount: .10 },
     { id: 'mercy', name: 'Blessing of Mercy', desc: '+15% healing received for the stage.', healing: .15 },
     { id: 'resolve', name: 'Blessing of Resolve', desc: 'Each party member survives their first fatal hit at 1 HP.', resolve: true },
-    { id: 'overture', name: 'Blessing of Overture', desc: 'Begin with +15 Resonance (shared ultimate charge).', resonance: 15 }
+    { id: 'overture', name: 'Blessing of Overture', desc: 'Begin with +15 Resonance (shared ultimate charge).', resonance: 15 },
+    { id: 'composure', name: 'Blessing of Composure', desc: 'Each ally: the first reducible negative status lasts 1 action less; minimum 1.', firstStatusDuration: 1 },
+    { id: 'purity', name: 'Blessing of Purity', desc: 'Each ally: the first Poison or Bleed tick deals 50% less damage.', firstDotReduction: .5 }
   ];
   const categories = { meal: meals, coating: coatings, blessing: blessings };
   const owners = { meal: 'Torren', coating: 'Mira', blessing: 'Kael' };
@@ -61,7 +63,7 @@
     if (!member || !supportForBattle()) return [];
     return Object.keys(categories).flatMap(category => {
       const effect = memberEffect(member, category); if (!effect) return [];
-      const spent = category === 'blessing' && (effect.resolve && member.hubResolveUsed || effect.barrier && !statusOf(member, 'barrier') || effect.resonance);
+      const spent = category === 'blessing' && (effect.resolve && member.hubResolveUsed || effect.barrier && !statusOf(member, 'barrier') || effect.resonance || effect.firstStatusDuration && member.statusGuards?.kaelDuration || effect.firstDotReduction && member.statusGuards?.kaelDot);
       return [{ type: 'hub_' + category, effect, category, remaining: 0, spent: Boolean(spent) }];
     });
   }
@@ -258,7 +260,7 @@
   const oldWeapon = applyWeaponBasicAttackEffect, oldEnemyRoll = enemyDamageRoll;
   applyWeaponBasicAttackEffect = (source, target) => {
     const existing = oldWeapon(source, target), coating = memberEffect(source, 'coating');
-    if (!coating || !target || target.hp <= 0) return existing;
+    if (window.StatusSystem || !coating || !target || target.hp <= 0) return existing;
     const result = applyStatus(target, coating.status, source, { chance: coating.chance, duration: coating.duration, ...(coating.value ? { value: coating.value } : {}), scaling: coating.status === 'bleed' ? 'str' : 'agi' });
     return [existing, result.message ? `${coating.name}: ${result.message}` : ''].filter(Boolean).join(' / ');
   };
@@ -356,7 +358,7 @@
     const chosen = ultimate || (heal && unit.hp < unit.max * .45 ? heal : buff && !((unit.actionsTaken || 0) % 4) ? buff : damage[(unit.actionsTaken || 0) % Math.max(1, damage.length)] || skills.find(sk => sk.basicAttack));
     if (!chosen) return oldEnemyAction(unit);
     const isBuff = chosen.power >= 0 && !skillTargetsEnemies(chosen);
-    return { kind: chosen.anim === 'ultimate' ? 'ultimate' : isBuff ? 'buff' : chosen.anim === 'melee' ? 'melee' : 'magic', name: chosen.name, element: chosen.element, scaling: skillScaling(chosen), mpCost: chosen.anim === 'ultimate' ? 0 : skillMpCost(unit.sparringId, chosen, unit), ...(isBuff ? { target: unit } : { coefficient: chosen.coefficient || Math.max(.7, Math.abs(chosen.power) / 20) }), healing: chosen.power < 0, healCoefficient: chosen.coefficient || 1.2, ...(chosen.status ? { status: { ...chosen.status } } : {}), buffs: chosen.buffs, crit: unit.crit };
+    return { kind: chosen.anim === 'ultimate' ? 'ultimate' : isBuff ? 'buff' : chosen.anim === 'melee' ? 'melee' : 'magic', name: chosen.name, basicAttack: Boolean(chosen.basicAttack), element: chosen.element, scaling: skillScaling(chosen), mpCost: chosen.anim === 'ultimate' ? 0 : skillMpCost(unit.sparringId, chosen, unit), ...(isBuff ? { target: unit } : { coefficient: chosen.coefficient || Math.max(.7, Math.abs(chosen.power) / 20) }), healing: chosen.power < 0, healCoefficient: chosen.coefficient || 1.2, ...(chosen.status ? { status: { ...chosen.status } } : {}), buffs: chosen.buffs, crit: unit.crit };
   };
   drawEnemy = (unit, x, y) => unit.sparringId ? drawSprite(unit.sparringId, x, y, 1, unit.anim === 'attack' ? unit.attackStyle === 'melee' ? 'melee' : 'magic' : unit.hp <= 0 ? 'death' : 'idle', tick) : oldDrawEnemy(unit, x, y);
   function finishSparring(result) {
