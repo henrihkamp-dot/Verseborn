@@ -9183,6 +9183,9 @@ function applyRecruitSceneAction(action) {
     actor.effect = actorAction.effect || "";
     actor.actionStarted = tick;
     actor.actionUntil = tick + (Number.isFinite(actorAction.duration) ? actorAction.duration : actorAction.anim === "walk" ? 36 : 54);
+    if (state.gameMode === "hallBattles" && actor.id === "Verseborn" && ["magic", "ultimate"].includes(actor.anim)) {
+      actor.actionUntil = tick + Math.max(132, actor.actionUntil - tick);
+    }
   });
 }
 

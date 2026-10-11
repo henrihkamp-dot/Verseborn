@@ -15,6 +15,12 @@ const { chromium } = require('C:/Users/Henri/.cache/codex-runtimes/codex-primary
       const scene = RECRUIT_SCENES.find(s => s.recruit === 'Torren');
       playRecruitScene(scene, { replay: true });
       const actor = activeRecruitScene.actors.find(a => a.id === 'Verseborn');
+      applyRecruitSceneAction({ actor: 'Verseborn', anim: 'magic', motion: 'flourish', duration: 66 });
+      const hallDuration = actor.actionUntil - actor.actionStarted;
+      state.gameMode = 'story';
+      applyRecruitSceneAction({ actor: 'Verseborn', anim: 'magic', motion: 'flourish', duration: 66 });
+      const storyDuration = actor.actionUntil - actor.actionStarted;
+      state.gameMode = 'hallBattles';
       actor.anim = 'magic'; actor.motion = 'flourish'; actor.actionStarted = tick; actor.actionUntil = tick + 160;
       const calls = [], original = ctx.drawImage;
       ctx.drawImage = function(image, ...args) {
@@ -26,9 +32,11 @@ const { chromium } = require('C:/Users/Henri/.cache/codex-runtimes/codex-primary
         for (let i = 0; i < 16; i++) { tick = start + i * 10; drawRecruitScene(); }
       } finally { tick = start; ctx.drawImage = original; }
       const pose = recruitScenePoseAt(actor, .5, true);
-      return { calls, pose: [pose.x, pose.y], dimensions: [emberHallWorld.images.VersebornLute.width, emberHallWorld.images.VersebornLute.height] };
+      return { calls, hallDuration, storyDuration, pose: [pose.x, pose.y], dimensions: [emberHallWorld.images.VersebornLute.width, emberHallWorld.images.VersebornLute.height] };
     });
     assert.deepEqual(result.dimensions, [400, 400]);
+    assert.equal(result.hallDuration, 132);
+    assert.equal(result.storyDuration, 66);
     assert.equal(result.calls.length, 16);
     assert.equal(new Set(result.calls.map(a => `${a[0]},${a[1]}`)).size, 16);
     assert.equal(new Set(result.calls.map(a => a.slice(4).join(','))).size, 1, 'Actor must stay anchored and retain scale');
