@@ -61,7 +61,8 @@ fs.mkdirSync(output, { recursive: true });
     assert.equal(await page.evaluate(() => emberHallWorld.player.facing), 4);
     await page.waitForFunction(() => !emberHallWorld.target && !emberHallWorld.player.walking);
     assert.equal(await page.evaluate(() => walkCalls.at(-1).frame), 8);
-    await page.evaluate(() => { Object.assign(emberHallWorld.player, { x: 410, y: 260, phase: 3 }); });
+    // Start at the exact floor edge so variable frame times cannot advance the last subpixel.
+    await page.evaluate(() => { Object.assign(emberHallWorld.player, { x: 411, y: 260, phase: 3 }); });
     await page.keyboard.down('ArrowRight'); await page.waitForTimeout(250);
     const wall = await page.evaluate(() => ({ ...emberHallWorld.player, frame: walkCalls.at(-1).frame }));
     assert.equal(wall.walking, false); assert.equal(wall.frame, 8);
