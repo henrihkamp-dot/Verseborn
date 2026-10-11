@@ -13,7 +13,8 @@ const {chromium}=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-run
  assert.equal(await page.evaluate(()=>activeRecruitScene.id),'ember-hall-start-verseborn');
  await page.waitForTimeout(300);await page.screenshot({path:path.join(output,'hall-world-opening.png')});
  await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>activeRecruitScene.id),'ember-hall-start-Torren');
- for(let i=0;i<12&&await page.evaluate(()=>mode!=='battle');i++)await page.keyboard.press('Enter');
+ for(let i=0;i<12&&!await page.locator('[data-begin]').count();i++)await page.keyboard.press('Enter');
+ await page.locator('[data-begin]').click();
  assert.equal(await page.evaluate(()=>mode),'battle');assert.equal(await page.evaluate(()=>battle.hallStage),1);
  await page.screenshot({path:path.join(output,'hall-world-battle.png')});
  await page.waitForTimeout(800);
@@ -29,7 +30,7 @@ const {chromium}=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-run
  for(const key of ['ArrowDown','Enter','ArrowDown','Enter','Enter'])await page.keyboard.press(key);
  assert.equal(await page.evaluate(()=>activeSaveSlot),2);assert.equal(await page.evaluate(()=>state.gold),222);assert.equal(await page.evaluate(()=>hallBattleProgress().unlockedStage),42);
  assert.equal(await page.evaluate(()=>mode),'walk');
- assert.deepEqual(await page.evaluate(()=>emberHallWorld.residents().map(a=>a.id).sort()),['Glimmer','Kael','Marla','Mira']);
+ assert.deepEqual(await page.evaluate(()=>emberHallWorld.residents().map(a=>a.id).sort()),['Kael','Marla','Mira']);
  const initial=await page.evaluate(()=>({x:emberHallWorld.player.x,gridX:state.x,gridY:state.y}));
  await page.keyboard.down('ArrowRight');await page.waitForTimeout(250);await page.keyboard.up('ArrowRight');await page.waitForTimeout(650);
  assert.ok(await page.evaluate(x=>emberHallWorld.player.x>x,initial.x));
@@ -38,7 +39,7 @@ const {chromium}=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-run
  await page.reload();await page.waitForFunction(()=>runtimeAssetsReady&&emberHallWorld.ready);
  for(const key of ['ArrowDown','Enter','ArrowDown','Enter','Enter'])await page.keyboard.press(key);
  assert.ok(await page.evaluate(p=>Math.abs(emberHallWorld.player.x-p.x)<1,saved));
- await page.evaluate(()=>{emberHallWorld.trigger(emberHallWorld.actors.find(a=>a.id==='Marla'));finishTalk();});assert.equal(await page.evaluate(()=>mode),'shop');await page.evaluate(()=>closeVendor());
+ await page.evaluate(()=>{emberHallWorld.trigger(emberHallWorld.actors.find(a=>a.id==='Marla'));});assert.equal(await page.evaluate(()=>mode),'shop');await page.evaluate(()=>closeVendor());
  const sceneIds=await page.evaluate(()=>RECRUIT_SCENES.map(s=>s.id));
  for(const id of sceneIds){
   const ok=await page.evaluate(id=>{state.party=['Verseborn',...HALL_RECRUITS];mode='walk';return playRecruitScene(RECRUIT_SCENES.find(s=>s.id===id),{replay:true});},id);assert.ok(ok);

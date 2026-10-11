@@ -59,7 +59,7 @@
   const oldControl=handleControl,oldCycleLeader=cycleLeader;
   handleControl=function(control){if(inHall()&&mode==='walk'&&!activeRecruitScene&&['up','down','left','right'].includes(control))return;oldControl(control);};
   cycleLeader=function(direction){if(inHall()&&mode==='walk')return;oldCycleLeader(direction);};
-  const residents=()=>actors.filter(actor=>['Marla','Glimmer'].includes(actor.id)||state.party.includes(actor.id));
+  const residents=()=>actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id));
   function resetNavigation(position=state.hallPosition){
     keys.clear();target=null;route=[];pendingActor=null;scene=null;last=performance.now();
     const valid=position&&Number.isFinite(position.x)&&Number.isFinite(position.y)&&!collision(position.x,position.y);
@@ -136,6 +136,7 @@
   function trigger(actor){
     keys.clear();target=null;route=[];pendingActor=null;
     if(actor.id==='Resonance Machine'){openHallBattleMap();return;}
+    if(window.HallHub?.openService(actor.id))return;
     scene={id:actor.id,started:performance.now(),duration:6400};
     const point=maps.emberHallBattles.points.find(entry=>entry.id===actor.id);
     if(point){activePoint=point;showTalk(pointDialogue(point),{portraits:['Verseborn',actor.id]});}
@@ -265,6 +266,7 @@
     camera.x=Math.max(0,Math.min(W-LOGICAL_WIDTH,player.x-LOGICAL_WIDTH/2));
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,player.y-LOGICAL_HEIGHT*.6));
     ctx.drawImage(images.hall,-camera.x,-camera.y,W,H);
+    window.HallHub?.drawAreas(camera);
     const fx=images.effects,cw=fx.width/4,ch=fx.height/2,frame=Math.floor(now/180)%4;
     ctx.save();
     for(const [i,[x,y,w,h]] of [[77,23,25,21],[564,136,19,19]].entries()){
