@@ -52,6 +52,31 @@
   function memberEffect(unit, category) {
     return unit?.id && battle?.party?.includes(unit) ? supportForBattle()?.[category] : null;
   }
+  for (const [category, icon] of [['meal', 'vampiric'], ['coating', 'poison'], ['blessing', 'barrier']]) {
+    STATUS_DEFS['hub_' + category] = { label: labels[category], short: category[0].toUpperCase() };
+    statusIconAliases['hub_' + category] = icon;
+  }
+  function supportPresentation(unit) {
+    const member = unit?.id && battle?.party?.find(member => member.id === unit.id);
+    if (!member || !supportForBattle()) return [];
+    return Object.keys(categories).flatMap(category => {
+      const effect = memberEffect(member, category); if (!effect) return [];
+      const spent = category === 'blessing' && (effect.resolve && member.hubResolveUsed || effect.barrier && !statusOf(member, 'barrier') || effect.resonance);
+      return [{ type: 'hub_' + category, effect, category, remaining: 0, spent: Boolean(spent) }];
+    });
+  }
+  const oldDrawStatusBadges = drawBattleStatusBadges, oldStatusDisplay = statusDisplayData, oldStatusBadges = statusBadgesHtml;
+  drawBattleStatusBadges = (unit, ...args) => {
+    const support = supportPresentation(unit);
+    return oldDrawStatusBadges(support.length ? { ...unit, statuses: [...support, ...(unit.statuses || [])] } : unit, ...args);
+  };
+  statusDisplayData = (unit, status) => status.effect && status.category ? {
+    name: status.effect.name, kind: labels[status.category], remaining: 0,
+    timing: status.spent ? 'Already used / stage-start effect applied' : 'Active for this stage',
+    compact: status.spent ? 'USED' : status.category[0].toUpperCase(),
+    description: status.effect.desc
+  } : oldStatusDisplay(unit, status);
+  statusBadgesHtml = unit => oldStatusBadges(unit) + (supportPresentation(unit).length ? `<div class="status-chips hub-combat-chips">${supportPresentation(unit).map(status => `<span class="hub-${status.category}" title="${escaped(status.effect.name + ': ' + status.effect.desc)}">${labels[status.category]}${status.spent ? ' / used' : ''}</span>`).join('')}</div>` : '');
   for (const [category, items] of Object.entries(categories)) {
     if (category === 'blessing') continue;
     items.forEach(item => inventoryDb[item.name] = { type: category === 'meal' ? 'Meal' : 'Weapon Coating', desc: item.desc, short: 'Selected at Stage Preparation. Consumed only when the stage begins.', hubCategory: category });

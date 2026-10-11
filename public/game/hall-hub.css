@@ -3,6 +3,7 @@
 .hub-screen button:hover:not(:disabled), .hub-screen button:focus-visible { border-color: #ffd878; background: #4a2d45; outline: 2px solid #ffd878; outline-offset: 2px; }
 .hub-screen button:disabled { opacity: .45; cursor: default; }
 .hub-screen select option { background: #21172b; color: #f8e7bb; }
+.hub-combat-chips span { border-color: var(--support-color); color: var(--support-color); }
 .hub-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #8f7040; padding-bottom: 10px; }
 .hub-header h2 { font-size: 20px; margin: 0; }
 .hub-header button { width: 36px; height: 36px; flex: 0 0 36px; font-size: 20px; }
