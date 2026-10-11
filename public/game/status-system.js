@@ -193,7 +193,7 @@
       const stun = type === 'stun' && actorId(source) === 'Mira' && (skill.doublesStunChance || statusOf(source, 'stunFocus')) ? 2 : 1;
       const cap = controls.has(type) ? .45 : dots.has(type) ? .65 : .85;
       const best = sources.slice().sort((a, b) => (b.value || 0) - (a.value || 0) || (b.duration || 0) - (a.duration || 0))[0];
-      return { ...best, type, chance: Math.min(cap, sources.reduce((sum, entry) => sum + entry.chance, 0) * stun), duration: Math.max(...sources.map(entry => entry.duration || (type === 'poison' ? 3 : STATUS_DEFS[type]?.duration || 2))), origin: 'gear', sources: sources.length };
+      return { ...best, type, chance: Math.min(cap, sources.reduce((sum, entry) => sum + entry.chance, 0)) * stun, duration: Math.max(...sources.map(entry => entry.duration || (type === 'poison' ? 3 : STATUS_DEFS[type]?.duration || 2))), origin: 'gear', sources: sources.length };
     });
   }
   function summary(results) {

@@ -117,6 +117,11 @@ const output = path.resolve(__dirname, '../../../previews/status-system-qa'); fs
       check('Gear cannot shorten an active native status', statusOf(target, 'silence').remaining === 5 && statusOf(target, 'silence').origins.length === 2);
       [target] = setup(); target.statusChances = { poison: .5 }; state.gearAffixes['Promise Ring'] = [{ type: 'statusChance', value: .5 }];
       check('Application support modifies the final attempt before resistance', Math.abs(statusApplicationChance(target, 'poison', .2, source) - .15) < .00001 && Math.abs(statusApplicationChance(target, 'poison', 1, source) - .75) < .00001);
+      [target] = setup(); procs([['Voice of Verse', 'stun', .2], ['Promise Ring', 'stun', .2], ['Cinder Star', 'stun', .2]]);
+      const miraGear = baseJobs.Mira.gear; baseJobs.Mira.gear = { ...baseJobs.Verseborn.gear };
+      const mira = { id: 'Mira', name: 'Mira', statuses: [{ type: 'stunFocus', remaining: 2 }] };
+      const focused = StatusSystem.groupedProcs(mira, skill, {}).find(entry => entry.type === 'stun'); baseJobs.Mira.gear = miraGear;
+      check('Mira Stun Focus doubles one consolidated chance after the base cap', focused.chance === .9 && focused.sources === 3);
       [target] = setup(); procs([['Voice of Verse', 'poison', .2, 'crit']]);
       StatusSystem.begin(source, skill); StatusSystem.queue(source, target, skill, { critical: false }); StatusSystem.queue(source, target, skill, { critical: true }); StatusSystem.finish();
       check('Crit trigger / one attempt across multiple hits', rolls === 1 && statusOf(target, 'poison'));

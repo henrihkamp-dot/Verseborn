@@ -24,6 +24,8 @@ Basic weapon negatives and Mira's Coatings are included in this same resolver. C
 
 Ability-native statuses are independent. Each declared native source uses its own chance, duration and normal resistance interaction, with one attempt per target per action. A skill and a distinct talent can each have their intentional attempt; additional hits do not repeatedly roll the same source. A native Poison and supplemental gear Poison may each attempt to apply, but multiple equipment sources never create multiple equipment rolls. Supplemental gear never shortens or weakens an already-active native status. Break and forced encounter rules are preserved; offensive status talents use their explicit chance and target resistance rather than a pre-roll followed by forced application.
 
+Mira's temporary Stun Focus doubles the consolidated base chance after its ordinary gear cap, before application support and target resistance. It never adds another roll.
+
 ## Defensive systems
 
 - Application resistance: specific and broad gear use diminishing returns. Broad gear resistance is capped at 30%; combined gear resistance at 60%. Talents and temporary wards remain separate. Ordinary stacking never grants immunity.
