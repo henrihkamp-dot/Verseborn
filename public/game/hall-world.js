@@ -5,7 +5,7 @@
   const keys=new Set(),images={},actors=[
     {id:'Torren',x:81,y:77,size:30,action:'Cooking',line:'A warm meal first. Heroics later.'},
     {id:'Sparky',x:165,y:82,size:30,action:'Resting',line:'Prrrp!'},
-    {id:'Glimmer',x:464,y:87,size:36,approach:{x:448,y:86},action:'Drone maintenance',line:'Careful with that coil. It bites.'},
+    {id:'Glimmer',x:464,y:87,size:36,renderScale:.65,approach:{x:448,y:86},action:'Drone maintenance',line:'Careful with that coil. It bites.'},
     {id:'Seerin',x:88,y:180,size:42,action:'Shield practice',line:'Feet steady. Eyes on your opponent.'},
     {id:'Marla',x:529,y:160,size:38,clipY:155,approach:{x:446,y:181},action:'Serving soup',line:'Welcome back. There is always something warm waiting.'},
     {id:'Mira',x:102,y:297,size:36,action:'Dagger practice',line:'My corner. No unwelcome surprises.'},
@@ -102,25 +102,27 @@
     return Boolean(target);
   }
   function drawActor(actor,row,col){
+    // Scale Hall art around its existing foot anchor; size still defines interaction bounds.
+    const size=actor.size*(actors.find(resident=>resident.id===actor.id)?.renderScale??1);
     if(actor.id==='Verseborn'&&row===8&&images.VersebornLute){
-      const size=actor.size,index=Math.max(0,Math.min(15,col));
+      const index=Math.max(0,Math.min(15,col));
       ctx.drawImage(images.VersebornLute,index%4*100,Math.floor(index/4)*100,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);return;
     }
     if(actor.id==='Verseborn'&&row>=0&&row<=7&&images.VersebornWalk){
-      const size=actor.size,index=actor.poseFrame??(player.walking?Math.floor(player.phase)%8:8);
+      const index=actor.poseFrame??(player.walking?Math.floor(player.phase)%8:8);
       const sheetRow=[0,1,2,2,3,3,4,4][row];
       ctx.save();ctx.translate(Math.round(actor.x-camera.x),Math.round(actor.y-camera.y-size*.94));
       if([2,4,6].includes(row))ctx.scale(-1,1);
       ctx.drawImage(images.VersebornWalk,index*128,sheetRow*128,128,128,-size/2,0,size,size);ctx.restore();return;
     }
     if(row===4&&images[actor.id+'Action']){
-      const image=images[actor.id+'Action'],size=actor.size,index=col%16;
+      const image=images[actor.id+'Action'],index=col%16;
       ctx.save();if(actor.clipY){ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,actor.clipY-camera.y);ctx.clip();}
       ctx.drawImage(image,index%4*100,Math.floor(index/4)*100,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);ctx.restore();return;
     }
     const image=images[actor.id];if(!image)return;
     const cols=actor.id==='Verseborn'?4:8,rows=actor.id==='Verseborn'?4:5;
-    const cw=image.width/cols,ch=image.height/rows,size=actor.size;
+    const cw=image.width/cols,ch=image.height/rows;
     ctx.save();if(actor.clipY){ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,actor.clipY-camera.y);ctx.clip();}
     ctx.drawImage(image,col*cw,row*ch,cw,ch,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);ctx.restore();
   }
