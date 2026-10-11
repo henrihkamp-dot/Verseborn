@@ -14377,12 +14377,12 @@ function renderMenu() {
     const fieldNotes = Object.values(maps).flatMap(field => field.spawns || []).filter(spawnPoint => spawnPoint.rare || spawnPoint.boss);
     const knownIssues = quests.slice(0, Math.max(0, state.quest + 1));
     el.menuBody.innerHTML = `${sceneMemoriesHtml()}<h3>Issue Chronicle</h3><div class="menu-grid">${knownIssues.length ? knownIssues.map((q, i) => `<div class="menu-card"><strong>Issue ${i + 1}: ${q[0]}</strong><p>${q[2]}</p><p>${q[1]}</p></div>`).join("") : `<div class="menu-card"><strong>No issue recorded</strong><p>Your chronicle begins when someone entrusts you with a quest.</p></div>`}</div><h3>Rare & Miniboss Field Notes</h3><div class="menu-grid">${fieldNotes.map(spawnPoint => `<div class="menu-card"><strong>${spawnPoint.name}</strong><small>${spawnPoint.rare ? "RARE SPAWN" : "ONE-TIME MINIBOSS"} / ${state.flags[`spawn:${spawnPoint.id}`] ? "DEFEATED" : spawnPoint.available ? "ACTIVE" : "DORMANT"}</small><p>${spawnPoint.lore}</p><p>${spawnPoint.boss ? "Does not respawn." : `Rare return window: roughly ${spawnPoint.respawn}-${spawnPoint.respawn + 30}s.`}</p></div>`).join("")}</div>`;
-    el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
-    el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
     const archive = document.createElement('div');
     if (hallMenu) el.menuBody.innerHTML = sceneMemoriesHtml();
     archive.innerHTML = hallLexiconHtml();
     el.menuBody.prepend(archive);
+    el.menuBody.querySelectorAll("[data-play-arrival-scene]").forEach(button => button.addEventListener("click", () => playUnseenArrival(button.dataset.playArrivalScene)));
+    el.menuBody.querySelectorAll("[data-replay-scene]").forEach(button => button.addEventListener("click", () => replayRecruitScene(button.dataset.replayScene)));
     archive.querySelector('[data-lexicon-stage]').addEventListener('change', event => { lexiconStage = Number(event.target.value); renderMenu(); });
   }
   if (menuTab === "developer") {
