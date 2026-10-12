@@ -6932,6 +6932,7 @@ function drawTitle(now = performance.now()) {
   const fixedBackground = titleIdleFrames[0] || titleImage;
   ctx.drawImage(fixedBackground, layout.x, layout.y, layout.width, layout.height);
   drawTitleAtmosphere(layout, now);
+  drawTitleTwinkles(layout);
   drawTitleMenu(layout);
   ctx.restore();
 }
@@ -6954,27 +6955,27 @@ function titleImageLayout() {
 function drawTitleAtmosphere(layout, now) {
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
   ctx.save();
-  const lamps = [[108, 474], [218, 589], [347, 648], [1097, 577], [1240, 621], [1325, 449]];
+  const lamps = [[50, 620], [459, 700], [1136, 730], [1262, 661], [1358, 779], [1390, 768]];
   lamps.forEach(([lx, ly], index) => {
     const shimmer = Math.sin(now / 780 + index * 2.1) * .5 + Math.sin(now / 237 + index) * .15;
     const x = layout.x + lx * layout.scale, y = layout.y + ly * layout.scale;
-    const radius = 12 * layout.scale;
+    const radius = 18 * layout.scale;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    glow.addColorStop(0, 'rgba(255, 220, 132, ' + (.11 + shimmer * .05) + ')');
+    glow.addColorStop(0, 'rgba(255, 220, 132, ' + (.38 + shimmer * .32) + ')');
     glow.addColorStop(1, 'rgba(255, 170, 68, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   });
-  // A short, faint streak in the sky, once per eighteen seconds.
-  const elapsed = (now + 11500) % 18000;
-  if (elapsed < 1000) {
-    const progress = elapsed / 1000;
-    ctx.globalAlpha = Math.sin(progress * Math.PI) * .35;
-    ctx.strokeStyle = '#d8d7ff';
-    ctx.lineWidth = Math.max(.6, layout.scale);
+  // A visible but occasional shooting star, once per eight seconds.
+  const elapsed = now % 8000;
+  if (elapsed < 1600) {
+    const progress = elapsed / 1600;
+    ctx.globalAlpha = Math.sin(progress * Math.PI) * .9;
+    ctx.strokeStyle = '#f0eaff';
+    ctx.lineWidth = Math.max(1.3, 2 * layout.scale);
     ctx.beginPath();
-    const x = 1185 + progress * 155, y = 23 + progress * 67;
-    ctx.moveTo(layout.x + (x - 22) * layout.scale, layout.y + (y - 9) * layout.scale);
+    const x = 1160 + progress * 205, y = 20 + progress * 92;
+    ctx.moveTo(layout.x + (x - 65) * layout.scale, layout.y + (y - 29) * layout.scale);
     ctx.lineTo(layout.x + x * layout.scale, layout.y + y * layout.scale);
     ctx.stroke();
   }
