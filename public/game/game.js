@@ -2976,7 +2976,7 @@ function resetGearBrowser() {
 
 function autoEquipToolbarHtml(id) {
   return `<section class="gear-auto-equip" aria-label="Automatic equipment">
-    <div><strong>Auto Equip</strong></div>
+    <div class="gear-auto-options"><strong>Auto Equip</strong>
     <div class="gear-auto-source" role="group" aria-label="Optimization priority">
       <button type="button" data-auto-equip-strategy="dps" class="${autoEquipStrategy === 'dps' ? 'is-active' : ''}" aria-pressed="${autoEquipStrategy === 'dps'}">DPS</button>
       <button type="button" data-auto-equip-strategy="utility" class="${autoEquipStrategy === 'utility' ? 'is-active' : ''}" aria-pressed="${autoEquipStrategy === 'utility'}">Utility</button>
@@ -2985,8 +2985,17 @@ function autoEquipToolbarHtml(id) {
       <button type="button" data-auto-equip-pool="all" class="${autoEquipPool === "all" ? "is-active" : ""}" aria-pressed="${autoEquipPool === "all"}">All gear</button>
       <button type="button" data-auto-equip-pool="unequipped" class="${autoEquipPool === "unequipped" ? "is-active" : ""}" aria-pressed="${autoEquipPool === "unequipped"}">Unequipped gear</button>
     </div>
-    <button type="button" data-auto-equip="hero">Optimize ${id}</button>
-    <button type="button" data-auto-equip="party">Optimize everybody</button>
+    </div>
+    <div class="gear-bulk-actions">
+      <section aria-label="Equipment for ${id}"><h4>${id}</h4>
+        <button type="button" data-auto-equip="hero">Optimize ${id}</button>
+        <button type="button" data-unequip-all="hero" ${Object.values(baseJobs[id].gear).some(Boolean) ? '' : 'disabled'}>Unequip ${id}</button>
+      </section>
+      <section aria-label="Equipment for everybody"><h4>Everybody / all recruited heroes</h4>
+        <button type="button" data-auto-equip="party">Optimize everybody</button>
+        <button type="button" data-unequip-all="party" ${state.party.some(heroId => Object.values(baseJobs[heroId].gear).some(Boolean)) ? '' : 'disabled'}>Unequip everybody</button>
+      </section>
+    </div>
   </section>`;
 }
 
@@ -5259,6 +5268,26 @@ function autoEquipParty(pool = autoEquipPool) {
   });
   heroes.forEach(clampHeroVitals);
   return changed;
+}
+
+function runUnequipAll(target) {
+  if (developerGearLoadout) return showHudNotice("Disable the developer gear set before changing equipment.");
+  const heroes = target === "party" ? state.party : state.party.includes(selectedGearHero) ? [selectedGearHero] : [];
+  let removed = 0;
+  for (const id of heroes) {
+    const hero = baseJobs[id];
+    if (!hero) continue;
+    let changed = false;
+    for (const slot of Object.keys(hero.gear)) {
+      if (hero.gear[slot]) { hero.gear[slot] = null; removed++; changed = true; }
+    }
+    if (changed) clampHeroVitals(id);
+  }
+  selectedGearRef = null;
+  playSfx(removed ? "item" : "menu");
+  updatePanels();
+  renderMenu();
+  showHudNotice(removed ? `UNEQUIPPED - ${target === "party" ? "everybody" : selectedGearHero}; ${removed} items remain in your gear collection` : "No equipped gear to remove.");
 }
 
 function runAutoEquip(target) {
@@ -14312,6 +14341,7 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-auto-equip]").forEach(btn => btn.onclick = () => runAutoEquip(btn.dataset.autoEquip));
+    el.menuBody.querySelectorAll("[data-unequip-all]").forEach(btn => btn.onclick = () => runUnequipAll(btn.dataset.unequipAll));
     el.menuBody.querySelectorAll("[data-auto-equip-strategy]").forEach(btn => btn.onclick = () => {
       autoEquipStrategy = btn.dataset.autoEquipStrategy;
       renderMenu();
