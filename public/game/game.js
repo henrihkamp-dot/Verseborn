@@ -5856,6 +5856,10 @@ function applySkillBuffs(source, targets, sk) {
     notes.push(`Second Chorus: ${STATUS_DEFS[secondary].label}`);
   }
   if (sk.buffs?.some(buff => buff.type === "agilityUp")) reorderRemainingTurns();
+  if (source.id === 'Seerin' && sk.name === 'Cinder Guard' && window.HallHub?.hasShadowRing(source)) targets.forEach(target => {
+    const current = statusOf(target, 'holyFollowUp');
+    applyStatus(target, 'holyFollowUp', source, { duration: Math.max(2, current?.remaining || 0), value: Math.max(.35, current?.value || 0), force: true });
+  });
   if (songBoost) delete source.nextSongBoost;
   return notes;
 }
@@ -9821,7 +9825,8 @@ function renderHallBattleMap() {
     const thumbnail = (info.stage - 1) % 8;
     return `<button type="button" class="hall-stage hall-thumb-${thumbnail} ${info.boss ? "is-boss" : ""} ${isCleared ? "is-cleared" : ""} ${unlocked ? "" : "is-locked"}" data-hall-stage="${info.stage}" ${unlocked ? "" : "disabled"}><span>STAGE ${String(info.stage).padStart(2, "0")}${info.boss ? " / BOSS" : ""}</span><strong>${info.name}</strong><small>Enemy level ${Math.min(info.stage, MAX_LEVEL)} / ${lootLabel} / ${stateLabel}</small><em>${details.enemies}</em><i>Weak: ${details.weaknesses}</i><i>${details.traits}</i></button>`;
   }).join("");
-  el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/${HALL_BATTLE_BLUEPRINTS.length} cleared / newest stage ${progress.unlockedStage}</p></div><button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
+  el.menuBody.innerHTML = `<section class="hall-map"><header><div><strong>Hall Battle Records</strong><p>${cleared.size}/${HALL_BATTLE_BLUEPRINTS.length} cleared / newest stage ${progress.unlockedStage}</p></div>${state.party.includes("Seerin") ? '<button type="button" data-open-shadows>Shadow Trials</button>' : ""}<button type="button" data-close-hall aria-label="Close battle records">X</button></header><div class="hall-stage-grid">${stages}</div></section>`;
+  el.menuBody.querySelector("[data-open-shadows]")?.addEventListener("click", () => window.HallHub?.openService("Seerin"));
   el.menuBody.querySelector("[data-close-hall]")?.addEventListener("click", closeHallOverlay);
   el.menuBody.querySelectorAll("[data-hall-stage]").forEach(button => button.addEventListener("click", () => startHallBattleStage(Number(button.dataset.hallStage))));
 }
@@ -10992,6 +10997,7 @@ function applyEnemyResonanceControl(source, target, sk) {
 function skillDamageTalentMultiplier(source, sk, target, zeroResonance = battle?.enemyResonance === 0) {
   if (!source?.id) return 1;
   let bonus = 0;
+  if (source.id === 'Mira' && window.HallHub?.hasShadowRing(source) && sk.element === 'Shadow' && statusOf(target, 'silence') && statusOf(target, 'shadowExposed')) bonus += .30;
   if (sk.element === "Holy Fire") bonus += typedTalentValue(source.id, "holyFireDamage");
   if (sk.element === "Tech") bonus += typedTalentValue(source.id, "techDamage");
   if (sk.element === "Ancient Fire") bonus += typedTalentValue(source.id, "ancientFireDamage");
@@ -11044,7 +11050,8 @@ function combatDroneFollowUp(source, totalDamage, targetCount) {
   if ((!drone && !carrier) || totalDamage <= 0) return "";
   const ownerId = baseJobs[drone?.source?.id] ? drone.source.id : source.id;
   const dual = typedTalentValue(ownerId, "dronePower");
-  const base = (drone?.value ?? .25) + typedTalentValue(ownerId, "droneBaseBonus");
+  const base = (drone?.value ?? .25) + typedTalentValue(ownerId, "droneBaseBonus")
+    + (ownerId === 'Glimmer' && battle.party.some(unit => unit.id === ownerId && window.HallHub?.hasShadowRing(unit)) ? .20 : 0);
   const ownerMag = totals(ownerId).mag;
   const swarm = typedTalentValue(ownerId, "droneSwarm");
   const ratios = 1 + (dual ? .5 : 0) + swarm;
@@ -11190,6 +11197,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         ? battle.party.filter(ally => ally.hp > 0)
         : [u];
 
+    let shadowHitTargets = [], shadowDirectDamage = 0;
     if (sk.revive) {
       battle.party.filter(ally => ally.hp <= 0).forEach(ally => {
         const revivedHp = reviveBattleUnit(ally, sk.revive);
@@ -11211,6 +11219,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const critical = Math.random() < healingCritChance(u);
         const restored = Math.min(healingReceived(ally, (critical ? healing * 2 : healing) * protector), ally.max - ally.hp);
         ally.hp += restored;
+        window.HallHub?.shadowHeal(u, ally, restored);
         totalRestored += restored;
         if (critical && restored) criticalHeals++;
         addBattleFloater(ally, restored, { kind: "heal", crit: critical });
@@ -11308,6 +11317,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         const weaknessHit = skillHitsElementWeakness(hitTarget, sk);
         const breakGain = canGenerateBreak(u) ? (sk.staggerPower || (weaknessHit ? 2 : 1))
+          + (u.id === 'Torren' && u.guarding && sk.element === 'Earth' && window.HallHub?.hasShadowRing(u) ? 2 : 0)
           + typedTalentValue(u.id, "staggerBonus")
           + (sk.rank0Break || 0)
           + (u.id === "Seerin" && sk.anim === "ultimate" && hitTarget === target ? typedTalentValue(u.id, "flameguardCharge") : 0)
@@ -11359,6 +11369,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
         directDamageDealt += dmg;
+        shadowHitTargets.push(hitTarget);
         const holyDamage = holyFollowUpPower ? Math.min(holyCapPerTarget, Math.max(1, Math.round(dmg * holyFollowUpPower))) : 0;
         if (holyDamage) {
           hitTarget.hp -= holyDamage;
@@ -11487,6 +11498,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         applyStatus(spreadTarget, "burn", u, { force: true, duration: 3, scaling: "mag", element: "Ancient Fire" });
         log += ` Wildfire spreads to ${spreadTarget.name}.`;
       }
+      shadowDirectDamage = directDamageDealt;
       log += combatDroneFollowUp(u, totalDamageDealt, hitTargets.length);
       if (sk.selfHealRatio && totalDamageDealt > 0) {
         const restored = Math.min(healingReceived(u, Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio))), u.max - u.hp);
@@ -11520,6 +11532,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     }
 
     if (window.StatusSystem) log += StatusSystem.finish();
+    if (shadowDirectDamage > 0) log += window.HallHub?.shadowAction(u, sk, shadowHitTargets, selectedSkill.anim === 'ultimate' ? 0 : selectedCost) || '';
     log += finishMechTalentAction(u);
     transferDeadSparkyBurns();
     if (sk.grantsWard) battle.ward = true;

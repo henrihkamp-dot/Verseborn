@@ -28,7 +28,7 @@
   ];
   const categories = { meal: meals, coating: coatings, blessing: blessings };
   const owners = { meal: 'Torren', coating: 'Mira', blessing: 'Kael' };
-  const services = { Marla: 'General Shop', Glimmer: 'Stage Shop', Torren: 'Kitchen', Mira: 'Coating Supply', Kael: 'Sanctuary', Seerin: 'Sparring Area', Sparky: 'Scavenging' };
+  const services = { Marla: 'General Shop', Glimmer: 'Stage Shop', Torren: 'Kitchen', Mira: 'Coating Supply', Kael: 'Sanctuary', Seerin: 'Shadow Trials', Sparky: 'Scavenging' };
   const labels = { meal: 'Torren Meal', coating: 'Mira Coating', blessing: 'Kael Blessing' };
   let prepStage = null, startingSupport = null, sparringSnapshot = null, noticeTimer;
   let preparationNotes = [];
@@ -47,6 +47,7 @@
       if (!entry(category, hub.selected[category])) hub.selected[category] = null;
     }
     hub.sparringWins = Array.isArray(hub.sparringWins) ? [...new Set(hub.sparringWins.filter(id => HALL_RECRUITS.includes(id) || id === 'Verseborn'))] : [];
+    hub.shadowDefeated = Array.isArray(hub.shadowDefeated) ? [...new Set(hub.shadowDefeated.filter(id => Object.hasOwn(baseJobs, id)))] : [];
     return hub;
   }
   function supportForBattle() {
@@ -104,6 +105,52 @@
     Kael: { mag: 3, stam: 2 }, Glimmer: { mag: 3, agi: 2 }, Seerin: { str: 3, stam: 2 }, Sparky: { mag: 2, echo: 3 }
   };
   Object.entries(sparringRewards).forEach(([id, stats]) => gearDb.ring.push({ name: `${id}'s Sparring Seal`, slot: 'ring', stats, rarity: 'Common', effects: [] }));
+
+  const shadowTrials = {
+    Verseborn: { ring: 'Ring of the Unbroken Refrain', ability: 'Sound attacks against Silenced enemies grant 8 additional Resonance, once per action (excluding ultimates).', desc: 'An unheard refrain answers every song. Silence the echo, then let Sound carry the Hall forward.' },
+    Mira: { ring: 'Ring of the Last Whisper', ability: 'Shadow attacks deal 30% more damage against enemies that are both Silenced and Shadow Exposed.', desc: 'A perfect strike waits in the darkness. Break her silence before precision breaks your formation.' },
+    Seerin: { ring: 'Ring of the Hearthward Oath', ability: 'Cinder Guard grants its healed allies a 35% Holy Fire follow-up for 2 actions, replacing its normal 10% follow-up.', desc: 'The oath has become a burning wall. Face the shield that would protect the Hall from itself.' },
+    Kael: { ring: 'Ring of the Unspent Mercy', ability: 'Healing grants a 2-action Barrier: 30% of the target’s restored HP percentage, capped at 20% damage reduction.', desc: 'Every quiet rite has a shadow. Withstand his sigils and the mercy he refuses to surrender.' },
+    Torren: { ring: 'Ring of the Mountain Within', ability: 'While personally Guarded, damaging Earth abilities generate 2 additional Break per target.', desc: 'The mountain remembers every blow. Guard your allies while his foundations threaten to split the Hall.' },
+    Glimmer: { ring: 'Ring of the Endless Workshop', ability: 'Combat Drones deployed by Glimmer gain 20 percentage points of follow-up power, within the existing drone damage cap.', desc: 'A machine without an off switch wears a familiar smile. Outlast the engineer and her relentless inventions.' },
+    Sparky: { ring: 'Ring of the Everhungry Ember', ability: 'Damaging Ancient Fire skills against Burning enemies refund 30% of MP spent while Sparky has Vampiric, once per action.', desc: 'The smallest ember casts a hungry shadow. Survive the fire before Emberblood restores what you took.' }
+  };
+  const shadowRequirement = 'Encounter unavailable — this Flameguard member has not yet entered Ember Hall.';
+  let shadowParty = [], selectedShadow = null;
+  for (const [id, trial] of Object.entries(shadowTrials)) {
+    const prototype = HALL_ARTIFACT_GEAR.find(gear => gear.slot === 'ring');
+    const ring = item(trial.ring, 'ring', { ...prototype.stats }, trial.ability,
+      { type: 'shadowTrial', value: 1, label: trial.ability, artifactUnique: true });
+    ring.rarity = 'Artifact'; gearDb.ring.push(ring); gearOwners[trial.ring] = [id]; artifactGearNames.add(trial.ring);
+  }
+  function shadowStats(id) {
+    // Fixed level-40 trial strength never follows the player's equipped gear.
+    const stats = Object.fromEntries(Object.entries(baseJobs[id].stats).map(([key, value]) => [key, Math.round((value + Math.floor(39 * (.32 + value / 30))) * 2)]));
+    return { ...stats, max: (30 + stats.stam * 4) * 8, mp: 180 };
+  }
+  function hasShadowRing(unit) {
+    return Boolean(unit?.id && battle?.party?.includes(unit) && effectValue(unit.id, 'shadowTrial'));
+  }
+  function shadowHeal(source, ally, restored) {
+    if (!hasShadowRing(source) || source.id !== 'Kael' || restored <= 0) return;
+    const value = Math.min(.20, restored * .30 / ally.max);
+    const existing = statusOf(ally, 'barrier');
+    // Refresh useful wards, never replace a stronger barrier with a weaker one.
+    applyStatus(ally, 'barrier', source, { duration: Math.max(2, existing?.remaining || 0), value: Math.max(value, existing?.value || 0), force: true });
+  }
+  function shadowAction(source, sk, targets, mpSpent) {
+    if (!hasShadowRing(source) || !skillTargetsEnemies(sk) || sk.power < 0 || sk.statusOnly || sk.dispel) return '';
+    if (source.id === 'Verseborn' && sk.element === 'Sound' && sk.anim !== 'ultimate' && targets.some(target => statusOf(target, 'silence'))) {
+      const gained = Math.min(8, 100 - state.resonance); state.resonance += gained;
+      return gained ? ' Unbroken Refrain grants ' + gained + ' Resonance.' : '';
+    }
+    if (source.id === 'Sparky' && sk.element === 'Ancient Fire' && statusOf(source, 'vampiric') && targets.some(target => statusOf(target, 'burn')) && mpSpent > 0) {
+      const restored = Math.min(Math.ceil(mpSpent * .30), source.maxmp - source.mp); source.mp += restored;
+      if (restored) addBattleMpGain(source, restored, 'Everhungry Ember');
+      return restored ? ' Everhungry Ember refunds ' + restored + ' MP.' : '';
+    }
+    return '';
+  }
   const oldWares = vendorWares, oldOpenVendor = openVendor, oldBuy = buyWare;
   vendorWares = id => {
     if (state.gameMode !== 'hallBattles') return oldWares(id);
@@ -738,31 +785,46 @@
     if (elapsed >= fx.timing.totalMs) effect = null;
   };
 
-  function renderSparring() {
+  function renderSparring(opponent = selectedShadow) {
+    if (state.gameMode !== 'hallBattles' || !recruited('Seerin')) return false;
     loadDuelArt();
-    const hero = state.activeParty[0] || state.party[0];
-    overlay("Seerin's Sparring Area", `<div class="hub-spar-controls"><label>Your fighter<select data-fighter>${state.party.map(id => `<option ${id === hero ? 'selected' : ''}>${id}</option>`).join('')}</select></label><p>1 vs 1 / no EXP or stage progress / practice items returned</p></div><div class="hub-spar-roster">${state.party.map(id => `<article><img src="assets/sprites/hall-duels/${id.toLowerCase()}-portrait.webp" alt="${escaped(id)}"><div><strong>${escaped(id)}</strong><small>Lv ${progressFor(id).level}</small><p>${progress().sparringWins.includes(id) ? 'First-win reward earned / rematches available' : 'First win: ' + escaped(id + "'s Sparring Seal")}</p></div><button type="button" data-spar="${id}">Spar</button></article>`).join('')}</div>`);
-    el.menuBody.querySelectorAll('[data-spar]').forEach(button => button.onclick = () => startSparring(el.menuBody.querySelector('[data-fighter]').value, button.dataset.spar));
+    shadowParty = shadowParty.filter(id => recruited(id)).slice(0, 3);
+    if (!shadowParty.length) shadowParty = state.activeParty.filter(id => recruited(id)).slice(0, 3);
+    selectedShadow = opponent && recruited(opponent) ? opponent : null;
+    const defeated = progress().shadowDefeated;
+    const cards = Object.entries(shadowTrials).map(([id, trial], index) => {
+      const unlocked = recruited(id), won = defeated.includes(id);
+      if (!unlocked) return '<button type="button" class="hall-stage shadow-stage is-locked" disabled><span>SHADOW TRIAL ' + (index + 1) + ' / LOCKED</span><div class="shadow-mystery" aria-hidden="true">?</div><strong>Unknown Flameguard</strong><small>Locked</small><p>' + shadowRequirement + '</p></button>';
+      return '<button type="button" class="hall-stage shadow-stage ' + (won ? 'is-cleared ' : '') + (selectedShadow === id ? 'is-selected' : '') + '" data-shadow="' + id + '" aria-pressed="' + (selectedShadow === id) + '"><span>SHADOW TRIAL ' + (index + 1) + ' / ' + (won ? 'DEFEATED' : 'AVAILABLE') + '</span><img src="assets/sprites/hall-duels/' + id.toLowerCase() + '-portrait.webp" alt="Shadow ' + id + '"><strong>Shadow ' + id + '</strong><small>Recommended level 40 / Personal trial</small><em>' + trial.ring + '</em><i>' + (won ? 'FIRST CLEAR EARNED / REPLAY' : 'FIRST CLEAR REWARD / Artifact Ring') + '</i></button>';
+    }).join('');
+    const trial = shadowTrials[selectedShadow];
+    const details = trial ? '<section class="shadow-detail" aria-label="Shadow encounter preview"><div class="hub-stage-tags"><b>Shadow ' + selectedShadow + '</b><span>' + (defeated.includes(selectedShadow) ? 'Defeated / Replay' : 'Available') + '</span><span>Recommended level 40</span></div><div class="shadow-preview"><img src="assets/sprites/hall-duels/' + selectedShadow.toLowerCase() + '-portrait.webp" alt="Shadow ' + selectedShadow + ' enemy preview"><div><h3>Shadow ' + selectedShadow + '</h3><p>' + trial.desc + '</p><dl class="hub-stage-info"><dt>Encounter</dt><dd>Level 40 / one Shadow / 60-round limit</dd><dt>' + (defeated.includes(selectedShadow) ? 'First clear earned' : 'FIRST CLEAR REWARD') + '</dt><dd><strong>' + trial.ring + '</strong><br>Artifact Ring / ' + selectedShadow + ' only<br>Normal Artifact base-stat roll + 5 Artifact affixes</dd><dt>Unique ability</dt><dd>' + escaped(trial.ability) + '</dd></dl></div></div><h3>Your party (' + shadowParty.length + '/3)</h3><p>Select 1–3 Hall members. Trial items and vitals are restored afterward; no EXP or normal stage progress.</p><div class="shadow-party">' + state.party.map(id => '<button type="button" data-shadow-party="' + id + '" aria-pressed="' + shadowParty.includes(id) + '" ' + (!shadowParty.includes(id) && shadowParty.length >= 3 ? 'disabled' : '') + '><strong>' + id + '</strong><small>Level ' + progressFor(id).level + (shadowParty.includes(id) ? ' / Selected' : '') + '</small></button>').join('') + '</div><footer class="hub-footer"><p>' + (defeated.includes(selectedShadow) ? 'Replay available. The unique Artifact Ring is already earned.' : 'Guaranteed first victory: ' + trial.ring) + '</p><button type="button" data-shadow-start ' + (!shadowParty.length ? 'disabled' : '') + '>Start Battle</button></footer></section>' : '<p class="shadow-empty">Select an available Shadow trial to preview its encounter and first-clear reward.</p>';
+    overlay('Ember Hall / Shadow Trials', '<nav class="shadow-path-nav"><button type="button" data-ember-path>Ember Battles</button><button type="button" aria-current="page" disabled>Shadow Trials</button></nav><p>' + defeated.length + '/7 trials defeated. Shadows awaken as Flameguard members enter Ember Hall.</p><div class="hall-stage-grid shadow-grid">' + cards + '</div>' + details);
+    el.menuBody.querySelector('[data-ember-path]').onclick = renderHallBattleMap;
+    el.menuBody.querySelectorAll('[data-shadow]').forEach(button => button.onclick = () => { renderSparring(button.dataset.shadow); el.menuBody.querySelector('.shadow-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    el.menuBody.querySelectorAll('[data-shadow-party]').forEach(button => button.onclick = () => { const id = button.dataset.shadowParty; if (shadowParty.includes(id)) shadowParty = shadowParty.filter(member => member !== id); else if (shadowParty.length < 3 && recruited(id)) shadowParty.push(id); renderSparring(); });
+    const start = el.menuBody.querySelector('[data-shadow-start]'); if (start) start.onclick = () => startSparring([...shadowParty], selectedShadow);
   }
-  function startSparring(fighter, opponent) {
-    if (state.gameMode !== 'hallBattles' || !recruited('Seerin') || !state.party.includes(fighter) || !state.party.includes(opponent) || mode !== 'hallMap') return false;
+  function startSparring(fighters, opponent) {
+    const party = Array.isArray(fighters) ? [...new Set(fighters)] : [fighters];
+    if (state.gameMode !== 'hallBattles' || !recruited('Seerin') || !shadowTrials[opponent] || !recruited(opponent) || !party.length || party.length > 3 || party.some(id => !Object.hasOwn(baseJobs, id) || !recruited(id)) || mode !== 'hallMap') return false;
     loadDuelArt();
     sparringSnapshot = { activeParty: [...state.activeParty], resonance: state.resonance, fieldWard: state.fieldWard, inventory: { ...state.inventory }, stash: { ...state.stash }, heroes: Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, { hp: hero.hp, mp: hero.mp }])) };
-    const total = oldTotals(opponent);
-    state.activeParty = [fighter]; startingSupport = null;
-    const opponentUnit = enemy(opponent, total.max, total.str, baseJobs[opponent].element, baseJobs[opponent].color || '#bd9971', 1, opponent);
-    opponentUnit.sparringId = opponent; opponentUnit.levelHint = progressFor(opponent).level; opponentUnit.fixedLevel = true;
+    const total = shadowStats(opponent);
+    state.activeParty = party; startingSupport = null;
+    const opponentUnit = enemy('Shadow ' + opponent, total.max, total.str, baseJobs[opponent].element, baseJobs[opponent].color || '#bd9971', 1, opponent);
+    opponentUnit.sparringId = opponent; opponentUnit.levelHint = 40; opponentUnit.fixedLevel = true;
     el.menu.classList.add('hidden'); document.querySelector('.menu-tabs').classList.remove('hidden');
-    startBattle('Sparring / ' + fighter + ' vs ' + opponent, [opponentUnit], undefined, null, [], { combatMapId: 'emberHallBattles', roundCap: 60 });
-    battle.sparring = { fighter, opponent }; battle.startingResonance = sparringSnapshot.resonance;
+    startBattle('Shadow Trial / ' + opponent, [opponentUnit], undefined, null, [], { combatMapId: 'emberHallBattles', roundCap: 60 });
+    battle.sparring = { fighter: party[0], party, opponent }; battle.startingResonance = sparringSnapshot.resonance;
     return true;
   }
   const oldPrepareEnemy = prepareEnemyForBattle, oldEnemyAction = chooseEnemyAction, oldDrawEnemy = drawEnemy;
   prepareEnemyForBattle = (source, ...args) => {
     const prepared = oldPrepareEnemy(source, ...args);
     if (!source.sparringId) return prepared;
-    const total = oldTotals(source.sparringId);
-    return { ...prepared, hp: total.max, max: total.max, maxmp: total.mp, mp: total.mp, atk: total.str, stats: { ...total }, baseEvasion: FLAMEGUARD_BASE_EVASION[source.sparringId] || .05, resistanceTier: 'normal', crit: heroCritChance(source.sparringId), xp: 0, sparringId: source.sparringId };
+    const total = shadowStats(source.sparringId);
+    return { ...prepared, hp: total.max, max: total.max, maxmp: total.mp, mp: total.mp, atk: total.str, stats: { ...total }, baseEvasion: FLAMEGUARD_BASE_EVASION[source.sparringId] || .05, resistanceTier: 'normal', crit: .12, xp: 0, sparringId: source.sparringId };
   };
   chooseEnemyAction = unit => {
     if (!unit.sparringId) return oldEnemyAction(unit);
@@ -787,12 +849,12 @@
     state.inventory = sparringSnapshot.inventory; state.stash = sparringSnapshot.stash;
     for (const [id, stats] of Object.entries(sparringSnapshot.heroes)) Object.assign(baseJobs[id], stats);
     sparringSnapshot = null;
-    if (result === 'victory' && !progress().sparringWins.includes(opponent)) {
-      progress().sparringWins.push(opponent);
-      const reward = opponent + "'s Sparring Seal";
-      addOwnedGear(reward, 1, { rarity: 'Common', rollAffixes: false });
-      entries.push({ kind: 'gear', icon: 'E', label: reward, detail: 'Unique first-win reward', value: 'x1' });
-    } else if (result === 'victory') entries.push({ kind: 'record', icon: '#', label: 'Practice complete', detail: 'First-win reward already earned', value: 'REMATCH' });
+    if (result === 'victory' && !progress().shadowDefeated.includes(opponent)) {
+      progress().shadowDefeated.push(opponent);
+      const reward = shadowTrials[opponent].ring;
+      addOwnedGear(reward, 1, { rarity: 'Artifact', stats: rollHallBaseStatProfile('Artifact').stats, separateCopy: true, rollAffixes: true });
+      entries.push({ kind: 'gear', icon: 'E', label: reward, detail: 'FIRST CLEAR / Artifact / ' + opponent + ' only', value: 'x1' });
+    } else if (result === 'victory') entries.push({ kind: 'record', icon: '#', label: 'Shadow defeated', detail: 'First-win reward already earned', value: 'REMATCH' });
     updatePanels();
     oldShowResult(result === 'victory' ? 'victory' : 'defeat', entries, () => { returnToHallAfterBattle(); renderSparring(); queueSave(); });
     return true;
@@ -815,11 +877,13 @@
     }
     ctx.restore();
   }
-  window.HallHub = { meals, coatings, blessings, services, progress, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
+  window.HallHub = { meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, shadowHeal, shadowAction, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
   const duelQa = new URLSearchParams(location.search);
   if (['hallduel','duelselect'].includes(duelQa.get('qa'))) loadDuelArt().then(() => {
-    state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';
-    refreshHeroVitals(); updatePanels(); openService('Seerin');
+    state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = duelQa.get('recruits') ? duelQa.get('recruits').split(',').filter(id => Object.hasOwn(baseJobs,id)) : Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';
+    state.activeParty = state.activeParty.filter(id => recruited(id));
+    refreshHeroVitals(); updatePanels(); renderSparring();
+    if (duelQa.get('opponent') && recruited(duelQa.get('opponent'))) renderSparring(duelQa.get('opponent'));
     if (duelQa.get('qa') === 'hallduel') startSparring(duelQa.get('fighter') || 'Verseborn', duelQa.get('opponent') || 'Seerin');
   });
 })();
