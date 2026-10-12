@@ -191,9 +191,14 @@ const SAVE_KEY = "verseborn-jrpg-save-v2";
 const HALL_SAVE_KEY = "verseborn-hall-battles-save-v1";
 const HALL_SCENE_HISTORY_KEY = "verseborn-hall-scene-history-v1";
 const titleTwinkles = [
-  { x: 135, y: 170, phase: 0, color: "#fff2b8" },
-  { x: 1290, y: 118, phase: 110, color: "#d9c7ff" },
-  { x: 1115, y: 344, phase: 220, color: "#c7e8ff" }
+  { x: 100, y: 55, phase: 0, color: "#fff5d9" },
+  { x: 230, y: 125, phase: 380, color: "#e9dcff" },
+  { x: 390, y: 40, phase: 740, color: "#ffffff" },
+  { x: 1070, y: 40, phase: 1100, color: "#e2eeff" },
+  { x: 1280, y: 100, phase: 1480, color: "#ffffff" },
+  { x: 1390, y: 225, phase: 1860, color: "#fff5d9" },
+  { x: 170, y: 350, phase: 220, color: "#e2eeff" },
+  { x: 1120, y: 330, phase: 960, color: "#e9dcff" }
 ];
 const TITLE_BACKGROUND_FRAME = 1;
 
@@ -6932,7 +6937,7 @@ function drawTitle(now = performance.now()) {
   const fixedBackground = titleIdleFrames[0] || titleImage;
   ctx.drawImage(fixedBackground, layout.x, layout.y, layout.width, layout.height);
   drawTitleAtmosphere(layout, now);
-  drawTitleTwinkles(layout);
+  drawTitleTwinkles(layout, now);
   drawTitleMenu(layout);
   ctx.restore();
 }
@@ -6957,24 +6962,26 @@ function drawTitleAtmosphere(layout, now) {
   ctx.save();
   const lamps = [[50, 620], [459, 700], [1136, 730], [1262, 661], [1358, 779], [1390, 768]];
   lamps.forEach(([lx, ly], index) => {
-    const shimmer = Math.sin(now / 780 + index * 2.1) * .5 + Math.sin(now / 237 + index) * .15;
+    const shimmer = (1 + Math.sin(now / 340 + index * 1.8)) / 2;
     const x = layout.x + lx * layout.scale, y = layout.y + ly * layout.scale;
-    const radius = 18 * layout.scale;
+    const radius = 26 * layout.scale;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    glow.addColorStop(0, 'rgba(255, 220, 132, ' + (.38 + shimmer * .32) + ')');
+    glow.addColorStop(0, 'rgba(255, 220, 132, ' + (.12 + shimmer * .78) + ')');
+    glow.addColorStop(.35, 'rgba(255, 174, 58, ' + shimmer * .32 + ')');
     glow.addColorStop(1, 'rgba(255, 170, 68, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   });
-  // A visible but occasional shooting star, once per eight seconds.
-  const elapsed = now % 8000;
+  // A visible but occasional shooting star, alternating sides every six seconds.
+  const elapsed = now % 6000;
   if (elapsed < 1600) {
     const progress = elapsed / 1600;
     ctx.globalAlpha = Math.sin(progress * Math.PI) * .9;
     ctx.strokeStyle = '#f0eaff';
     ctx.lineWidth = Math.max(1.3, 2 * layout.scale);
     ctx.beginPath();
-    const x = 1160 + progress * 205, y = 20 + progress * 92;
+    const rightSide = Math.floor(now / 6000) % 2 === 0;
+    const x = (rightSide ? 1160 : 130) + progress * 205, y = 20 + progress * 92;
     ctx.moveTo(layout.x + (x - 65) * layout.scale, layout.y + (y - 29) * layout.scale);
     ctx.lineTo(layout.x + x * layout.scale, layout.y + y * layout.scale);
     ctx.stroke();
@@ -6982,22 +6989,20 @@ function drawTitleAtmosphere(layout, now) {
   ctx.restore();
 }
 
-function drawTitleTwinkles(layout) {
+function drawTitleTwinkles(layout, now = performance.now()) {
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  ctx.save();
   titleTwinkles.forEach(star => {
-    const phase = ((tick + star.phase) % 360) / 360;
-    const glow = Math.max(0, Math.sin(phase * Math.PI * 2));
-    if (glow < 0.62) return;
-    const alpha = Math.pow((glow - 0.62) / 0.38, 2) * 0.68;
-    const x = Math.round(layout.x + star.x * layout.scale);
-    const y = Math.round(layout.y + star.y * layout.scale);
-    const arm = Math.max(2, Math.round(7 * layout.scale));
-    ctx.globalAlpha = alpha;
+    const pulse = Math.pow((1 + Math.sin((now + star.phase) * Math.PI * 2 / 2400)) / 2, 2);
+    const x = layout.x + star.x * layout.scale, y = layout.y + star.y * layout.scale;
+    const arm = (3 + pulse * 10) * layout.scale;
+    ctx.globalAlpha = .16 + pulse * .84;
     ctx.fillStyle = star.color;
-    ctx.fillRect(x - arm, y, arm * 2 + 1, 1);
-    ctx.fillRect(x, y - arm, 1, arm * 2 + 1);
-    ctx.fillRect(x - 1, y - 1, 3, 3);
-    ctx.globalAlpha = 1;
+    ctx.fillRect(x - arm, y - layout.scale, arm * 2, layout.scale * 2);
+    ctx.fillRect(x - layout.scale, y - arm, layout.scale * 2, arm * 2);
+    ctx.fillRect(x - 2 * layout.scale, y - 2 * layout.scale, 4 * layout.scale, 4 * layout.scale);
   });
+  ctx.restore();
 }
 
 function drawTitleMenu(layout) {
