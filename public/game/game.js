@@ -197,8 +197,7 @@ const titleTwinkles = [
   { x: 1070, y: 40, phase: 1100, color: "#e2eeff" },
   { x: 1280, y: 100, phase: 1480, color: "#ffffff" },
   { x: 1390, y: 225, phase: 1860, color: "#fff5d9" },
-  { x: 170, y: 350, phase: 220, color: "#e2eeff" },
-  { x: 1120, y: 330, phase: 960, color: "#e9dcff" }
+
 ];
 const TITLE_BACKGROUND_FRAME = 1;
 
@@ -6960,17 +6959,24 @@ function titleImageLayout() {
 function drawTitleAtmosphere(layout, now) {
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
   ctx.save();
-  const lamps = [[50, 620], [459, 700], [1136, 730], [1262, 661], [1358, 779], [1390, 768]];
+  // Measured light cores on title-idle-1.webp (1536 x 1024).
+  const lamps = [[29.4, 610.7], [137, 538.7], [307.6, 625.7], [406.8, 615.9], [483.9, 657.8], [1207.1, 689.5], [1318.3, 720.9], [1438.5, 736.3], [1291.8, 413]];
   lamps.forEach(([lx, ly], index) => {
     const shimmer = (1 + Math.sin(now / 340 + index * 1.8)) / 2;
-    const x = layout.x + lx * layout.scale, y = layout.y + ly * layout.scale;
-    const radius = 26 * layout.scale;
+    const x = layout.x + lx / 1536 * layout.width, y = layout.y + ly / 1024 * layout.height;
+    const radius = 15 / 1536 * layout.width;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
     glow.addColorStop(0, 'rgba(255, 220, 132, ' + (.12 + shimmer * .78) + ')');
     glow.addColorStop(.35, 'rgba(255, 174, 58, ' + shimmer * .32 + ')');
     glow.addColorStop(1, 'rgba(255, 170, 68, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    const arm = (2 + shimmer * 5) / 1536 * layout.width;
+    ctx.globalAlpha = .2 + shimmer * .6;
+    ctx.fillStyle = "#fff0c2";
+    ctx.fillRect(x - arm, y - .5, arm * 2, 1);
+    ctx.fillRect(x - .5, y - arm, 1, arm * 2);
+    ctx.globalAlpha = 1;
   });
   // A visible but occasional shooting star, alternating sides every six seconds.
   const elapsed = now % 6000;
