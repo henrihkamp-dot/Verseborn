@@ -6931,6 +6931,7 @@ function drawTitle(now = performance.now()) {
   const layout = titleImageLayout();
   const fixedBackground = titleIdleFrames[0] || titleImage;
   ctx.drawImage(fixedBackground, layout.x, layout.y, layout.width, layout.height);
+  drawTitleAtmosphere(layout, now);
   drawTitleMenu(layout);
   ctx.restore();
 }
@@ -6948,6 +6949,36 @@ function titleImageLayout() {
     height: drawHeight,
     scale
   };
+}
+
+function drawTitleAtmosphere(layout, now) {
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  ctx.save();
+  const lamps = [[108, 474], [218, 589], [347, 648], [1097, 577], [1240, 621], [1325, 449]];
+  lamps.forEach(([lx, ly], index) => {
+    const shimmer = Math.sin(now / 780 + index * 2.1) * .5 + Math.sin(now / 237 + index) * .15;
+    const x = layout.x + lx * layout.scale, y = layout.y + ly * layout.scale;
+    const radius = 12 * layout.scale;
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    glow.addColorStop(0, 'rgba(255, 220, 132, ' + (.11 + shimmer * .05) + ')');
+    glow.addColorStop(1, 'rgba(255, 170, 68, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+  });
+  // A short, faint streak in the sky, once per eighteen seconds.
+  const elapsed = (now + 11500) % 18000;
+  if (elapsed < 1000) {
+    const progress = elapsed / 1000;
+    ctx.globalAlpha = Math.sin(progress * Math.PI) * .35;
+    ctx.strokeStyle = '#d8d7ff';
+    ctx.lineWidth = Math.max(.6, layout.scale);
+    ctx.beginPath();
+    const x = 1185 + progress * 155, y = 23 + progress * 67;
+    ctx.moveTo(layout.x + (x - 22) * layout.scale, layout.y + (y - 9) * layout.scale);
+    ctx.lineTo(layout.x + x * layout.scale, layout.y + y * layout.scale);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawTitleTwinkles(layout) {
