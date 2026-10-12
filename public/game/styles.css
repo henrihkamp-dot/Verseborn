@@ -2303,16 +2303,16 @@ canvas:focus {
 .battle-result-rewards {
   position: absolute;
   z-index: 2;
-  left: 27%;
-  right: 24%;
-  top: 52%;
-  bottom: 14%;
-  padding: 2px 5px;
+  left: 25%;
+  right: 25%;
+  top: 50%;
+  bottom: 17%;
+  padding: 4px 8px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #a57a42 #11101a;
-  background: #11101af5;
-  border-inline: 1px solid #7e603d;
+  background: #121019;
+  border: 0;
 }
 
 .battle-result-row {

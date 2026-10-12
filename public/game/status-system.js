@@ -380,17 +380,12 @@
     });
     return template.innerHTML;
   };
-  const oldTooltip = statusTooltipHtml, oldDisplay = statusDisplayData, oldRecord = recordDamageMeterAction;
+  const oldDisplay = statusDisplayData, oldRecord = recordDamageMeterAction;
   statusDisplayData = (unit, status) => {
     const data = oldDisplay(unit, status);
     if (['hubStrengthDown', 'hubMagicDown'].includes(status.type)) data.description = `Outgoing ${status.type === 'hubStrengthDown' ? 'STR' : 'MAG'} damage reduced by ${Math.round(statusValue(unit, status.type) * 100)}%.`;
     const origin = status.origins?.length > 1 ? 'Ability + Gear' : status.origin === 'gear' ? 'Gear' : 'Ability';
     return STATUS_DEFS[status.type]?.negative && status.origin ? { ...data, kind: origin + ' / Debuff' } : data;
-  };
-  statusTooltipHtml = unit => {
-    const html = oldTooltip(unit); if (unit.id || !unit.stats) return html;
-    const profile = enemyProfile(unit);
-    return html + `<section><b>Status identity</b><small>${tracked.map(type => `${title(type)}: ${profile[type] === 0 ? 'immune' : profile[type] < 1 ? Math.round((1 - profile[type]) * 100) + '% resistance' : profile[type] > 1 ? '+' + Math.round((profile[type] - 1) * 100) + '% susceptibility' : 'normal'}`).join(' / ')}</small></section>`;
   };
   recordDamageMeterAction = message => {
     oldRecord(message);
