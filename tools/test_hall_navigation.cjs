@@ -19,3 +19,12 @@ Object.assign(api.player,{x:315.7,y:185.3});assert.ok(api.navigate(448,86),'off-
 travel([200.09257945774928,85.90742054225072],[224,168],'off-grid left stairs down');
 console.log('PASS all obstacle footprints, wall boundaries and off-grid start');
 
+
+for(const [x,y] of [[425,32],[425,50],[425,75],[207,32],[207,75],[240,40],[390,40],[320,25],[257,160],[373,160]])assert.equal(api.collision(x,y),true,'painted wall or lamp base must block '+x+','+y);
+for(const [start,pressed] of [[[440,86],['ArrowUp']],[[228,88],['ArrowUp']],[[395,185],['ArrowUp','ArrowLeft']],[[235,185],['ArrowUp','ArrowRight']]]){
+  Object.assign(api.player,{x:start[0],y:start[1]});assert.equal(api.collision(...start),false);api.navigate(...start);for(const key of pressed)api.keys.add(key);
+  for(let i=0;i<300;i++){now+=1000/30;api.update(now);assert.equal(api.collision(api.player.x,api.player.y),false,'keyboard motion stays outside obstacles');}
+  api.keys.clear();
+}
+console.log('PASS reported upper wall and lamp positions; keyboard presses cannot enter them');
+
