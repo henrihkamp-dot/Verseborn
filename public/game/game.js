@@ -172,13 +172,15 @@ let developerGearLoadout = null;
 const developerGearInstances = new Map();
 let audioContext = null;
 let screenSlide = null;
-let titleMenuIndex = 0;
+let titleMenuIndex = 1;
 let titleSubmenuIndex = 0;
 let titleMenuState = "main";
 let activeSaveSlot = 1;
 let saveTimer = null;
 
-const titleMenuEntries = ["Story Mode", "Ember Hall"];
+const titleMenuEntries = ["Ember Hall"];
+// Preserve mode IDs and save keys while Story Mode is temporarily hidden.
+const titleModeIndices = [1];
 const saveSlotEntries = ["Save Slot 1", "Save Slot 2", "Back"];
 const titleSubmenuEntries = [
   ["New", "Continue", "Back"],
@@ -6966,10 +6968,6 @@ function drawTitleTwinkles(layout) {
 }
 
 function drawTitleMenu(layout) {
-  const portraitTouchMain = titleMenuState === "main"
-    && document.documentElement?.classList.contains("touch-phone")
-    && document.documentElement?.classList.contains("touch-portrait");
-  if (portraitTouchMain) return;
   const sx = value => Math.round(layout.x + value * layout.scale);
   const sy = value => Math.round(layout.y + value * layout.scale);
   const panelX = sx(570);
@@ -6983,8 +6981,8 @@ function drawTitleMenu(layout) {
   ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
 
   const entries = titleMenuEntriesForState();
-  const selectedIndex = titleMenuState === "main" ? titleMenuIndex : titleSubmenuIndex;
-  const startY = entries.length === 2 ? 468 : 449;
+  const selectedIndex = titleMenuState === "main" ? titleModeIndices.indexOf(titleMenuIndex) : titleSubmenuIndex;
+  const startY = entries.length === 1 ? 492 : entries.length === 2 ? 468 : 449;
   const fontSize = Math.max(14, Math.round(30 * layout.scale));
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -7045,7 +7043,8 @@ function titleMenuEntriesForState() {
 function moveTitleSelection(direction) {
   if (!runtimeAssetsReady) return;
   if (titleMenuState === "main") {
-    titleMenuIndex = (titleMenuIndex + direction + titleMenuEntries.length) % titleMenuEntries.length;
+    const visibleIndex = titleModeIndices.indexOf(titleMenuIndex);
+    titleMenuIndex = titleModeIndices[(visibleIndex + direction + titleModeIndices.length) % titleModeIndices.length];
   } else {
     const submenu = titleMenuEntriesForState();
     titleSubmenuIndex = (titleSubmenuIndex + direction + submenu.length) % submenu.length;
@@ -7200,7 +7199,7 @@ function titleMenuPointerTarget(event) {
   const sourceY = (canvasY - layout.y) / layout.scale;
   if (sourceX >= 570 && sourceX <= 880) {
     const entries = titleMenuEntriesForState();
-    const startY = entries.length === 2 ? 468 : 449;
+    const startY = entries.length === 1 ? 492 : entries.length === 2 ? 468 : 449;
     for (let index = 0; index < entries.length; index++) {
       if (sourceY >= startY + index * 49 && sourceY <= startY + index * 49 + 43) {
         return { kind: titleMenuState === "main" ? "mode" : "action", index };
@@ -15432,7 +15431,7 @@ canvas.addEventListener("click", event => {
   if (mode === "title") {
     const target = titleMenuPointerTarget(event);
     if (target?.kind === "mode") {
-      titleMenuIndex = target.index;
+      titleMenuIndex = titleModeIndices[target.index];
       titleSubmenuIndex = 0;
       openTitleSubmenu();
     } else if (target?.kind === "action") {
