@@ -11315,6 +11315,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         const weaknessHit = skillHitsElementWeakness(hitTarget, sk);
         const breakGain = canGenerateBreak(u) ? (sk.staggerPower || (weaknessHit ? 2 : 1))
+          + (window.HallHub?.shadowBreakBonus(u, sk) || 0)
           + typedTalentValue(u.id, "staggerBonus")
           + (sk.rank0Break || 0)
           + (u.id === "Seerin" && sk.anim === "ultimate" && hitTarget === target ? typedTalentValue(u.id, "flameguardCharge") : 0)

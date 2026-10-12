@@ -204,7 +204,7 @@
       "keen",
       "quickstart"
     ],
-    "ability": "Successfully intercepting a hit or blocking with Personal Guard grants 12% Strength Up for 2 actions, reinforcing Earth attacks.",
+    "ability": "Torren’s damaging Earth abilities generate 1 additional Break per target, once per action. Works with Foundation Break and his other Earth attacks.",
     "legacy": "Ring of the Mountain Within",
     "desc": "The mountain remembers every blow. Guard your allies while his foundations threaten to split the Hall."
   },
@@ -297,6 +297,9 @@
     source.shadowActionContext = { resonance: state.resonance, enemyResonance: battle.enemyResonance, support: !skillTargetsEnemies(sk) || sk.power < 0, offensive: offensiveShadowSkill(sk), ready: Boolean(source.shadowUniqueReady), success: false };
     if (hasShadowRing(source) && source.shadowUniqueReady && (source.id === 'Verseborn' && source.shadowActionContext.support || source.id === 'Seerin' && source.shadowActionContext.offensive || source.id === 'Sparky' && source.shadowActionContext.offensive || source.id === 'Glimmer' && source.shadowActionContext.offensive && sk.element === 'Tech')) delete source.shadowUniqueReady;
   }
+  function shadowBreakBonus(source, sk) {
+    return source?.id === 'Torren' && hasShadowRing(source) && offensiveShadowSkill(sk) && sk.element === 'Earth' ? 1 : 0;
+  }
   function shadowDamageBonus(source, sk, target) {
     if (!hasShadowRing(source) || !offensiveShadowSkill(sk)) return 0;
     if (source.id === 'Mira') return statusOf(target,'silence') || statusOf(target,'shadowExposed') ? .12 : 0;
@@ -322,10 +325,6 @@
   function shadowDefended(unit, guarded, intercepted, partyGuard, damage) {
     if (!hasShadowRing(unit) || damage <= 0 || unit.hp <= 0) return;
     if (unit.id === 'Seerin' && (guarded || intercepted || partyGuard)) unit.shadowUniqueReady = true;
-    if (unit.id === 'Torren' && (guarded || intercepted)) {
-      const current = statusOf(unit,'strengthUp');
-      applyStatus(unit,'strengthUp',unit,{ force:true,value:Math.max(.12,current?.value || 0),duration:Math.max(2,current?.remaining || 0) });
-    }
   }
   const oldShadowStatus = applyStatus;
   applyStatus = (target,type,source,options) => {
@@ -1071,7 +1070,7 @@
     }
     ctx.restore();
   }
-  window.HallHub = { meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
+  window.HallHub = { meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowBreakBonus, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
   const duelQa = new URLSearchParams(location.search);
   if (['hallduel','duelselect'].includes(duelQa.get('qa'))) loadDuelArt().then(() => {
     state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = duelQa.get('recruits') ? duelQa.get('recruits').split(',').filter(id => Object.hasOwn(baseJobs,id)) : Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';
