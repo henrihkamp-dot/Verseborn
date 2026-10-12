@@ -5216,10 +5216,16 @@ function maximizeGearAssignments(weights) {
   return assignment;
 }
 
-function assignGearRef(id, slot, ref) {
+function equippedGearLocked(id, slot) {
+  const ref = baseJobs[id]?.gear?.[slot];
+  return Boolean(ref && state.favoriteGear[ref]);
+}
+
+function assignGearRef(id, slot, ref, preserveLocks = false) {
   const hero = baseJobs[id];
   if (!hero || !Object.hasOwn(hero.gear, slot)) return false;
   const currentRef = hero.gear[slot] || null;
+  if (preserveLocks && equippedGearLocked(id, slot)) return false;
   if (!ref) {
     hero.gear[slot] = null;
     return currentRef !== null;
@@ -5229,7 +5235,8 @@ function assignGearRef(id, slot, ref) {
   const holders = state.party.filter(heroId => heroId !== id && baseJobs[heroId].gear[slot] === ref);
   const usedCopies = state.party.filter(heroId => baseJobs[heroId].gear[slot] === ref).length;
   if (holders.length && usedCopies >= gearCopyCount(ref)) {
-    const otherId = holders[0];
+    const otherId = holders.find(holder => !preserveLocks || !equippedGearLocked(holder, slot));
+    if (!otherId) return false;
     const currentGear = gearByName(currentRef);
     baseJobs[otherId].gear[slot] = currentGear && canEquip(otherId, currentGear) ? currentRef : null;
   }
@@ -5242,13 +5249,15 @@ function autoEquipHero(id, pool = autoEquipPool) {
   if (!state.party.includes(id)) return false;
   let changed = false;
   Object.keys(baseJobs[id].gear).forEach(slot => {
+    if (equippedGearLocked(id, slot)) return;
     const tokens = gearInventoryTokens(slot).filter(token => canEquip(id, token.gear)
+      && (!token.equippedBy || !equippedGearLocked(token.equippedBy, slot))
       && (pool === "all" || !token.equippedBy || token.equippedBy === id));
     const current = baseJobs[id].gear[slot];
     const candidates = [...tokens, { id: `empty:${slot}`, ref: null, gear: null, equippedBy: null }]
       .sort((a, b) => autoEquipGearScore(id, slot, b.ref) - autoEquipGearScore(id, slot, a.ref));
     const best = candidates[0]?.ref || null;
-    if (best !== current) changed = assignGearRef(id, slot, best) || changed;
+    if (best !== current) changed = assignGearRef(id, slot, best, true) || changed;
   });
   state.party.forEach(clampHeroVitals);
   return changed;
@@ -5260,16 +5269,18 @@ function autoEquipParty(pool = autoEquipPool) {
   if (!heroes.length) return false;
   let changed = false;
   Object.keys(baseJobs[heroes[0]].gear).forEach(slot => {
-    const tokens = gearInventoryTokens(slot);
-    const choices = [...tokens, ...heroes.map((id, index) => ({ id: `empty:${slot}:${index}`, ref: null, gear: null, equippedBy: null }))];
-    const weights = heroes.map(id => choices.map(choice => {
+    const unlockedHeroes = heroes.filter(id => !equippedGearLocked(id, slot));
+    if (!unlockedHeroes.length) return;
+    const tokens = gearInventoryTokens(slot).filter(token => !token.equippedBy || !equippedGearLocked(token.equippedBy, slot));
+    const choices = [...tokens, ...unlockedHeroes.map((id, index) => ({ id: `empty:${slot}:${index}`, ref: null, gear: null, equippedBy: null }))];
+    const weights = unlockedHeroes.map(id => choices.map(choice => {
       if (choice.gear && !canEquip(id, choice.gear)) return -1e9;
       if (pool === "unequipped" && choice.equippedBy && choice.equippedBy !== id) return -1e9;
       return autoEquipGearScore(id, slot, choice.ref);
     }));
     const assignment = maximizeGearAssignments(weights);
-    const next = heroes.map((id, index) => choices[assignment[index]]?.ref || null);
-    heroes.forEach((id, index) => {
+    const next = unlockedHeroes.map((id, index) => choices[assignment[index]]?.ref || null);
+    unlockedHeroes.forEach((id, index) => {
       if (baseJobs[id].gear[slot] !== next[index]) changed = true;
       baseJobs[id].gear[slot] = next[index];
     });
@@ -14242,7 +14253,7 @@ function bindGearHoverTooltips(root = el.menuBody) {
 }
 
 function favoriteGearButton(ref) {
-  return `<label class="gear-favorite"><input type="checkbox" data-favorite="${ref}" ${state.favoriteGear[ref] ? "checked" : ""}> Lock favorite</label>`;
+  return `<label class="gear-favorite"><input type="checkbox" data-favorite="${ref}" ${state.favoriteGear[ref] ? "checked" : ""}> Lock gear (keep equipped)</label>`;
 }
 
 function renderMenu() {
