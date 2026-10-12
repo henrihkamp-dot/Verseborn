@@ -8555,6 +8555,13 @@ function enemyAnimationSheetFor(e) {
   return key ? enemyAnimationSheets[key] : null;
 }
 
+// Match each idle frame's opaque foot band to frame zero's anchor.
+// Offsets are source pixels; attack and death rows keep their original placement.
+const enemyIdleFrameOffsets = {
+  "Koru-Vak, the Iron Oathkeeper": [[0, 0], [28, -1], [16, -1], [3, -1]],
+  "Lady Morvanna": [[0, 0], [18, -1], [14, -1], [18, 0]]
+};
+
 function drawAnimatedEnemy(e, px, py) {
   const key = enemyAnimationKey(e);
   const sheet = key ? enemyAnimationSheets[key] : null;
@@ -8586,8 +8593,9 @@ function drawAnimatedEnemy(e, px, py) {
   );
   const width = Math.max(1, Math.round(sheet.cellWidth * scale));
   const height = Math.max(1, Math.round(sheet.cellHeight * scale));
-  const destX = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
-  const destY = Math.max(2, Math.round(baseline - sheet.baseline * scale));
+  const idleOffset = animation === "idle" ? enemyIdleFrameOffsets[key]?.[column] : null;
+  const destX = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2))) + Math.round((idleOffset?.[0] || 0) * scale);
+  const destY = Math.max(2, Math.round(baseline - sheet.baseline * scale)) + Math.round((idleOffset?.[1] || 0) * scale);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(
