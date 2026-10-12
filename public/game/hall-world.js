@@ -15,14 +15,15 @@
   // implicit floor merely because they are absent from a furniture rectangle.
   const floors=[
     [[224,138],[416,138],[416,343],[224,343]],
-    [[220,36],[420,36],[420,66],[220,66]],
+    // Connected upper landing behind the machine's railing.
+    [[189,53],[220,36],[420,36],[450,53],[450,92],[422,92],[410,67],[230,67],[218,92],[189,92]],
     [[253,120],[264,105],[285,99],[345,99],[366,105],[379,120],[374,137],[351,149],[279,149],[256,137]],
     [[220,106],[252,106],[252,206],[220,206]],
     [[389,106],[428,106],[428,206],[389,206]],
     [[20,53],[192,53],[192,94],[20,94]],
-    [[189,86],[205,86],[232,111],[239,111],[239,140],[224,140],[199,111],[189,100]],
+    [[189,82],[210,82],[242,106],[242,142],[214,142],[214,116],[189,101]],
     [[438,53],[620,53],[620,92],[438,92]],
-    [[435,86],[450,86],[450,100],[424,128],[400,140],[400,114],[423,105]],
+    [[430,82],[451,82],[451,101],[426,119],[426,142],[398,142],[398,108]],
     [[20,156],[169,156],[169,190],[20,190]],
     [[160,177],[187,167],[194,150],[214,157],[244,179],[244,207],[194,192],[160,190]],
     [[441,177],[463,178],[473,187],[473,191],[442,191],[410,206],[397,184]],
@@ -44,6 +45,18 @@
     [197,220,19,62],[421,220,19,62],
     [239,85,13,51],[381,85,15,51],[251,80,130,17],
     [250,143,40,12],[339,143,40,12]
+  ];
+  // Footprints at floor level, rather than the tall foliage or pillar artwork.
+  const obstacles=[
+    {x:229,y:279,rx:11,ry:11},{x:410,y:279,rx:11,ry:11},
+    {x:263,y:182,rx:10,ry:7},{x:367,y:182,rx:10,ry:7},
+    {x:219,y:56,rx:9,ry:6},{x:240,y:56,rx:9,ry:6},
+    {x:391,y:56,rx:9,ry:6},{x:410,y:56,rx:8,ry:6},
+    {x:205,y:65,rx:9,ry:7},{x:425,y:65,rx:9,ry:7},
+    {x:211,y:162,rx:10,ry:9},{x:419,y:162,rx:10,ry:9},
+    {x:228,y:103,rx:8,ry:5},{x:401,y:103,rx:8,ry:5},
+    {x:257,y:176,rx:7,ry:6},{x:373,y:176,rx:7,ry:6},
+    {x:226,y:263,rx:7,ry:6},{x:413,y:263,rx:7,ry:6}
   ];
   const ready=Promise.all(['Verseborn',...actors.map(a=>a.id),'hall','effects','hearths'].map(name=>new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error(name+' asset missing'));image.src='assets/hall/'+(['hall','effects','hearths'].includes(name)?name:name.toLowerCase()+'-clean-v3')+'.webp';
@@ -79,26 +92,47 @@
     return inside;
   }
   const onFloor=(x,y)=>floors.some(points=>inPolygon(x,y,points));
-  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||((x-resonance.x)/41)**2+((y-126)/18)**2<1;
+  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/41)**2+((y-126)/18)**2<1;
   function clearSegment(ax,ay,bx,by){
     const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.5);
     for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;
     return true;
   }
-  function navigate(x,y,actor=null){
-    const step=2,start=[Math.round(player.x/step),Math.round(player.y/step)],goal=[Math.round(x/step),Math.round(y/step)];
-    const key=([a,b])=>a+','+b,queue=[start],previous=new Map([[key(start),null]]);
-    let end=null;
-    for(let i=0;i<queue.length;i++){
-      const cell=queue[i];if(Math.hypot(cell[0]-goal[0],cell[1]-goal[1])<=1){end=cell;break;}
-      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
-        const next=[cell[0]+dx,cell[1]+dy],k=key(next);
-        if(previous.has(k)||next[0]<1||next[0]>=W/step||next[1]<1||next[1]>=H/step||collision(next[0]*step,next[1]*step)||!clearSegment(cell[0]*step,cell[1]*step,next[0]*step,next[1]*step))continue;
-        previous.set(k,cell);queue.push(next);
-      }
+  // Cache the floor grid and safe diagonal edges; clicks only search its reachable component.
+  const navStep=2,navCols=W/navStep,navRows=H/navStep,navNodes=new Map();
+  const nodeKey=(x,y)=>y*navCols+x;
+  for(let y=1;y<navRows;y++)for(let x=1;x<navCols;x++){
+    if(!collision(x*navStep,y*navStep))navNodes.set(nodeKey(x,y),{x:x*navStep,y:y*navStep,edges:[]});
+  }
+  for(const [key,node] of navNodes){
+    const gx=node.x/navStep,gy=node.y/navStep;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
+      const nextKey=nodeKey(gx+dx,gy+dy),next=navNodes.get(nextKey);
+      if(next&&clearSegment(node.x,node.y,next.x,next.y))node.edges.push(nextKey);
     }
-    pendingActor=end?actor:null;route=[];while(end&&previous.get(key(end))){route.unshift({x:end[0]*step,y:end[1]*step});end=previous.get(key(end));}
-    target=route.shift()||null;
+  }
+  function navigate(x,y,actor=null){
+    if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+    let start=null,startDistance=Infinity;
+    // The saved/player position need not be an exact grid point.
+    for(const [key,node] of navNodes){
+      const distance=Math.hypot(node.x-player.x,node.y-player.y);
+      if(distance<startDistance&&distance<=4&&clearSegment(player.x,player.y,node.x,node.y)){start=key;startDistance=distance;}
+    }
+    if(start===null)return false;
+    const queue=[start],previous=new Map([[start,null]]);
+    let end=null,bestDistance=Infinity;
+    for(let i=0;i<queue.length;i++){
+      const key=queue[i],node=navNodes.get(key),distance=Math.hypot(node.x-x,node.y-y);
+      if(distance<bestDistance){end=key;bestDistance=distance;}
+      if(distance<.5)break;
+      for(const next of node.edges)if(!previous.has(next)){previous.set(next,key);queue.push(next);}
+    }
+    // Snap near-edge clicks to reachable floor, never to a distant room through a wall.
+    if(bestDistance>18)return false;
+    const path=[];
+    for(let key=end;key!==null;key=previous.get(key)){const node=navNodes.get(key);path.unshift({x:node.x,y:node.y});}
+    route=path;target=route.shift()||null;pendingActor=actor;
     return Boolean(target);
   }
   function drawActor(actor,row,col){
@@ -237,7 +271,7 @@
     if(dx||dy){target=null;route=[];pendingActor=null;}
     let distance=Infinity;
     if(!dx&&!dy&&target){
-      while(target&&Math.hypot(target.x-player.x,target.y-player.y)<.2)target=route.shift()||null;
+      while(target&&Math.hypot(target.x-player.x,target.y-player.y)<.000001)target=route.shift()||null;
       if(target){dx=target.x-player.x;dy=target.y-player.y;distance=Math.hypot(dx,dy);}
     }
     const length=Math.hypot(dx,dy)||1,step=Math.min(65*dt,distance);
@@ -249,8 +283,12 @@
     const count=Math.max(1,Math.ceil(step/.75));
     for(let i=0;i<count;i++){
       const sx=player.x+dx/length*step/count,sy=player.y+dy/length*step/count;
-      if(!collision(sx,player.y)){moved||=sx!==player.x;player.x=sx;}
-      if(!collision(player.x,sy)){moved||=sy!==player.y;player.y=sy;}
+      // Follow the validated diagonal itself; axis-first movement can snag at stair edges.
+      if(!collision(sx,sy)){moved||=sx!==player.x||sy!==player.y;player.x=sx;player.y=sy;}
+      else if(!target){
+        if(!collision(sx,player.y)){moved||=sx!==player.x;player.x=sx;}
+        if(!collision(player.x,sy)){moved||=sy!==player.y;player.y=sy;}
+      }
     }
     if(target&&!moved){target=null;route=[];pendingActor=null;}
     if(moved){
@@ -320,11 +358,11 @@
     else if(Math.abs(x-resonance.x)<resonance.width/2&&y>resonance.y-resonance.height&&y<resonance.y){
       if(nearby()?.id===resonance.id)trigger(resonance);else navigate(resonance.approach.x,resonance.approach.y,resonance);
     }
-    else if(!collision(x,y))navigate(x,y);
+    else navigate(x,y);
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={player,actors,resonance,walls,floors,collision,images,trigger,navigate,nearby,residents,get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
