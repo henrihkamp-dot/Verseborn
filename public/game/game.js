@@ -153,6 +153,7 @@ function syncResponsiveDevice() {
 
 function syncResponsiveMode() {
   if (document.body?.dataset.playMode !== mode) document.body.dataset.playMode = mode;
+  document.body?.classList.toggle("frameless-hall", mode === "title" || state.gameMode === "hallBattles" && mode !== "battle");
 }
 let battle = null;
 let effect = null;
@@ -8586,8 +8587,18 @@ function enemyAnimationSheetFor(e) {
 // Match each idle frame's opaque foot band to frame zero's anchor.
 // Offsets are source pixels; attack and death rows keep their original placement.
 const enemyIdleFrameOffsets = {
-  "Koru-Vak, the Iron Oathkeeper": [[0, 0], [28, -1], [16, -1], [3, -1]],
-  "Lady Morvanna": [[0, 0], [18, -1], [14, -1], [18, 0]]
+  "Koru-Vak, the Iron Oathkeeper": [[0, 0], [24.5, 0], [18.5, -1], [8, -1]],
+  "Lady Morvanna": [[0, 0], [18, -1], [14, -1], [18, 0]],
+  "Brokk": [[0, 0], [17, 1], [-4, 0], [-7, 0]]
+};
+
+// Align the planted boot through action rows too; spell effects are not ground anchors.
+const enemyActionFrameOffsets = {
+  "Koru-Vak, the Iron Oathkeeper": {
+    melee: [[7.5, 4], [8.5, 4], [9, 2], [10, 2]],
+    magic: [[11.5, -5], [26.5, 1], [-4, -4], [-1.5, -2]],
+    ultimate: [[8.5, 22], [13.5, 21], [-1.5, 19], [36, 18]]
+  }
 };
 
 function drawAnimatedEnemy(e, px, py) {
@@ -8621,7 +8632,7 @@ function drawAnimatedEnemy(e, px, py) {
   );
   const width = Math.max(1, Math.round(sheet.cellWidth * scale));
   const height = Math.max(1, Math.round(sheet.cellHeight * scale));
-  const idleOffset = animation === "idle" ? enemyIdleFrameOffsets[key]?.[column] : null;
+  const idleOffset = animation === "idle" ? enemyIdleFrameOffsets[key]?.[column] : enemyActionFrameOffsets[key]?.[animation]?.[column];
   const destX = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2))) + Math.round((idleOffset?.[0] || 0) * scale);
   const destY = Math.max(2, Math.round(baseline - sheet.baseline * scale)) + Math.round((idleOffset?.[1] || 0) * scale);
   ctx.save();

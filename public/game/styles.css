@@ -7476,3 +7476,8 @@ html:not(.touch-layout) .menu {
 .gear-bulk-actions h4 { grid-column: 1 / -1; margin: 0 0 4px; color: #f4cf87; font-size: 12px; }
 .gear-bulk-actions button { width: 100%; min-width: 0; min-height: 36px; white-space: normal; }
 @media(max-width: 700px) { .gear-bulk-actions { grid-template-columns: 1fr; } }
+
+/* Let the title and Ember Hall artwork fill the screen without a frame or location strip. */
+body.frameless-hall .game { border: 0; box-shadow: none; }
+body.frameless-hall .hud { display: none; }
+body.frameless-hall canvas:focus { box-shadow: none; }
