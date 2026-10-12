@@ -8533,6 +8533,7 @@ function drawBattleAmbient(arenaId) {
 function battleOffset(u) {
   if (!u.flash) return 0;
   u.flash--;
+  if (enemyAnimationKey(u) === "Koru-Vak, the Iron Oathkeeper" && u.anim !== "attack" && u.hp > 0) return 0;
   return Math.sin(tick * 2.4) * 3;
 }
 
@@ -8592,15 +8593,6 @@ const enemyIdleFrameOffsets = {
   "Brokk": [[0, 0], [17, 1], [-4, 0], [-7, 0]]
 };
 
-// Align the planted boot through action rows too; spell effects are not ground anchors.
-const enemyActionFrameOffsets = {
-  "Koru-Vak, the Iron Oathkeeper": {
-    melee: [[7.5, 4], [8.5, 4], [9, 2], [10, 2]],
-    magic: [[11.5, -5], [26.5, 1], [-4, -4], [-1.5, -2]],
-    ultimate: [[8.5, 22], [13.5, 21], [-1.5, 19], [36, 18]]
-  }
-};
-
 function drawAnimatedEnemy(e, px, py) {
   const key = enemyAnimationKey(e);
   const sheet = key ? enemyAnimationSheets[key] : null;
@@ -8632,7 +8624,7 @@ function drawAnimatedEnemy(e, px, py) {
   );
   const width = Math.max(1, Math.round(sheet.cellWidth * scale));
   const height = Math.max(1, Math.round(sheet.cellHeight * scale));
-  const idleOffset = animation === "idle" ? enemyIdleFrameOffsets[key]?.[column] : enemyActionFrameOffsets[key]?.[animation]?.[column];
+  const idleOffset = animation === "idle" ? enemyIdleFrameOffsets[key]?.[column] : null;
   const destX = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2))) + Math.round((idleOffset?.[0] || 0) * scale);
   const destY = Math.max(2, Math.round(baseline - sheet.baseline * scale)) + Math.round((idleOffset?.[1] || 0) * scale);
   ctx.save();
