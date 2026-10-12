@@ -342,13 +342,279 @@
     });
     return true;
   }
+  const duelArt = {
+  "Seerin": {
+    "file": "seerin.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 131,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "seerin-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 133,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Sparky": {
+    "file": "sparky.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 140,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "sparky-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 145,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Glimmer": {
+    "file": "glimmer.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 121,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "glimmer-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 138,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Torren": {
+    "file": "torren.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 140,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "torren-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 154,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Mira": {
+    "file": "mira.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 146,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "mira-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 151,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Verseborn": {
+    "file": "verseborn.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 138,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "verseborn-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 147,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Kael": {
+    "file": "kael.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 130,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "kael-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 149,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  }
+};
+  let duelArtPromise;
+  function loadDuelArt() {
+    return duelArtPromise ||= Promise.all(Object.values(duelArt).flatMap(sheet => [sheet, sheet.vfx]).map(sheet => new Promise(resolve => {
+      const image = new Image(); image.onload = () => { sheet.image = image; resolve(); }; image.onerror = () => resolve();
+      image.src = 'assets/sprites/hall-duels/' + sheet.file;
+    })));
+  }
+  function drawDuelOpponent(unit, x, y) {
+    const sheet = duelArt[unit.sparringId];
+    if (!battle?.sparring || state.gameMode !== 'hallBattles' || !sheet?.image) return false;
+    const dying = unit.hp <= 0 || unit.anim === 'death', attacking = unit.anim === 'attack';
+    const animation = dying ? 'death' : attacking ? unit.attackStyle === 'ultimate' ? 'ultimate' : unit.attackStyle === 'melee' ? 'melee' : 'magic' : 'idle';
+    const column = dying ? Math.min(3, Math.floor(Math.max(0, tick - (unit.deathTick ?? tick)) / 5)) : attacking ? Math.min(3, Math.floor((unit.animTick || 0) / 6)) : [0,1,2,3,2,1][Math.floor((tick + unit.sparringId.length * 3) / 36) % 6];
+    const scale = (battleSpriteHeights[unit.sparringId] || 54) * BATTLE_COMPOSITION_SCALE / sheet.referenceHeight;
+    const width = Math.round(sheet.cellWidth * scale), height = Math.round(sheet.cellHeight * scale);
+    ctx.save(); ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sheet.image, column * sheet.cellWidth, sheet.rowMap[animation] * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, Math.round(x + 8 - width / 2), Math.round(y + 31 - sheet.baseline * scale), width, height); ctx.restore();
+    if (attacking && unit.lastAnimDrawTick !== tick) { unit.animTick = (unit.animTick || 0) + 1; unit.lastAnimDrawTick = tick; }
+    return true;
+  }
+  const oldEnemyAnimationSheetFor = enemyAnimationSheetFor;
+  enemyAnimationSheetFor = unit => battle?.sparring && unit.sparringId && duelArt[unit.sparringId]?.image ? duelArt[unit.sparringId] : oldEnemyAnimationSheetFor(unit);
+  const oldBattleVitals = drawBattleVitals;
+  drawBattleVitals = (unit, x, baseline, enemySide) => oldBattleVitals(unit, x, baseline + (enemySide && battle?.sparring && unit.sparringId ? 8 : 0), enemySide);
+  const oldEnemyEffect = makeEnemyBattleEffect, oldDrawEffect = drawEffect;
+  makeEnemyBattleEffect = (unit, target, action) => {
+    const fx = oldEnemyEffect(unit, target, action);
+    if (battle?.sparring && state.gameMode === 'hallBattles' && unit.sparringId && duelArt[unit.sparringId]?.vfx.image) {
+      fx.hallDuelVfx = unit.sparringId;
+      fx.timing = { ...fx.timing, totalMs: Math.max(fx.timing.totalMs, fx.timing.impactMs + 600) };
+    }
+    return fx;
+  };
+  drawEffect = () => {
+    const fx = effect, sheet = duelArt[fx?.hallDuelVfx]?.vfx;
+    if (!battle?.sparring || !sheet?.image) return oldDrawEffect();
+    const elapsed = performance.now() - fx.startedAt, impact = elapsed >= fx.timing.impactMs;
+    const support = ['buff','cleanse'].includes(fx.actionKind), ultimate = fx.actionKind === 'ultimate';
+    const progress = Math.max(0, Math.min(1, elapsed / Math.max(1, fx.timing.impactMs)));
+    const row = impact ? ultimate ? 2 : 1 : ultimate || support ? 1 : 0;
+    const frame = impact ? Math.min(3, Math.floor((elapsed - fx.timing.impactMs) / 150)) : Math.min(3, Math.floor(progress * 4));
+    const x = support ? fx.toX : impact ? fx.toX : fx.fromX + (fx.toX - fx.fromX) * progress;
+    const y = support ? fx.toY : impact ? fx.toY : fx.fromY + (fx.toY - fx.fromY) * progress;
+    const size = ultimate ? 92 : impact || support ? 64 : 48;
+    ctx.save(); ctx.imageSmoothingEnabled = false;
+    if (elapsed > fx.timing.totalMs - 160) ctx.globalAlpha = Math.max(0, (fx.timing.totalMs - elapsed) / 160);
+    // These projectiles already face left, toward the player's fighter.
+    ctx.drawImage(sheet.image, frame * sheet.cellWidth, row * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, Math.round(x - size / 2), Math.round(y - size / 2), size, size); ctx.restore();
+    fx.t++;
+    if (elapsed >= fx.timing.totalMs) effect = null;
+  };
+
   function renderSparring() {
+    loadDuelArt();
     const hero = state.activeParty[0] || state.party[0];
-    overlay("Seerin's Sparring Area", `<div class="hub-spar-controls"><label>Your fighter<select data-fighter>${state.party.map(id => `<option ${id === hero ? 'selected' : ''}>${id}</option>`).join('')}</select></label><p>1 vs 1 / no EXP or stage progress / practice items returned</p></div><div class="hub-spar-roster">${state.party.map(id => `<article><img src="${menuPortraitSource(id)}" alt="${escaped(id)}"><div><strong>${escaped(id)}</strong><small>Lv ${progressFor(id).level}</small><p>${progress().sparringWins.includes(id) ? 'First-win reward earned / rematches available' : 'First win: ' + escaped(id + "'s Sparring Seal")}</p></div><button type="button" data-spar="${id}">Spar</button></article>`).join('')}</div>`);
+    overlay("Seerin's Sparring Area", `<div class="hub-spar-controls"><label>Your fighter<select data-fighter>${state.party.map(id => `<option ${id === hero ? 'selected' : ''}>${id}</option>`).join('')}</select></label><p>1 vs 1 / no EXP or stage progress / practice items returned</p></div><div class="hub-spar-roster">${state.party.map(id => `<article><img src="assets/sprites/hall-duels/${id.toLowerCase()}-portrait.webp" alt="${escaped(id)}"><div><strong>${escaped(id)}</strong><small>Lv ${progressFor(id).level}</small><p>${progress().sparringWins.includes(id) ? 'First-win reward earned / rematches available' : 'First win: ' + escaped(id + "'s Sparring Seal")}</p></div><button type="button" data-spar="${id}">Spar</button></article>`).join('')}</div>`);
     el.menuBody.querySelectorAll('[data-spar]').forEach(button => button.onclick = () => startSparring(el.menuBody.querySelector('[data-fighter]').value, button.dataset.spar));
   }
   function startSparring(fighter, opponent) {
     if (state.gameMode !== 'hallBattles' || !recruited('Seerin') || !state.party.includes(fighter) || !state.party.includes(opponent) || mode !== 'hallMap') return false;
+    loadDuelArt();
     sparringSnapshot = { activeParty: [...state.activeParty], resonance: state.resonance, fieldWard: state.fieldWard, inventory: { ...state.inventory }, stash: { ...state.stash }, heroes: Object.fromEntries(Object.entries(baseJobs).map(([id, hero]) => [id, { hp: hero.hp, mp: hero.mp }])) };
     const total = oldTotals(opponent);
     state.activeParty = [fighter]; startingSupport = null;
@@ -378,7 +644,7 @@
     const isBuff = chosen.power >= 0 && !skillTargetsEnemies(chosen);
     return { kind: chosen.anim === 'ultimate' ? 'ultimate' : isBuff ? 'buff' : chosen.anim === 'melee' ? 'melee' : 'magic', name: chosen.name, basicAttack: Boolean(chosen.basicAttack), element: chosen.element, scaling: skillScaling(chosen), mpCost: chosen.anim === 'ultimate' ? 0 : skillMpCost(unit.sparringId, chosen, unit), ...(isBuff ? { target: unit } : { coefficient: chosen.coefficient || Math.max(.7, Math.abs(chosen.power) / 20) }), healing: chosen.power < 0, healCoefficient: chosen.coefficient || 1.2, ...(chosen.status ? { status: { ...chosen.status } } : {}), buffs: chosen.buffs, crit: unit.crit };
   };
-  drawEnemy = (unit, x, y) => unit.sparringId ? drawSprite(unit.sparringId, x, y, 1, unit.anim === 'attack' ? unit.attackStyle === 'melee' ? 'melee' : 'magic' : unit.hp <= 0 ? 'death' : 'idle', tick) : oldDrawEnemy(unit, x, y);
+  drawEnemy = (unit, x, y) => drawDuelOpponent(unit, x, y) ? true : unit.sparringId ? drawSprite(unit.sparringId, x, y, 1, unit.anim === 'attack' ? unit.attackStyle === 'melee' ? 'melee' : 'magic' : unit.hp <= 0 ? 'death' : 'idle', tick) : oldDrawEnemy(unit, x, y);
   function finishSparring(result) {
     if (!battle?.sparring || battle.ended || !sparringSnapshot) return false;
     const opponent = battle.sparring.opponent, entries = [];
@@ -417,5 +683,11 @@
     }
     ctx.restore();
   }
-  window.HallHub = { meals, coatings, blessings, services, progress, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle };
+  window.HallHub = { meals, coatings, blessings, services, progress, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
+  const duelQa = new URLSearchParams(location.search);
+  if (['hallduel','duelselect'].includes(duelQa.get('qa'))) loadDuelArt().then(() => {
+    state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';
+    refreshHeroVitals(); updatePanels(); openService('Seerin');
+    if (duelQa.get('qa') === 'hallduel') startSparring(duelQa.get('fighter') || 'Verseborn', duelQa.get('opponent') || 'Seerin');
+  });
 })();

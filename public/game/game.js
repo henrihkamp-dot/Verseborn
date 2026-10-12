@@ -15646,6 +15646,7 @@ if (new URLSearchParams(location.search).has("qa")) {
 }
 
 function runQaChecks() {
+  if (["hallduel", "duelselect"].includes(new URLSearchParams(location.search).get("qa"))) return;
   const results = {};
   const check = (name, pass, detail = "") => { results[name] = { pass: Boolean(pass), detail }; };
   try {

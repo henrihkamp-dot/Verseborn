@@ -1,0 +1,212 @@
+{
+  "Seerin": {
+    "file": "seerin.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 131,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "seerin-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 133,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Sparky": {
+    "file": "sparky.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 140,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "sparky-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 145,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Glimmer": {
+    "file": "glimmer.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 121,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "glimmer-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 138,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Torren": {
+    "file": "torren.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 140,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "torren-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 154,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Mira": {
+    "file": "mira.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 146,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "mira-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 151,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Verseborn": {
+    "file": "verseborn.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 138,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "verseborn-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 147,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  },
+  "Kael": {
+    "file": "kael.webp",
+    "columns": 4,
+    "rows": 5,
+    "cellWidth": 192,
+    "cellHeight": 208,
+    "baseline": 196,
+    "referenceHeight": 130,
+    "rowMap": {
+      "idle": 0,
+      "melee": 1,
+      "magic": 2,
+      "ultimate": 3,
+      "death": 4
+    },
+    "vfx": {
+      "file": "kael-vfx.webp",
+      "columns": 4,
+      "rows": 3,
+      "cellWidth": 208,
+      "cellHeight": 208,
+      "baseline": 196,
+      "referenceHeight": 149,
+      "rowMap": {
+        "projectile": 0,
+        "magic": 1,
+        "ultimate": 2
+      }
+    }
+  }
+}
