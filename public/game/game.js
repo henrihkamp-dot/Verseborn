@@ -2490,7 +2490,8 @@ function gearEffectHtml(gear, className = "rare-effect") {
     const label = gearEffectLabel(effect);
     return `<small class="${effect.echoUnique ? "is-echo-unique" : effect.basicAttackUnique ? "is-basic-attack" : ""}">${label}</small>`;
   }).join("")}</span>` : "";
-  return `${effectHtml}${setHtml}`;
+  const shadowUnique = window.HallHub && Object.values(HallHub.shadowTrials).some(trial => trial.ring === gear.name);
+  return shadowUnique ? `<section class="shadow-gear-unique"><h4>Unique Effects</h4>${effectHtml}${setHtml}</section>` : `${effectHtml}${setHtml}`;
 }
 
 const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5 };
@@ -5843,7 +5844,8 @@ function applySkillBuffs(source, targets, sk) {
       const barrierBonus = buff.type === "barrier" && source?.id ? typedTalentValue(source.id, "barrierBoost") + (source.form === "mech" ? typedTalentValue(source.id, "fortressCapstone") : 0) : 0;
       const duration = (buff.duration || STATUS_DEFS[buff.type]?.duration || 3) + (source?.id ? typedTalentValue(source.id, "buffDuration") + effectValue(source.id, "buffDuration") + (typedTalentValue(source.id, "supportPotency") ? 1 : 0) : 0);
       const woundedBonus = target.hp / target.max < .35 && ["defenseUp", "barrier"].includes(buff.type) ? typedTalentValue(source.id, "woundedProtection") : 0;
-      const value = (buff.value ?? STATUS_DEFS[buff.type]?.value) * (1 + supportBonus + barrierBonus + songBoost + woundedBonus);
+      const rewardBoost = source.id === 'Verseborn' && window.HallHub?.hasShadowRing(source) && source.shadowActionContext?.ready && source.shadowActionContext.support ? .15 : 0;
+      const value = (buff.value ?? STATUS_DEFS[buff.type]?.value) * (1 + supportBonus + barrierBonus + songBoost + woundedBonus + rewardBoost);
       const result = applyStatus(target, buff.type, source, { duration, chance: 1, value });
       if (result.message) notes.push(`${target.name}: ${result.message}`);
     });
@@ -5856,10 +5858,6 @@ function applySkillBuffs(source, targets, sk) {
     notes.push(`Second Chorus: ${STATUS_DEFS[secondary].label}`);
   }
   if (sk.buffs?.some(buff => buff.type === "agilityUp")) reorderRemainingTurns();
-  if (source.id === 'Seerin' && sk.name === 'Cinder Guard' && window.HallHub?.hasShadowRing(source)) targets.forEach(target => {
-    const current = statusOf(target, 'holyFollowUp');
-    applyStatus(target, 'holyFollowUp', source, { duration: Math.max(2, current?.remaining || 0), value: Math.max(.35, current?.value || 0), force: true });
-  });
   if (songBoost) delete source.nextSongBoost;
   return notes;
 }
@@ -10997,7 +10995,7 @@ function applyEnemyResonanceControl(source, target, sk) {
 function skillDamageTalentMultiplier(source, sk, target, zeroResonance = battle?.enemyResonance === 0) {
   if (!source?.id) return 1;
   let bonus = 0;
-  if (source.id === 'Mira' && window.HallHub?.hasShadowRing(source) && sk.element === 'Shadow' && statusOf(target, 'silence') && statusOf(target, 'shadowExposed')) bonus += .30;
+  bonus += window.HallHub?.shadowDamageBonus(source, sk, target) || 0;
   if (sk.element === "Holy Fire") bonus += typedTalentValue(source.id, "holyFireDamage");
   if (sk.element === "Tech") bonus += typedTalentValue(source.id, "techDamage");
   if (sk.element === "Ancient Fire") bonus += typedTalentValue(source.id, "ancientFireDamage");
@@ -11019,6 +11017,7 @@ function restoreTalentHp(target, amount) {
   if (!target || target.hp <= 0) return 0;
   const restored = Math.min(healingReceived(target, Math.max(0, amount)), target.max - target.hp);
   target.hp += restored;
+  window.HallHub?.shadowHealed(null, target, restored);
   if (restored) addBattleFloater(target, restored, { kind: "heal" });
   return restored;
 }
@@ -11050,8 +11049,7 @@ function combatDroneFollowUp(source, totalDamage, targetCount) {
   if ((!drone && !carrier) || totalDamage <= 0) return "";
   const ownerId = baseJobs[drone?.source?.id] ? drone.source.id : source.id;
   const dual = typedTalentValue(ownerId, "dronePower");
-  const base = (drone?.value ?? .25) + typedTalentValue(ownerId, "droneBaseBonus")
-    + (ownerId === 'Glimmer' && battle.party.some(unit => unit.id === ownerId && window.HallHub?.hasShadowRing(unit)) ? .20 : 0);
+  const base = (drone?.value ?? .25) + typedTalentValue(ownerId, "droneBaseBonus");
   const ownerMag = totals(ownerId).mag;
   const swarm = typedTalentValue(ownerId, "droneSwarm");
   const ratios = 1 + (dual ? .5 : 0) + swarm;
@@ -11179,6 +11177,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     if (!battle || mode !== "battle") return;
     battle.attackDamage = [];
     if (u.id === "Seerin" && typedTalentValue(u.id, "bulwarkTaunt")) u.holdTheLine = true;
+    window.HallHub?.beginShadowAction(u, sk);
     window.StatusSystem?.begin(u, sk);
     let feedbackUsed = false;
     let purifyingUsed = false;
@@ -11197,7 +11196,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         ? battle.party.filter(ally => ally.hp > 0)
         : [u];
 
-    let shadowHitTargets = [], shadowDirectDamage = 0;
     if (sk.revive) {
       battle.party.filter(ally => ally.hp <= 0).forEach(ally => {
         const revivedHp = reviveBattleUnit(ally, sk.revive);
@@ -11217,9 +11215,9 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const belowHalf = ally.hp / ally.max < .5;
         const protector = ally.hp / ally.max < .35 ? 1 + typedTalentValue(u.id, "woundedProtection") : 1;
         const critical = Math.random() < healingCritChance(u);
-        const restored = Math.min(healingReceived(ally, (critical ? healing * 2 : healing) * protector), ally.max - ally.hp);
+        const restored = Math.min(healingReceived(ally, (critical ? healing * 2 : healing) * protector * (1 + (window.HallHub?.shadowHealingBonus(u, ally) || 0))), ally.max - ally.hp);
         ally.hp += restored;
-        window.HallHub?.shadowHeal(u, ally, restored);
+        window.HallHub?.shadowHealed(u, ally, restored, belowHalf);
         totalRestored += restored;
         if (critical && restored) criticalHeals++;
         addBattleFloater(ally, restored, { kind: "heal", crit: critical });
@@ -11317,7 +11315,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         }
         const weaknessHit = skillHitsElementWeakness(hitTarget, sk);
         const breakGain = canGenerateBreak(u) ? (sk.staggerPower || (weaknessHit ? 2 : 1))
-          + (u.id === 'Torren' && u.guarding && sk.element === 'Earth' && window.HallHub?.hasShadowRing(u) ? 2 : 0)
           + typedTalentValue(u.id, "staggerBonus")
           + (sk.rank0Break || 0)
           + (u.id === "Seerin" && sk.anim === "ultimate" && hitTarget === target ? typedTalentValue(u.id, "flameguardCharge") : 0)
@@ -11369,7 +11366,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
         directDamageDealt += dmg;
-        shadowHitTargets.push(hitTarget);
         const holyDamage = holyFollowUpPower ? Math.min(holyCapPerTarget, Math.max(1, Math.round(dmg * holyFollowUpPower))) : 0;
         if (holyDamage) {
           hitTarget.hp -= holyDamage;
@@ -11448,6 +11444,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         const restored = Math.min(healingReceived(u, Math.max(1, Math.round(directDamageDealt / Math.max(1, hitTargets.length) * vampiric))), Math.floor(u.max * .12), u.max - u.hp);
         vampiricRestored = restored;
         u.hp += restored;
+        window.HallHub?.shadowHealed(u, u, restored);
         if (restored) {
           addBattleFloater(u, restored, { kind: "heal" });
           log += ` VAMPIRIC restores ${restored} HP to ${u.name}.`;
@@ -11498,7 +11495,6 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         applyStatus(spreadTarget, "burn", u, { force: true, duration: 3, scaling: "mag", element: "Ancient Fire" });
         log += ` Wildfire spreads to ${spreadTarget.name}.`;
       }
-      shadowDirectDamage = directDamageDealt;
       log += combatDroneFollowUp(u, totalDamageDealt, hitTargets.length);
       if (sk.selfHealRatio && totalDamageDealt > 0) {
         const restored = Math.min(healingReceived(u, Math.max(1, Math.round(totalDamageDealt * sk.selfHealRatio))), u.max - u.hp);
@@ -11532,7 +11528,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     }
 
     if (window.StatusSystem) log += StatusSystem.finish();
-    if (shadowDirectDamage > 0) log += window.HallHub?.shadowAction(u, sk, shadowHitTargets, selectedSkill.anim === 'ultimate' ? 0 : selectedCost) || '';
+    window.HallHub?.finishShadowAction(u, sk);
     log += finishMechTalentAction(u);
     transferDeadSparkyBurns();
     if (sk.grantsWard) battle.ward = true;
@@ -12854,12 +12850,15 @@ function resolveEnemyTurn(turn, prev) {
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
       if (!["stagePrepare", "sanctuaryPrepare", "receptionPrepare", "charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
+        const pressureOriginalTarget = target;
         target = taunter || rank0Protector(target, false) || target;
+        const pressureGuarded = Boolean(target.guarding);
         const pressure = { kind: "magic", element: action.element, coefficient: action.pressureCoefficient || .35 };
         let damage = enemyDamageRoll(e, pressure, target).damage;
         if (tryEvadeAttack(target)) damage = 0;
         else if (target.guarding) { damage = Math.ceil(damage * (1 - defendReduction(target) / 100)); target.guarding = false; }
         target.hp = Math.max(0, target.hp - damage);
+        window.HallHub?.shadowDefended(target, pressureGuarded, pressureOriginalTarget !== target, false, damage);
         markBattleUnitDown(target);
         addBattleFloater(target, damage, { damageType: action.element });
         actionLog += ` ${target.name}: ${damage} ${action.element} pressure damage.`;
@@ -12978,6 +12977,7 @@ function resolveEnemyTurn(turn, prev) {
           defenseText += ` ${lastBastion.name}'s Last Bastion leaves ${defender.name} at 1 HP.`;
         }
         defender.hp = Math.max(0, defender.hp - dmg);
+        window.HallHub?.shadowDefended(defender, personallyGuarded, intercepted.has(defender), battle.ward, dmg);
         if (e.sparringId && defender.hp > 0 && dmg > 0) window.StatusSystem?.queue(e, defender, { ...action, power: 1, anim: action.kind }, { critical: rolled.critical, broken: Boolean(statusOf(defender, "broken")) });
         const thorns = personallyGuarded ? typedTalentValue(defender.id, "thorns") : 0;
         if (thorns && action.kind === "melee" && e.hp > 0 && dmg > 0) {
@@ -15454,7 +15454,14 @@ function handleFieldTap(x, y) {
   advanceFieldDestination();
 }
 
+function editableKeyboardTarget(event) {
+  const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
+  const editable = node => Boolean(node?.isContentEditable || node?.closest?.('textarea, select, [contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"], input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="color"])'));
+  return Boolean(event.isComposing || editable(target) || editable(document.activeElement));
+}
+window.addEventListener('focusin', event => { if (editableKeyboardTarget(event)) heldDirection = null; }, true);
 window.addEventListener("keydown", e => {
+  if (editableKeyboardTarget(e)) return;
   if (e.target?.closest?.(".forge-reroll, .gear-favorite, .gear-comparison")) return;
   const key = e.key.toLowerCase();
   const movement = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key);

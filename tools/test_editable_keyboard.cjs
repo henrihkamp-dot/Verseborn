@@ -1,0 +1,8 @@
+const fs=require('fs'),assert=require('node:assert/strict');
+let prefix=fs.readFileSync(__dirname+'/test_combat.cjs','utf8').split("run('runQaChecks()');")[0];prefix=prefix.replace('sandbox.window = sandbox;',`const listeners={};sandbox.addEventListener=(name,fn)=>{(listeners[name]??=[]).push(fn)};sandbox.listeners=listeners;sandbox.fetch=async()=>({ok:false});sandbox.window=sandbox;`);
+const {run}=new Function('require','__dirname',prefix+`;return {run};`)(require,__dirname);
+run(`let prevented=0,controls=0;const oldControl=handleControl;handleControl=()=>controls++;const textTarget={closest:selector=>selector.includes('textarea')?{}:null};document.activeElement=textTarget;heldDirection='up';const eventFor=key=>({key,target:textTarget,repeat:false,preventDefault(){prevented++}});`);
+for(const key of ['w','a','s','d','1','9','.',',',' ','Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter','m','q','e','z'])assert.equal(run(`(()=>{const e=eventFor(${JSON.stringify(key)});listeners.keydown.forEach(fn=>fn(e));return prevented+controls})()`),0,key);
+assert.ok(run(`(()=>{listeners.focusin.forEach(fn=>fn(eventFor('w')));return heldDirection===null})()`),'Movement cleared when typing begins');
+assert.ok(run(`(()=>{document.activeElement=null;const e={key:'m',target:{closest:()=>null},repeat:false,preventDefault(){prevented++}};listeners.keydown.forEach(fn=>fn(e));return controls===1})()`),'Menu controls restored immediately after blur');
+console.log('PASS All text-editing keys retain native input behavior; movement clears on focus; controls return after blur');

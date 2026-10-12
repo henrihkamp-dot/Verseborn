@@ -39,6 +39,7 @@
   const stock = item => Math.max(0, Math.floor(Number(state.inventory[item?.name]) || 0));
   const escaped = value => escapeMarkup(String(value ?? ''));
   function progress() {
+    upgradeShadowRewards();
     const hall = hallBattleProgress();
     if (!hall.hub || typeof hall.hub !== 'object' || Array.isArray(hall.hub)) hall.hub = {};
     const hub = hall.hub;
@@ -107,49 +108,241 @@
   Object.entries(sparringRewards).forEach(([id, stats]) => gearDb.ring.push({ name: `${id}'s Sparring Seal`, slot: 'ring', stats, rarity: 'Common', effects: [] }));
 
   const shadowTrials = {
-    Verseborn: { ring: 'Ring of the Unbroken Refrain', ability: 'Sound attacks against Silenced enemies grant 8 additional Resonance, once per action (excluding ultimates).', desc: 'An unheard refrain answers every song. Silence the echo, then let Sound carry the Hall forward.' },
-    Mira: { ring: 'Ring of the Last Whisper', ability: 'Shadow attacks deal 30% more damage against enemies that are both Silenced and Shadow Exposed.', desc: 'A perfect strike waits in the darkness. Break her silence before precision breaks your formation.' },
-    Seerin: { ring: 'Ring of the Hearthward Oath', ability: 'Cinder Guard grants its healed allies a 35% Holy Fire follow-up for 2 actions, replacing its normal 10% follow-up.', desc: 'The oath has become a burning wall. Face the shield that would protect the Hall from itself.' },
-    Kael: { ring: 'Ring of the Unspent Mercy', ability: 'Healing grants a 2-action Barrier: 30% of the target’s restored HP percentage, capped at 20% damage reduction.', desc: 'Every quiet rite has a shadow. Withstand his sigils and the mercy he refuses to surrender.' },
-    Torren: { ring: 'Ring of the Mountain Within', ability: 'While personally Guarded, damaging Earth abilities generate 2 additional Break per target.', desc: 'The mountain remembers every blow. Guard your allies while his foundations threaten to split the Hall.' },
-    Glimmer: { ring: 'Ring of the Endless Workshop', ability: 'Combat Drones deployed by Glimmer gain 20 percentage points of follow-up power, within the existing drone damage cap.', desc: 'A machine without an off switch wears a familiar smile. Outlast the engineer and her relentless inventions.' },
-    Sparky: { ring: 'Ring of the Everhungry Ember', ability: 'Damaging Ancient Fire skills against Burning enemies refund 30% of MP spent while Sparky has Vampiric, once per action.', desc: 'The smallest ember casts a hungry shadow. Survive the fire before Emberblood restores what you took.' }
-  };
+  "Verseborn": {
+    "ring": "Ring of the Unwritten Refrain",
+    "unique": "Resonant Encore",
+    "effectType": "resonantEncore",
+    "stats": {
+      "mag": 30,
+      "echo": 27,
+      "agi": 21
+    },
+    "affixKeys": [
+      "resonant",
+      "prolonging",
+      "alchemist",
+      "siphoning",
+      "resolute"
+    ],
+    "ability": "Interacting with Resonance empowers the next support or healing action by 15%. No additional cast.",
+    "legacy": "Ring of the Unbroken Refrain",
+    "desc": "An unheard refrain answers every song. Silence the echo, then let Sound carry the Hall forward."
+  },
+  "Mira": {
+    "ring": "Ring of the Hollow Veil",
+    "unique": "Voidthorn Precision",
+    "effectType": "voidthornPrecision",
+    "stats": {
+      "str": 30,
+      "agi": 27,
+      "mag": 21
+    },
+    "affixKeys": [
+      "fleet",
+      "keen",
+      "alchemist",
+      "quickstart",
+      "siphoning"
+    ],
+    "ability": "Deal 12% additional damage against enemies affected by Silence or Shadow Exposed. Both statuses do not stack this bonus.",
+    "legacy": "Ring of the Last Whisper",
+    "desc": "A perfect strike waits in the darkness. Break her silence before precision breaks your formation."
+  },
+  "Seerin": {
+    "ring": "Ring of the Last Ember",
+    "unique": "Flame’s Answer",
+    "effectType": "flamesAnswer",
+    "stats": {
+      "str": 30,
+      "stam": 27,
+      "mag": 21
+    },
+    "affixKeys": [
+      "resolute",
+      "prolonging",
+      "leeching",
+      "siphoning",
+      "keen"
+    ],
+    "ability": "After successfully intercepting an ally’s hit or reducing a hit with Personal Guard or Party Guard, the next offensive action deals 15% more damage.",
+    "legacy": "Ring of the Hearthward Oath",
+    "desc": "The oath has become a burning wall. Face the shield that would protect the Hall from itself."
+  },
+  "Kael": {
+    "ring": "Ring of the Broken Oath",
+    "unique": "Measured Mercy",
+    "effectType": "measuredMercy",
+    "stats": {
+      "mag": 30,
+      "stam": 27,
+      "echo": 21
+    },
+    "affixKeys": [
+      "resolute",
+      "prolonging",
+      "resonant",
+      "fleet",
+      "siphoning"
+    ],
+    "ability": "Healing a target below 50% HP restores 15% more HP and grants 8% Defense Up for 1 action.",
+    "legacy": "Ring of the Unspent Mercy",
+    "desc": "Every quiet rite has a shadow. Withstand his sigils and the mercy he refuses to surrender."
+  },
+  "Torren": {
+    "ring": "Ring of the Deep Foundation",
+    "unique": "Stone Remembers",
+    "effectType": "stoneRemembers",
+    "stats": {
+      "stam": 30,
+      "str": 27,
+      "agi": 21
+    },
+    "affixKeys": [
+      "resolute",
+      "prolonging",
+      "leeching",
+      "keen",
+      "quickstart"
+    ],
+    "ability": "Successfully intercepting a hit or blocking with Personal Guard grants 12% Strength Up for 2 actions, reinforcing Earth attacks.",
+    "legacy": "Ring of the Mountain Within",
+    "desc": "The mountain remembers every blow. Guard your allies while his foundations threaten to split the Hall."
+  },
+  "Glimmer": {
+    "ring": "Ring of Impossible Maintenance",
+    "unique": "Overclocked Patch",
+    "effectType": "overclockedPatch",
+    "stats": {
+      "mag": 30,
+      "agi": 27,
+      "echo": 21
+    },
+    "affixKeys": [
+      "fleet",
+      "resonant",
+      "siphoning",
+      "alchemist",
+      "quickstart"
+    ],
+    "ability": "Successful healing or deploying a Combat Drone empowers the next damaging Tech action by 12%. One charge per support action; charges do not stack.",
+    "legacy": "Ring of the Endless Workshop",
+    "desc": "A machine without an off switch wears a familiar smile. Outlast the engineer and her relentless inventions."
+  },
+  "Sparky": {
+    "ring": "Ring of the Remembered Ember",
+    "unique": "Hungry Flame",
+    "effectType": "hungryFlame",
+    "stats": {
+      "mag": 30,
+      "echo": 27,
+      "stam": 21
+    },
+    "affixKeys": [
+      "leeching",
+      "siphoning",
+      "keen",
+      "resonant",
+      "alchemist"
+    ],
+    "ability": "Receiving a buff or healing, or restoring HP through Vampiric, empowers the next damaging action by 12%. Charges do not stack.",
+    "legacy": "Ring of the Everhungry Ember",
+    "desc": "The smallest ember casts a hungry shadow. Survive the fire before Emberblood restores what you took."
+  }
+};
   const shadowRequirement = 'Encounter unavailable — this Flameguard member has not yet entered Ember Hall.';
   let shadowParty = [], selectedShadow = null;
   for (const [id, trial] of Object.entries(shadowTrials)) {
-    const prototype = HALL_ARTIFACT_GEAR.find(gear => gear.slot === 'ring');
-    const ring = item(trial.ring, 'ring', { ...prototype.stats }, trial.ability,
-      { type: 'shadowTrial', value: 1, label: trial.ability, artifactUnique: true });
+    const ring = item(trial.ring, 'ring', { ...trial.stats }, trial.ability,
+      { type: trial.effectType, value: 1, label: trial.unique + ': ' + trial.ability, artifactUnique: true });
     ring.rarity = 'Artifact'; gearDb.ring.push(ring); gearOwners[trial.ring] = [id]; artifactGearNames.add(trial.ring);
+    // Keep legacy references loadable until their existing copy is upgraded in place.
+    gearDb.ring.push({ ...ring, name: trial.legacy }); gearOwners[trial.legacy] = [id]; artifactGearNames.add(trial.legacy);
+  }
+  function premiumShadowAffixes(id) {
+    const trial = shadowTrials[id], gear = gearByName(trial.ring), pool = gearAffixPool(gear);
+    return trial.affixKeys.map(key => {
+      const template = pool.find(entry => entry.key === key);
+      if (!template) throw new Error('Invalid Shadow Ring affix: ' + key);
+      const entry = { ...template, value: template.max, ...(window.StatusSystem ? { statusRulesVersion: StatusSystem.version } : {}) };
+      entry.text = formatAffix(entry); return entry;
+    });
+  }
+  function upgradeShadowRewards() {
+    for (const [id, trial] of Object.entries(shadowTrials)) {
+      for (const instance of Object.values(gearInstances)) if ([trial.ring, trial.legacy].includes(instance.name) && instance.shadowRewardVersion !== 2) {
+        instance.name = trial.ring; instance.stats = { ...trial.stats }; instance.affixes = premiumShadowAffixes(id); instance.rarity = 'Artifact'; instance.shadowRewardVersion = 2;
+      }
+      for (const hero of Object.values(baseJobs)) for (const slot of Object.keys(hero.gear)) if (hero.gear[slot] === trial.legacy) hero.gear[slot] = trial.ring;
+      if (state.ownedGear.includes(trial.legacy)) {
+        state.ownedGear = [...new Set(state.ownedGear.map(name => name === trial.legacy ? trial.ring : name))];
+        if (state.gearCopies[trial.legacy]) { state.gearCopies[trial.ring] = Math.max(state.gearCopies[trial.ring] || 0, state.gearCopies[trial.legacy]); delete state.gearCopies[trial.legacy]; }
+      }
+    }
+  }
+  const oldShadowLoad = loadGame;
+  loadGame = (...args) => { const result = oldShadowLoad(...args); if (result) upgradeShadowRewards(); return result; };
+  function shadowRewardHtml(id) {
+    const trial = shadowTrials[id], affixes = premiumShadowAffixes(id);
+    return '<section class="shadow-reward"><h4>' + escaped(trial.ring) + '</h4><p>ARTIFACT RING / Character-bound: ' + id + ' only</p><div class="shadow-reward-stats">' + Object.entries(trial.stats).map(([stat,value]) => '<span>' + stat.toUpperCase() + ' <b>+' + value + '</b></span>').join('') + '</div><h4>Artifact Affixes</h4><ul>' + affixes.map(entry => '<li>' + escaped(formatAffix(entry)) + '</li>').join('') + '</ul><h4>Unique Effects</h4><p><strong>' + escaped(trial.unique) + '</strong><br>' + escaped(trial.ability) + '</p></section>';
   }
   function shadowStats(id) {
-    // Fixed level-40 trial strength never follows the player's equipped gear.
     const stats = Object.fromEntries(Object.entries(baseJobs[id].stats).map(([key, value]) => [key, Math.round((value + Math.floor(39 * (.32 + value / 30))) * 2)]));
-    return { ...stats, max: (30 + stats.stam * 4) * 8, mp: 180 };
+    return { ...stats, max: (30 + stats.stam * 4) * 8 * 6, mp: 180 };
   }
   function hasShadowRing(unit) {
-    return Boolean(unit?.id && battle?.party?.includes(unit) && effectValue(unit.id, 'shadowTrial'));
+    return Boolean(unit?.id && shadowTrials[unit.id] && battle?.party?.includes(unit) && effectValue(unit.id, shadowTrials[unit.id].effectType));
   }
-  function shadowHeal(source, ally, restored) {
-    if (!hasShadowRing(source) || source.id !== 'Kael' || restored <= 0) return;
-    const value = Math.min(.20, restored * .30 / ally.max);
-    const existing = statusOf(ally, 'barrier');
-    // Refresh useful wards, never replace a stronger barrier with a weaker one.
-    applyStatus(ally, 'barrier', source, { duration: Math.max(2, existing?.remaining || 0), value: Math.max(value, existing?.value || 0), force: true });
+  function offensiveShadowSkill(sk) { return skillTargetsEnemies(sk) && sk.power >= 0 && !sk.statusOnly && !sk.dispel; }
+  function beginShadowAction(source, sk) {
+    source.shadowActionContext = { resonance: state.resonance, enemyResonance: battle.enemyResonance, support: !skillTargetsEnemies(sk) || sk.power < 0, offensive: offensiveShadowSkill(sk), ready: Boolean(source.shadowUniqueReady), success: false };
+    if (hasShadowRing(source) && source.shadowUniqueReady && (source.id === 'Verseborn' && source.shadowActionContext.support || source.id === 'Seerin' && source.shadowActionContext.offensive || source.id === 'Sparky' && source.shadowActionContext.offensive || source.id === 'Glimmer' && source.shadowActionContext.offensive && sk.element === 'Tech')) delete source.shadowUniqueReady;
   }
-  function shadowAction(source, sk, targets, mpSpent) {
-    if (!hasShadowRing(source) || !skillTargetsEnemies(sk) || sk.power < 0 || sk.statusOnly || sk.dispel) return '';
-    if (source.id === 'Verseborn' && sk.element === 'Sound' && sk.anim !== 'ultimate' && targets.some(target => statusOf(target, 'silence'))) {
-      const gained = Math.min(8, 100 - state.resonance); state.resonance += gained;
-      return gained ? ' Unbroken Refrain grants ' + gained + ' Resonance.' : '';
+  function shadowDamageBonus(source, sk, target) {
+    if (!hasShadowRing(source) || !offensiveShadowSkill(sk)) return 0;
+    if (source.id === 'Mira') return statusOf(target,'silence') || statusOf(target,'shadowExposed') ? .12 : 0;
+    const ready = source.shadowActionContext?.ready ?? source.shadowUniqueReady;
+    if (!ready) return 0;
+    return source.id === 'Seerin' ? .15 : source.id === 'Sparky' ? .12 : source.id === 'Glimmer' && sk.element === 'Tech' ? .12 : 0;
+  }
+  function shadowHealingBonus(source, ally) {
+    if (!hasShadowRing(source)) return 0;
+    if (source.id === 'Kael' && ally.hp < ally.max * .5) return .15;
+    return source.id === 'Verseborn' && source.shadowActionContext?.ready && source.shadowActionContext.support ? .15 : 0;
+  }
+  function shadowHealed(source, ally, restored, belowHalf = false) {
+    if (restored <= 0) return;
+    if (hasShadowRing(ally) && ally.id === 'Sparky') ally.shadowUniqueReady = true;
+    if (!hasShadowRing(source)) return;
+    if (source.id === 'Kael' && belowHalf) {
+      const current = statusOf(ally,'defenseUp');
+      applyStatus(ally,'defenseUp',source,{ force:true,value:Math.max(.08,current?.value || 0),duration:Math.max(1,current?.remaining || 0) });
     }
-    if (source.id === 'Sparky' && sk.element === 'Ancient Fire' && statusOf(source, 'vampiric') && targets.some(target => statusOf(target, 'burn')) && mpSpent > 0) {
-      const restored = Math.min(Math.ceil(mpSpent * .30), source.maxmp - source.mp); source.mp += restored;
-      if (restored) addBattleMpGain(source, restored, 'Everhungry Ember');
-      return restored ? ' Everhungry Ember refunds ' + restored + ' MP.' : '';
+    if (source.id === 'Glimmer' && source.shadowActionContext) source.shadowActionContext.success = true;
+  }
+  function shadowDefended(unit, guarded, intercepted, partyGuard, damage) {
+    if (!hasShadowRing(unit) || damage <= 0 || unit.hp <= 0) return;
+    if (unit.id === 'Seerin' && (guarded || intercepted || partyGuard)) unit.shadowUniqueReady = true;
+    if (unit.id === 'Torren' && (guarded || intercepted)) {
+      const current = statusOf(unit,'strengthUp');
+      applyStatus(unit,'strengthUp',unit,{ force:true,value:Math.max(.12,current?.value || 0),duration:Math.max(2,current?.remaining || 0) });
     }
-    return '';
+  }
+  const oldShadowStatus = applyStatus;
+  applyStatus = (target,type,source,options) => {
+    const result = oldShadowStatus(target,type,source,options);
+    if (result.applied) {
+      if (target?.id === 'Sparky' && hasShadowRing(target) && STATUS_DEFS[type]?.buff) target.shadowUniqueReady = true;
+      if (type === 'combatDrone' && source?.id === 'Glimmer' && hasShadowRing(source) && source.shadowActionContext) source.shadowActionContext.success = true;
+    }
+    return result;
+  };
+  function finishShadowAction(source, sk) {
+    const context = source.shadowActionContext;
+    if (context && hasShadowRing(source)) {
+      if (source.id === 'Verseborn' && !context.support && (state.resonance !== context.resonance || battle.enemyResonance !== context.enemyResonance || sk.anim === 'ultimate' || sk.enemyResonanceClear || sk.enemyResonanceLock || sk.enemyResonanceDrain)) source.shadowUniqueReady = true;
+      if (source.id === 'Glimmer' && context.success && context.support) source.shadowUniqueReady = true;
+    }
+    delete source.shadowActionContext;
   }
   const oldWares = vendorWares, oldOpenVendor = openVendor, oldBuy = buyWare;
   vendorWares = id => {
@@ -798,7 +991,7 @@
       return '<button type="button" class="hall-stage shadow-stage ' + (won ? 'is-cleared ' : '') + (selectedShadow === id ? 'is-selected' : '') + '" data-shadow="' + id + '" aria-pressed="' + (selectedShadow === id) + '"><span>SHADOW TRIAL ' + (index + 1) + ' / ' + (won ? 'DEFEATED' : 'AVAILABLE') + '</span><img src="assets/sprites/hall-duels/' + id.toLowerCase() + '-portrait.webp" alt="Shadow ' + id + '"><strong>Shadow ' + id + '</strong><small>Recommended level 40 / Personal trial</small><em>' + trial.ring + '</em><i>' + (won ? 'FIRST CLEAR EARNED / REPLAY' : 'FIRST CLEAR REWARD / Artifact Ring') + '</i></button>';
     }).join('');
     const trial = shadowTrials[selectedShadow];
-    const details = trial ? '<section class="shadow-detail" aria-label="Shadow encounter preview"><div class="hub-stage-tags"><b>Shadow ' + selectedShadow + '</b><span>' + (defeated.includes(selectedShadow) ? 'Defeated / Replay' : 'Available') + '</span><span>Recommended level 40</span></div><div class="shadow-preview"><img src="assets/sprites/hall-duels/' + selectedShadow.toLowerCase() + '-portrait.webp" alt="Shadow ' + selectedShadow + ' enemy preview"><div><h3>Shadow ' + selectedShadow + '</h3><p>' + trial.desc + '</p><dl class="hub-stage-info"><dt>Encounter</dt><dd>Level 40 / one Shadow / 60-round limit</dd><dt>' + (defeated.includes(selectedShadow) ? 'First clear earned' : 'FIRST CLEAR REWARD') + '</dt><dd><strong>' + trial.ring + '</strong><br>Artifact Ring / ' + selectedShadow + ' only<br>Normal Artifact base-stat roll + 5 Artifact affixes</dd><dt>Unique ability</dt><dd>' + escaped(trial.ability) + '</dd></dl></div></div><h3>Your party (' + shadowParty.length + '/3)</h3><p>Select 1–3 Hall members. Trial items and vitals are restored afterward; no EXP or normal stage progress.</p><div class="shadow-party">' + state.party.map(id => '<button type="button" data-shadow-party="' + id + '" aria-pressed="' + shadowParty.includes(id) + '" ' + (!shadowParty.includes(id) && shadowParty.length >= 3 ? 'disabled' : '') + '><strong>' + id + '</strong><small>Level ' + progressFor(id).level + (shadowParty.includes(id) ? ' / Selected' : '') + '</small></button>').join('') + '</div><footer class="hub-footer"><p>' + (defeated.includes(selectedShadow) ? 'Replay available. The unique Artifact Ring is already earned.' : 'Guaranteed first victory: ' + trial.ring) + '</p><button type="button" data-shadow-start ' + (!shadowParty.length ? 'disabled' : '') + '>Start Battle</button></footer></section>' : '<p class="shadow-empty">Select an available Shadow trial to preview its encounter and first-clear reward.</p>';
+    const details = trial ? '<section class="shadow-detail" aria-label="Shadow encounter preview"><div class="hub-stage-tags"><b>Shadow ' + selectedShadow + '</b><span>' + (defeated.includes(selectedShadow) ? 'Defeated / Replay' : 'Available') + '</span><span>Recommended level 40</span></div><div class="shadow-preview"><img src="assets/sprites/hall-duels/' + selectedShadow.toLowerCase() + '-portrait.webp" alt="Shadow ' + selectedShadow + ' enemy preview"><div><h3>Shadow ' + selectedShadow + '</h3><p>' + trial.desc + '</p><dl class="hub-stage-info"><dt>Encounter</dt><dd>Level 40 / one Shadow / 60-round limit</dd><dt>' + (defeated.includes(selectedShadow) ? 'First clear earned' : 'FIRST CLEAR REWARD') + '</dt><dd><strong>' + trial.ring + '</strong><br>Artifact Ring / ' + selectedShadow + ' only</dd><dt>Personal reward</dt><dd>' + shadowRewardHtml(selectedShadow) + '</dd></dl></div></div><h3>Your party (' + shadowParty.length + '/3)</h3><p>Select 1–3 Hall members. Trial items and vitals are restored afterward; no EXP or normal stage progress.</p><div class="shadow-party">' + state.party.map(id => '<button type="button" data-shadow-party="' + id + '" aria-pressed="' + shadowParty.includes(id) + '" ' + (!shadowParty.includes(id) && shadowParty.length >= 3 ? 'disabled' : '') + '><strong>' + id + '</strong><small>Level ' + progressFor(id).level + (shadowParty.includes(id) ? ' / Selected' : '') + '</small></button>').join('') + '</div><footer class="hub-footer"><p>' + (defeated.includes(selectedShadow) ? 'Replay available. The unique Artifact Ring is already earned.' : 'Guaranteed first victory: ' + trial.ring) + '</p><button type="button" data-shadow-start ' + (!shadowParty.length ? 'disabled' : '') + '>Start Battle</button></footer></section>' : '<p class="shadow-empty">Select an available Shadow trial to preview its encounter and first-clear reward.</p>';
     overlay('Ember Hall / Shadow Trials', '<nav class="shadow-path-nav"><button type="button" data-ember-path>Ember Battles</button><button type="button" aria-current="page" disabled>Shadow Trials</button></nav><p>' + defeated.length + '/7 trials defeated. Shadows awaken as Flameguard members enter Ember Hall.</p><div class="hall-stage-grid shadow-grid">' + cards + '</div>' + details);
     el.menuBody.querySelector('[data-ember-path]').onclick = renderHallBattleMap;
     el.menuBody.querySelectorAll('[data-shadow]').forEach(button => button.onclick = () => { renderSparring(button.dataset.shadow); el.menuBody.querySelector('.shadow-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
@@ -852,7 +1045,8 @@
     if (result === 'victory' && !progress().shadowDefeated.includes(opponent)) {
       progress().shadowDefeated.push(opponent);
       const reward = shadowTrials[opponent].ring;
-      addOwnedGear(reward, 1, { rarity: 'Artifact', stats: rollHallBaseStatProfile('Artifact').stats, separateCopy: true, rollAffixes: true });
+      addOwnedGear(reward, 1, { rarity: 'Artifact', stats: { ...shadowTrials[opponent].stats }, affixes: premiumShadowAffixes(opponent), separateCopy: true, rollAffixes: false });
+      upgradeShadowRewards();
       entries.push({ kind: 'gear', icon: 'E', label: reward, detail: 'FIRST CLEAR / Artifact / ' + opponent + ' only', value: 'x1' });
     } else if (result === 'victory') entries.push({ kind: 'record', icon: '#', label: 'Shadow defeated', detail: 'First-win reward already earned', value: 'REMATCH' });
     updatePanels();
@@ -877,7 +1071,7 @@
     }
     ctx.restore();
   }
-  window.HallHub = { meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, shadowHeal, shadowAction, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
+  window.HallHub = { meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
   const duelQa = new URLSearchParams(location.search);
   if (['hallduel','duelselect'].includes(duelQa.get('qa'))) loadDuelArt().then(() => {
     state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = duelQa.get('recruits') ? duelQa.get('recruits').split(',').filter(id => Object.hasOwn(baseJobs,id)) : Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';

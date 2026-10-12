@@ -346,7 +346,9 @@
     el.place.textContent='Ember Hall';
   };
   const controls=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','e']);
+  document.addEventListener('focusin',event=>{if(editableKeyboardTarget(event))keys.clear();},true);
   document.addEventListener('keydown',event=>{
+    if(editableKeyboardTarget(event))return;
     if(!inHall()||activeRecruitScene||!['walk','talk'].includes(mode))return;
     const key=event.key.length===1?event.key.toLowerCase():event.key;
     if(!controls.has(key))return;event.preventDefault();event.stopImmediatePropagation();
