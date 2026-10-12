@@ -11650,6 +11650,7 @@ function enemyActionForKind(unit, kind, target = null) {
     const enhance = status => status ? { ...status, chance: Math.min(.95, (status.chance ?? 1) * statusPotency) } : null;
     return {
       ...configured,
+      isUltimate: kind === "ultimate",
       status: enhance(configured.status),
       extraStatuses: (configured.extraStatuses || []).map(enhance),
       target
@@ -11672,7 +11673,7 @@ function enemyActionDealsDamage(action) {
 }
 
 function enemyActionMpCost(unit, action) {
-  if (!action || action.kind === "ultimate") return 0;
+  if (!action || action.kind === "ultimate" || action.isUltimate) return 0;
   return developerScale("enemy", "cost", Math.max(0, Math.round((action.mpCost || 0) * (1 - (unit.affixes?.mpEfficiency || 0)))));
 }
 
@@ -12758,7 +12759,9 @@ function resolveEnemyTurn(turn, prev) {
     return finishTurn(prev);
   }
   let action = chooseEnemyAction(e);
-  let target = action.target || (action.healing ? chooseEnemyHealTarget() || e : chooseEnemyTarget(e, action, liveParty));
+  let target = action.kind === "buff"
+    ? (battle.enemies.includes(action.target) && action.target.hp > 0 ? action.target : enemyBuffTarget(e, action) || e)
+    : action.target || (action.healing ? chooseEnemyHealTarget() || e : chooseEnemyTarget(e, action, liveParty));
   if (!target) {
     action = enemyActionForKind(e, "melee");
     target = chooseEnemyTarget(e, action, liveParty);
@@ -12945,7 +12948,7 @@ function resolveEnemyTurn(turn, prev) {
       const notes = enemyApplyBuffs(e, battle.enemies.filter(ally => ally.hp > 0), action.teamBuffs);
       if (notes.length) actionLog += ` ${notes.join("; ")}.`;
     }
-    if (action.kind === "ultimate") { battle.enemyResonance = 0; delete e.ultimateTelegraphed; }
+    if (action.kind === "ultimate" || action.isUltimate) { battle.enemyResonance = 0; delete e.ultimateTelegraphed; }
     else gainEnemyResonance(e, enemyResonanceGainForAction(e, action));
     if (e.hp <= 0) {
       e.anim = "death";
