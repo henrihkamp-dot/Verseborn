@@ -31,6 +31,7 @@
   const services = { Marla: 'General Shop', Glimmer: 'Stage Shop', Torren: 'Kitchen', Mira: 'Coating Supply', Kael: 'Sanctuary', Seerin: 'Sparring Area', Sparky: 'Scavenging' };
   const labels = { meal: 'Torren Meal', coating: 'Mira Coating', blessing: 'Kael Blessing' };
   let prepStage = null, startingSupport = null, sparringSnapshot = null, noticeTimer;
+  let preparationNotes = [];
   const curios = new Image();
   curios.src = 'assets/ui/loot-icons.png';
   const recruited = id => id === 'Marla' || state.party.includes(id);
@@ -157,10 +158,26 @@
   function openPreparation(stage) {
     if (!validStage(stage) || mode === 'battle' || hallBattleProgress().pendingRecruit) return false;
     prepStage = stage;
+    preparationNotes = [];
     renderPreparation();
     return true;
   }
+  function clearExhaustedSupport() {
+    const selected = progress().selected;
+    let cleared = false;
+    for (const category of ['meal', 'coating']) {
+      const item = entry(category, selected[category]);
+      if (item && stock(item) === 0) {
+        selected[category] = null;
+        preparationNotes.push(`${item.name} is used up. Its slot has been cleared. You can begin without it or select another support item.`);
+        cleared = true;
+      }
+    }
+    if (cleared) queueSave();
+    return cleared;
+  }
   function renderPreparation() {
+    clearExhaustedSupport();
     const info = hallBattleInfo(prepStage); if (!info) return openHallBattleMap();
     const details = hallEncounterDetails(info), selected = progress().selected;
     const profiles = [info.enemies, ...info.waves].flat().map(key => HALL_ENEMY_LIBRARY[key]);
@@ -171,7 +188,7 @@
       return `<section class="hub-slot hub-${category}"><h3>${labels[category]}</h3>${supportIcon(category, item)}<strong>${item ? escaped(item.name) : 'None selected'}</strong><p>${item ? escaped(item.desc) : unlocked ? 'Optional' : 'Recruit ' + owners[category] + ' to unlock'}</p><small>${item && category !== 'blessing' ? 'Owned: ' + stock(item) : category === 'blessing' ? 'No consumable cost' : 'Consumed at stage start'}</small><div><button type="button" data-select="${category}" ${unlocked ? '' : 'disabled'}>${item ? 'Change' : 'Select'}</button><button type="button" data-clear="${category}" aria-label="Remove ${category}" ${item ? '' : 'disabled'}>&times;</button></div></section>`;
     }).join('');
     const active = Object.keys(categories).flatMap(category => { const item = entry(category, selected[category]); return item ? [`<span class="hub-${category}"><b>${labels[category]}</b> ${escaped(item.name)}<small>${escaped(item.desc)}</small></span>`] : []; }).join('');
-    overlay(`Stage ${String(prepStage).padStart(2, '0')} / ${info.name}`, `<section class="hub-stage-info"><div class="hub-stage-tags"><b>${info.boss ? 'BOSS' : 'NORMAL'}</b>${profiles.some(profile => profile.node >= 3) ? '<b>ELITE</b>' : ''}<span>Enemy level ${Math.min(prepStage, MAX_LEVEL)}</span></div><p>${escaped(description)}</p><dl><dt>Enemies</dt><dd>${escaped(details.enemies)}</dd><dt>Threats &amp; modifiers</dt><dd>${escaped(details.traits)}</dd><dt>Weaknesses</dt><dd>${escaped(details.weaknesses)}</dd><dt>Rewards</dt><dd>${escaped(rollHallGearRarity(prepStage))} gear, gold and EXP${info.boss ? ' / boss bonus' : ''}${prepStage >= 51 ? ' / Artifact shop unlock on first clear' : ''}</dd></dl></section><section class="hub-party"><h3>Party</h3><div>${party.map(id => { const hero = baseJobs[id], stats = totals(id); return `<article><img src="${menuPortraitSource(id)}" alt="${escaped(id)}"><div><strong>${escaped(id)} <small>Lv ${progressFor(id).level}</small></strong><span>HP ${hero.hp}/${stats.max} &nbsp; MP ${hero.mp}/${stats.mp}</span><small>${Object.entries(hero.gear).map(([slot, ref]) => escaped(gearSlotLabel(slot)) + ': ' + escaped(gearDisplayName(ref))).join(' / ')}</small></div></article>`; }).join('')}</div></section><section class="hub-loadout"><h3>Stage Support</h3><div>${slots}</div></section><section class="hub-active"><h3>Active Support</h3>${active || '<p>No support selected.</p>'}</section><footer class="hub-footer"><span>Meals &amp; Coatings are consumed only when the stage begins.</span><button type="button" data-begin ${party.length ? '' : 'disabled'}>Begin Stage &rarr;</button></footer>`, openHallBattleMap);
+    overlay(`Stage ${String(prepStage).padStart(2, '0')} / ${info.name}`, `<section class="hub-stage-info"><div class="hub-stage-tags"><b>${info.boss ? 'BOSS' : 'NORMAL'}</b>${profiles.some(profile => profile.node >= 3) ? '<b>ELITE</b>' : ''}<span>Enemy level ${Math.min(prepStage, MAX_LEVEL)}</span></div><p>${escaped(description)}</p><dl><dt>Enemies</dt><dd>${escaped(details.enemies)}</dd><dt>Threats &amp; modifiers</dt><dd>${escaped(details.traits)}</dd><dt>Weaknesses</dt><dd>${escaped(details.weaknesses)}</dd><dt>Rewards</dt><dd>${escaped(rollHallGearRarity(prepStage))} gear, gold and EXP${info.boss ? ' / boss bonus' : ''}${prepStage >= 51 ? ' / Artifact shop unlock on first clear' : ''}</dd></dl></section><section class="hub-party"><h3>Party</h3><div>${party.map(id => { const hero = baseJobs[id], stats = totals(id); return `<article><img src="${menuPortraitSource(id)}" alt="${escaped(id)}"><div><strong>${escaped(id)} <small>Lv ${progressFor(id).level}</small></strong><span>HP ${hero.hp}/${stats.max} &nbsp; MP ${hero.mp}/${stats.mp}</span><small>${Object.entries(hero.gear).map(([slot, ref]) => escaped(gearSlotLabel(slot)) + ': ' + escaped(gearDisplayName(ref))).join(' / ')}</small></div></article>`; }).join('')}</div></section><section class="hub-loadout"><h3>Stage Support</h3>${preparationNotes.map(note => `<p class="hub-preparation-note" role="status">${escaped(note)}</p>`).join('')}<div>${slots}</div></section><section class="hub-active"><h3>Active Support</h3>${active || '<p>No support selected.</p>'}</section><footer class="hub-footer"><span>Meals &amp; Coatings are consumed only when the stage begins.</span><button type="button" data-begin ${party.length ? '' : 'disabled'}>Begin Stage &rarr;</button></footer>`, openHallBattleMap);
     el.menuBody.querySelectorAll('[data-select]').forEach(button => button.onclick = () => showChoices(button.dataset.select));
     el.menuBody.querySelectorAll('[data-clear]').forEach(button => button.onclick = () => { select(button.dataset.clear, null); renderPreparation(); });
     el.menuBody.querySelector('[data-begin]').onclick = beginStage;
@@ -180,6 +197,7 @@
   startHallBattleStage = openPreparation;
   function beginStage() {
     if (mode !== 'hallMap' || !validStage(prepStage) || !state.activeParty.length) return false;
+    if (clearExhaustedSupport()) { renderPreparation(); return false; }
     const selected = progress().selected, support = {}, consumed = [];
     for (const category of Object.keys(categories)) {
       const item = entry(category, selected[category]);

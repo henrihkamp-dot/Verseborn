@@ -70,3 +70,5 @@
   .hub-choices label .hub-support-icon { width: 32px; }
   .hub-respec > div { flex-wrap: wrap; }
 }
+
+.hub-preparation-note { padding: 10px 12px; border: 1px solid #b98d43; background: #211b21; color: #ffd986; line-height: 1.45; }
