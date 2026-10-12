@@ -7482,5 +7482,5 @@ body.frameless-hall .game { border: 0; box-shadow: none; }
 body.frameless-hall .hud { display: none; }
 body.frameless-hall canvas:focus { box-shadow: none; }
 
-/* The opening screen has no gameplay status panel. */
-body[data-play-mode="title"] .panel { display: none; }
+/* Title and Ember Hall exploration have no gameplay status strip; battle meters remain. */
+body.frameless-hall .panel { display: none; }
