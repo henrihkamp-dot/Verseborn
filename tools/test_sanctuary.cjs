@@ -18,12 +18,16 @@ check('Every phase announces healing, then resolves and recovers', `(() => {
  return heal.healing&&heal.target===leader&&heal.cleanse&&Boolean(heal.allAllies)===(phase===2)&&!recovery.healing&&!recovery.endgameEffect;
  });
 })()`);
-check('Interrupting Maelin collapses wards and cancels the ritual', `(() => {
+check('Silence interrupts Maelin while Break preserves her pending ritual', `(() => {
  const boss=battle.enemies.find(e=>e.endgameBoss==='sanctuary');
  endgameResolveEnemyEffect(boss,{endgameEffect:'sanctuaryPrepare'},battle.party[0]);
  if(!statusOf(boss,'barrier'))return false;
  endgameBossBroken(boss);
- return !boss.encounterMechanic.sanctuaryPending&&battle.enemies.every(e=>!statusOf(e,'sanctuary'))&&statusValue(boss,'magicVulnerability')===.25&&!chooseEnemyAction(boss).healing;
+ if(!boss.encounterMechanic.sanctuaryPending||!statusOf(boss,'barrier'))return false;
+ endgameStatus(boss,'silence',battle.party[0],{duration:2});
+ const interrupted=chooseEnemyAction(boss);
+ boss.statuses=boss.statuses.filter(s=>s.type!=='silence');
+ return !interrupted.healing&&!boss.encounterMechanic.sanctuaryPending&&battle.enemies.every(e=>!statusOf(e,'sanctuary'))&&statusValue(boss,'magicVulnerability')===.25&&!chooseEnemyAction(boss).healing;
 })()`);
 check('Defeated or Silenced supports weaken healing and remove cleanse', `(() => {
  const boss=battle.enemies.find(e=>e.endgameBoss==='sanctuary');const data=endgameMechanicState(boss);data.sanctuaryRecovery=false;

@@ -2555,8 +2555,8 @@ function randomAffixValue(entry) {
 
 function formatAffix(entry) {
   const value = entry.value;
-  if (entry.type === "leeching") return `${entry.label}: Heal ${Math.round(value * 100)}% of direct damage dealt by this action`;
-  if (entry.type === "siphoning") return `${entry.label}: After a damaging skill, restore MP equal to ${Math.round(value * 100)}% of its STR or MAG scaling stat`;
+  if (entry.type === "leeching") return `${entry.label}: Heal ${Math.round(value * 100)}% of average direct damage per target (combined rate cap 15%; heal cap 8% Max HP per action)`;
+  if (entry.type === "siphoning") return `${entry.label}: Refund ${Math.round(value * 200)}% of paid MP after a damaging skill (combined cap 30%; no Ultimate refund)`;
   if (entry.type === "echoing") return `${entry.label}: ${Math.round(value * 100)}% chance after an action to grant an immediate ally action; once per wearer per battle, shares the 2-action cap`;
   if (entry.type === "openingTurnProgress") return `${entry.label}: +${Math.round(value * 100)}% initiative in round 1 only (no extra action or CRIT)`;
   if (entry.type === "statPct") return `${entry.label}: ${entry.stat.toUpperCase()} +${Math.round(value * 100)}%`;
@@ -8251,7 +8251,7 @@ function updateBossMechanicDisplay() {
   const rule = boss?.encounterMechanic?.order;
   const focused = boss && ensureStatuses(boss).find(status => ["brokenOath", "memoryCore", "inspectionOrder", "buffRecord", "memoryRecord", "harmonicRings", "echoSigil"].includes(status.type));
   const names = { guest: "Protected Guest", sanctuary: "Sanctuary", inspection: "Inspection Orders", guidance: "Guidance Marks", root: "Memory Adaptation", echo: "Echo Sigil", veil: "Beguiling Veil", oath: "Oathguard", crescendo: "Crescendo", archive: "The Living Archive" };
-  const summaries = { guest: "Strike the unprotected target.", sanctuary: "Interrupt healing and cleanse cycles.", inspection: "Obey the active Inspection Order.", guidance: "Marks reveal the next astral target.", root: "Vary attacks; burst the exposed Core.", echo: "Sigils copy buffs and delay attacks.", veil: "Cleanse illusions to restore targeting.", oath: "Break his shield, then burst.", crescendo: "Silence or Break before the chorus.", archive: "Buff theft, skill locks and replayed effects." };
+  const summaries = { guest: "Strike the unprotected target.", sanctuary: "Interrupt healing and cleanse cycles.", inspection: "Obey the active Inspection Order.", guidance: "Marks reveal the next astral target.", root: "Vary attacks; burst the exposed Core.", echo: "Sigils copy buffs and delay attacks.", veil: "Cleanse illusions to restore targeting.", oath: "Break his shield, then burst.", crescendo: "Silence before the chorus.", archive: "Buff theft, skill locks and replayed effects." };
   const title = warning ? announcement.title : focused ? STATUS_DEFS[focused.type].label : boss ? names[boss.endgameBoss] : `Phase ${phase}/3`;
   const text = warning ? announcement.text : focused ? statusDisplayData(boss,focused).description : boss ? summaries[boss.endgameBoss] : battle.enemies.filter(unit=>unit.hp>0).map(unit=>unit.name).join(" / ");
   const roster = (units, enemySide) => `<div class="boss-hud-roster ${enemySide ? 'is-enemy' : ''}">${units.map(unit => {
@@ -10292,7 +10292,7 @@ function runCurrentTurn(log) {
   renderBattle(`${log} ${turn.name}: choose a command.`);
 }
 
-function finishTurn(log) {
+function completeBattleAction(log) {
   if (!battle.meterActionRecorded) recordDamageMeterAction(log);
   transferDeadSparkyBurns();
   const actor = currentTurn();
@@ -10315,6 +10315,11 @@ function finishTurn(log) {
   }
   if (recorded && faded.length) recorded.message += ` ${faded.join(" ")}`;
   battle.meterActionRecorded = false;
+  return log;
+}
+
+function finishTurn(log) {
+  log = completeBattleAction(log);
   battle.turnIndex++;
   runCurrentTurn(log);
 }
@@ -12228,7 +12233,7 @@ function initializeEndgameFormation() {
     const rhythm = stageFormationRhythm();
     if (rhythm) receptionAnnounce(rhythm.title, rhythm.hint);
   }
-  if (battle?.hallStage === 52) receptionAnnounce("Sanctuary Under Pressure", "Wounded healers prepare Renewal before healing. Silence or Break cancels the ritual; Justin enables cleanse and the Seal Bearer amplifies healing.");
+  if (battle?.hallStage === 52) receptionAnnounce("Sanctuary Under Pressure", "Wounded healers prepare Renewal before healing. Silence interrupts boss Renewal; Silence or Break interrupts other healers. Justin enables cleanse and the Seal Bearer amplifies healing.");
   if (battle?.hallStage === 51) {
     const leader = battle.enemies.find(unit => ["Concierge Veyr", "High Administrator Thaddeus", "Dawn Gate Sentinel"].includes(unit.name));
     if (leader) receptionAnnounce(`${leader.name} prepares the reception`, "Watch the announced attack. Break its attacker or Silence its support to weaken the combination.");
@@ -12373,7 +12378,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
       clearEndgameStatus("guidanceMark", unit);
       data.pending = target; data.moved = false;
       endgameStatus(target, "guidanceMark", unit, { duration: 4 }, "Astral strike next Guide action; the mark may move once. Cleanse or interrupt now.");
-      receptionAnnounce('Guidance Mark', `${target.name} is marked. Astral Impact follows; the mark can move once. Cleanse it or Silence/Break the Guide. His escorts pressure the marked target.`);
+      receptionAnnounce('Guidance Mark', `${target.name} is marked. Astral Impact follows; the mark can move once. Cleanse it or Silence the Guide. Break deals bonus damage but does not cancel Astral Impact. His escorts pressure the marked target.`);
       return ` ${target.name} receives Guidance Mark. It may move before the delayed astral strike.`;
     case "moveMark": {
       const next = party.find(hero => hero !== data.pending) || data.pending;
@@ -12933,6 +12938,9 @@ function winBattle(log) {
   battle.defeated.push(...battle.enemies);
   if (battle.waves.length) {
     if (battleRoundLimitReached()) return endBattleDraw(log);
+    // A phase-winning action still consumes buff and transformation duration.
+    log = completeBattleAction(log);
+    const pendingExtraTurns = battle.turnQueue.slice(battle.turnIndex + 1).filter(turn => turn.extra && turnIsAlive(turn));
     const total = battle.phaseTotal || battle.waves.length + 1;
     const nextWave = battle.waves.shift();
     const activeBattle = battle;
@@ -12948,6 +12956,8 @@ function winBattle(log) {
       state.resonance = Math.min(100, state.resonance + 10);
       battle.round++;
       buildTurnOrder();
+      // Keep already awarded actions ahead of the new phase's normal initiative.
+      battle.turnQueue.unshift(...pendingExtraTurns.filter(turnIsAlive));
       runCurrentTurn(`${log} The next wave enters.`);
     };
     if (!battle.hallStage) {
