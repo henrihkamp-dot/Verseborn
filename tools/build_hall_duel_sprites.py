@@ -64,8 +64,22 @@ def pack(name,frames,effects=False):
  file=name.lower()+('-vfx' if effects else '')+'.webp';sheet.save(OUT/file,quality=79,method=4)
  if not effects:sheet.crop((0,0,cw,ch)).save(OUT/(name.lower()+'-portrait.webp'),quality=82,method=4)
  return {'file':file,'columns':4,'rows':3 if effects else 5,'cellWidth':cw,'cellHeight':ch,'baseline':196,'referenceHeight':max(heights[:4]),'rowMap':{'projectile':0,'magic':1,'ultimate':2} if effects else {'idle':0,'melee':1,'magic':2,'ultimate':3,'death':4}}
+def stabilize_idle(name,meta):
+ rois={'Seerin':(55,90,112,183),'Sparky':(35,117,109,189),'Glimmer':(35,118,86,190),'Torren':(35,85,105,185),'Mira':(40,82,93,180),'Verseborn':(43,85,104,189),'Kael':(32,85,101,185)}
+ im=np.array(Image.open(OUT/meta['file']).convert('RGBA')).astype(float);frames=[im[:208,c*192:(c+1)*192] for c in range(4)];x0,y0,x1,y1=rois[name];template=frames[0][y0:y1,x0:x1];mask=template[:,:,3]>200;rgb=template[:,:,:3];weight=np.where(np.indices(mask.shape)[0]<mask.shape[0]*.4,2,1)*mask;offsets=[[0,0]]
+ ground=[int(np.argwhere(f[:,:,3]>220)[:,0].max()) for f in frames]
+ for col,frame in enumerate(frames[1:],1):
+  best=(1e9,0,0)
+  for dy in range(-6,7):
+   for dx in range(-22,23):
+    candidate=frame[y0-dy:y1-dy,x0-dx:x1-dx];valid=(candidate[:,:,3]>150)&mask;diff=np.mean(np.minimum(abs(candidate[:,:,:3]-rgb),70),axis=2);cost=np.sum((diff+np.where(valid,0,70))*weight)/weight.sum()+abs(dx)*.025+abs(dy)*.05
+    if cost<best[0]:best=(cost,dx,dy)
+  # Register the stable body horizontally; feet set the vertical ground plane.
+  offsets.append([best[1],ground[0]-ground[col]])
+ meta['idleFrameOffsets']=offsets
+
 manifest={};preview=ROOT.parent/'duel-frame-previews';preview.mkdir(exist_ok=True)
 for name,(file,bounds) in SPRITES.items():
- im=Image.open(Path.home()/'AppData/Local/Temp'/('codex-clipboard-'+file+'.png')).convert('RGBA');frames=extract(im,bounds);meta=pack(name,frames);effectim=Image.open(Path.home()/'AppData/Local/Temp'/('codex-clipboard-'+VFX[name]+'.png')).convert('RGBA');meta['vfx']=pack(name,extract(effectim,[round(effectim.height/3),round(effectim.height*2/3)]),True);manifest[name]=meta
+ im=Image.open(Path.home()/'AppData/Local/Temp'/('codex-clipboard-'+file+'.png')).convert('RGBA');frames=extract(im,bounds);meta=pack(name,frames);effectim=Image.open(Path.home()/'AppData/Local/Temp'/('codex-clipboard-'+VFX[name]+'.png')).convert('RGBA');meta['vfx']=pack(name,extract(effectim,[round(effectim.height/3),round(effectim.height*2/3)]),True);stabilize_idle(name,meta);manifest[name]=meta
  Image.open(OUT/meta['file']).save(preview/(name.lower()+'.png'));Image.open(OUT/meta['vfx']['file']).save(preview/(name.lower()+'-vfx.png'));print(name,'ready',flush=True)
 (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2));print('TOTAL',sum(p.stat().st_size for p in OUT.iterdir()),flush=True)

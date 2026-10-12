@@ -371,7 +371,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        -3,
+        -1
+      ],
+      [
+        10,
+        -1
+      ],
+      [
+        10,
+        -1
+      ]
+    ]
   },
   "Sparky": {
     "file": "sparky.webp",
@@ -401,7 +419,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        -3,
+        1
+      ]
+    ]
   },
   "Glimmer": {
     "file": "glimmer.webp",
@@ -431,7 +467,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        -9,
+        0
+      ]
+    ]
   },
   "Torren": {
     "file": "torren.webp",
@@ -461,7 +515,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        8,
+        -1
+      ],
+      [
+        6,
+        -1
+      ]
+    ]
   },
   "Mira": {
     "file": "mira.webp",
@@ -491,7 +563,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        -12,
+        0
+      ],
+      [
+        -9,
+        1
+      ],
+      [
+        -11,
+        0
+      ]
+    ]
   },
   "Verseborn": {
     "file": "verseborn.webp",
@@ -521,7 +611,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ]
   },
   "Kael": {
     "file": "kael.webp",
@@ -551,7 +659,25 @@
         "magic": 1,
         "ultimate": 2
       }
-    }
+    },
+    "idleFrameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        11,
+        0
+      ],
+      [
+        7,
+        1
+      ]
+    ]
   }
 };
   let duelArtPromise;
@@ -567,13 +693,19 @@
     const dying = unit.hp <= 0 || unit.anim === 'death', attacking = unit.anim === 'attack';
     const animation = dying ? 'death' : attacking ? unit.attackStyle === 'ultimate' ? 'ultimate' : unit.attackStyle === 'melee' ? 'melee' : 'magic' : 'idle';
     const column = dying ? Math.min(3, Math.floor(Math.max(0, tick - (unit.deathTick ?? tick)) / 5)) : attacking ? Math.min(3, Math.floor((unit.animTick || 0) / 6)) : [0,1,2,3,2,1][Math.floor((tick + unit.sparringId.length * 3) / 36) % 6];
-    const scale = (battleSpriteHeights[unit.sparringId] || 54) * BATTLE_COMPOSITION_SCALE / sheet.referenceHeight;
+    const scale = (battleSpriteHeights[unit.sparringId] || 54) * BATTLE_COMPOSITION_SCALE * 2 / sheet.referenceHeight;
     const width = Math.round(sheet.cellWidth * scale), height = Math.round(sheet.cellHeight * scale);
+    const anchorOffset = animation === "idle" ? sheet.idleFrameOffsets?.[column] || [0, 0] : [0, 0];
     ctx.save(); ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(sheet.image, column * sheet.cellWidth, sheet.rowMap[animation] * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, Math.round(x + 8 - width / 2), Math.round(y + 31 - sheet.baseline * scale), width, height); ctx.restore();
+    ctx.drawImage(sheet.image, column * sheet.cellWidth, sheet.rowMap[animation] * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, Math.round(x + 8 - width / 2 + anchorOffset[0] * scale), Math.round(y + 31 - sheet.baseline * scale + anchorOffset[1] * scale), width, height); ctx.restore();
     if (attacking && unit.lastAnimDrawTick !== tick) { unit.animTick = (unit.animTick || 0) + 1; unit.lastAnimDrawTick = tick; }
     return true;
   }
+  const oldBattleOffset = battleOffset;
+  battleOffset = unit => {
+    if (battle?.sparring && unit.sparringId && unit.anim !== "attack" && unit.hp > 0) { if (unit.flash > 0) unit.flash--; return 0; }
+    return oldBattleOffset(unit);
+  };
   const oldEnemyAnimationSheetFor = enemyAnimationSheetFor;
   enemyAnimationSheetFor = unit => battle?.sparring && unit.sparringId && duelArt[unit.sparringId]?.image ? duelArt[unit.sparringId] : oldEnemyAnimationSheetFor(unit);
   const oldBattleVitals = drawBattleVitals;
