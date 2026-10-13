@@ -102,6 +102,7 @@ const gearBrowser = {
   filterOpen: false,
   sortOpen: false
 };
+let gearPickerOpen = false, gearOptimizeOpen = false;
 let autoEquipPool = "all";
 let autoEquipStrategy = "utility";
 let selectedItemCategory = "consumables";
@@ -14256,6 +14257,31 @@ function favoriteGearButton(ref) {
   return `<label class="gear-favorite"><input type="checkbox" data-favorite="${ref}" ${state.favoriteGear[ref] ? "checked" : ""}> Lock gear (keep equipped)</label>`;
 }
 
+
+function equipmentArtwork(id) { return 'assets/equipment/' + id.toLowerCase() + '.webp'; }
+function emptyEquipmentDetailHtml(id, slot, picker) {
+  return `<article class="selection-detail selection-empty"><header><small>${gearSlotLabel(slot)}</small><strong>Empty slot</strong></header><p>No equipment bonus. Choose an item to view its stats and effects.</p>${picker ? `<button type="button" data-equip="${id}:${slot}:__EMPTY__" ${!baseJobs[id].gear[slot] ? "disabled" : ""}>Unequip ${gearSlotLabel(slot)}</button>` : ""}</article>`;
+}
+function equipmentAttributesHtml(id, previewRef = null) {
+  const current = totals(id), hero = baseJobs[id], previous = { ...hero.gear };
+  let next = current;
+  const candidate = gearByName(previewRef);
+  if (previewRef === "__EMPTY__" || candidate && canEquip(id, candidate)) {
+    try { hero.gear[candidate?.slot || selectedGearSlot] = previewRef === "__EMPTY__" ? null : previewRef; next = totals(id); }
+    finally { hero.gear = previous; }
+  }
+  return '<section class="equip-attributes"><h3>Attributes</h3>' + [['str','STR'],['agi','AGI'],['mag','MAG'],['stam','STAM'],['echo','ECHO'],['max','HP'],['mp','MP']].map(([key,label]) => {
+    const delta = next[key] - current[key];
+    return '<div><span>' + label + '</span><b>' + current[key] + '</b><small class="' + (delta > 0 ? 'is-positive' : delta < 0 ? 'is-negative' : '') + '">' + (delta ? (delta > 0 ? '▲ +' : '▼ ') + delta : '—') + '</small></div>';
+  }).join('') + '</section>';
+}
+function equipmentBodySlotsHtml(id) {
+  return ['weapon','helmet','armour','necklace','ring'].map(slot => {
+    const ref = baseJobs[id].gear[slot], gear = gearByName(ref), index = {weapon:0,armour:1,ring:2,necklace:3,helmet:4}[slot], locked = equippedGearLocked(id,slot);
+    return '<div class="equip-body-slot equip-slot-' + slot + (selectedGearSlot === slot ? ' is-selected' : '') + '"><button type="button" data-gear-slot="' + slot + '" aria-label="Choose ' + gearSlotLabel(slot) + ' for ' + id + '">' + (gear ? gearIconHtml(gear,id,index,'equip-slot-icon',ref) : pixelIconHtml('gear-empty',index,'equip-slot-icon')) + '<span><small>' + gearSlotLabel(slot) + '</small><strong>' + escapeMarkup(ref ? gearDisplayName(ref) : 'Empty') + '</strong>' + (gear ? '<em>' + gearRarity(ref) + '</em>' : '') + '</span></button><button type="button" class="equip-slot-lock" data-equipped-lock="' + slot + '" aria-label="' + (locked ? 'Unlock' : 'Lock') + ' ' + gearSlotLabel(slot) + ' on ' + id + '" aria-pressed="' + locked + '" ' + (!ref ? 'disabled' : '') + '>' + (locked ? '▣' : '◇') + '</button></div>';
+  }).join('');
+}
+
 function renderMenu() {
   const hallMenu = state.gameMode === 'hallBattles';
   if (hallMenu && menuTab === 'quests') menuTab = 'world';
@@ -14359,13 +14385,13 @@ function renderMenu() {
     const roster = state.party.map(heroId => {
       const hero = baseJobs[heroId];
       const heroTotals = totals(heroId);
-      return `<button type="button" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><strong>${hero.name}</strong><small>${hero.title}</small><span>HP ${hero.hp}/${heroTotals.max}</span></button>`;
+      return `<button type="button" title="${hero.name} / ${hero.title}" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><strong>${hero.name}</strong></button>`;
     }).join("");
     const allGearChoices = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
     const slotChoices = filteredSortedGear(allGearChoices);
     const choiceIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
     if (selectedGearRef !== "__EMPTY__" && !slotChoices.some(entry => entry.ref === selectedGearRef)) selectedGearRef = null;
-    if (!selectedGearRef) selectedGearRef = h.gear[selectedGearSlot] || slotChoices[0]?.ref || "__EMPTY__";
+    if (!selectedGearRef) selectedGearRef = h.gear[selectedGearSlot] || (gearPickerOpen ? slotChoices[0]?.ref : null) || "__EMPTY__";
     const slotTabs = Object.entries(h.gear).map(([slot, equippedRef]) => {
       const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
       const gear = gearByName(equippedRef);
@@ -14385,15 +14411,24 @@ function renderMenu() {
     const usable = selectedGear ? canEquip(id, selectedGear) : true;
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
     const detailIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedSlot];
-    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon", selectedGearRef)}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}${gearAffixHtml(selectedGearRef)}<p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison" open>${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : `<article class="selection-detail selection-empty"><header><small>${gearBrowser.slot === "all" ? "Gear results" : gearSlotLabel(selectedGearSlot)}</small><strong>${slotChoices.length ? "Select gear" : "No matching gear"}</strong></header><p>${slotChoices.length ? "Choose an item to inspect its stats, effects and affixes." : "Adjust the search or clear the active filters."}</p></article>`;
-    el.menuBody.innerHTML = `<div class="gear-roster">${roster}</div><div class="gear-scroll-region"><section class="gear-summary gear-summary-strip"><img class="gear-profile-portrait" src="${menuPortraitSource(id)}" alt=""><strong>${h.name}</strong><small>${h.title} / ${h.element}</small><div class="gear-stat-grid"><span>STR <b>${totalsNow.str}</b></span><span>AGI <b>${totalsNow.agi}</b></span><span>MAG <b>${totalsNow.mag}</b></span><span>STAM <b>${totalsNow.stam}</b></span><span>ECHO <b>${totalsNow.echo}</b></span><span>HP <b>${h.hp}/${totalsNow.max}</b></span><span>MP <b>${h.mp}/${totalsNow.mp}</b></span></div></section>${autoEquipToolbarHtml(id)}${gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length)}<div class="selection-workspace gear-selection-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">${slotTabs}</nav><header><strong>${gearBrowser.slot === "all" ? "All Gear" : gearSlotLabel(gearBrowser.slot)}</strong><small>${slotChoices.length} matching</small></header><div class="selection-list">${choiceList}</div></section>${detail}</div></div>`;
+    const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon", selectedGearRef)}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}<details class="equip-affixes"><summary>Affixes & modifiers</summary>${gearAffixHtml(selectedGearRef)}</details><p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison">${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : emptyEquipmentDetailHtml(id, selectedGearSlot, gearPickerOpen);
+    const overview = '<div class="equip-workspace"><section class="equip-body" data-character="' + id + '" aria-label="' + id + ' equipment overview"><div class="equip-identity"><h2>' + h.name + '</h2><p>' + h.title + '</p></div><img class="equip-character" src="' + equipmentArtwork(id) + '" alt="' + id + ' full-body equipment portrait">' + equipmentBodySlotsHtml(id) + '</section><aside class="equip-sidebar">' + equipmentAttributesHtml(id) + '<div class="equip-current-detail">' + detail + '</div><footer class="equip-main-actions"><button type="button" data-auto-equip="hero" aria-label="Optimize ' + id + '">Optimize</button><button type="button" data-unequip-all="hero" aria-label="Unequip ' + id + '">Unequip</button></footer></aside></div>';
+    const picker = '<section class="equip-picker gear-scroll-region" aria-label="Equipment selection"><header class="equip-picker-head"><button type="button" data-close-equipment-picker>← Character overview</button><strong>' + h.name + ' / ' + (gearBrowser.slot === 'all' ? 'All Gear' : gearSlotLabel(gearBrowser.slot)) + '</strong></header>' + gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length) + '<div class="equip-picker-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">' + slotTabs + '</nav><header><strong>' + (gearBrowser.slot === 'all' ? 'All Gear' : gearSlotLabel(gearBrowser.slot)) + '</strong><small>' + slotChoices.length + ' matching</small></header><div class="selection-list">' + choiceList + '</div></section><aside class="equip-picker-detail">' + equipmentAttributesHtml(id, selectedGearRef) + detail + '</aside></div></section>';
+    el.menuBody.innerHTML = '<section class="equip-screen"><header class="equip-header"><h2>Equipment</h2><nav class="gear-roster equip-roster" aria-label="Choose equipment character">' + roster + '</nav><div class="equip-header-actions"><button type="button" data-equip-inventory>Search gear</button><details class="equip-optimize-menu" ' + (gearOptimizeOpen ? 'open' : '') + '><summary>Options</summary>' + autoEquipToolbarHtml(id) + '</details></div></header>' + (gearPickerOpen ? picker : overview) + '</section>';
+    el.menuBody.querySelector('[data-equip-inventory]').onclick = () => { gearPickerOpen = true; gearBrowser.slot = 'all'; selectedGearRef = null; renderMenu(); el.menuBody.querySelector('[data-gear-search]')?.focus(); };
+    const closePicker = el.menuBody.querySelector('[data-close-equipment-picker]');
+    if (closePicker) closePicker.onclick = () => { gearPickerOpen = false; selectedGearRef = h.gear[selectedGearSlot] || '__EMPTY__'; renderMenu(); };
+    const optimizeMenu = el.menuBody.querySelector('.equip-optimize-menu'); optimizeMenu.ontoggle = () => { gearOptimizeOpen = optimizeMenu.open; };
+    el.menuBody.querySelectorAll('[data-equipped-lock]').forEach(button => button.onclick = () => { const ref = h.gear[button.dataset.equippedLock]; if (!ref) return; if (state.favoriteGear[ref]) delete state.favoriteGear[ref]; else state.favoriteGear[ref] = true; updatePanels(); renderMenu(); });
     el.menuBody.querySelectorAll("[data-gear-hero]").forEach(btn => btn.onclick = () => {
       selectedGearHero = btn.dataset.gearHero;
+      gearPickerOpen = false;
       selectedGearRef = null;
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-slot]").forEach(btn => btn.onclick = () => {
       selectedGearSlot = btn.dataset.gearSlot;
+      gearPickerOpen = true;
       gearBrowser.slot = selectedGearSlot;
       selectedGearRef = null;
       renderMenu();
@@ -15474,6 +15509,7 @@ function editableKeyboardTarget(event) {
 window.addEventListener('focusin', event => { if (editableKeyboardTarget(event)) heldDirection = null; }, true);
 window.addEventListener("keydown", e => {
   if (editableKeyboardTarget(e)) return;
+  if (e.target?.closest?.(".equip-screen") && ["tab", "enter", " "].includes(e.key.toLowerCase())) return;
   if (e.target?.closest?.(".forge-reroll, .gear-favorite, .gear-comparison")) return;
   const key = e.key.toLowerCase();
   const movement = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key);
@@ -15491,6 +15527,7 @@ window.addEventListener("keydown", e => {
   else if (key === "x" || key === "escape") {
     if (mode === "battle" && battle?.targetMode) closeTargetSelection();
     else if (mode === "battle" && battle?.itemMode) closeBattleItems();
+    else if (mode === "menu" && menuTab === "gear" && gearPickerOpen) { gearPickerOpen = false; renderMenu(); }
     else if (mode === "menu" || mode === "shop" || mode === "hallMap") toggleMenu();
     else if (mode === "atlas") toggleAtlas();
   }
