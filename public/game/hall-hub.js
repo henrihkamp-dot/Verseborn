@@ -394,9 +394,14 @@
   }
   function encounterSupportHtml() {
     const selected=progress().selected;
-    return '<section class="hub-loadout"><h3>Battle Support</h3><div>'+Object.keys(categories).map(category=>'<section class="hub-slot hub-'+category+'"><label><strong>'+labels[category]+'</strong><select data-encounter-support="'+category+'" '+(recruited(owners[category])?'':'disabled')+'><option value="">None</option>'+categories[category].map(item=>'<option value="'+item.id+'" '+(selected[category]===item.id?'selected':'')+' '+(category==='blessing'||stock(item)>0?'':'disabled')+'>'+escaped(item.name)+(category==='blessing'?' / Free':' / '+stock(item)+' owned')+'</option>').join('')+'</select></label><p>'+escaped(entry(category,selected[category])?.desc||(recruited(owners[category])?'Optional':'Recruit '+owners[category]+' to unlock'))+'</p></section>').join('')+'</div></section>';
+    const slots=Object.keys(categories).map(category=>{const item=entry(category,selected[category]),unlocked=recruited(owners[category]);return `<section class="hub-slot hub-${category}"><h3>${labels[category]}</h3>${supportIcon(category,item)}<strong>${item?escaped(item.name):'None selected'}</strong><p>${item?escaped(item.desc):unlocked?'Select to view effects and choose support.':'Recruit '+owners[category]+' to unlock'}</p><small>${item&&category!=='blessing'?'Owned: '+stock(item):category==='blessing'?'No consumable cost':'Consumed at battle start'}</small><div><button type="button" data-encounter-support="${category}" ${unlocked?'':'disabled'}>${item?'Change':'Select'}</button><button type="button" data-encounter-clear="${category}" aria-label="Remove ${category}" ${item?'':'disabled'}>&times;</button></div></section>`;}).join('');
+    const active=Object.keys(categories).flatMap(category=>{const item=entry(category,selected[category]);return item?[`<span class="hub-${category}"><b>${labels[category]}</b> ${escaped(item.name)}<small>${escaped(item.desc)}</small></span>`]:[];}).join('');
+    return `<section class="hub-loadout"><h3>Battle Support</h3><div>${slots}</div></section><section class="hub-active"><h3>Active Support</h3>${active||'<p>No support selected.</p>'}</section>`;
   }
-  function bindEncounterSupport(returnTo) { el.menuBody.querySelectorAll('[data-encounter-support]').forEach(control=>control.onchange=()=>{select(control.dataset.encounterSupport,control.value||null);returnTo();}); }
+  function bindEncounterSupport(returnTo) {
+    el.menuBody.querySelectorAll('[data-encounter-support]').forEach(button=>button.onclick=()=>showChoices(button.dataset.encounterSupport,returnTo));
+    el.menuBody.querySelectorAll('[data-encounter-clear]').forEach(button=>button.onclick=()=>{select(button.dataset.encounterClear,null);returnTo();});
+  }
   function beginSupportedBattle(begin) {
     const support={},consumed=[];
     for(const category of Object.keys(categories)){const item=entry(category,progress().selected[category]);if(item&&(!recruited(owners[category])||category!=='blessing'&&!stock(item))){notice(item.name+' is unavailable. Change or remove it before beginning.');return false;}support[category]=item?{...item}:null;}
