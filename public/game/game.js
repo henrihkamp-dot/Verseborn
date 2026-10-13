@@ -14231,6 +14231,7 @@ function fitGearHoverTooltipToViewport() {
 }
 
 function showGearHoverTooltip(element, context) {
+  if (el.menu.dataset.menuView === "gear") { hideGearHoverTooltip(); return; }
   if (!context || !gearByName(context.ref)) return;
   keepGearHoverTooltipOpen();
   if (!gearHoverTooltip) {
@@ -14404,7 +14405,7 @@ function renderMenu() {
       const copies = gearCopyCount(ref);
       const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
       const rowIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
-      return `<button type="button" class="selection-row ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}" ${gearHoverAttribute({ heroId: id, ref })}>${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon", ref)}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small><small>${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
+      return `<button type="button" class="selection-row rarity-${gearRarity(ref).toLowerCase().replace(/\s+/g, "-")} ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}" ${gearHoverAttribute({ heroId: id, ref })}>${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon", ref)}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small><small>${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
     }).join("") || `<p class="selection-list-empty">No gear matches these filters.</p>`}${gearBrowser.slot === "all" ? "" : `<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`}`;
     const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
     const selectedSlot = selectedGear?.slot || selectedGearSlot;
