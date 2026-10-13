@@ -87,7 +87,7 @@
   maps[MAP]={...maps.emberHallBattles,name:'Ember Rift — The Revealed Vault',chapter:'Ember Rift',points:[],spawns:[],exits:[]};
   const images={},sheets={},effects={},portraits={},npcSheets={};let assetsReady=false,assetFailure=null,selected=1,doorStart=null,manifest;
   const loadImage=(key,file)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[key]=image;resolve(image);};image.onerror=()=>reject(Error('Rift asset missing: '+file));image.src=BASE+file;});
-  const ready=fetch(BASE+'manifest.json?v=ember-rift-1').then(r=>{if(!r.ok)throw Error('Rift asset manifest unavailable');return r.json();}).then(async data=>{
+  const ready=fetch(BASE+'manifest.json?v=ember-rift-2').then(r=>{if(!r.ok)throw Error('Rift asset manifest unavailable');return r.json();}).then(async data=>{
     manifest=data;await Promise.all([...Object.entries(data.characters).map(async([key,config])=>{sheets[key]={...config,image:await loadImage(key,config.file)};}),...Object.entries(data.effects).map(async([key,config])=>{effects[key]={...config,image:await loadImage('vfx:'+key,config.file)};}),...Object.entries(data.environment).map(([key,file])=>loadImage(key,file)),...Object.entries(data.battles||{}).map(async([id,file])=>{battleImages['rift-'+id]=await loadImage('battle:'+id,file);}),...Object.entries(data.npcs||{}).map(async([key,config])=>{npcSheets[key]={...config,image:await loadImage('npc:'+key,config.file)};})]);
     assetsReady=true;for(const key of Object.keys(roster)){const sheet=sheets[key],cell=sheet.cells[0],c=document.createElement('canvas');c.width=180;c.height=180;const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(sheet.image,...cell,0,0,180,180);portraits[key]=c.toDataURL('image/png');}
     if(mode==='hallMap'&&el.menu.dataset.menuView==='rift-path')renderSelection();
@@ -309,5 +309,6 @@
   closeHallOverlay=function(){const ours=['rift-path','rift-forge','rift-merchant'].includes(el.menu.dataset.menuView);oldClose();if(ours)saveGame(hallSaveKey());};
   window.EmberRift={ready,openMerchant,learnSecretSkill,buySecretGear,exchangeMaterial,secretSkills,secretGear,curios,npcSheets,merchant,guide,roomDepthOrder,clearSegment,get route(){return target?.path||[];},getNavigationTarget(){return target;},progress,available,roster,encounters,rewards,makeEnemy,startEncounter,awardRewards,openSelection,forge,temper,enterRoom,leaveRoom,returnToRoom,nearbyHallDoor,triggerHall,drawHallDoor,collision,navigate,player,portal,anvil,exit,interrupt,sheets,effects,get assetsReady(){return assetsReady;},get assetFailure(){return assetFailure;},get camera(){return camera;},hallDoorHit:(x,y)=>Math.abs(x-315)<22&&y>=0&&y<50?door:null,tickHallDoor:hallPlayer=>{if(progress().unlocked&&progress().doorSeen&&Math.abs(hallPlayer.x-315)<14&&hallPlayer.y<48&&mode==='walk')enterRoom();}};
 })();
+
 
 
