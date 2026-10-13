@@ -185,9 +185,9 @@
   drawAnimatedEnemy=function(unit,px,py){
     if(!unit.riftKey)return oldAnimated(unit,px,py);const sheet=sheets[unit.riftKey];if(!sheet)return false;
     const animation=unit.hp<=0||unit.anim==='death'?'death':unit.anim==='attack'?(unit.attackStyle==='ultimate'?'ultimate':unit.attackStyle==='melee'?'melee':'magic'):'idle';
-    const frame=animation==='death'?Math.min(3,Math.floor(Math.max(0,tick-(unit.deathTick??tick))/7)):animation==='idle'?(sheet.stableIdle?0:Math.floor(tick/60)%4):Math.min(3,Math.floor((unit.animTick||0)/6));
+    const frame=animation==='death'?Math.min(3,Math.floor(Math.max(0,tick-(unit.deathTick??tick))/7)):animation==='idle'?(Math.floor(tick/(sheet.idleFrameTicks||36))%4):Math.min(3,Math.floor((unit.animTick||0)/6));
     const index=sheet.rowMap[animation]*4+frame,cell=sheet.cells[index],image=safeEnemyFrame(sheet,index),anchor=sheet.frameAnchors?.[index]||[cell[2]/2,sheet.baseline],size=unit.riftKey==='dragon'?78:unit.riftKey==='engine'?70:unit.riftBoss?56:['warden','bear','brute'].includes(unit.riftKey)?49:['fae','mina','sella'].includes(unit.riftKey)?36:43;
-    const scale=Math.min(size/sheet.referenceHeight,105/(sheet.maxCellWidth||cell[2])),scaleY=scale*(animation==='idle'&&sheet.stableIdle?1+(sheet.idleBreathAmplitude||.006)*Math.sin(tick/45):1),groundX=Math.max(2+(sheet.maxAnchorLeft||cell[2]/2)*scale,Math.min(LOGICAL_WIDTH-2-(sheet.maxAnchorRight||cell[2]/2)*scale,px+8)),x=groundX-anchor[0]*scale,y=py+31-anchor[1]*scaleY;
+    const scale=Math.min(size/sheet.referenceHeight,105/(sheet.maxCellWidth||cell[2])),scaleY=scale,groundX=Math.max(2+(sheet.maxAnchorLeft||cell[2]/2)*scale,Math.min(LOGICAL_WIDTH-2-(sheet.maxAnchorRight||cell[2]/2)*scale,px+8)),x=groundX-anchor[0]*scale,y=py+31-anchor[1]*scaleY;
     ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(image,x,y,cell[2]*scale,cell[3]*scaleY);ctx.restore();
     if(unit.anim==='attack'&&unit.lastAnimDrawTick!==tick){unit.animTick=(unit.animTick||0)+1;unit.lastAnimDrawTick=tick;}return true;
   };
