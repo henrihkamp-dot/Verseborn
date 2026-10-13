@@ -7484,3 +7484,6 @@ body.frameless-hall canvas:focus { box-shadow: none; }
 
 /* Title and Ember Hall exploration have no gameplay status strip; battle meters remain. */
 body.frameless-hall .panel { display: none; }
+
+.rarity-shadow-artifact { color: #d2bfff !important; border-color: #9983d8; background: #1e1830; text-shadow: 0 0 6px #a38ce088; }
+.rarity-rift-artifact { color: #adfff0 !important; border-color: #54d9c2; background: #102c2a; text-shadow: 0 0 6px #59e5cd88; }
