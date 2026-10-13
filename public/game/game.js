@@ -14385,18 +14385,13 @@ function renderMenu() {
     const roster = state.party.map(heroId => {
       const hero = baseJobs[heroId];
       const heroTotals = totals(heroId);
-      return `<button type="button" title="${hero.name} / ${hero.title}" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><strong>${hero.name}</strong></button>`;
+      return `<button type="button" title="${hero.name} / ${hero.title}" class="gear-hero ${heroId === id ? "is-selected" : ""}" data-gear-hero="${heroId}"><img src="${menuPortraitSource(heroId)}" alt=""><span><strong>${hero.name}</strong><small>${hero.title}</small></span></button>`;
     }).join("");
     const allGearChoices = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
     const slotChoices = filteredSortedGear(allGearChoices);
     const choiceIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
     if (selectedGearRef !== "__EMPTY__" && !slotChoices.some(entry => entry.ref === selectedGearRef)) selectedGearRef = null;
     if (!selectedGearRef) selectedGearRef = h.gear[selectedGearSlot] || (gearPickerOpen ? slotChoices[0]?.ref : null) || "__EMPTY__";
-    const slotTabs = Object.entries(h.gear).map(([slot, equippedRef]) => {
-      const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[slot];
-      const gear = gearByName(equippedRef);
-      return `<button type="button" class="selection-tab ${selectedGearSlot === slot ? "is-active" : ""}" data-gear-slot="${slot}">${gear ? gearIconHtml(gear, id, iconIndex, "selection-tab-icon", equippedRef) : pixelIconHtml("gear-empty", iconIndex, "selection-tab-icon")}<span><strong>${gearSlotLabel(slot)}</strong><small>${equippedRef ? gearDisplayName(equippedRef) : "Empty"}</small></span><b>${ownedGearRefs(slot, id).length}</b></button>`;
-    }).join("");
     const choiceList = `${slotChoices.map(({ ref, gear }, index) => {
       const equipped = h.gear[selectedGearSlot] === ref;
       const holders = equippedGearUsers(ref);
@@ -14412,9 +14407,10 @@ function renderMenu() {
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
     const detailIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedSlot];
     const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon", selectedGearRef)}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}<details class="equip-affixes"><summary>Affixes & modifiers</summary>${gearAffixHtml(selectedGearRef)}</details><p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison">${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : emptyEquipmentDetailHtml(id, selectedGearSlot, gearPickerOpen);
-    const overview = '<div class="equip-workspace"><section class="equip-body" data-character="' + id + '" aria-label="' + id + ' equipment overview"><div class="equip-identity"><h2>' + h.name + '</h2><p>' + h.title + '</p></div><img class="equip-character" src="' + equipmentArtwork(id) + '" alt="' + id + ' full-body equipment portrait">' + equipmentBodySlotsHtml(id) + '</section><aside class="equip-sidebar">' + equipmentAttributesHtml(id) + '<div class="equip-current-detail">' + detail + '</div><footer class="equip-main-actions"><button type="button" data-auto-equip="hero" aria-label="Optimize ' + id + '">Optimize</button><button type="button" data-unequip-all="hero" aria-label="Unequip ' + id + '">Unequip</button></footer></aside></div>';
-    const picker = '<section class="equip-picker gear-scroll-region" aria-label="Equipment selection"><header class="equip-picker-head"><button type="button" data-close-equipment-picker>← Character overview</button><strong>' + h.name + ' / ' + (gearBrowser.slot === 'all' ? 'All Gear' : gearSlotLabel(gearBrowser.slot)) + '</strong></header>' + gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length) + '<div class="equip-picker-workspace"><section class="selection-list-panel"><nav class="selection-tabs gear-slot-tabs">' + slotTabs + '</nav><header><strong>' + (gearBrowser.slot === 'all' ? 'All Gear' : gearSlotLabel(gearBrowser.slot)) + '</strong><small>' + slotChoices.length + ' matching</small></header><div class="selection-list">' + choiceList + '</div></section><aside class="equip-picker-detail">' + equipmentAttributesHtml(id, selectedGearRef) + detail + '</aside></div></section>';
-    el.menuBody.innerHTML = '<section class="equip-screen" data-character="' + id + '"><header class="equip-header"><h2>Equipment</h2><nav class="gear-roster equip-roster" aria-label="Choose equipment character">' + roster + '</nav><div class="equip-header-actions"><button type="button" data-equip-inventory>Search gear</button><details class="equip-optimize-menu" ' + (gearOptimizeOpen ? 'open' : '') + '><summary>Options</summary>' + autoEquipToolbarHtml(id) + '</details></div></header>' + (gearPickerOpen ? picker : overview) + '</section>';
+    const picker = '<section class="equip-picker equip-slot-picker" aria-label="Equipment selection"><header class="equip-picker-head"><div><small>' + h.name + '</small><strong>' + (gearBrowser.slot === 'all' ? 'Choose equipment' : 'Choose ' + gearSlotLabel(gearBrowser.slot).toLowerCase()) + '</strong></div><button type="button" data-close-equipment-picker aria-label="Close equipment selection">×</button></header>' + gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length) + '<div class="selection-list" aria-label="Matching equipment">' + choiceList + '</div><div class="equip-picker-detail"><details class="equip-preview-stats"><summary>Attribute changes</summary>' + equipmentAttributesHtml(id, selectedGearRef) + '</details>' + detail + '</div></section>';
+    const sidebar = gearPickerOpen ? picker : equipmentAttributesHtml(id) + '<div class="equip-current-detail">' + detail + '</div>';
+    const overview = '<div class="equip-workspace"><section class="equip-body" data-character="' + id + '" aria-label="' + id + ' equipment overview"><div class="equip-identity"><h2>' + h.name + '</h2><p>' + h.title + '</p></div><img class="equip-character" src="' + equipmentArtwork(id) + '" alt="' + id + ' full-body equipment portrait">' + equipmentBodySlotsHtml(id) + '</section><aside class="equip-sidebar">' + sidebar + '<footer class="equip-main-actions"><button type="button" data-auto-equip="hero" aria-label="Optimize ' + id + '">Optimize</button><button type="button" data-unequip-all="hero" aria-label="Unequip ' + id + '">Unequip</button></footer></aside></div>';
+    el.menuBody.innerHTML = '<section class="equip-screen" data-character="' + id + '"><header class="equip-header"><h2>Equipment</h2><div class="equip-header-actions"><button type="button" data-equip-inventory>Search gear</button><details class="equip-optimize-menu" ' + (gearOptimizeOpen ? 'open' : '') + '><summary>Options</summary>' + autoEquipToolbarHtml(id) + '</details></div></header><nav class="gear-roster equip-roster" aria-label="Choose equipment character">' + roster + '</nav>' + overview + '</section>';
     el.menuBody.querySelector('[data-equip-inventory]').onclick = () => { gearPickerOpen = true; gearBrowser.slot = 'all'; selectedGearRef = null; renderMenu(); el.menuBody.querySelector('[data-gear-search]')?.focus(); };
     const closePicker = el.menuBody.querySelector('[data-close-equipment-picker]');
     if (closePicker) closePicker.onclick = () => { gearPickerOpen = false; selectedGearRef = h.gear[selectedGearSlot] || '__EMPTY__'; renderMenu(); };
@@ -14434,16 +14430,24 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-preview]").forEach(btn => btn.onclick = () => {
+      const scrollTop = el.menuBody.querySelector('.equip-slot-picker .selection-list')?.scrollTop || 0;
       const selected = slotChoices[Number(btn.dataset.gearPreview)];
       selectedGearRef = selected?.ref || null;
       if (selected?.gear?.slot) selectedGearSlot = selected.gear.slot;
       renderMenu();
+      const list = el.menuBody.querySelector('.equip-slot-picker .selection-list');
+      if (list) list.scrollTop = scrollTop;
     });
     el.menuBody.querySelectorAll("[data-gear-empty]").forEach(btn => btn.onclick = () => {
       selectedGearRef = "__EMPTY__";
       renderMenu();
     });
-    el.menuBody.querySelectorAll("[data-equip]").forEach(btn => btn.onclick = () => equipGear(btn.dataset.equip));
+    el.menuBody.querySelectorAll("[data-equip]").forEach(btn => btn.onclick = () => {
+      const scrollTop = el.menuBody.querySelector('.equip-slot-picker .selection-list')?.scrollTop || 0;
+      equipGear(btn.dataset.equip);
+      const list = el.menuBody.querySelector('.equip-slot-picker .selection-list');
+      if (list) list.scrollTop = scrollTop;
+    });
     el.menuBody.querySelectorAll("[data-auto-equip-pool]").forEach(btn => btn.onclick = () => {
       autoEquipPool = btn.dataset.autoEquipPool;
       renderMenu();
@@ -14458,6 +14462,7 @@ function renderMenu() {
       if (input.checked) state.favoriteGear[input.dataset.favorite] = true;
       else delete state.favoriteGear[input.dataset.favorite];
       updatePanels();
+      renderMenu();
     });
     bindGearBrowserControls();
   }
