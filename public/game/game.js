@@ -8195,13 +8195,12 @@ function drawEnemyBreakIcon(unit, anchorX) {
   if (!broken && breakValue === 0) return;
   const cell = breakIconSheet.cells[broken ? 3 : breakValue - 1];
   if (!cell) return;
-  const size = broken ? 10 : 18;
+  const size = 12;
   const [, enemyTop] = battleFloaterPosition(unit);
   const x = Math.round(anchorX - size / 2);
   const y = Math.max(21, Math.round(enemyTop - size - 2));
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  if (!broken) drawBattleIconOutline(x, y, size, size, false);
   ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x, y, size, size);
   ctx.restore();
 }
@@ -8222,9 +8221,8 @@ function drawBossIndicatorStrip(unit, anchorX, enemySide) {
   let x = Math.max(2, Math.min(LOGICAL_WIDTH - width - 2, Math.round(anchorX - width / 2)));
   if (showBreak) {
     const cell = breakIconSheet?.cells[broken ? 3 : breakValue - 1];
-    const iconSize = broken ? 8 : size, inset = (size - iconSize) / 2;
-    if (!broken) drawBattleIconOutline(x, y, size, size, false);
-    if (cell) ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x + inset, y + inset, iconSize, iconSize);
+    const iconSize = 10, inset = (size - iconSize) / 2;
+      if (cell) ctx.drawImage(breakIconSheet.image, cell.x, cell.y, cell.w, cell.h, x + inset, y + inset, iconSize, iconSize);
     x += size + gap;
   }
   icons.forEach(status => {
