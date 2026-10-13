@@ -19,6 +19,8 @@ check('Normal attacks and ultimates cannot one-shot full-health heroes',`(()=>{c
 check('Exclusive reward first clear, shards on replay, next lock opens',`(()=>{const first=EmberRift.awardRewards(1),again=EmberRift.awardRewards(1);return EmberRift.progress().cleared.join(',')==='1'&&EmberRift.available(2)&&!EmberRift.available(3)&&first.gold===0&&first.drops.some(d=>d.baseName==='Ashwake Signet')&&!again.drops.some(d=>d.baseName==='Ashwake Signet')&&EmberRift.progress().shards===29;})()`);
 check('All exclusive base stat floors exceed normal top tier',`EmberRift.rewards.every(g=>Object.values(g.stats).every(n=>n>=48))`);
 check('Physical door and connected room entry/return',`(()=>{mode='walk';state.map='emberHallBattles';const entered=EmberRift.enterRoom();EmberRift.leaveRoom();return entered&&state.map==='emberHallBattles';})()`);
+check('Rift affixes are five distinct mixed bonuses with stable migration rolls',`EmberRift.rewards.concat(EmberRift.curios,EmberRift.secretGear.map(o=>o.gear)).every(g=>{const a=EmberRift.riftArtifactAffixes(g,'saved-copy');return a.length===5&&new Set(a.map(e=>e.key)).size===5&&new Set(a.map(e=>e.type)).size>=3&&a.some(e=>e.type==='statPct'||e.type==='hpPct')&&JSON.stringify(a)===JSON.stringify(EmberRift.riftArtifactAffixes(g,'saved-copy'));})`);
+check('New Rift rewards store five affixes while retaining unique effects',`(()=>{const reward=EmberRift.awardRewards(2);return reward.drops.filter(d=>d.kind==='gear').every(d=>gearAffixes(d.name).length===5)&&gearEffects(EmberRift.rewards[1]).length===2;})()`);
 console.log('PASS '+passed+'/'+passed+' focused Ember Rift checks');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
