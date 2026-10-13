@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 let prefix=fs.readFileSync(path.join(__dirname,'test_combat.cjs'),'utf8').split("run('runQaChecks()');")[0];
 prefix=prefix.replace('sandbox.window = sandbox;',`sandbox.fetch=async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync(path.join(__dirname,'../public/game/assets/rift/manifest.json'),'utf8'))}); drawing.createRadialGradient=()=>({addColorStop:noop});drawing.createLinearGradient=()=>({addColorStop:noop});Element.prototype.insertAdjacentElement=noop;Element.prototype.toDataURL=()=> 'data:image/png;base64,test'; sandbox.Image=class {constructor(){this.complete=false;this.width=1152;this.height=1408;}set src(v){this._src=v;if(this.onload&&v.startsWith('assets/rift/')){this.complete=true;this.onload();}}get src(){return this._src;}addEventListener(){}}; sandbox.window=sandbox;`);
-prefix += `\nrun(fs.readFileSync(path.join(__dirname,'../public/game/ember-rift.js'),'utf8'));return {run,sandbox};`;
+prefix += `\nrun(fs.readFileSync(path.join(__dirname,'../public/game/hall-hub.js'),'utf8'));run(fs.readFileSync(path.join(__dirname,'../public/game/ember-rift.js'),'utf8'));return {run,sandbox};`;
 const {run,sandbox}=new Function('require','__dirname',prefix)(require,__dirname);
 let passed=0;function check(name,code){assert.ok(run(code),name);console.log('PASS '+name);passed++;}
 (async()=>{await sandbox.EmberRift.ready;
