@@ -2375,7 +2375,7 @@ function gearIconHtml(gear, heroId, fallbackIndex, className = "", ref = null) {
   if (!["weapon", "armour", "ring", "necklace", "helmet"].includes(gear?.slot)) {
     return pixelIconHtml("gear-empty", fallbackIndex, className);
   }
-  const rarity = String(ref ? gearRarity(ref) : gear?.rarity || gearRarity(gear.name)).toLowerCase();
+  const rarity = String(ref ? gearRarity(ref) : gearRarity(gear.name)).toLowerCase();
   const visualRarity = rarity.endsWith("artifact") ? "artifact" : ["rare", "epic", "legendary", "mythic", "artifact"].includes(rarity) ? rarity : "rare";
   const source = `assets/ui/gear-visuals/${gearVisualRole(gear)}-${visualRarity}-${gear.slot}.webp`;
   return `<span class="pixel-icon ${className} gear-art-icon gear-art-${gear.slot}" aria-hidden="true" style="background-image:url('${source}');background-size:contain;background-position:center;background-repeat:no-repeat"></span>`;
@@ -2495,12 +2495,12 @@ function gearEffectHtml(gear, className = "rare-effect") {
   return shadowUnique ? `<section class="shadow-gear-unique"><h4>Unique Effects</h4>${effectHtml}${setHtml}</section>` : `${effectHtml}${setHtml}`;
 }
 
-const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5, "Shadow Artifact": 5, "Rift Artifact": 5 };
+const RARITY_AFFIX_COUNTS = { Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5, "Shadow Artifact": 5, "Rift Artifact": 5, "Personal Artifact": 5, "Shadow Personal Artifact": 5 };
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"];
-const GEAR_DISPLAY_RARITIES = [...RARITY_ORDER, "Artifact", "Shadow Artifact", "Rift Artifact"];
+const GEAR_DISPLAY_RARITIES = [...RARITY_ORDER, "Artifact", "Shadow Artifact", "Rift Artifact", "Personal Artifact", "Shadow Personal Artifact"];
 
 function gearRarityRank(rarity) {
-  return ["Artifact", "Shadow Artifact", "Rift Artifact"].includes(rarity) ? RARITY_ORDER.length : RARITY_ORDER.indexOf(rarity);
+  return ["Artifact", "Shadow Artifact", "Rift Artifact", "Personal Artifact", "Shadow Personal Artifact"].includes(rarity) ? RARITY_ORDER.length : RARITY_ORDER.indexOf(rarity);
 }
 
 function affix(key, label, type, min, max, options = {}) {
@@ -2587,8 +2587,9 @@ function defaultGearRarity(name) {
   const baseName = gearBaseName(name);
   const gear = gearByName(baseName);
   if (!gear) return "Common";
-  if (gear.shadowArtifact) return "Shadow Artifact";
+  if (gear.shadowArtifact) return gearOwners[baseName]?.length === 1 ? "Shadow Personal Artifact" : "Shadow Artifact";
   if (gear.riftArtifact) return "Rift Artifact";
+  if (gearOwners[baseName]?.length === 1) return "Personal Artifact";
   if (artifactGearNames.has(baseName)) return "Artifact";
   if (mythicGearNames.has(baseName)) return "Mythic";
   if (ngPlusSignatureNames.has(baseName) || postgameGearNames.has(baseName)) return "Legendary";
@@ -2762,7 +2763,7 @@ function upgradeOwnedLegendaryGear() {
 
 function gearRarity(name) {
   const sourceRarity = defaultGearRarity(name);
-  if (["Shadow Artifact", "Rift Artifact"].includes(sourceRarity)) return sourceRarity;
+  if (["Shadow Artifact", "Rift Artifact", "Personal Artifact", "Shadow Personal Artifact"].includes(sourceRarity)) return sourceRarity;
   const rarity = gearInstance(name)?.rarity || state.gearRarities?.[gearBaseName(name)] || sourceRarity;
   return rarity === "Platinum" ? "Mythic" : rarity;
 }
@@ -14504,7 +14505,7 @@ function renderMenu() {
         const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[entry.gear.slot];
         const iconHero = holders[0] || gearOwners[entry.gear.name]?.[0] || state.activeParty[0];
         const comparisonHero = gearComparisonHero(entry.gear, selectedGearHero);
-        return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}" ${gearHoverAttribute({ heroId: comparisonHero, ref: entry.ref })}>${gearIconHtml(entry.gear, iconHero, iconIndex, "selection-row-icon", entry.ref)}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} &bull; ${gearSlotLabel(entry.gear.slot)} &bull; ${statLine(entry.gear.stats)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
+        return `<button type="button" class="selection-row rarity-${gearRarity(entry.ref).toLowerCase().replace(/\s+/g, "-")} ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}" ${gearHoverAttribute({ heroId: comparisonHero, ref: entry.ref })}>${gearIconHtml(entry.gear, iconHero, iconIndex, "selection-row-icon", entry.ref)}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} &bull; ${gearSlotLabel(entry.gear.slot)} &bull; ${statLine(entry.gear.stats)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
       }
       if (entry.kind === "skill") return `<button type="button" class="selection-row ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}"><span class="selection-letter-icon">S</span><span><strong>${entry.sk.name}</strong><small>${entry.casterId} / ${entry.sk.cost} MP</small></span></button>`;
       const icon = inventoryIcon(entry.name);
@@ -15777,7 +15778,7 @@ function runQaChecks() {
 
     const affixCounts = RARITY_ORDER.map(rarity => [rarity, rollGearAffixes(gearByName("Ashrunner Knife"), rarity, "mountain").length]);
     check("affix-counts", affixCounts.every(([rarity, count]) => count === RARITY_AFFIX_COUNTS[rarity]), JSON.stringify(affixCounts));
-    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5, "Shadow Artifact": 5, "Rift Artifact": 5 }));
+    check("rarity-progression", JSON.stringify(RARITY_AFFIX_COUNTS) === JSON.stringify({ Common: 0, Uncommon: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5, Artifact: 5, "Shadow Artifact": 5, "Rift Artifact": 5, "Personal Artifact": 5, "Shadow Personal Artifact": 5 }));
     const rangedAffixes = Array.from({ length: 20 }, () => rollGearAffixes(gearByName("Ashrunner Knife"), "Epic", "mountain")).flat();
     check("affix-ranges", rangedAffixes.every(entry => entry.value >= entry.min && entry.value <= entry.max));
     check("early-status-gear", zoneStarterGear.filter(gear => gear.slot === "weapon").every(gear => gearEffects(gear).some(effect => effect.type === "statusOnHit")) && zoneStarterGear.some(gear => gear.slot === "armour" && gearEffects(gear).some(effect => effect.type === "statusOnHit")));
