@@ -41,3 +41,11 @@
 .menu[data-menu-view="gear"] .equip-picker-detail .selection-detail-head{grid-template-columns:64px minmax(0,1fr);gap:12px}
 .menu[data-menu-view="gear"] .equip-picker-detail .selection-detail-icon{width:60px;height:60px;box-sizing:border-box;padding:5px}
 .menu[data-menu-view="gear"] .equip-main-actions button{color:#f1d49d}
+/* Larger, non-shrinking gear silhouettes throughout the equipment menu. */
+.menu[data-menu-view="gear"] .equip-body-slot .equip-slot-icon{width:60px;height:60px;min-width:60px;flex:0 0 60px;box-sizing:border-box;padding:3px}
+.menu[data-menu-view="gear"] .equip-picker .selection-row{grid-template-columns:64px minmax(0,1fr) auto;min-height:78px;gap:10px}
+.menu[data-menu-view="gear"] .equip-picker .selection-row-icon{width:64px;height:64px;min-width:64px;box-sizing:border-box;padding:4px}
+.menu[data-menu-view="gear"] .equip-picker .selection-tab-icon{width:44px;height:44px;min-width:44px;box-sizing:border-box;padding:3px}
+.menu[data-menu-view="gear"] .equip-current-detail .selection-detail-head,.menu[data-menu-view="gear"] .equip-picker-detail .selection-detail-head{grid-template-columns:76px minmax(0,1fr);gap:12px}
+.menu[data-menu-view="gear"] .equip-current-detail .selection-detail-icon,.menu[data-menu-view="gear"] .equip-picker-detail .selection-detail-icon{width:76px;height:76px;min-width:76px;box-sizing:border-box;padding:4px}
+@media(max-width:1000px){.menu[data-menu-view="gear"] .equip-body-slot .equip-slot-icon{width:48px;height:48px;min-width:48px;flex-basis:48px}.equip-body-slot>button[data-gear-slot]{flex-wrap:wrap}.equip-body-slot>button[data-gear-slot]>span:not(.equip-slot-icon){flex-basis:100%}}
