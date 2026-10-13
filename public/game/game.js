@@ -14009,7 +14009,9 @@ function resetTalents(id) {
   if (mode === "battle" || !canResetTalents()) return;
   const progress = progressFor(id);
   progress.talents = [];
+  delete progress.rank0;
   progressFor(id);
+  queueSave();
   playSfx("menu");
   updatePanels();
   renderMenu();
@@ -14366,7 +14368,7 @@ function renderMenu() {
       return `<button type="button" class="talent-choice ${selected ? "is-active" : ""} ${locked ? "is-locked" : ""}" data-talent="${id}:${entry.name}" aria-pressed="${selected}" ${locked ? "disabled" : ""}><span><strong>${entry.name}</strong><p>${entry.unlockDesc}</p>${entry.type === "newSkill" ? `<small>${skillFormula(entry.value, id)} / ${entry.value.anim === "ultimate" ? "100 Resonance" : `${entry.value.cost} fixed MP`}</small>` : ""}<small>${stateText}</small></span><b>${selected ? "ON" : locked ? "LOCK" : capstoneChosen ? "SWAP" : "+"}</b></button>`;
       }).join("")}</div></section>`;
     }).join("");
-    const resetControl = canResetTalents() ? `<button type="button" class="talent-reset" data-reset-talents="${id}" ${progress.talents.length ? "" : "disabled"}>Reset talents</button>` : "";
+    const resetControl = canResetTalents() ? `<button type="button" class="talent-reset" data-reset-talents="${id}" ${progress.talents.length || progress.rank0 ? "" : "disabled"}>Reset talents</button>` : "";
     el.menuBody.innerHTML = `<div class="skill-head"><div><strong>Flameguard Talents</strong><p>Gain 1 point at levels 4, 8, 12, 16, 20, 24, 28, 32, 36 and 40. Spend 2 points to open each next tier; choose only one Tier 5 capstone.</p></div><span>${hero.name} / ${progress.talents.length} spent / ${available} ready</span></div><div class="skill-roster">${roster}</div><section class="skill-tree-panel"><header><img class="skill-profile-portrait" src="${menuPortraitSource(id)}" alt=""><div><strong>${hero.name}</strong><small>${hero.title} / ${hero.element}</small>${resetControl}</div>${xpProgressHtml(id)}</header><div class="talent-tiers">${choices}</div></section>${window.EmberRift?.learnedSkillHtml(id)||''}${skillCatalogueHtml(id)}`;
     el.menuBody.querySelectorAll("[data-skill-hero]").forEach(button => button.onclick = () => {
       selectedSkillHero = button.dataset.skillHero;
@@ -14379,7 +14381,7 @@ function renderMenu() {
     });
     const resetButton = el.menuBody.querySelector("[data-reset-talents]");
     if (resetButton) {
-      resetButton.disabled = !progress.talents.length;
+      resetButton.disabled = !progress.talents.length && !progress.rank0;
       resetButton.onclick = () => resetTalents(id);
     }
   }
