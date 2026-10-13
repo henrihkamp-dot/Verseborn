@@ -10280,6 +10280,7 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   });
   battle = { name, enemies: preparedEnemies, party: state.activeParty.slice(0, 3).map(battleUnit), winFlag, retryEvent: BATTLE_RETRY_EVENTS[winFlag] || null, spawnRef, waves: preparedWaves, defeated: [], ward: preparedWard, resolving: false, itemMode: false, targetMode: false, pendingSkill: null, turnQueue: [], turnIndex: 0, round: 1, roundCap: options.roundCap || MAX_BATTLE_ROUNDS, startingResonance, enemyResonance: 0, usedOnce: {}, lastSupport: null, extraTurns: 0, hallBoss, musicTrack };
   if (options.hallStage) battle.hallStage = options.hallStage;
+  if (options.riftEncounter) { battle.riftEncounter = options.riftEncounter; battle.phaseTotal = waves.length + 1; }
   initializeEndgameFormation();
   battle.actionHistory = [];
   battle.meterEvents = [];
@@ -13110,7 +13111,7 @@ function winBattle(log) {
     h.mp = u.mp;
   });
   const echoHuntBattle = Boolean(battle.echoHuntRank || battle.winFlag === "endgameHuntWon" || /^Echo Hunt\s+\d+:/i.test(battle.name));
-  const rewards = rollBattleLoot(battle.defeated, {
+  const rewards = battle.riftEncounter ? window.EmberRift.awardRewards(battle.riftEncounter) : rollBattleLoot(battle.defeated, {
     hallStage,
     forceGearRarity: echoHuntBattle ? "Legendary" : null,
     allowGearLoot: !hallStage

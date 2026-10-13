@@ -171,11 +171,13 @@
     return frame;
   }
   function nearby(){
+    const riftDoor=window.EmberRift?.nearbyHallDoor(player);if(riftDoor)return riftDoor;
     if(Math.hypot(player.x-resonance.approach.x,player.y-resonance.approach.y)<23)return resonance;
     return residents().find(a=>Math.hypot(player.x-(a.approach?.x??a.x),player.y-(a.approach?.y??a.y))<23);
   }
   function trigger(actor){
     keys.clear();target=null;route=[];pendingActor=null;
+    if(window.EmberRift?.triggerHall(actor))return;
     if(actor.id==='Resonance Machine'){openHallBattleMap();return;}
     if(window.HallHub?.openService(actor.id))return;
     scene={id:actor.id,started:performance.now(),duration:6400};
@@ -308,9 +310,11 @@
   drawTileMap=function(){
     if(!inHall()||activeRecruitScene){last=performance.now();oldDraw();return;}
     const now=performance.now();update(now);
+    window.EmberRift?.tickHallDoor(player);
     camera.x=Math.max(0,Math.min(W-LOGICAL_WIDTH,player.x-LOGICAL_WIDTH/2));
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,player.y-LOGICAL_HEIGHT*.6));
     ctx.drawImage(images.hall,-camera.x,-camera.y,W,H);
+    window.EmberRift?.drawHallDoor(camera,now);
     window.HallHub?.drawAreas(camera);
     const fx=images.effects,cw=fx.width/4,ch=fx.height/2,frame=Math.floor(now/180)%4;
     ctx.save();
@@ -360,6 +364,7 @@
     if(!inHall()||mode!=='walk'||activeRecruitScene)return;
     event.preventDefault();event.stopImmediatePropagation();suppressClick=true;
     const rect=canvas.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width*LOGICAL_WIDTH+camera.x,y=(event.clientY-rect.top)/rect.height*LOGICAL_HEIGHT+camera.y;
+    const riftDoor=window.EmberRift?.hallDoorHit(x,y);if(riftDoor){if(nearby()?.id===riftDoor.id)trigger(riftDoor);else navigate(riftDoor.approach.x,riftDoor.approach.y,riftDoor);return;}
     const clicked=residents().find(a=>Math.abs(x-a.x)<a.size*.5&&y>a.y-a.size&&y<a.y+4);
     if(clicked){const near=nearby();if(near?.id===clicked.id)trigger(clicked);else {const point=clicked.approach||clicked;navigate(point.x,point.y,clicked);}}
     else if(Math.abs(x-resonance.x)<resonance.width/2&&y>resonance.y-resonance.height&&y<resonance.y){
@@ -369,7 +374,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
