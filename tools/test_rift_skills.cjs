@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const scaffold=fs.readFileSync(path.join(__dirname,'test_ember_rift.cjs'),'utf8').split('let passed=0;')[0];
+const {run,sandbox}=new Function('require','__dirname',scaffold+'\nreturn {run,sandbox};')(require,__dirname);
+(async()=>{await sandbox.EmberRift.ready;
+run(`state.gameMode='hallBattles';state.hallBattles={clearedStages:Array.from({length:60},(_,i)=>i+1),rift:{unlocked:true,cleared:[1],learnedSkills:Object.fromEntries(Object.keys(baseJobs).map(id=>[id,true]))}};runCurrentTurn=()=>{};function setupRiftSkill(id){state.party=Object.keys(baseJobs);state.activeParty=[id,...state.party.filter(n=>n!==id).slice(0,2)];state.party.forEach(n=>progressFor(n).level=40);const party=state.activeParty.map(battleUnit),e=prepareEnemyForBattle(EmberRift.makeEnemy('pursuer',1));battle={party,enemies:[e],round:1,turnIndex:0,turnQueue:[{side:'party',id}],usedOnce:{},extraTurns:0,resolving:false,riftEncounter:1,defeated:[],waves:[],phaseTotal:1};mode='battle';party.forEach(u=>{u.max=u.hp=10000;u.mp=u.maxmp=999;u.baseEvasion=0;});e.hp=e.max=100000;e.baseEvasion=0;return {u:party[0],ally:party[1],e,sk:battleSkills(id,party[0]).find(s=>s.riftSecret)};}`);
+for(const id of ['Verseborn','Mira','Seerin','Kael','Torren','Glimmer','Sparky']){
+ const result=run(`(()=>{const {u,ally,e,sk}=setupRiftSkill('${id}');if(sk.power<0){battle.party.forEach(h=>h.hp=1);if(sk.cleanse)applyStatus(ally,'poison',e,{force:true});}const mp=u.mp,hp=e.hp;useSkill(u,sk,sk.targetSide==='ally'?ally:e);__impact();return {mp:u.mp<mp,damage:sk.power>0?e.hp<hp:true,healing:sk.power<0?battle.party.some(h=>h.hp>1):true,barrier:'${id}'!=='Seerin'||!!statusOf(ally,'barrier'),cleanse:'${id}'!=='Kael'||!statusOf(ally,'poison'),break:'${id}'!=='Torren'||!!statusOf(e,'broken')};})()`);
+ assert.ok(Object.values(result).every(Boolean),id+': '+JSON.stringify(result));console.log('PASS '+id+' secret skill resolves actual combat effects');
+}
+})().catch(e=>{console.error(e);process.exitCode=1;});

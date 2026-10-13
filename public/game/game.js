@@ -11219,7 +11219,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
 
     if (sk.power < 0) {
       const living = battle.party.filter(p => p.hp > 0);
-      const wounded = living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
+      const wounded = sk.riftSecret && sk.targetSide === "ally" && living.includes(target) ? target : living.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;
       const healing = healingAmount(u.id, sk, u);
       const healTargets = sk.partyWide || talentValue(u.id, "partyHeal", sk.name) > 0 ? living : sk.targetSide === "self" ? [u] : [wounded];
       let totalRestored = 0;

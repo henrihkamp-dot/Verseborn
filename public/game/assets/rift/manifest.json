@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "characters": {
     "stalker": {
       "file": "ash-stalker-sheet.webp",
@@ -6421,6 +6421,141 @@
   "environment": {
     "room": "dungeon-room.webp",
     "rift": "portal-sheet.webp",
-    "entrance": "hall-open-entrance.webp"
+    "entrance": "hall-open-entrance-crop.webp",
+    "closedEntrance": "hall-closed-door-crop.webp"
+  },
+  "battles": {
+    "1": "battle-01.webp",
+    "2": "battle-02.webp",
+    "3": "battle-03.webp",
+    "4": "battle-04.webp",
+    "5": "battle-05.webp",
+    "6": "battle-06.webp",
+    "7": "battle-07.webp",
+    "8": "battle-08.webp",
+    "9": "battle-09.webp",
+    "10": "battle-10.webp"
+  },
+  "npcs": {
+    "merchant": {
+      "file": "merchant-idle.webp",
+      "columns": 4,
+      "rows": 1,
+      "cells": [
+        [
+          0,
+          0,
+          543,
+          724
+        ],
+        [
+          543,
+          0,
+          543,
+          724
+        ],
+        [
+          1086,
+          0,
+          543,
+          724
+        ],
+        [
+          1629,
+          0,
+          543,
+          724
+        ]
+      ],
+      "bounds": [
+        [
+          6,
+          11,
+          543,
+          705
+        ],
+        [
+          0,
+          21,
+          543,
+          705
+        ],
+        [
+          0,
+          24,
+          542,
+          705
+        ],
+        [
+          7,
+          20,
+          543,
+          705
+        ]
+      ],
+      "referenceHeight": 694,
+      "baseline": 705,
+      "frameMs": 1100
+    },
+    "guide": {
+      "file": "guide-idle.webp",
+      "columns": 4,
+      "rows": 1,
+      "cells": [
+        [
+          0,
+          0,
+          543,
+          724
+        ],
+        [
+          543,
+          0,
+          543,
+          724
+        ],
+        [
+          1086,
+          0,
+          543,
+          724
+        ],
+        [
+          1629,
+          0,
+          543,
+          724
+        ]
+      ],
+      "bounds": [
+        [
+          44,
+          14,
+          522,
+          716
+        ],
+        [
+          49,
+          21,
+          522,
+          716
+        ],
+        [
+          51,
+          14,
+          522,
+          716
+        ],
+        [
+          47,
+          14,
+          522,
+          716
+        ]
+      ],
+      "referenceHeight": 702,
+      "baseline": 716,
+      "frameMs": 1100
+    }
   }
 }
