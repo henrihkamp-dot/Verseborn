@@ -393,6 +393,7 @@
     el.menuBody.querySelector('[data-done]').onclick = returnTo;
   }
   function encounterSupportHtml() {
+    clearExhaustedSupport();
     const selected=progress().selected;
     const slots=Object.keys(categories).map(category=>{const item=entry(category,selected[category]),unlocked=recruited(owners[category]);return `<section class="hub-slot hub-${category}"><h3>${labels[category]}</h3>${supportIcon(category,item)}<strong>${item?escaped(item.name):'None selected'}</strong><p>${item?escaped(item.desc):unlocked?'Select to view effects and choose support.':'Recruit '+owners[category]+' to unlock'}</p><small>${item&&category!=='blessing'?'Owned: '+stock(item):category==='blessing'?'No consumable cost':'Consumed at battle start'}</small><div><button type="button" data-encounter-support="${category}" ${unlocked?'':'disabled'}>${item?'Change':'Select'}</button><button type="button" data-encounter-clear="${category}" aria-label="Remove ${category}" ${item?'':'disabled'}>&times;</button></div></section>`;}).join('');
     const active=Object.keys(categories).flatMap(category=>{const item=entry(category,selected[category]);return item?[`<span class="hub-${category}"><b>${labels[category]}</b> ${escaped(item.name)}<small>${escaped(item.desc)}</small></span>`]:[];}).join('');
@@ -403,6 +404,7 @@
     el.menuBody.querySelectorAll('[data-encounter-clear]').forEach(button=>button.onclick=()=>{select(button.dataset.encounterClear,null);returnTo();});
   }
   function beginSupportedBattle(begin) {
+    clearExhaustedSupport();
     const support={},consumed=[];
     for(const category of Object.keys(categories)){const item=entry(category,progress().selected[category]);if(item&&(!recruited(owners[category])||category!=='blessing'&&!stock(item))){notice(item.name+' is unavailable. Change or remove it before beginning.');return false;}support[category]=item?{...item}:null;}
     startingSupport=support;
@@ -456,7 +458,7 @@
   startHallBattleStage = openPreparation;
   function beginStage() {
     if (mode !== 'hallMap' || !validStage(prepStage) || !state.activeParty.length) return false;
-    if (clearExhaustedSupport()) { renderPreparation(); return false; }
+    clearExhaustedSupport();
     const selected = progress().selected, support = {}, consumed = [];
     for (const category of Object.keys(categories)) {
       const item = entry(category, selected[category]);
