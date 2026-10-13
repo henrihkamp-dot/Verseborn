@@ -1,6 +1,6 @@
 /* Equipment overview: shared Ember Hall art, live slots and existing gear actions. */
 .menu[data-menu-view="gear"] .menu-body{display:flex;flex-direction:column;overflow:hidden;min-height:0;padding:10px}
-.equip-screen{position:relative;display:flex;flex-direction:column;min-height:0;flex:1;width:100%;box-sizing:border-box;padding:10px;background:linear-gradient(90deg,#0e0a1525,#0e0a154a),url('assets/equipment/background.webp') center/cover;border:1px solid #a27b3e;isolation:isolate}
+.equip-screen{position:relative;display:flex;flex-direction:column;min-height:0;flex:1;width:100%;box-sizing:border-box;padding:10px;background:linear-gradient(90deg,#0e0a1525,#0e0a154a),var(--equip-background,url('assets/equipment/background.webp')) center/cover;border:1px solid #a27b3e;isolation:isolate}
 .equip-header{position:relative;z-index:8;display:flex;align-items:center;gap:12px;padding:0 0 10px;border-bottom:1px solid #a27b3e;flex:none}
 .equip-header>h2{font-family:Georgia,serif;font-size:19px;letter-spacing:3px;text-transform:uppercase;color:#efd49c;margin:0;margin-right:auto}
 .menu[data-menu-view="gear"] .equip-roster{display:flex;gap:6px;flex:0 1 auto;min-width:0;margin:0;overflow-x:auto;border:0;padding:0}
@@ -49,3 +49,12 @@
 .menu[data-menu-view="gear"] .equip-current-detail .selection-detail-head,.menu[data-menu-view="gear"] .equip-picker-detail .selection-detail-head{grid-template-columns:76px minmax(0,1fr);gap:12px}
 .menu[data-menu-view="gear"] .equip-current-detail .selection-detail-icon,.menu[data-menu-view="gear"] .equip-picker-detail .selection-detail-icon{width:76px;height:76px;min-width:76px;box-sizing:border-box;padding:4px}
 @media(max-width:1000px){.menu[data-menu-view="gear"] .equip-body-slot .equip-slot-icon{width:48px;height:48px;min-width:48px;flex-basis:48px}.equip-body-slot>button[data-gear-slot]{flex-wrap:wrap}.equip-body-slot>button[data-gear-slot]>span:not(.equip-slot-icon){flex-basis:100%}}
+
+.equip-screen[data-character="Verseborn"]{--equip-background:url("assets/equipment/verseborn-background.webp")}
+.equip-screen[data-character="Torren"]{--equip-background:url("assets/equipment/torren-background.webp")}
+.equip-screen[data-character="Glimmer"]{--equip-background:url("assets/equipment/glimmer-background.webp")}
+.equip-screen[data-character="Mira"]{--equip-background:url("assets/equipment/mira-background.webp")}
+.equip-screen[data-character="Kael"]{--equip-background:url("assets/equipment/kael-background.webp")}
+.equip-screen[data-character="Seerin"]{--equip-background:url("assets/equipment/seerin-background.webp")}
+.equip-screen[data-character="Sparky"]{--equip-background:url("assets/equipment/sparky-background.webp")}
+.equip-identity{text-shadow:0 2px 4px #000,0 0 10px #000,0 0 20px #000;background:#100b1866;padding:5px 8px;border-radius:3px}
