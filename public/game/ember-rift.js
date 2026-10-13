@@ -87,9 +87,9 @@
   maps[MAP]={...maps.emberHallBattles,name:'Ember Rift — The Revealed Vault',chapter:'Ember Rift',points:[],spawns:[],exits:[]};
   const images={},sheets={},effects={},portraits={},npcSheets={};let assetsReady=false,assetFailure=null,selected=1,doorStart=null,manifest;
   const loadImage=(key,file)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[key]=image;resolve(image);};image.onerror=()=>reject(Error('Rift asset missing: '+file));image.src=BASE+file;});
-  const ready=fetch(BASE+'manifest.json?v=ember-rift-2').then(r=>{if(!r.ok)throw Error('Rift asset manifest unavailable');return r.json();}).then(async data=>{
+  const ready=fetch(BASE+'manifest.json?v=ember-rift-3').then(r=>{if(!r.ok)throw Error('Rift asset manifest unavailable');return r.json();}).then(async data=>{
     manifest=data;await Promise.all([...Object.entries(data.characters).map(async([key,config])=>{sheets[key]={...config,image:await loadImage(key,config.file)};}),...Object.entries(data.effects).map(async([key,config])=>{effects[key]={...config,image:await loadImage('vfx:'+key,config.file)};}),...Object.entries(data.environment).map(([key,file])=>loadImage(key,file)),...Object.entries(data.battles||{}).map(async([id,file])=>{battleImages['rift-'+id]=await loadImage('battle:'+id,file);}),...Object.entries(data.npcs||{}).map(async([key,config])=>{npcSheets[key]={...config,image:await loadImage('npc:'+key,config.file)};})]);
-    assetsReady=true;for(const key of Object.keys(roster)){const sheet=sheets[key],cell=sheet.cells[0],c=document.createElement('canvas');c.width=180;c.height=180;const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(sheet.image,...cell,0,0,180,180);portraits[key]=c.toDataURL('image/png');}
+    assetsReady=true;for(const key of Object.keys(roster)){const sheet=sheets[key],frame=safeEnemyFrame(sheet,0),box=sheet.bounds[0],bw=box[2]-box[0],bh=box[3]-box[1],scale=Math.min(164/bw,164/bh),c=document.createElement('canvas');c.width=180;c.height=180;const dc=c.getContext('2d');dc.imageSmoothingEnabled=false;dc.drawImage(frame,box[0],box[1],bw,bh,(180-bw*scale)/2,(180-bh*scale)/2,bw*scale,bh*scale);portraits[key]=c.toDataURL('image/png');}
     if(mode==='hallMap'&&el.menu.dataset.menuView==='rift-path')renderSelection();
   }).catch(error=>{assetFailure=error;console.error(error);});
   const oldPortrait=enemyPortraitDataUrl;
@@ -180,14 +180,15 @@
   const oldRoll=enemyDamageRoll;
   enemyDamageRoll=function(unit,action,hero){const result=oldRoll(unit,action,hero);if(unit.riftKey){if(action.riftCollection)result.damage=Math.round(result.damage*(1+(statusOf(hero,'riftDebt')?.value||0)*.12));result.damage=Math.min(result.damage,Math.max(1,Math.round(hero.max*(action.kind==='ultimate'?.47:.34))));}return result;};
   const oldAnimated=drawAnimatedEnemy,oldSheetFor=enemyAnimationSheetFor;
+  function safeEnemyFrame(sheet,index){sheet.safeFrames??=new Map();if(sheet.safeFrames.has(index))return sheet.safeFrames.get(index);const cell=sheet.cells[index],frame=document.createElement('canvas');frame.width=cell[2];frame.height=cell[3];const paint=frame.getContext('2d');paint.imageSmoothingEnabled=false;paint.drawImage(sheet.image,...cell,0,0,frame.width,frame.height);for(const[y,x,length]of sheet.discardRuns?.[index]||[])paint.clearRect(x,y,length,1);sheet.safeFrames.set(index,frame);return frame;}
   enemyAnimationSheetFor=function(unit){return unit.riftKey?sheets[unit.riftKey]||null:oldSheetFor(unit);};
   drawAnimatedEnemy=function(unit,px,py){
     if(!unit.riftKey)return oldAnimated(unit,px,py);const sheet=sheets[unit.riftKey];if(!sheet)return false;
     const animation=unit.hp<=0||unit.anim==='death'?'death':unit.anim==='attack'?(unit.attackStyle==='ultimate'?'ultimate':unit.attackStyle==='melee'?'melee':'magic'):'idle';
-    const frame=animation==='death'?Math.min(3,Math.floor(Math.max(0,tick-(unit.deathTick??tick))/7)):animation==='idle'?Math.floor(tick/20)%4:Math.min(3,Math.floor((unit.animTick||0)/6));
-    const cell=sheet.cells[sheet.rowMap[animation]*4+frame],size=unit.riftKey==='dragon'?78:unit.riftKey==='engine'?70:unit.riftBoss?56:['warden','bear','brute'].includes(unit.riftKey)?49:['fae','mina','sella'].includes(unit.riftKey)?36:43;
-    const scale=Math.min(size/sheet.referenceHeight,105/cell[2]);const x=Math.max(2,Math.min(LOGICAL_WIDTH-cell[2]*scale-2,px+8-cell[2]*scale/2)),y=py+31-sheet.baseline*scale;
-    ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(sheet.image,...cell,Math.round(x),Math.round(y),Math.round(cell[2]*scale),Math.round(cell[3]*scale));ctx.restore();
+    const frame=animation==='death'?Math.min(3,Math.floor(Math.max(0,tick-(unit.deathTick??tick))/7)):animation==='idle'?(sheet.stableIdle?0:Math.floor(tick/60)%4):Math.min(3,Math.floor((unit.animTick||0)/6));
+    const index=sheet.rowMap[animation]*4+frame,cell=sheet.cells[index],image=safeEnemyFrame(sheet,index),anchor=sheet.frameAnchors?.[index]||[cell[2]/2,sheet.baseline],size=unit.riftKey==='dragon'?78:unit.riftKey==='engine'?70:unit.riftBoss?56:['warden','bear','brute'].includes(unit.riftKey)?49:['fae','mina','sella'].includes(unit.riftKey)?36:43;
+    const scale=Math.min(size/sheet.referenceHeight,105/(sheet.maxCellWidth||cell[2])),scaleY=scale*(animation==='idle'&&sheet.stableIdle?1+(sheet.idleBreathAmplitude||.006)*Math.sin(tick/45):1),groundX=Math.max(2+(sheet.maxAnchorLeft||cell[2]/2)*scale,Math.min(LOGICAL_WIDTH-2-(sheet.maxAnchorRight||cell[2]/2)*scale,px+8)),x=groundX-anchor[0]*scale,y=py+31-anchor[1]*scaleY;
+    ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(image,x,y,cell[2]*scale,cell[3]*scaleY);ctx.restore();
     if(unit.anim==='attack'&&unit.lastAnimDrawTick!==tick){unit.animTick=(unit.animTick||0)+1;unit.lastAnimDrawTick=tick;}return true;
   };
   const oldEffect=makeEnemyBattleEffect,oldDrawEffect=drawEffect;

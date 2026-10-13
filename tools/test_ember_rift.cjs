@@ -10,7 +10,7 @@ check('All 60 normal stages required; Shadow progress cannot unlock',`!normalize
 check('Permanent unlock and old Hall data survive migration',`(()=>{const h=normalizeHallBattleProgress({clearedStages:[],rift:{unlocked:true,cleared:[1,1,99],shards:27},startingWelcomeComplete:true});return h.rift.unlocked&&h.rift.cleared.join(',')==='1'&&h.rift.shards===27&&h.startingWelcomeComplete;})()`);
 check('Ten new sequential challenges remain separate',`(()=>{state.gameMode='hallBattles';state.hallBattles={clearedStages:Array.from({length:60},(_,i)=>i+1)};return EmberRift.encounters.length===10&&EmberRift.available(1)&&!EmberRift.available(2)&&HALL_BATTLE_BLUEPRINTS.length===60;})()`);
 check('Every wave has real new enemies with final animation art',`EmberRift.encounters.every(e=>e.waves.every((w,p)=>w.every((k,i)=>{const u=prepareEnemyForBattle(EmberRift.makeEnemy(k,e.id,p,i));return u.riftKey===k&&u.hp>0&&u.riftState&&enemyAnimationSheetFor(u).cells.length===20;})))`);
-check('Cute fantasy retained; only Hearthbound receives final anime revision',`['fae','elf','mushroom','bear','raccoon','rabbit','squirrel'].every(k=>EmberRift.sheets[k].file===k+'-chibi-sheet.webp')&&['benji','pippa','mina','sella'].every(k=>EmberRift.sheets[k].file===k+'-final-sheet.webp')`);
+check('Cute fantasy retained; only Hearthbound receives final anime revision',`['fae','mushroom','bear','raccoon','rabbit','squirrel'].every(k=>EmberRift.sheets[k].file===k+'-chibi-sheet.webp')&&EmberRift.sheets.elf.file==='elf-repaired-v3.webp'&&['benji','pippa','mina','sella'].every(k=>EmberRift.sheets[k].file===k+'-final-sheet.webp')`);
 run(`state.party=['Verseborn','Mira','Seerin'];state.activeParty=[...state.party];state.party.forEach(id=>{progressFor(id).level=40;});state.map='emberRiftVault';mode='walk';`);
 check('Real battle starts with Rift identity before first turn',`EmberRift.startEncounter(1)&&battle.riftEncounter===1&&battle.phaseTotal===2&&battle.waves.length===1&&battle.enemies[0].riftKey==='pursuer'`);
 check('Marked telegraph cancels when cleansed',`(()=>{const e=battle.enemies[0];e.actionsTaken=1;chooseEnemyAction(e);const target=e.riftState.pending.target;target.statuses=ensureStatuses(target).filter(s=>s.type!=='riftMark');const a=chooseEnemyAction(e);return !e.riftState.pending&&e.riftState.recovery>0&&a.kind!=='ultimate';})()`);
@@ -21,6 +21,7 @@ check('All exclusive base stat floors exceed normal top tier',`EmberRift.rewards
 check('Physical door and connected room entry/return',`(()=>{mode='walk';state.map='emberHallBattles';const entered=EmberRift.enterRoom();EmberRift.leaveRoom();return entered&&state.map==='emberHallBattles';})()`);
 console.log('PASS '+passed+'/'+passed+' focused Ember Rift checks');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
 
 
 
