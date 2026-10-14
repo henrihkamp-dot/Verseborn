@@ -92,7 +92,7 @@
   const images = {}, frameCache = new Map();
   let manifest;
   const ready = (async () => {
-    const response = await fetch(BASE + 'manifest.json?v=tinus-playable-1');
+    const response = await fetch(BASE + 'manifest.json?v=tinus-walk-scale-210');
     if (!response.ok) throw new Error('Tinus frame manifest could not load.');
     manifest = await response.json();
     await Promise.all(['hall', 'battle', 'effects'].map(key => new Promise((resolve, reject) => {
