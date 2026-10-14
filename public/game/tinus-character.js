@@ -44,8 +44,8 @@
   FLAMEGUARD_COMBAT_ROLES[ID] = 'utility';
   AUTO_EQUIP_PROFILES[ID] = { damage: 1, healing: .7, hp: .18, mp: .25, agi: .1, echo: .3, control: 1, support: 1.2, tank: .15 };
   FLAMEGUARD_BASE_EVASION[ID] = .04;
-  spriteScale[ID] = { field: [28, 29], battle: [53, 48] };
-  battleSpriteHeights[ID] = 48;
+  spriteScale[ID] = { field: [28, 29], battle: [58, 53] };
+  battleSpriteHeights[ID] = 53;
   portraitSources[ID] = BASE + 'portrait.webp';
   menuPortraitSources[ID] = BASE + 'portrait.webp';
   characterSpecialties[ID] = ['Network magic', 'Barriers & cleansing', 'Enemy disruption'];
@@ -92,7 +92,7 @@
   const images = {}, frameCache = new Map();
   let manifest;
   const ready = (async () => {
-    const response = await fetch(BASE + 'manifest.json?v=tinus-walk-scale-210');
+    const response = await fetch(BASE + 'manifest.json?v=tinus-anchored-210');
     if (!response.ok) throw new Error('Tinus frame manifest could not load.');
     manifest = await response.json();
     await Promise.all(['hall', 'battle', 'effects'].map(key => new Promise((resolve, reject) => {
@@ -146,6 +146,31 @@
     ctx.restore();
     return true;
   }
+  const battleIdleFrames = [];
+  function stableBattleIdleFrame(col) {
+    if (battleIdleFrames[col]) return battleIdleFrames[col];
+    const config = manifest.battle, canvas = document.createElement('canvas');
+    canvas.width = config.cellWidth; canvas.height = config.cellHeight;
+    // Align complete coffee poses by the torso, rather than the shifting shoe centroid.
+    canvas.getContext('2d').drawImage(images.battle, col * config.cellWidth, 0,
+      config.cellWidth, config.cellHeight, -(config.idleAnchorOffsets[col] || 0),
+      -(config.idleBaselineOffsets[col] || 0), config.cellWidth, config.cellHeight);
+    return battleIdleFrames[col] = canvas;
+  }
+  const oldDrawBattlePartySprite = drawBattlePartySprite;
+  drawBattlePartySprite = function(unit, anchorX, baseline, frame = tick) {
+    if (unit.id !== ID || unit.anim && unit.anim !== 'idle' || !manifest || !images.battle) {
+      return oldDrawBattlePartySprite(unit, anchorX, baseline, frame);
+    }
+    const config = manifest.battle, sequence = [0, 1, 2, 3, 2, 1];
+    const phase = (frame + 15) / BATTLE_IDLE_FRAME_TICKS;
+    const source = stableBattleIdleFrame(sequence[Math.floor(phase) % sequence.length]);
+    const scale = battleSpriteHeights[ID] * BATTLE_COMPOSITION_SCALE / config.referenceHeight;
+    ctx.save(); ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(source, anchorX - config.cellWidth * scale / 2,
+      baseline - config.baseline * scale, config.cellWidth * scale, config.cellHeight * scale);
+    ctx.restore(); return true;
+  };
   const oldDrawSprite = drawSprite;
   drawSprite = function(id, px, py, dir = 0, anim = 'idle', frame = tick) {
     if (id !== ID) return oldDrawSprite(id, px, py, dir, anim, frame);
