@@ -44,8 +44,8 @@
   FLAMEGUARD_COMBAT_ROLES[ID] = 'utility';
   AUTO_EQUIP_PROFILES[ID] = { damage: 1, healing: .7, hp: .18, mp: .25, agi: .1, echo: .3, control: 1, support: 1.2, tank: .15 };
   FLAMEGUARD_BASE_EVASION[ID] = .04;
-  spriteScale[ID] = { field: [28, 29], battle: [58, 53] };
-  battleSpriteHeights[ID] = 53;
+  spriteScale[ID] = { field: [28, 29], battle: [70, 64] };
+  battleSpriteHeights[ID] = 64;
   portraitSources[ID] = BASE + 'portrait.webp';
   menuPortraitSources[ID] = BASE + 'portrait.webp';
   characterSpecialties[ID] = ['Network magic', 'Barriers & cleansing', 'Enemy disruption'];
