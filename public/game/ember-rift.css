@@ -5,3 +5,5 @@
 .rift-learned-skill article { display:grid; gap:8px; padding:14px; border:1px solid #54d9c2; background:#102c2a; }
 .rift-learned-skill b { color:#adfff0; }
 .hub-slot select { width:100%; margin-top:8px; }
+
+.rift-lore-topics { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
