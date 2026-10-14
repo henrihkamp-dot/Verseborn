@@ -63,6 +63,42 @@
     {x:257,y:176,rx:7,ry:6},{x:373,y:176,rx:7,ry:6},
     {x:226,y:263,rx:7,ry:6},{x:413,y:263,rx:7,ry:6}
   ];
+  // Solid feet of the stair cheeks and lounge furniture, traced from the Hall.
+  const solidFeet=[
+    [[201,119],[212,117],[221,122],[219,145],[224,148],[225,162],[216,168],[203,163]],
+    [[409,122],[418,117],[429,119],[427,163],[414,168],[405,162],[406,148],[411,145]],
+    [[219,99],[229,95],[240,100],[240,108],[228,112],[219,108]],
+    [[392,100],[402,95],[412,99],[412,108],[403,112],[392,108]],
+    [[218,257],[226,253],[234,257],[234,268],[226,272],[218,268]],
+    [[405,257],[413,253],[421,257],[421,268],[413,272],[405,268]],
+    [[20,290],[28,286],[38,290],[38,301],[28,306],[20,302]],
+    [[31,283],[43,279],[51,283],[50,293],[39,297],[31,292]],
+    [[45,291],[66,283],[78,288],[77,301],[55,310],[45,305]],
+    [[51,279],[104,280],[116,275],[123,280],[120,290],[104,294],[51,288]],
+    [[130,270],[145,266],[164,270],[164,285],[151,291],[130,285]],
+    [[174,281],[187,276],[199,281],[198,291],[185,295],[174,290]],
+    [[18,321],[27,317],[37,321],[36,330],[25,334],[18,330]]
+  ];
+  // Tall painted silhouettes are redrawn at their floor depth, after actors behind them.
+  const foregroundProps=[
+    {id:'left-balcony',depth:118,outline:[[20,91],[60,91],[62,88],[68,88],[68,93],[111,93],[113,88],[122,88],[122,93],[160,93],[162,89],[169,89],[169,93],[193,93],[193,115],[20,118]]},
+    {id:'right-balcony',depth:118,outline:[[438,93],[463,93],[464,88],[475,88],[475,93],[510,93],[512,88],[521,88],[521,93],[561,93],[563,89],[573,89],[573,93],[620,92],[620,118],[438,118]]},
+    {id:'left-stair-wall',depth:168,outline:[[201,113],[209,113],[212,117],[220,116],[224,120],[224,127],[219,130],[219,143],[226,146],[227,155],[223,160],[222,168],[210,169],[201,164],[201,147],[208,142],[208,125],[201,123]]},
+    {id:'right-stair-wall',depth:168,outline:[[429,113],[421,113],[418,117],[410,116],[406,120],[406,127],[411,130],[411,143],[404,146],[403,155],[407,160],[408,168],[420,169],[429,164],[429,147],[422,142],[422,125],[429,123]]},
+    {id:'left-upper-lamp',depth:112,outline:[[219,99],[223,96],[223,86],[226,69],[231,69],[234,86],[234,96],[240,100],[240,108],[228,112],[219,108]]},
+    {id:'right-upper-lamp',depth:112,outline:[[392,100],[396,96],[397,86],[400,69],[405,69],[408,86],[408,96],[412,99],[412,108],[403,112],[392,108]]},
+    {id:'left-lounge-wall',depth:283,outline:[[194,215],[203,210],[214,214],[217,222],[216,257],[219,260],[219,278],[208,284],[195,278]]},
+    {id:'right-library-wall',depth:283,outline:[[437,215],[428,210],[417,214],[414,222],[415,257],[412,260],[412,278],[423,284],[436,278]]},
+    {id:'left-lounge-lamp',depth:272,outline:[[217,257],[223,252],[223,233],[227,226],[232,235],[233,252],[235,257],[235,268],[226,272],[217,268]]},
+    {id:'right-library-lamp',depth:272,outline:[[404,257],[410,252],[410,233],[414,226],[419,235],[420,252],[422,257],[422,268],[413,272],[404,268]]},
+    {id:'mira-lamp',depth:306,outline:[[20,292],[23,283],[23,277],[27,264],[30,264],[32,278],[33,284],[39,290],[39,301],[28,306],[20,302]]},
+    {id:'mira-table',depth:297,outline:[[31,281],[36,278],[36,263],[43,260],[48,279],[52,283],[50,294],[39,297],[31,292]]},
+    {id:'mira-chest',depth:310,outline:[[45,289],[66,281],[78,286],[78,302],[55,310],[45,305]]},
+    {id:'mira-couch',depth:294,outline:[[51,252],[65,247],[87,249],[105,255],[116,257],[124,268],[123,280],[120,291],[104,294],[51,288]]},
+    {id:'mira-cabinet',depth:291,outline:[[130,266],[141,259],[152,260],[153,253],[158,253],[160,266],[165,270],[164,285],[151,291],[130,285]]},
+    {id:'mira-entry-pot',depth:295,outline:[[176,280],[178,265],[187,260],[196,267],[199,281],[198,291],[185,295],[174,290]]}
+  ];
+  function drawForegroundProp(prop){ctx.save();ctx.beginPath();prop.outline.forEach(([x,y],i)=>{if(i)ctx.lineTo(x-camera.x,y-camera.y);else ctx.moveTo(x-camera.x,y-camera.y);});ctx.closePath();ctx.clip();ctx.drawImage(images.hall,-camera.x,-camera.y,W,H);ctx.restore();}
   const ready=Promise.all(['Verseborn',...actors.map(a=>a.id),'hall','effects','hearths'].map(name=>new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error(name+' asset missing'));image.src='assets/hall/'+(['hall','effects','hearths'].includes(name)?name:name.toLowerCase()+'-clean-v3')+'.webp';
   })));
@@ -97,7 +133,7 @@
     return inside;
   }
   const onFloor=(x,y)=>floors.some(points=>inPolygon(x,y,points));
-  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/41)**2+((y-126)/18)**2<1;
+  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/41)**2+((y-126)/18)**2<1;
   function clearSegment(ax,ay,bx,by){
     const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.5);
     for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;
@@ -324,8 +360,9 @@
       ctx.drawImage(fx,frame*cw,0,cw,ch,x-camera.x-2,y-camera.y-1,w+4,h+2);ctx.restore();
     }
     ctx.globalAlpha=.23;ctx.drawImage(fx,frame*cw,ch,cw,ch,479-camera.x,141-camera.y,12,17);ctx.restore();
-    const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true}].sort((a,b)=>a.y-b.y);
+    const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true},...foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>a.y-b.y);
     for(const actor of things){
+      if(actor.prop){drawForegroundProp(actor.prop);continue;}
       if(actor.machine){
         const image=stageSelectorImage;
         if(image){const cw=image.width/4,frame=Math.floor(now/220)%3;ctx.drawImage(image,frame*cw,0,cw,image.height,actor.x-camera.x-actor.width/2,actor.y-camera.y-actor.height,actor.width,actor.height);}
