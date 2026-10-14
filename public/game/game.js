@@ -244,7 +244,8 @@ const music = {
   battle: new Audio("assets/audio/battle-jrpg.mp3"),
   battleAlt: new Audio("assets/audio/battle-jrpg-2.mp3"),
   cutscene: new Audio("assets/audio/cutscenes.mp3"),
-  hallBoss: new Audio("assets/audio/ember-hall-boss-battle.mp3")
+  hallBoss: new Audio("assets/audio/ember-hall-boss-battle.mp3"),
+  emberRift: new Audio("assets/audio/ember-rift-drunken-lantern.ogg")
 };
 Object.values(music).forEach(track => {
   track.loop = true;
@@ -267,6 +268,7 @@ function trackForScene() {
   if (mode === "title") return "title";
   if (mode === "battle" || mode === "battleResult") return battle?.musicTrack || (battle?.hallBoss ? "hallBoss" : "battle");
   if (mode === "talk" && activeRecruitScene) return "cutscene";
+  if (state.map === "emberRiftVault") return "emberRift";
   return currentMap()?.music === "overworld" ? "overworld" : "inhouse";
 }
 
