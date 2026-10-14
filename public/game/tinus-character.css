@@ -1,0 +1,15 @@
+/* Tinus uses the same roster, talent and equipment layouts as the Flameguard. */
+.equip-body[data-character="Tinus"] .equip-character {
+  left: 1%;
+  bottom: 3%;
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.tinus-gear-icon {
+  filter: drop-shadow(0 1px 3px #04070dcc);
+}
+.skill-tree-panel:has(.skill-profile-portrait[src*="assets/tinus/"]) > header {
+  background-image: linear-gradient(110deg, #22476833, transparent 55%, #b9822630);
+}

@@ -113,7 +113,7 @@
   const oldControl=handleControl,oldCycleLeader=cycleLeader;
   handleControl=function(control){if(inHall()&&mode==='walk'&&!activeRecruitScene&&['up','down','left','right'].includes(control))return;oldControl(control);};
   cycleLeader=function(direction){if(inHall()&&mode==='walk')return;oldCycleLeader(direction);};
-  const residents=()=>actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id));
+  const residents=()=>{const tinus=window.TinusRecruitment?.resident();return [...actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id)),...(tinus?[tinus]:[])];};
   function resetNavigation(position=state.hallPosition){
     keys.clear();target=null;route=[];pendingActor=null;scene=null;last=performance.now();
     const valid=position&&Number.isFinite(position.x)&&Number.isFinite(position.y)&&!collision(position.x,position.y);
@@ -152,15 +152,15 @@
       if(next&&clearSegment(node.x,node.y,next.x,next.y))node.edges.push(nextKey);
     }
   }
-  function navigate(x,y,actor=null){
-    if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+  function findPath(from,x,y){
+    if(!Number.isFinite(x)||!Number.isFinite(y))return null;
     let start=null,startDistance=Infinity;
     // The saved/player position need not be an exact grid point.
     for(const [key,node] of navNodes){
-      const distance=Math.hypot(node.x-player.x,node.y-player.y);
-      if(distance<startDistance&&distance<=4&&clearSegment(player.x,player.y,node.x,node.y)){start=key;startDistance=distance;}
+      const distance=Math.hypot(node.x-from.x,node.y-from.y);
+      if(distance<startDistance&&distance<=4&&clearSegment(from.x,from.y,node.x,node.y)){start=key;startDistance=distance;}
     }
-    if(start===null)return false;
+    if(start===null)return null;
     const queue=[start],previous=new Map([[start,null]]);
     let end=null,bestDistance=Infinity;
     for(let i=0;i<queue.length;i++){
@@ -170,13 +170,18 @@
       for(const next of node.edges)if(!previous.has(next)){previous.set(next,key);queue.push(next);}
     }
     // Snap near-edge clicks to reachable floor, never to a distant room through a wall.
-    if(bestDistance>18)return false;
+    if(bestDistance>18)return null;
     const path=[];
     for(let key=end;key!==null;key=previous.get(key)){const node=navNodes.get(key);path.unshift({x:node.x,y:node.y});}
+    return path;
+  }
+  function navigate(x,y,actor=null){
+    const path=findPath(player,x,y);if(!path)return false;
     route=path;target=route.shift()||null;pendingActor=actor;
     return Boolean(target);
   }
   function drawActor(actor,row,col){
+    if(actor.id==='Tinus'&&window.TinusCharacter){window.TinusRecruitment?.drawPortal(actor,camera,performance.now());ctx.save();ctx.globalAlpha=actor.alpha??1;window.TinusCharacter.drawField(actor,camera,performance.now());ctx.restore();return;}
     // Scale Hall art around its existing foot anchor; size still defines interaction bounds.
     const size=actor.size*(actors.find(resident=>resident.id===actor.id)?.renderScale??1);
     if(actor.id==='Verseborn'&&row===8&&images.VersebornLute){
@@ -209,10 +214,12 @@
   function nearby(){
     const riftDoor=window.EmberRift?.nearbyHallDoor(player);if(riftDoor)return riftDoor;
     if(Math.hypot(player.x-resonance.approach.x,player.y-resonance.approach.y)<23)return resonance;
-    return residents().find(a=>Math.hypot(player.x-(a.approach?.x??a.x),player.y-(a.approach?.y??a.y))<23);
+    const distance=a=>Math.hypot(player.x-(a.approach?.x??a.x),player.y-(a.approach?.y??a.y));
+    return residents().filter(a=>distance(a)<23).sort((a,b)=>distance(a)-distance(b))[0];
   }
   function trigger(actor){
     keys.clear();target=null;route=[];pendingActor=null;
+    if(actor.id==='Tinus'&&window.TinusRecruitment?.interact())return;
     if(window.EmberRift?.triggerHall(actor))return;
     if(actor.id==='Resonance Machine'){openHallBattleMap();return;}
     if(window.HallHub?.openService(actor.id))return;
@@ -345,7 +352,7 @@
   }
   drawTileMap=function(){
     if(!inHall()||activeRecruitScene){last=performance.now();oldDraw();return;}
-    const now=performance.now();update(now);
+    const now=performance.now();update(now);window.TinusRecruitment?.tick(now);
     window.EmberRift?.tickHallDoor(player);
     camera.x=Math.max(0,Math.min(W-LOGICAL_WIDTH,player.x-LOGICAL_WIDTH/2));
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,player.y-LOGICAL_HEIGHT*.6));
@@ -411,7 +418,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
