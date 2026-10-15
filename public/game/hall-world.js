@@ -133,7 +133,7 @@
     return inside;
   }
   const onFloor=(x,y)=>floors.some(points=>inPolygon(x,y,points));
-  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/41)**2+((y-126)/18)**2<1;
+  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
   function clearSegment(ax,ay,bx,by){
     const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.5);
     for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;
@@ -315,6 +315,15 @@
   function update(now){
     const dt=Math.min(.05,(now-last)/1000);last=now;
     if(mode!=='walk'||activeRecruitScene||window.TinusRecruitment?.replaying){keys.clear();player.walking=false;return;}
+    // Recover positions saved inside an old obstacle before attempting a new route.
+    if(collision(player.x,player.y)){
+      let nearest=null,distance=Infinity;
+      for(const node of navNodes.values()){
+        const d=Math.hypot(node.x-player.x,node.y-player.y);
+        if(d<distance){nearest=node;distance=d;}
+      }
+      if(nearest){player.x=nearest.x;player.y=nearest.y;target=null;route=[];pendingActor=null;}
+    }
     const wasWalking=player.walking;
     let dx=Number(keys.has('ArrowRight')||keys.has('d')||heldDirection==='right')-Number(keys.has('ArrowLeft')||keys.has('a')||heldDirection==='left');
     let dy=Number(keys.has('ArrowDown')||keys.has('s')||heldDirection==='down')-Number(keys.has('ArrowUp')||keys.has('w')||heldDirection==='up');

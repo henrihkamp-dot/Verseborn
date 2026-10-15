@@ -1,0 +1,15 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+let scaffold=fs.readFileSync(path.join(__dirname,'test_endgame_ultimates.cjs'),'utf8').split('let passed=0;function check')[0];
+scaffold=scaffold.replace("const{run,sandbox}=new Function('require','__dirname',scaffold)(require,__dirname);", "return new Function('require','__dirname',scaffold)(require,__dirname);");
+const{run,sandbox}=new Function('require','__dirname',scaffold)(require,__dirname);
+let passed=0;function check(label,code){assert.ok(run(code),label);console.log('PASS '+label);passed++;}
+run(`state.gameMode='hallBattles';state.party=['Verseborn','Sparky','Torren'];state.activeParty=[...state.party];function setup(res=0){const info=hallBattleInfo(5);battle={party:state.party.map(battleUnit),enemies:hallEnemiesForStage(5).map(e=>prepareEnemyForBattle(e,info.mapId)),hallStage:5,phase:0,enemyResonance:res,round:1,turnIndex:0,turnQueue:[{side:'enemy',index:0}],usedOnce:{}};mode='battle';Math.random=()=>.5;return battle.enemies[0];}function prepare(){const e=setup();e.actionsTaken=1;const a=chooseEnemyAction(e);endgameResolveEnemyEffect(e,a);return e;}`);
+check('Foreman fixture selects the actual announced assault',`(()=>{const e=prepare();return e.name==='Dock Foreman'&&e.encounterMechanic.stagePending.target;})()`);
+check('Fast heroes cannot expire the mark before the promised enemy action',`(()=>{const e=prepare(),t=e.encounterMechanic.stagePending.target;for(let i=0;i<12;i++){battle.round++;processTurnEnd(t);}return statusOf(t,'marked')&&chooseEnemyAction(e).name.endsWith('Anchor Chain Impact');})()`);
+check('Cleansing the mark still cancels the announced assault',`(()=>{const e=prepare(),t=e.encounterMechanic.stagePending.target;t.statuses=[];return chooseEnemyAction(e).name.endsWith('Anchor Chain Impact')===false&&e.encounterMechanic.stageRecovery;})()`);
+check('Silence does not cancel a physical assault',`(()=>{const e=prepare();applyStatus(e,'silence',battle.party[0],{force:true});processTurnStart(e);return chooseEnemyAction(e).name.endsWith('Anchor Chain Impact');})()`);
+check('Break still interrupts an announced assault',`(()=>{const e=prepare();applyStatus(e,'broken',battle.party[0],{force:true});processTurnStart(e);return !e.encounterMechanic.stagePending;})()`);
+check('Full meter turns the pending assault into a real physical Ultimate',`(()=>{const e=prepare();battle.enemyResonance=100;const t=e.encounterMechanic.stagePending.target,a=chooseEnemyAction(e);return a.kind==='ultimate'&&a.isUltimate&&a.target===t&&a.scaling==='str'&&a.coefficient>=1.55&&enemyActionMpCost(e,a)===0;})()`);
+check('Full meter without a pending assault is not hidden by the formation pattern',`(()=>{const e=setup(100);e.actionsTaken=1;return chooseEnemyAction(e).kind==='ultimate';})()`);
+check('The deliberate recovery opening remains available to the player',`(()=>{const e=prepare();chooseEnemyAction(e);battle.enemyResonance=100;return chooseEnemyAction(e).name==='Recovering from the assault';})()`);
+console.log('PASS '+passed+' Hall assault regression checks');

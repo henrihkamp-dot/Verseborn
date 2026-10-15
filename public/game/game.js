@@ -5945,7 +5945,9 @@ function processTurnEnd(unit) {
   ensureStatuses(unit).forEach(status => {
     if (status.type === "evasion" && Number.isFinite(status.incomingCharges)) return;
     if (status.appliedRound === battle?.round && status.appliedTurn === combatantKey(unit)) return;
-    status.remaining--;
+    // Telegraphs last until the promised enemy action, not the target's faster turns.
+    const telegraph = battle?.enemies?.some(enemy => enemy.hp > 0 && enemy.encounterMechanic?.stagePending?.target === unit && enemy.name === status.source?.name && stageFormationRhythm()?.status === status.type);
+    if (!telegraph) status.remaining--;
   });
   const expired = unit.statuses.filter(status => status.remaining <= 0);
   unit.statuses = unit.statuses.filter(status => status.remaining > 0);
@@ -12091,7 +12093,7 @@ const ENDGAME_STAGE_RHYTHMS = {
 
 function stageUnitControlled(unit) {
   if (unit.endgameBoss) return endgameBossControlled(unit);
-  return ['silence', 'stun', 'sleep', 'broken'].some(type => statusOf(unit, type));
+  return ['stun', 'sleep', 'broken'].some(type => statusOf(unit, type)) || Boolean(statusOf(unit, 'silence') && (unit.encounterMechanic?.stagePending?.kind || stageFormationRhythm()?.kind) !== 'melee');
 }
 
 function interruptStageCombination(unit) {
@@ -12185,8 +12187,12 @@ function stageRhythmAction(unit) {
     }
     const supports = live.filter(ally => ally !== unit && !stageUnitControlled(ally)).length;
     receptionAnnounce(rhythm.title, `${target.name} receives the announced impact. ${supports} active companions amplify it. The attacker now recovers.`);
-    return { ...enemyActionForKind(unit, rhythm.kind, target), name: rhythm.title, target, allTargets: false, coefficient: rhythm.early ? 1.05 + supports * .15 : 1.25 + supports * .2, breakPower: rhythm.kind === 'melee' ? 3 : 1 };
+    const charged = (battle.enemyResonance || 0) >= 100;
+    const base = enemyActionForKind(unit, rhythm.kind, target);
+    const coefficient = rhythm.early ? 1.05 + supports * .15 : 1.25 + supports * .2;
+    return { ...base, kind: charged ? 'ultimate' : base.kind, scaling: base.scaling || (rhythm.kind === 'melee' ? 'str' : 'mag'), name: rhythm.title, target, allTargets: false, isUltimate: charged, mpCost: charged ? 0 : base.mpCost, coefficient: charged ? Math.max(coefficient, enemyActionForKind(unit, 'ultimate', target).coefficient || 1.55) : coefficient, breakPower: rhythm.kind === 'melee' ? 3 : 1 };
   }
+  if ((battle.enemyResonance || 0) >= 100 && !unit.endgameBoss) return null;
   if (rhythm.early && (unit.actionsTaken || 0) % rhythm.interval !== 1) return null;
   return { kind: 'utility', name: `${rhythm.title} - preparing`, element: rhythm.kind === 'melee' ? 'Physical' : 'Arcane', mpCost: 0, endgameEffect: 'stagePrepare', rhythm };
 }

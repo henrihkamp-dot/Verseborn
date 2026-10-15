@@ -1093,11 +1093,7 @@
   triggerPartyDefeat = log => battle?.sparring ? finishSparring('defeat') : oldDefeat(log);
   endBattleDraw = log => battle?.sparring ? finishSparring('draw') : oldDraw(log);
   function drawAreas(camera) {
-    const areas = { Torren: [18, 13, 111, 80], Sparky: [139, 54, 53, 39], Glimmer: [437, 14, 185, 80], Seerin: [18, 152, 160, 40], Mira: [18, 273, 175, 70], Kael: [449, 273, 172, 70] };
     ctx.save();
-    for (const [id, [x, y, w, h]] of Object.entries(areas)) if (!recruited(id)) {
-      ctx.fillStyle = 'rgba(15,12,22,.55)'; ctx.fillRect(x - camera.x, y - camera.y, w, h);
-    }
     if (recruited('Sparky') && curios.complete && curios.naturalWidth) {
       const cell = curios.naturalWidth / 5;
       for (const [index, x, y, size] of [[0, 179, 84, 12], [4, 186, 86, 10], [2, 178, 90, 9]]) {
