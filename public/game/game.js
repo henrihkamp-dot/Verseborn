@@ -9774,9 +9774,11 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
   const advanced = stage > 40;
   const healthScale = (1 + Math.max(0, stage - 1) * .052) * (advanced ? 1.12 + phaseIndex * .08 : 1);
   const attackScale = (1 + Math.max(0, stage - 1) * .024) * (advanced ? 1.08 + phaseIndex * .04 : 1);
+  const openingBoost = stage <= 4 ? 1.75 : stage <= 12 ? 1.5 : stage <= 20 ? 1.35 : stage <= 35 ? 1.25 : stage <= 50 ? 1.2 : 1;
   return (keys || info.enemies).map((key, enemyIndex) => {
     const profile = HALL_ENEMY_LIBRARY[key];
     const unit = enemy(profile.name, Math.round(profile.hp * healthScale), Math.round(profile.atk * attackScale), profile.weak, profile.color, profile.node, profile.sprite || null);
+    unit.hp = unit.max = unit.baseMax = Math.round(unit.baseMax * openingBoost);
     if (profile.finalState) unit.finalState = profile.finalState;
     unit.levelHint = stage;
     unit.fixedLevel = true;
@@ -9789,6 +9791,8 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
       : stage <= 12 ? { damage: 1.25, healing: 1.4, ultimate: 1.45 }
       : stage <= 20 ? { damage: 1.3, healing: 1.5, ultimate: 1.6 }
       : { damage: 1.15, healing: 1.5, ultimate: 1.1 };
+    unit.combatPotency.damage *= openingBoost;
+    unit.combatPotency.ultimate *= openingBoost;
     if (info.boss || profile.node >= 3) {
       unit.npcBoss = true;
       unit.resistanceTier = info.boss && (stage > 20 || enemyIndex === 0) && (!advanced || phaseIndex === info.waves.length) ? "boss" : "elite";
