@@ -51,7 +51,7 @@
       unit.statuses=ensureStatuses(unit).filter(s=>s.type!=='haste');
       applyStatus(unit,'exhaustion',unit,{force:true,value:.25,duration:2});
       note=` ${unit.name}: EXHAUSTION — damage and initiative -25% for two own actions.`;
-    }else if(stamp?.battle===battle&&stamp.turn===turn&&stamp.action.kind!=='ultimate'&&enemyActionDealsDamage(stamp.action)){
+    }else if(stamp?.battle===battle&&stamp.turn===turn&&stamp.action.kind!=='ultimate'&&!stamp.action.isUltimate&&!stamp.action.noTempo&&enemyActionDealsDamage(stamp.action)){
       if(queue(unit))note=` ${unit.name}: BATTLE ECHO grants one immediate Echo Strike (${battle.enemyExtraTurns}/2 enemy bonus actions used).`;
       else if(prime(unit))note=` ${unit.name}: HASTE +20% initiative; BATTLE ECHO readied. Dispel Echo before its next regular attack to cancel the bonus action.`;
     }

@@ -12762,10 +12762,10 @@ function enemyDamageRoll(unit, action, target) {
   damage *= outgoingDamageMultiplier(unit, damageKind, target);
   if (!physical) damage *= 1 + (unit.affixes?.elementDamage || 0);
   else damage *= 1 + (unit.affixes?.physicalDamage || 0);
-  if (hasNegativeStatus(target)) damage *= 1 + (unit.affixes?.damageAfflicted || 0);
-  if (statusOf(target, "broken")) damage *= 1 + (unit.affixes?.damageBroken || 0);
+  if (!action.hallEcho && hasNegativeStatus(target)) damage *= 1 + (unit.affixes?.damageAfflicted || 0);
+  if (!action.hallEcho && statusOf(target, "broken")) damage *= 1 + (unit.affixes?.damageBroken || 0);
   const profile = enemyAbilityProfile(unit);
-  if (statusOf(target, "broken")) damage *= 1 + (physical ? profile?.physicalBrokenBonus || profile?.brokenBonus || 0 : profile?.brokenBonus || 0);
+  if (!action.hallEcho && statusOf(target, "broken")) damage *= 1 + (physical ? profile?.physicalBrokenBonus || profile?.brokenBonus || 0 : profile?.brokenBonus || 0);
   damage *= 1 + Math.min(.4, (unit.actionsTaken || 0) * (profile?.escalation || 0));
   if (enemyPayoffMatches(action, target)) damage *= action.payoffMultiplier || 1.2;
   damage *= 1 + (physical ? statusValue(target, "physicalVulnerability") : statusValue(target, "magicVulnerability"));
@@ -12881,7 +12881,7 @@ function resolveEnemyTurn(turn, prev) {
     let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
-      if (!["stagePrepare", "sanctuaryPrepare", "receptionPrepare", "charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
+      if (!["stagePrepare", "hallFinisherPrepare", "sanctuaryPrepare", "receptionPrepare", "charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
         const pressureOriginalTarget = target;
         target = taunter || rank0Protector(target, false) || target;
         const pressureGuarded = Boolean(target.guarding);
