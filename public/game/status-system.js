@@ -328,6 +328,7 @@
     return entries.at(-1);
   }
   function generate(gear, rarity, theme = '', countOverride = null, existing = []) {
+    if (gear?.slot === 'ring2') return [];
     const count = Number.isInteger(countOverride) ? Math.max(0, countOverride) : RARITY_AFFIX_COUNTS[rarity] || 0;
     const chosen = [...existing];
     const build = gearEntries(selectedGearHero || state.activeParty[0]).filter(entry => entry.type === 'statusOnHit').reduce((counts, entry) => { counts[entry.status] = (counts[entry.status] || 0) + entry.value; return counts; }, {});

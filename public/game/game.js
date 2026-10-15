@@ -2374,6 +2374,7 @@ function gearVisualRole(gear) {
 }
 
 function gearIconHtml(gear, heroId, fallbackIndex, className = "", ref = null) {
+  if (gear?.slot === "ring2") return gearIconHtml({ ...gear, slot: "ring" }, heroId, 2, className, ref);
   if (!["weapon", "armour", "ring", "necklace", "helmet"].includes(gear?.slot)) {
     return pixelIconHtml("gear-empty", fallbackIndex, className);
   }
@@ -2605,6 +2606,7 @@ function defaultGearRarity(name) {
 }
 
 function rollGearAffixes(gear, rarity, theme = "", countOverride = null) {
+  if (gear?.slot === "ring2") return [];
   const count = Number.isInteger(countOverride) ? Math.max(0, countOverride) : RARITY_AFFIX_COUNTS[rarity] || 0;
   if (!count) return [];
   const base = gearAffixPool(gear);
@@ -3041,7 +3043,7 @@ function gearBrowserToolbarHtml(visibleCount, totalCount) {
       <input type="search" data-gear-search value="${escapeMarkup(gearBrowser.search)}" placeholder="Search gear..." aria-label="Search gear">
       <details data-gear-filter-panel ${gearBrowser.filterOpen ? "open" : ""}><summary>Filter${filterCount ? ` (${filterCount})` : ""}</summary>
         <div class="gear-browser-panel gear-filter-grid">
-          <label>Type<select data-gear-filter="slot"><option value="all">All slots</option>${["weapon", "armour", "ring", "necklace", "helmet"].map(slot => `<option value="${slot}" ${gearBrowser.slot === slot ? "selected" : ""}>${gearSlotLabel(slot)}</option>`).join("")}</select></label>
+          <label>Type<select data-gear-filter="slot"><option value="all">All slots</option>${["weapon", "armour", "ring", "necklace", "helmet", "ring2"].map(slot => `<option value="${slot}" ${gearBrowser.slot === slot ? "selected" : ""}>${gearSlotLabel(slot)}</option>`).join("")}</select></label>
           <label>Rarity<select data-gear-filter="rarity"><option value="all">All rarities</option>${GEAR_DISPLAY_RARITIES.map(rarity => `<option value="${rarity}" ${gearBrowser.rarity === rarity ? "selected" : ""}>${rarity}</option>`).join("")}</select></label>
           <label>Usability<select data-gear-filter="usability"><option value="all">All characters</option><option value="selected" ${gearBrowser.usability === "selected" ? "selected" : ""}>Selected hero</option>${heroOptions}</select></label>
           <label>Equipment<select data-gear-filter="equipped"><option value="all">Equipped + unequipped</option><option value="equipped" ${gearBrowser.equipped === "equipped" ? "selected" : ""}>Equipped only</option><option value="unequipped" ${gearBrowser.equipped === "unequipped" ? "selected" : ""}>Unequipped only</option></select></label>
@@ -3204,7 +3206,7 @@ function inventoryInfo(name) {
 const QUEST_INVENTORY_ITEMS = new Set(["Old Registry Key", "Iron Chain Link"]);
 
 function gearSlotLabel(slot) {
-  return { weapon: "Weapon", armour: "Armour", ring: "Ring", necklace: "Necklace", helmet: "Helmet" }[slot] || "Equipment";
+  return { weapon: "Weapon", armour: "Armour", ring: "Ring", ring2: "Destiny Ring II", necklace: "Necklace", helmet: "Helmet" }[slot] || "Equipment";
 }
 
 function inventoryCategory(name) {
@@ -3969,7 +3971,7 @@ function character(name, title, element, color, hair, trim, stats, gear, skills)
 }
 
 function slotsFrom(names) {
-  return { weapon: names[0], armour: names[1], ring: names[2], necklace: names[3], helmet: names[4] };
+  return { weapon: names[0], armour: names[1], ring: names[2], necklace: names[3], helmet: names[4], ring2: null };
 }
 
 function skill(name, anim, element, power, cost, desc, options = {}) {
@@ -14286,8 +14288,8 @@ function equipmentAttributesHtml(id, previewRef = null) {
   }).join('') + '</section>';
 }
 function equipmentBodySlotsHtml(id) {
-  return ['weapon','helmet','armour','necklace','ring'].map(slot => {
-    const ref = baseJobs[id].gear[slot], gear = gearByName(ref), index = {weapon:0,armour:1,ring:2,necklace:3,helmet:4}[slot], locked = equippedGearLocked(id,slot);
+  return ['weapon','helmet','armour','necklace','ring','ring2'].map(slot => {
+    const ref = baseJobs[id].gear[slot], gear = gearByName(ref), index = {weapon:0,armour:1,ring:2,ring2:2,necklace:3,helmet:4}[slot], locked = equippedGearLocked(id,slot);
     return '<div class="equip-body-slot equip-slot-' + slot + (selectedGearSlot === slot ? ' is-selected' : '') + '"><button type="button" data-gear-slot="' + slot + '" aria-label="Choose ' + gearSlotLabel(slot) + ' for ' + id + '">' + (gear ? gearIconHtml(gear,id,index,'equip-slot-icon',ref) : pixelIconHtml('gear-empty',index,'equip-slot-icon')) + '<span><small>' + gearSlotLabel(slot) + '</small><strong>' + escapeMarkup(ref ? gearDisplayName(ref) : 'Empty') + '</strong>' + (gear ? '<em>' + gearRarity(ref) + '</em>' : '') + '</span></button><button type="button" class="equip-slot-lock" data-equipped-lock="' + slot + '" aria-label="' + (locked ? 'Unlock' : 'Lock') + ' ' + gearSlotLabel(slot) + ' on ' + id + '" aria-pressed="' + locked + '" ' + (!ref ? 'disabled' : '') + '>' + (locked ? '▣' : '◇') + '</button></div>';
   }).join('');
 }
@@ -14399,7 +14401,7 @@ function renderMenu() {
     }).join("");
     const allGearChoices = ownedGearRefs().map(ref => ({ ref, gear: gearByName(ref) })).filter(entry => entry.gear);
     const slotChoices = filteredSortedGear(allGearChoices);
-    const choiceIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
+    const choiceIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[selectedGearSlot];
     if (selectedGearRef !== "__EMPTY__" && !slotChoices.some(entry => entry.ref === selectedGearRef)) selectedGearRef = null;
     if (!selectedGearRef) selectedGearRef = h.gear[selectedGearSlot] || (gearPickerOpen ? slotChoices[0]?.ref : null) || "__EMPTY__";
     const choiceList = `${slotChoices.map(({ ref, gear }, index) => {
@@ -14407,7 +14409,7 @@ function renderMenu() {
       const holders = equippedGearUsers(ref);
       const copies = gearCopyCount(ref);
       const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
-      const rowIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
+      const rowIconIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[gear.slot];
       return `<button type="button" class="selection-row rarity-${gearRarity(ref).toLowerCase().replace(/\s+/g, "-")} ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}" ${gearHoverAttribute({ heroId: id, ref })}>${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon", ref)}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small><small>${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
     }).join("") || `<p class="selection-list-empty">No gear matches these filters.</p>`}${gearBrowser.slot === "all" ? "" : `<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`}`;
     const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
@@ -14415,7 +14417,7 @@ function renderMenu() {
     const equipped = h.gear[selectedSlot] === selectedGearRef;
     const usable = selectedGear ? canEquip(id, selectedGear) : true;
     const selectedHolders = selectedGear ? equippedGearUsers(selectedGearRef) : [];
-    const detailIconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[selectedSlot];
+    const detailIconIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[selectedSlot];
     const detail = selectedGear ? `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(selectedGear, id, detailIconIndex, "selection-detail-icon", selectedGearRef)}<div><small>${gearSlotLabel(selectedGear.slot)}</small><strong>${gearDisplayName(selectedGearRef)}</strong>${gearRarityHtml(selectedGearRef)}</div></header><div class="selection-stat-line">${statLine(selectedGear.stats)}</div><p>${selectedGear.desc}</p><small class="gear-access">${gearAccessLabel(selectedGear)}</small>${gearEffectHtml(selectedGear, "item-effect")}<details class="equip-affixes"><summary>Affixes & modifiers</summary>${gearAffixHtml(selectedGearRef)}</details><p class="selection-location">${selectedHolders.length ? `Equipped by ${selectedHolders.join(", ")}` : "Unequipped"}</p><div class="selection-actions"><button type="button" data-equip="${id}:${selectedSlot}:${selectedGearRef}" ${equipped || !usable ? "disabled" : ""}>${equipped ? "Equipped" : usable ? "Equip on " + h.name : "Not usable by " + h.name}</button>${favoriteGearButton(selectedGearRef)}</div><details class="gear-comparison">${gearComparisonHtml(id, selectedSlot, selectedGearRef)}</details></article>` : emptyEquipmentDetailHtml(id, selectedGearSlot, gearPickerOpen);
     const picker = '<section class="equip-picker equip-slot-picker" aria-label="Equipment selection"><header class="equip-picker-head"><div><small>' + h.name + '</small><strong>' + (gearBrowser.slot === 'all' ? 'Choose equipment' : 'Choose ' + gearSlotLabel(gearBrowser.slot).toLowerCase()) + '</strong></div><button type="button" data-close-equipment-picker aria-label="Close equipment selection">×</button></header>' + gearBrowserToolbarHtml(slotChoices.length, allGearChoices.length) + '<div class="selection-list" aria-label="Matching equipment">' + choiceList + '</div><div class="equip-picker-detail"><details class="equip-preview-stats"><summary>Attribute changes</summary>' + equipmentAttributesHtml(id, selectedGearRef) + '</details>' + detail + '</div></section>';
     const sidebar = gearPickerOpen ? picker : equipmentAttributesHtml(id) + '<div class="equip-current-detail">' + detail + '</div>';
@@ -14506,7 +14508,7 @@ function renderMenu() {
     const listRows = currentEntries.map((entry, index) => {
       if (entry.kind === "gear") {
         const holders = equippedGearUsers(entry.ref);
-        const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[entry.gear.slot];
+        const iconIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[entry.gear.slot];
         const iconHero = holders[0] || gearOwners[entry.gear.name]?.[0] || state.activeParty[0];
         const comparisonHero = gearComparisonHero(entry.gear, selectedGearHero);
         return `<button type="button" class="selection-row rarity-${gearRarity(entry.ref).toLowerCase().replace(/\s+/g, "-")} ${selectedItemRef === entry.key ? "is-selected" : ""}" data-item-preview="${index}" ${gearHoverAttribute({ heroId: comparisonHero, ref: entry.ref })}>${gearIconHtml(entry.gear, iconHero, iconIndex, "selection-row-icon", entry.ref)}<span><strong>${gearDisplayName(entry.ref)}</strong><small>${gearRarity(entry.ref)} &bull; ${gearSlotLabel(entry.gear.slot)} &bull; ${statLine(entry.gear.stats)}</small></span><b>${holders.length ? "ON" : ""}</b></button>`;
@@ -14534,7 +14536,7 @@ function renderMenu() {
       const { ref, gear } = selectedEntry;
       const holders = equippedGearUsers(ref);
       const copies = gearCopyCount(ref);
-      const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
+      const iconIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[gear.slot];
       const iconHero = holders[0] || gearOwners[gear.name]?.[0] || state.activeParty[0];
       detail = `<article class="selection-detail"><header class="selection-detail-head">${gearIconHtml(gear, iconHero, iconIndex, "selection-detail-icon", ref)}<div><small>${gearSlotLabel(gear.slot)}</small><strong>${gearDisplayName(ref)}</strong>${gearRarityHtml(ref)}</div></header><div class="selection-stat-line">${statLine(gear.stats)}</div><p>${gear.desc}</p><small class="gear-access">${gearAccessLabel(gear)}</small>${gearEffectHtml(gear, "item-effect")}${gearAffixHtml(ref)}<p class="selection-location">${holders.length ? `Equipped by ${holders.join(", ")}` : `Unequipped / ${gearInstance(ref) ? "separate copy" : `${copies} owned`}`}</p><div class="selection-actions"><button type="button" data-open-gear="${ref}">Open in Gear</button>${favoriteGearButton(ref)}</div></article>`;
     }
@@ -14943,6 +14945,7 @@ function setDeveloperGear(stage, rarity, enabled) {
     const profile = AUTO_EQUIP_PROFILES[id];
     const weights = { str: physical.has(id) ? profile.damage : .1, mag: physical.has(id) ? profile.healing : profile.damage + profile.healing * .4, stam: profile.hp * 2, agi: profile.agi, echo: profile.echo };
     for (const slot of Object.keys(hero.gear)) {
+      if (slot === "ring2") continue;
       const choices = [...prepared.values()].filter(entry => entry.gear.slot === slot && canEquip(id, entry.gear));
       const score = entry => Object.entries(entry.stats).reduce((sum, [stat, value]) => sum + value * (weights[stat] || 0), 0);
       choices.sort((a, b) => score(b) - score(a) || a.gear.name.localeCompare(b.gear.name));
@@ -14954,7 +14957,7 @@ function setDeveloperGear(stage, rarity, enabled) {
   developerGearInstances.clear();
   for (const [id, loadout] of Object.entries(loadouts)) {
     Object.values(loadout).forEach(entry => developerGearInstances.set(entry.id, entry));
-    baseJobs[id].gear = Object.fromEntries(Object.entries(loadout).map(([slot, entry]) => [slot, entry.id]));
+    baseJobs[id].gear = { ...Object.fromEntries(Object.entries(loadout).map(([slot, entry]) => [slot, entry.id])), ring2: baseJobs[id].gear.ring2 || null };
   }
   developerGearLoadout = { stage, rarity, original };
   state.developerGearChoice = { stage, rarity };
@@ -15107,7 +15110,7 @@ function shopWareRowHtml(ware, index, purchased = false) {
   const full = ware.kind === "item" && !canCarryInventoryItem(ware.name);
   const displayedRarity = gear ? (ware.rarity || (repeatableEcho ? defaultGearRarity(gear.name) : gearRarity(gear.name))) : "Common";
   const icon = gear
-    ? gearIconHtml({ ...gear, rarity: displayedRarity }, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
+    ? gearIconHtml({ ...gear, rarity: displayedRarity }, gearOwners[gear.name]?.[0] || state.party[0], { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[gear.slot], "shop-icon")
     : (() => { const itemIcon = inventoryIcon(ware.name); return inventoryItemIconHtml(ware.name, "shop-icon"); })();
   const ownedCount = repeatableEcho || ware.artifactShop ? gearCopyCount(gear.name) : 0;
   const displayedStats = ware.stats && typeof ware.stats === "object" ? ware.stats : gear?.stats;
@@ -15158,7 +15161,7 @@ function renderVendor() {
     const icon = inventoryIcon(name);
     return `<div class="shop-row">${inventoryItemIconHtml(name, "shop-icon")}<div><strong>${name} x${amount}</strong><small>${inventoryTypeLabel(name)}. ${info.desc}</small></div><span>${inventorySellPrice(name)} G</span><button type="button" data-sell-kind="item" data-sell-name="${name}">Sell 1</button></div>`;
   }).join("")}${sellGear.map(({ ref, gear }) => {
-    const iconIndex = { weapon: 0, armour: 1, ring: 2, necklace: 3, helmet: 4 }[gear.slot];
+    const iconIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[gear.slot];
     const available = gearCopyCount(ref) - equippedGearUsers(ref).length;
     const comparisonHero = gearComparisonHero(gear, selectedGearHero);
     return `<div class="shop-row is-gear-row" ${gearHoverAttribute({ heroId: comparisonHero, ref })}>${gearIconHtml(gear, state.party[0], iconIndex, "shop-icon", ref)}<div><strong>${gearDisplayName(ref)}${gearInstance(ref) ? "" : ` x${available} spare`}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small></div><span>${gearSellPrice(gear)} G</span><button type="button" data-sell-kind="gear" data-sell-name="${ref}">Sell 1</button></div>`;
