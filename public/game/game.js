@@ -358,8 +358,8 @@ const battleSpriteHeights = {
   Kael: 47, KaelShadow: 50, Torren: 49, Seerin: 48
 };
 const BATTLE_COMPOSITION_SCALE = .92;
-const BATTLE_IDLE_FRAME_TICKS = 48;
-const BATTLE_DEATH_FRAME_TICKS = 14;
+const BATTLE_IDLE_FRAME_TICKS = 72;
+const BATTLE_DEATH_FRAME_TICKS = 20;
 const battleFrameSequences = {
   Verseborn: { idle: [0, 0, 0, 0] },
   Mira: {
@@ -6649,47 +6649,77 @@ function battleVisualId(unit) {
   return unit?.form === "mech" ? "GlimmerMech" : unit?.form === "shadowpriest" ? "KaelShadow" : unit?.id;
 }
 
+// Dissolve whole existing drawings on a transparent scratch surface. No limb puppetry.
+const battlePoseBlendCanvases = new Map();
+function battleIdlePhase(id, frame = tick) {
+  const elapsed = frame === tick ? performance.now() * .06 : frame;
+  return (elapsed + (id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS;
+}
+function battlePoseTransition(fraction, window = .22) {
+  const t = Math.max(0, Math.min(1, (fraction - (1 - window)) / window));
+  return t * t * (3 - 2 * t);
+}
+function blendBattlePoses(key, first, second, mix) {
+  const pad = Math.ceil(Math.max(Math.abs(first.dx || 0), Math.abs(second.dx || 0), Math.abs(first.dy || 0), Math.abs(second.dy || 0))) + 4;
+  const ratio = Math.min(1, 512 / Math.max(first.w + pad * 2, first.h + pad * 2));
+  let canvas = battlePoseBlendCanvases.get(key);
+  if (!canvas) { canvas = document.createElement('canvas'); battlePoseBlendCanvases.set(key, canvas); }
+  const width = Math.ceil((first.w + pad * 2) * ratio), height = Math.ceil((first.h + pad * 2) * ratio);
+  if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+  const paint = canvas.getContext('2d');
+  paint.clearRect(0, 0, width, height); paint.imageSmoothingEnabled = true;
+  const draw = (source, alpha) => { paint.globalAlpha = alpha; paint.drawImage(source.image, source.x || 0, source.y || 0, source.w, source.h, (pad + (source.dx || 0)) * ratio, (pad + (source.dy || 0)) * ratio, source.w * ratio, source.h * ratio); };
+  paint.globalCompositeOperation = 'source-over'; draw(first, 1 - mix);
+  paint.globalCompositeOperation = 'lighter'; draw(second, mix);
+  paint.globalAlpha = 1; paint.globalCompositeOperation = 'source-over';
+  return { image: canvas, pad, ratio };
+}
+
 function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
-  const visualId = battleVisualId(unit);
-  const sheet = battleAnimationSheets[visualId];
+  const visualId = battleVisualId(unit), sheet = battleAnimationSheets[visualId];
   if (!sheet) return false;
-  let animation = unit.anim || "idle";
-  if (animation === "ultimate") animation = "ultimate1";
+  let animation = unit.anim || 'idle';
+  if (animation === 'ultimate') animation = 'ultimate1';
   const row = sheet.rowMap?.[animation] ?? sheet.rowMap?.idle ?? 0;
   const activeEffect = effect?.caster === unit.id ? effect : null;
   const duration = Math.max(1, activeEffect?.duration || 24);
-  const progress = activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
-  const idlePhase = Math.floor((frame + (unit.id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS) % 6;
-  const usesDirectFrames = sheet.directFrames === true;
-  const defaultColumn = animation === "idle"
-    ? [0, 1, 2, 3, 2, 1][idlePhase]
-    : animation === "death"
-      ? Math.min(sheet.columns - 1, Math.floor(Math.max(0, frame - (Number.isFinite(unit.deathTick) ? unit.deathTick : frame)) / BATTLE_DEATH_FRAME_TICKS))
-      : usesDirectFrames
-        ? Math.min(sheet.columns - 1, Math.floor(progress * sheet.columns))
-        : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
-  const sequence = usesDirectFrames ? null : battleFrameSequences[visualId]?.[animation];
-  const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
+  const progress = activeEffect?.startedAt !== undefined && activeEffect?.timing?.totalMs
+    ? Math.min(1, Math.max(0, (performance.now() - activeEffect.startedAt) / activeEffect.timing.totalMs))
+    : activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
+  const phase = battleIdlePhase(unit.id, frame);
+  const idleOrder = [0, 1, 2, 3, 2, 1], direct = sheet.directFrames === true;
+  const sequence = direct ? null : battleFrameSequences[visualId]?.[animation];
+  let col, next, mix = 0;
+  if (animation === 'idle') {
+    const index = Math.floor(phase) % idleOrder.length;
+    const map = n => Math.min(sheet.columns - 1, sequence ? sequence[Math.min(sequence.length - 1, n)] : n);
+    col = map(idleOrder[index]); next = map(idleOrder[(index + 1) % idleOrder.length]);
+    mix = battlePoseTransition(phase % 1);
+  } else if (animation === 'death') {
+    col = Math.min(sheet.columns - 1, Math.floor(Math.max(0, frame - (Number.isFinite(unit.deathTick) ? unit.deathTick : frame)) / BATTLE_DEATH_FRAME_TICKS)); next = col;
+  } else {
+    const position = Math.min(sheet.columns - 1, progress * sheet.columns);
+    const slot = Math.floor(position);
+    const map = n => sequence ? sequence[Math.min(sequence.length - 1, direct ? n : 1 + n)] : Math.min(sheet.columns - 1, direct ? n : 1 + n);
+    col = map(slot); next = map(Math.min(sheet.columns - 1, slot + 1));
+    mix = battlePoseTransition(position % 1, .32);
+  }
   const targetHeight = (battleSpriteHeights[visualId] || 54) * BATTLE_COMPOSITION_SCALE;
   const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight);
-  const idleCrop = animation === "idle" && !usesDirectFrames ? battleIdleSourceCrops[visualId] : null;
-  const sourceOffsetX = idleCrop?.x || 0;
-  const sourceOffsetY = idleCrop?.y || 0;
-  const sourceWidth = idleCrop?.width || sheet.cellWidth;
-  const sourceHeight = idleCrop?.height || sheet.cellHeight;
-  const sourceX = col * sheet.cellWidth + sourceOffsetX;
-  const sourceY = row * sheet.cellHeight + sourceOffsetY;
-  const width = Math.round(sourceWidth * scale);
-  const height = Math.round(sourceHeight * scale);
-  const idleAnchorOffset = animation === "idle" ? Number(sheet.idleAnchorOffsets?.[col] || 0) : 0;
-  const idleBreathOffset = animation === "idle" && calmBattleIdleHeroes.has(visualId) ? [0, 0, -1, -1, 0, 0][idlePhase] : 0;
-  const destX = idleCrop ? Math.round(anchorX - width / 2) : Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
-  const destY = Math.round(baseline - (sheet.baseline - sourceOffsetY) * scale + idleBreathOffset);
-  ctx.save();
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sheet.image, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, width, height);
-  ctx.restore();
-  return true;
+  const crop = animation === 'idle' && !direct ? battleIdleSourceCrops[visualId] : null;
+  const sourceWidth = crop?.width || sheet.cellWidth, sourceHeight = crop?.height || sheet.cellHeight;
+  const source = column => ({ image: sheet.image, x: column * sheet.cellWidth + (crop?.x || 0), y: row * sheet.cellHeight + (crop?.y || 0), w: sourceWidth, h: sourceHeight,
+    dx: animation === 'idle' && !crop ? -Number(sheet.idleAnchorOffsets?.[column] || 0) : 0,
+    dy: animation === 'idle' ? -Number(sheet.idleBaselineOffsets?.[column] || 0) : 0 });
+  const first = source(col), second = source(next);
+  const breath = animation === 'idle' && calmBattleIdleHeroes.has(visualId) ? -.3 * (1 - Math.cos(phase * Math.PI / 3)) : 0;
+  const x = anchorX - sourceWidth * scale / 2, y = baseline - (sheet.baseline - (crop?.y || 0)) * scale + breath;
+  ctx.save(); ctx.imageSmoothingEnabled = false;
+  if (col !== next && mix > 0) {
+    const blended = blendBattlePoses(visualId, first, second, mix);
+    ctx.drawImage(blended.image, x - blended.pad * scale, y - blended.pad * scale, blended.image.width / blended.ratio * scale, blended.image.height / blended.ratio * scale);
+  } else ctx.drawImage(sheet.image, first.x, first.y, first.w, first.h, x + first.dx * scale, y + first.dy * scale, sourceWidth * scale, sourceHeight * scale);
+  ctx.restore(); return true;
 }
 
 function drawAnimationSprite(id, px, py, dir, anim, frame) {
@@ -8757,7 +8787,8 @@ function drawEffect() {
     if (performance.now() - effect.startedAt > effect.timing.totalMs) effect = null;
     return;
   }
-  effect.t++;
+  const partyClock = effect.startedAt !== undefined && effect.timing && spriteScale[effect.caster];
+  effect.t = partyClock ? (performance.now() - effect.startedAt) * .06 : effect.t + 1;
   const x = effect.toX ?? effect.x;
   const y = effect.toY ?? effect.y;
   if (effect.kind === "melee") {
@@ -8776,7 +8807,7 @@ function drawEffect() {
   if (effect.kind === "ultimate") {
     drawUltimateEffect(effect);
   }
-  if (effect.t > (effect.duration || 24)) effect = null;
+  if (partyClock ? performance.now() - effect.startedAt > effect.timing.totalMs : effect.t > (effect.duration || 24)) effect = null;
 }
 
 function drawEndgameBossVfx(fx) {
@@ -10767,7 +10798,7 @@ function defendReduction(u) {
 function useDefend(u) {
   if (battle.resolving) return;
   u.statuses = ensureStatuses(u).filter(status => status.type !== "audit");
-  const timing = battleActionTiming("block");
+  const timing = skillVisualTiming(u, { anim: "block" });
   battle.resolving = true;
   u.anim = "block";
   u.guarding = true;
@@ -10800,7 +10831,7 @@ function characterVfxRow(caster, sk) {
   return "projectile";
 }
 
-function skillVisualTiming(caster, sk) {
+function baseSkillVisualTiming(caster, sk) {
   const timing = battleActionTiming(sk.anim);
   const row = characterVfxRow(caster, sk);
   if (!row || !characterVfxSheets[battleVisualId(caster)]) return timing;
@@ -10811,6 +10842,14 @@ function skillVisualTiming(caster, sk) {
   if (row !== "heal") return timing;
   // Guard/heal poses share the existing animation, but give the healing effect time to travel.
   return { ...timing, impactMs: Math.max(780, timing.impactMs), totalMs: Math.max(1320, timing.totalMs) };
+}
+
+// Slow only playable combat actions; enemy turns and combat calculations retain their timing.
+function skillVisualTiming(caster, sk) {
+  const timing = baseSkillVisualTiming(caster, sk);
+  if (!spriteScale[caster?.id]) return timing;
+  const factor = sk.anim === 'ultimate' ? 1.3 : 1.35;
+  return { ...timing, impactMs: Math.round(timing.impactMs * factor), totalMs: Math.round(timing.totalMs * factor), effectTicks: Math.round(timing.effectTicks * factor), impactTicks: Math.round(timing.impactTicks * factor) };
 }
 
 function battleVfxAnchor(unit) {
@@ -10904,8 +10943,8 @@ function makeBattleEffect(caster, skillData, target) {
       targets: characterVfxTargets(caster, skillData, target),
       timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
       kind: skillData.anim, caster: caster.id, skill: skillData.name,
-      t: 0, duration: battleActionTiming(skillData.anim).effectTicks,
-      impactTicks: battleActionTiming(skillData.anim).impactTicks
+      t: 0, duration: skillVisualTiming(caster, skillData).effectTicks,
+      impactTicks: skillVisualTiming(caster, skillData).impactTicks
     };
   }
   const casterIndex = Math.max(0, battle.party.indexOf(caster));
@@ -10923,7 +10962,7 @@ function makeBattleEffect(caster, skillData, target) {
     toX = anchorX;
     toY = baseline - 17;
   }
-  const timing = battleActionTiming(skillData.anim);
+  const timing = skillVisualTiming(caster, skillData);
   return {
     kind: skillData.anim,
     caster: caster.id,
@@ -10937,6 +10976,7 @@ function makeBattleEffect(caster, skillData, target) {
     toY,
     x: toX,
     y: toY,
+    timing, startedAt: performance.now(),
     duration: timing.effectTicks,
     impactTicks: timing.impactTicks
   };
