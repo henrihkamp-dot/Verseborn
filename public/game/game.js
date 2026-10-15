@@ -10798,7 +10798,7 @@ function defendReduction(u) {
 function useDefend(u) {
   if (battle.resolving) return;
   u.statuses = ensureStatuses(u).filter(status => status.type !== "audit");
-  const timing = skillVisualTiming(u, { anim: "block" });
+  const timing = skillVisualTiming(u, { anim: "block", name: "Defend" });
   battle.resolving = true;
   u.anim = "block";
   u.guarding = true;

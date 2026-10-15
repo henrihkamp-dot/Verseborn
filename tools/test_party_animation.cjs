@@ -8,5 +8,6 @@ check('Enemy action timings stay unchanged',`['melee','magic','ultimate','block'
 check('Whole-frame transitions hold original art, ease continuously and complete',`battlePoseTransition(0)===0&&battlePoseTransition(.7)===0&&battlePoseTransition(.9)>0&&battlePoseTransition(.9)<1&&battlePoseTransition(1)===1`);
 check('Animation includes a transparent padded blend without changing the original image',`(()=>{const image={width:512,height:512},a={image,w:512,h:512,dx:-24,dy:-2},b={image,w:512,h:512,dx:25,dy:0},r=blendBattlePoses('qa',a,b,.5);return r.pad>=29&&r.ratio<=1&&a.image===image&&b.image===image&&battlePoseBlendCanvases.size===1;})()`);
 check('Death frames are extended and do not restart as an idle loop',`BATTLE_DEATH_FRAME_TICKS===20`);
+check('Defend pose and its fallback effect finish on the same clock',`(()=>{const u=battle.party[0],sk={anim:'block',name:'Defend',element:'Sound'},fx=makeBattleEffect(u,sk,u),timing=skillVisualTiming(u,sk);return fx.timing.totalMs===timing.totalMs&&timing.totalMs===1215;})()`);
 console.log('PASS '+passed+' battle animation checks');
 })().catch(e=>{console.error(e);process.exitCode=1;});
