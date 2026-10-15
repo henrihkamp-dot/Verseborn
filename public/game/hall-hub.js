@@ -1046,15 +1046,25 @@
   };
   chooseEnemyAction = unit => {
     if (!unit.sparringId) return oldEnemyAction(unit);
-    const skills = battleSkills(unit.sparringId).filter(sk => !sk.otherAllyOnly && !sk.encore && !sk.immediateTurn && !sk.dispel && !sk.revive && !sk.transform && (sk.anim === 'ultimate' ? battle.enemyResonance >= 100 : skillMpCost(unit.sparringId, sk, unit) <= unit.mp));
-    const damage = skills.filter(sk => skillTargetsEnemies(sk) && !sk.statusOnly && sk.power >= 0);
-    const heal = skills.find(sk => sk.power < 0);
-    const ultimate = skills.find(sk => sk.anim === 'ultimate' && (sk.power > 0 || sk.power < 0 && unit.hp < unit.max * .6));
-    const buff = skills.find(sk => sk.buffs?.length && !skillTargetsEnemies(sk) && !statusOf(unit, sk.buffs[0].type));
+    const silenced = Boolean(statusOf(unit, 'silence'));
+    const skills = battleSkills(unit.sparringId, unit).filter(sk => !sk.otherAllyOnly && !sk.encore && !sk.immediateTurn && !sk.dispel && !sk.revive && !sk.transform && (!silenced || sk.anim === 'melee' || sk.basicAttack || sk.anim === 'ultimate' && skillScaling(sk) === 'str') && (sk.anim === 'ultimate' ? battle.enemyResonance >= 100 : skillMpCost(unit.sparringId, sk, unit) <= unit.mp));
+    const offensive = sk => skillTargetsEnemies(sk) && !sk.statusOnly && (sk.power > 0 || sk.coefficient > 0 || sk.basicAttack);
+    const damage = skills.filter(sk => sk.anim !== 'ultimate' && offensive(sk));
+    const heal = skills.find(sk => sk.anim !== 'ultimate' && sk.power < 0);
+    // Coefficient-based capstones can have zero flat power. Carry their area
+    // targeting and level-40/ECHO potency into the enemy action as well.
+    const readyUltimates = skills.filter(sk => sk.anim === 'ultimate');
+    const healingUltimate = readyUltimates.find(sk => sk.power < 0 && unit.hp < unit.max * .6);
+    const payoff = sk => (sk.coefficient || Math.abs(sk.power) / 20) * (sk.allEnemies ? battle.party.filter(hero => hero.hp > 0).length : 1);
+    const damagingUltimate = readyUltimates.filter(offensive).sort((a,b) => payoff(b) - payoff(a))[0];
+    const ultimate = healingUltimate || damagingUltimate;
+    const buff = skills.find(sk => sk.anim !== 'ultimate' && sk.buffs?.length && !skillTargetsEnemies(sk) && !statusOf(unit, sk.buffs[0].type));
     const chosen = ultimate || (heal && unit.hp < unit.max * .45 ? heal : buff && !((unit.actionsTaken || 0) % 4) ? buff : damage[(unit.actionsTaken || 0) % Math.max(1, damage.length)] || skills.find(sk => sk.basicAttack));
     if (!chosen) return oldEnemyAction(unit);
     const isBuff = chosen.power >= 0 && !skillTargetsEnemies(chosen);
-    return { kind: chosen.anim === 'ultimate' ? 'ultimate' : isBuff ? 'buff' : chosen.anim === 'melee' ? 'melee' : 'magic', name: chosen.name, basicAttack: Boolean(chosen.basicAttack), element: chosen.element, scaling: skillScaling(chosen), mpCost: chosen.anim === 'ultimate' ? 0 : skillMpCost(unit.sparringId, chosen, unit), ...(isBuff ? { target: unit } : { coefficient: chosen.coefficient || Math.max(.7, Math.abs(chosen.power) / 20) }), healing: chosen.power < 0, healCoefficient: chosen.coefficient || 1.2, ...(chosen.status ? { status: { ...chosen.status } } : {}), buffs: chosen.buffs, crit: unit.crit };
+    const potency = chosen.anim === 'ultimate' ? 1.44 * (1 + (unit.stats.echo || 0) * .0015) : 1;
+    return { kind: chosen.anim === 'ultimate' ? 'ultimate' : isBuff ? 'buff' : chosen.anim === 'melee' ? 'melee' : 'magic', name: chosen.name, basicAttack: Boolean(chosen.basicAttack), element: chosen.element, scaling: skillScaling(chosen), mpCost: chosen.anim === 'ultimate' ? 0 : skillMpCost(unit.sparringId, chosen, unit), ...(isBuff ? { target: unit } : { coefficient: (chosen.coefficient || Math.max(.7, Math.abs(chosen.power) / 20)) * potency }), healing: chosen.power < 0, healCoefficient: (chosen.coefficient || 1.2) * potency, allTargets: Boolean(chosen.allEnemies), ...(chosen.status ? { status: { ...chosen.status } } : {}), extraStatuses: chosen.extraStatuses?.map(status => ({ ...status })), buffs: chosen.buffs, crit: unit.crit };
+
   };
   drawEnemy = (unit, x, y) => drawDuelOpponent(unit, x, y) ? true : unit.sparringId ? drawSprite(unit.sparringId, x, y, 1, unit.anim === 'attack' ? unit.attackStyle === 'melee' ? 'melee' : 'magic' : unit.hp <= 0 ? 'death' : 'idle', tick) : oldDrawEnemy(unit, x, y);
   function finishSparring(result) {

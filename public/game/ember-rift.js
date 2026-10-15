@@ -160,7 +160,7 @@
   const oldChoose=chooseEnemyAction;
   chooseEnemyAction=function(unit){
     if(!unit.riftKey||!battle?.riftEncounter)return oldChoose(unit);
-    const data=unit.riftState,info=encounters[battle.riftEncounter-1],p=roster[unit.riftKey];
+    const data=unit.riftState,info=encounters[battle.riftEncounter-1],p=roster[unit.riftKey],leader=battle.enemies.find(enemy=>enemy.hp>0&&enemy.riftLeader)||battle.enemies.find(enemy=>enemy.hp>0),leads=unit===leader;
     if(data.pending){
       const pending=data.pending;
       if(statusOf(unit,'broken')||statusOf(unit,'stun')||statusOf(unit,'sleep')||pending.kind==='magic'&&statusOf(unit,'silence')){interrupt(unit,'control');return basic(unit);}
@@ -168,17 +168,18 @@
       data.pending=null;data.recovery=2;
       if(pending.heal)return {kind:'magic',name:'The Hearth Holds',element:'Sound',healing:true,allAllies:true,healCoefficient:4.2,buffs:[{type:'barrier',value:.25,duration:2}],mpCost:24};
       const helpers=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;
-      const action={kind:'ultimate',name:unit.riftKey==='dragon'?'Vortex Breath':info.strike,element:pending.kind==='melee'?'Physical':enemyAbilityProfile(unit).element,scaling:pending.kind==='melee'?'str':'mag',coefficient:1.04+helpers*.12,allTargets:!pending.marked,target:pending.target,mpCost:0,riftCollection:unit.riftKey==='engine',status:info.mechanic==='spores'?{type:'poison',chance:.9,duration:3}:unit.riftKey==='dragon'?{type:'scorched',chance:.65,duration:2}:['hunt','crossfire'].includes(info.mechanic)?{type:'bleed',chance:.65,duration:3}:{type:'disrupted',chance:.6,duration:2}};
+      const action={kind:'ultimate',name:unit.riftKey==='dragon'?'Vortex Breath':info.strike,element:pending.kind==='melee'?'Physical':enemyAbilityProfile(unit).element,scaling:pending.kind==='melee'?'str':'mag',coefficient:1.45+helpers*.14,allTargets:!pending.marked,target:pending.target,mpCost:0,riftCollection:unit.riftKey==='engine',status:info.mechanic==='spores'?{type:'poison',chance:.9,duration:3}:unit.riftKey==='dragon'?{type:'scorched',chance:.65,duration:2}:['hunt','crossfire'].includes(info.mechanic)?{type:'bleed',chance:.65,duration:3}:{type:'disrupted',chance:.6,duration:2}};
       if(pending.target)pending.target.statuses=ensureStatuses(pending.target).filter(s=>s.type!=='riftMark');announce('Impact / recovery',`${action.name} resolves. The leader then recovers; use healing and exploit weaknesses.`);return action;
     }
     if(data.recovery>0){data.recovery--;return {...basic(unit),name:'Recovering Strike',coefficient:.36};}
     const actions=unit.actionsTaken||0;
     if(statusOf(unit,'silence'))return {...basic(unit),kind:'melee',element:'Physical',mpCost:0,coefficient:.55};
+    if(leads&&(battle.enemyResonance||0)>=100)return prepare(unit,info);
     if(info.mechanic==='armor'&&unit.riftLeader&&actions===0)return {kind:'buff',name:'Rampart Armour',target:unit,buffs:[{type:'defenseUp',value:.35,duration:4}],mpCost:0};
     if(unit.riftKey==='velourne'&&actions%4===0){const holder=battle.party.find(h=>h.hp>0&&enemyDispelStatus(h));if(holder){const stolen={...enemyDispelStatus(holder)};enemyDispelOne(holder);applyStatus(unit,stolen.type,unit,{force:true,value:stolen.value,duration:2});announce('Stolen blessing',`Velourne steals ${STATUS_DEFS[stolen.type]?.label||stolen.type}. Dispel it or interrupt his next ritual.`);return {kind:'buff',name:'Borrowed Nobility',target:unit,buffs:[],mpCost:0};}}
     const wounded=battle.enemies.filter(e=>e.hp>0&&e.hp/e.max<.65).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
     if(['fae','sella','benji','mushroom'].includes(unit.riftKey)&&wounded&&actions%3!==2&&unit.mp>=16)return {kind:'magic',name:unit.riftKey==='benji'?'Feed First':unit.riftKey==='sella'?'Water and Warmth':unit.riftKey==='fae'?'Thornlight Renewal':'Mycelial Mending',element:'Earth',healing:true,target:wounded,healCoefficient:2.1,mpCost:16};
-    if(unit.riftLeader&&actions%3===1)return prepare(unit,info);
+    if(leads&&actions%3===1)return prepare(unit,info);
     if(!unit.riftLeader&&actions%3===2)return {...basic(unit),name:p.family==='nature'?'Thicket Pressure':p.family==='mechanical'?'Chain Sweep':p.cameo?'Hearthbound Teamwork':'Ash Formation',allTargets:true,coefficient:.35,mpCost:8};
     const action=basic(unit);return (unit.mp||0)>=(action.mpCost||0)?action:{...action,kind:'melee',element:'Physical',mpCost:0,coefficient:.55};
   };
