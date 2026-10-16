@@ -6671,7 +6671,8 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const sequence = usesDirectFrames ? null : battleFrameSequences[visualId]?.[animation];
   const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
   const targetHeight = (battleSpriteHeights[visualId] || 54) * BATTLE_COMPOSITION_SCALE;
-  const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight);
+  // Match Sparky's older action drawings to the larger anatomy of his new idle.
+  const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight) * (visualId === "Sparky" ? 1.2 : 1);
   const idleCrop = animation === "idle" && !usesDirectFrames ? battleIdleSourceCrops[visualId] : null;
   const sourceOffsetX = idleCrop?.x || 0;
   const sourceOffsetY = idleCrop?.y || 0;
@@ -6683,7 +6684,9 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const height = Math.round(sourceHeight * scale);
   const idleAnchorOffset = animation === "idle" ? Number(sheet.idleAnchorOffsets?.[col] || 0) : 0;
   const idleBreathOffset = animation === "idle" && calmBattleIdleHeroes.has(visualId) ? [0, 0, -1, -1, 0, 0][idlePhase] : 0;
-  const destX = idleCrop ? Math.round(anchorX - width / 2) : Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
+  const destX = visualId === "Sparky"
+    ? Math.round(anchorX - (sheet.anchorX ?? sheet.cellWidth / 2) * scale)
+    : idleCrop ? Math.round(anchorX - width / 2) : Math.round(anchorX - width / 2 - idleAnchorOffset * scale);
   const destY = Math.round(baseline - (sheet.baseline - sourceOffsetY) * scale + idleBreathOffset);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
