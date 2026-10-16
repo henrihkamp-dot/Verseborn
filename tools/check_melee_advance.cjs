@@ -44,6 +44,29 @@ fs.mkdirSync(output, { recursive: true });
       if(id==='Seerin') assert.ok(samples[3].rotation < -1 && samples[3].y < samples[3].groundY);
       if(id==='Glimmer') assert.ok(samples[1].jet && samples[3].jet && samples[3].returning);
     }
+    const clearance = await page.evaluate(() => {
+      let samples = 0;
+      for (let count=1;count<=3;count++) for (let targetIndex=0;targetIndex<count;targetIndex++) {
+        battle.enemies=Array.from({length:count},(_,i)=>prepareEnemyForBattle(enemy('Path '+i,99999,1,'None','#555',1)));
+        for(let partyCount=1;partyCount<=3;partyCount++) for(let slot=0;slot<partyCount;slot++) {
+          battle.party=Array.from({length:partyCount},(_,i)=>battleUnit(['Seerin','Glimmer','Torren'][i]));
+          const unit=battle.party[slot];unit.anim='melee';
+          effect=makeBattleEffect(unit,{anim:'melee',power:1,basicAttack:true},battle.enemies[targetIndex]);
+          for(let ms=0;ms<1350;ms+=10) {
+            const pose=partyMeleeMotion(unit,effect.startedAt+ms);
+            battle.enemies.forEach((foe,index)=>{
+              if(index===targetIndex)return;
+              const [x,y]=enemyBattlePosition(index,count);
+              if(((pose.x-x)/25)**2+((pose.groundY-y)/22)**2<1)throw Error('Crossed enemy footprint '+JSON.stringify({count,targetIndex,slot,ms,pose,x,y}));
+            });
+            samples++;
+          }
+        }
+      }
+      return samples;
+    });
+    // Restore the representative two-enemy scene for the visual samples.
+    await page.evaluate(()=>{battle.enemies=[prepareEnemyForBattle(enemy('Training Construct',99999,1,'None','#555',1)),prepareEnemyForBattle(enemy('Training Construct',99999,1,'None','#555',1))];});
     for (const id of ['Seerin','Glimmer']) {
       await page.evaluate(id => {
         const unit=battleUnit(id);battle.party=[unit];unit.anim='melee';battle.resolving=true;
@@ -56,6 +79,6 @@ fs.mkdirSync(output, { recursive: true });
       }
     }
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({characters:results.length,phases:5,errors,output}));
+    console.log(JSON.stringify({characters:results.length,phases:5,clearanceSamples:clearance,errors,output}));
   } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

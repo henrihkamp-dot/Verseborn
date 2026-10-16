@@ -8463,7 +8463,7 @@ function drawBattleScene() {
     const hasTurn = !down && turn?.side === "party" && turn.id === unit.id;
     const motion = !down ? partyMeleeMotion(unit) : null;
     if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
-    drawFieldShadow(motion?.x ?? anchorX, (motion?.groundY ?? baseline) + 1, unit.id === "Torren" ? 14 : 10);
+    if (!motion) drawFieldShadow(anchorX, baseline + 1, unit.id === "Torren" ? 14 : 10);
     const drawUnit = () => {
       ctx.save();
       if (down) {
@@ -8474,6 +8474,7 @@ function drawBattleScene() {
       const x = (motion?.x ?? anchorX) + battleOffset(unit);
       const y = motion?.y ?? baseline;
       if (motion) {
+        drawFieldShadow(x, motion.groundY + 1, unit.id === "Torren" ? 14 : 10);
         drawMeleeBootTrail(unit, motion);
         ctx.translate(x, y - 24);
         ctx.rotate(motion.rotation);
@@ -8482,7 +8483,7 @@ function drawBattleScene() {
       if (!drawBattlePartySprite(unit, x, y, tick)) drawSprite(unit.id, x - 24, y - 52, 0, unit.anim || "idle", tick);
       ctx.restore();
     };
-    if (motion) advancingAttacker = drawUnit;
+    if (motion) advancingAttacker = { draw: drawUnit, groundY: motion.groundY };
     else if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
     else drawUnit();
     if (battle.hallStage > 50) drawBossIndicatorStrip(unit, anchorX, false);
@@ -8490,7 +8491,9 @@ function drawBattleScene() {
   });
 
   battle.enemies.map((enemyUnit, index) => ({ enemyUnit, index }))
-    .sort((a, b) => Number(Boolean(a.enemyUnit.endgameBoss)) - Number(Boolean(b.enemyUnit.endgameBoss)))
+    .sort((a, b) => advancingAttacker
+      ? enemyBattlePosition(a.index, battle.enemies.length)[1] - enemyBattlePosition(b.index, battle.enemies.length)[1]
+      : Number(Boolean(a.enemyUnit.endgameBoss)) - Number(Boolean(b.enemyUnit.endgameBoss)))
     .forEach(({ enemyUnit, index }) => {
     const animatedDeath = Boolean(enemyAnimationSheetFor(enemyUnit));
     if (enemyUnit.hp <= 0 && !enemyUnit.defeatUntil) {
@@ -8500,6 +8503,10 @@ function drawBattleScene() {
     }
     if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil && battle.phaseTransition?.step !== "fallen") return;
     const [anchorX, baseline] = enemyBattlePosition(index, battle.enemies.length);
+    if (advancingAttacker && advancingAttacker.groundY <= baseline) {
+      advancingAttacker.draw();
+      advancingAttacker = null;
+    }
     if (enemyUnit.hp <= 0 && !animatedDeath) ctx.globalAlpha = Math.max(0, (enemyUnit.defeatUntil - tick) / 12);
     const hasTurn = turn?.side === "enemy" && turn.index === index;
     if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
@@ -8513,7 +8520,7 @@ function drawBattleScene() {
     drawBattleVitals(enemyUnit, anchorX, baseline + (battle.hallStage === 50 ? 8 : 0), true);
     ctx.globalAlpha = 1;
   });
-  if (advancingAttacker) advancingAttacker();
+  if (advancingAttacker) advancingAttacker.draw();
   drawEffect();
   drawBossTelegraphs();
   drawBattleTurnRail();
@@ -8627,8 +8634,13 @@ function partyMeleeMotion(unit, now = performance.now()) {
   const outbound = elapsed < arrive;
   const retreat = Math.max(0, Math.min(1, (elapsed - returnAt) / (fx.timing.totalMs - returnAt)));
   const travel = outbound ? smooth((elapsed - 70) / (arrive - 70)) : 1 - smooth(retreat);
-  const x = homeX + (targetX - 28 - homeX) * travel;
-  const groundY = homeY + (targetY - homeY) * travel;
+  // Align with the target outside the formation, then close in along its lane.
+  // Reverse the same route on retreat instead of cutting through another enemy.
+  const stagingX = Math.min(homeX + 24, ...battle.enemies.map((enemy, index) => enemyBattlePosition(index, battle.enemies.length)[0] - 48));
+  const align = smooth(travel / .55);
+  const approach = smooth((travel - .55) / .45);
+  const x = homeX + (stagingX - homeX) * align + (targetX - 28 - stagingX) * approach;
+  const groundY = homeY + (targetY - homeY) * align;
   const leap = unit.id === "Seerin" ? (outbound ? Math.sin(Math.PI * travel) * 18 : Math.sin(Math.PI * retreat) * 23) : 0;
   return { x, y: groundY - leap, groundY, rotation: unit.id === "Seerin" ? -Math.PI * 2 * smooth(retreat) : 0,
     jet: unit.id === "Glimmer" && (outbound ? travel > 0 : retreat > 0 && retreat < 1), returning: !outbound && retreat > 0, elapsed };
