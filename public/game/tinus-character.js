@@ -163,18 +163,12 @@
       return oldDrawBattlePartySprite(unit, anchorX, baseline, frame);
     }
     const config = manifest.battle, sequence = [0, 1, 2, 3, 2, 1];
-    const phase = battleIdlePhase(ID, frame);
-    const index = Math.floor(phase) % sequence.length;
-    const source = stableBattleIdleFrame(sequence[index]);
-    const next = stableBattleIdleFrame(sequence[(index + 1) % sequence.length]);
-    const mix = battlePoseTransition(phase % 1);
+    const phase = (frame + 15) / BATTLE_IDLE_FRAME_TICKS;
+    const source = stableBattleIdleFrame(sequence[Math.floor(phase) % sequence.length]);
     const scale = battleSpriteHeights[ID] * BATTLE_COMPOSITION_SCALE / config.referenceHeight;
-    const x = anchorX - config.cellWidth * scale / 2, y = baseline - config.baseline * scale;
     ctx.save(); ctx.imageSmoothingEnabled = true;
-    if (mix > 0 && sequence[index] !== sequence[(index + 1) % sequence.length]) {
-      const blended = blendBattlePoses(ID, {image: source, w: config.cellWidth, h: config.cellHeight}, {image: next, w: config.cellWidth, h: config.cellHeight}, mix);
-      ctx.drawImage(blended.image, x - blended.pad * scale, y - blended.pad * scale, blended.image.width / blended.ratio * scale, blended.image.height / blended.ratio * scale);
-    } else ctx.drawImage(source, x, y, config.cellWidth * scale, config.cellHeight * scale);
+    ctx.drawImage(source, anchorX - config.cellWidth * scale / 2,
+      baseline - config.baseline * scale, config.cellWidth * scale, config.cellHeight * scale);
     ctx.restore(); return true;
   };
   const oldDrawSprite = drawSprite;
