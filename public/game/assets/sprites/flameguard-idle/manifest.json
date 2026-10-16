@@ -58,12 +58,12 @@
     "cycleMs": 2200
   },
   "Seerin": {
-    "file": "seerin-combat-v4.webp",
+    "file": "seerin-combat-v5.webp",
     "cellWidth": 320,
     "cellHeight": 310,
     "anchorX": 160,
     "baseline": 295,
-    "referenceHeight": 265,
+    "referenceHeight": 264,
     "order": [
       0,
       1,
@@ -142,12 +142,12 @@
     "cycleMs": 1800
   },
   "Torren": {
-    "file": "torren-combat-v4.webp",
+    "file": "torren-combat-v5.webp",
     "cellWidth": 320,
     "cellHeight": 310,
     "anchorX": 160,
     "baseline": 295,
-    "referenceHeight": 264,
+    "referenceHeight": 234,
     "order": [
       0,
       7,

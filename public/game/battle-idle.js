@@ -14,7 +14,7 @@
     return config.order[0];
   }
   const ready = (async () => {
-    const response = await fetch(base + 'manifest.json?v=218');
+    const response = await fetch(base + 'manifest.json?v=219');
     if (!response.ok) throw new Error('Flameguard idle manifest unavailable');
     manifest = await response.json();
     await Promise.all(Object.entries(manifest).map(async ([id, config]) => {
