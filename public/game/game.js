@@ -6658,7 +6658,9 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const row = sheet.rowMap?.[animation] ?? sheet.rowMap?.idle ?? 0;
   const activeEffect = effect?.caster === unit.id ? effect : null;
   const duration = Math.max(1, activeEffect?.duration || 24);
-  const progress = activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
+  const progress = activeEffect?.meleeMotion
+    ? Math.min(1, Math.max(0, (performance.now() - activeEffect.startedAt) / activeEffect.timing.impactMs) * .75)
+    : activeEffect ? Math.min(1, activeEffect.t / duration) : 0;
   const idlePhase = Math.floor((frame + (unit.id?.length || 0) * 3) / BATTLE_IDLE_FRAME_TICKS) % 6;
   const usesDirectFrames = sheet.directFrames === true;
   const defaultColumn = animation === "idle"
@@ -8452,14 +8454,16 @@ function drawBattleScene() {
 
   const turn = currentTurn();
   const target = selectedBattleEnemy();
+  let advancingAttacker = null;
 
   battle.party.forEach((unit, index) => {
     const [anchorX, baseline] = partyBattlePosition(index, battle.party.length);
     const down = unit.hp <= 0 || unit.down;
     if (down) markBattleUnitDown(unit);
     const hasTurn = !down && turn?.side === "party" && turn.id === unit.id;
+    const motion = !down ? partyMeleeMotion(unit) : null;
     if (hasTurn) drawBattleGroundMarker(anchorX, baseline, "turn");
-    drawFieldShadow(anchorX, baseline + 1, unit.id === "Torren" ? 14 : 10);
+    drawFieldShadow(motion?.x ?? anchorX, (motion?.groundY ?? baseline) + 1, unit.id === "Torren" ? 14 : 10);
     const drawUnit = () => {
       ctx.save();
       if (down) {
@@ -8467,11 +8471,19 @@ function drawBattleScene() {
         ctx.globalAlpha = 1 - deathFade * .22;
         ctx.filter = `grayscale(${deathFade * .7}) brightness(${1 - deathFade * .2})`;
       }
-      const x = anchorX + battleOffset(unit);
-      if (!drawBattlePartySprite(unit, x, baseline, tick)) drawSprite(unit.id, x - 24, baseline - 52, 0, unit.anim || "idle", tick);
+      const x = (motion?.x ?? anchorX) + battleOffset(unit);
+      const y = motion?.y ?? baseline;
+      if (motion) {
+        drawMeleeBootTrail(unit, motion);
+        ctx.translate(x, y - 24);
+        ctx.rotate(motion.rotation);
+        ctx.translate(-x, -(y - 24));
+      }
+      if (!drawBattlePartySprite(unit, x, y, tick)) drawSprite(unit.id, x - 24, y - 52, 0, unit.anim || "idle", tick);
       ctx.restore();
     };
-    if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
+    if (motion) advancingAttacker = drawUnit;
+    else if (hasTurn) drawWithTurnOutline(drawUnit, "#fff0bd");
     else drawUnit();
     if (battle.hallStage > 50) drawBossIndicatorStrip(unit, anchorX, false);
     drawBattleVitals(unit, anchorX, baseline);
@@ -8501,6 +8513,7 @@ function drawBattleScene() {
     drawBattleVitals(enemyUnit, anchorX, baseline + (battle.hallStage === 50 ? 8 : 0), true);
     ctx.globalAlpha = 1;
   });
+  if (advancingAttacker) advancingAttacker();
   drawEffect();
   drawBossTelegraphs();
   drawBattleTurnRail();
@@ -8598,6 +8611,42 @@ function drawBattleAmbient(arenaId) {
   const [x, y, colour] = active;
   drawRect(x, y - frame, 2, 2 + frame, colour);
   if (frame === 2) drawRect(x - 1, y + 1, 4, 1, "#fff0b0aa");
+}
+
+// Move the complete action sprite; formation anchors and combat targeting stay fixed.
+function partyMeleeMotion(unit, now = performance.now()) {
+  const fx = effect;
+  if (!fx?.meleeMotion || fx.source !== unit || !battle) return null;
+  const elapsed = Math.max(0, now - fx.startedAt);
+  if (elapsed >= fx.timing.totalMs) return null;
+  const [homeX, homeY] = partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
+  const [targetX, targetY] = fx.meleeMotion.targetPosition;
+  const impact = fx.timing.impactMs;
+  const arrive = impact - 120, returnAt = impact + 100;
+  const smooth = value => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
+  const outbound = elapsed < arrive;
+  const retreat = Math.max(0, Math.min(1, (elapsed - returnAt) / (fx.timing.totalMs - returnAt)));
+  const travel = outbound ? smooth((elapsed - 70) / (arrive - 70)) : 1 - smooth(retreat);
+  const x = homeX + (targetX - 28 - homeX) * travel;
+  const groundY = homeY + (targetY - homeY) * travel;
+  const leap = unit.id === "Seerin" ? (outbound ? Math.sin(Math.PI * travel) * 18 : Math.sin(Math.PI * retreat) * 23) : 0;
+  return { x, y: groundY - leap, groundY, rotation: unit.id === "Seerin" ? -Math.PI * 2 * smooth(retreat) : 0,
+    jet: unit.id === "Glimmer" && (outbound ? travel > 0 : retreat > 0 && retreat < 1), returning: !outbound && retreat > 0, elapsed };
+}
+
+function drawMeleeBootTrail(unit, motion) {
+  if (!motion.jet) return;
+  const direction = motion.returning ? 1 : -1;
+  ctx.save();
+  for (const offset of [-5, 5]) {
+    const x = motion.x + offset, y = motion.y - 2;
+    const flicker = 2 + Math.sin(motion.elapsed * .08 + offset) * 1.5;
+    ctx.fillStyle = "#f4b44caa";
+    ctx.beginPath();ctx.moveTo(x, y - 3);ctx.lineTo(x + direction * (13 + flicker), y + 2);ctx.lineTo(x, y + 3);ctx.fill();
+    ctx.fillStyle = "#b8f5ff";
+    ctx.beginPath();ctx.moveTo(x, y - 2);ctx.lineTo(x + direction * 8, y + 1);ctx.lineTo(x, y + 2);ctx.fill();
+  }
+  ctx.restore();
 }
 
 function battleOffset(u) {
@@ -8748,6 +8797,20 @@ function drawEnemy(e, px, py) {
 
 function drawEffect() {
   if (!effect) return;
+  if (effect.meleeMotion) {
+    const elapsed = performance.now() - effect.startedAt;
+    effect.t = elapsed / effect.timing.totalMs * effect.duration;
+    const hit = (elapsed - effect.timing.impactMs) / 180;
+    if (hit >= -.18 && hit <= 1) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - Math.max(0, hit));
+      ctx.strokeStyle = "#fff0bc";ctx.lineWidth = 2;
+      ctx.beginPath();ctx.arc(effect.toX, effect.toY, 9 + Math.max(0, hit) * 8, -.8, 1.5);ctx.stroke();
+      ctx.restore();
+    }
+    if (elapsed >= effect.timing.totalMs) effect = null;
+    return;
+  }
   if (effect.bossSheetVfx) {
     effect.t++;
     drawEndgameBossVfx(effect);
@@ -10804,6 +10867,9 @@ function characterVfxRow(caster, sk) {
 }
 
 function skillVisualTiming(caster, sk) {
+  if (sk.anim === "melee" && skillTargetsEnemies(sk) && !(sk.power < 0)) {
+    return { effectTicks: 80, impactTicks: 39, impactMs: 650, totalMs: 1350 };
+  }
   const timing = battleActionTiming(sk.anim);
   const row = characterVfxRow(caster, sk);
   if (!row || !characterVfxSheets[battleVisualId(caster)]) return timing;
@@ -10899,6 +10965,12 @@ function drawCharacterVfx(fx) {
 }
 
 function makeBattleEffect(caster, skillData, target) {
+  if (skillData.anim === "melee" && skillTargetsEnemies(skillData) && battle.enemies.includes(target)) {
+    const targetPosition = enemyBattlePosition(battle.enemies.indexOf(target), battle.enemies.length);
+    return { kind: "melee", caster: caster.id, source: caster, skill: skillData.name,
+      meleeMotion: { targetPosition }, timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
+      t: 0, duration: 80, impactTicks: 39, toX: targetPosition[0], toY: targetPosition[1] - 23 };
+  }
   const vfxRow = characterVfxRow(caster, skillData);
   const spriteId = battleVisualId(caster);
   if (vfxRow && characterVfxSheets[spriteId]) {
