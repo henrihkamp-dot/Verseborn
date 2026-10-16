@@ -6599,8 +6599,7 @@ function drawRect(x, y, w, h, color) {
 }
 
 function drawFieldShadow(x, y, radius) {
-  drawRect(Math.round(x - radius), Math.round(y), radius * 2, 2, "#05030a99");
-  drawRect(Math.round(x - radius + 2), Math.round(y + 2), Math.max(2, radius * 2 - 4), 1, "#05030a66");
+  // Character artwork supplies its own grounding; no rectangular shadow bars.
 }
 
 function drawText(text, x, y, color = "#f7e0a6", size = 8, align = "left") {
