@@ -354,6 +354,7 @@ const walkSpriteSheets = {};
 const animationSheets = {};
 const battleAnimationSheets = {};
 const battleMeleeSheets = {};
+const battleChargeSheets = {};
 const battleSpriteHeights = {
   Verseborn: 46, Mira: 48, Sparky: 34, Glimmer: 43, GlimmerMech: 52,
   Kael: 47, KaelShadow: 50, Torren: 49, Seerin: 48
@@ -6654,9 +6655,10 @@ function battleVisualId(unit) {
 function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const visualId = battleVisualId(unit);
   const activeEffect = effect?.caster === unit.id ? effect : null;
-  const sheet = activeEffect?.meleeMotion && unit.anim === "melee" ? battleMeleeSheets[visualId] || battleAnimationSheets[visualId] : battleAnimationSheets[visualId];
+  const runSheet = Number.isFinite(unit.meleeRunFrame) ? battleChargeSheets[visualId] : null;
+  const sheet = runSheet || (activeEffect?.meleeMotion && unit.anim === "melee" ? battleMeleeSheets[visualId] || battleAnimationSheets[visualId] : battleAnimationSheets[visualId]);
   if (!sheet) return false;
-  let animation = unit.anim || "idle";
+  let animation = runSheet ? "run" : unit.anim || "idle";
   if (animation === "ultimate") animation = "ultimate1";
   const row = sheet.rowMap?.[animation] ?? sheet.rowMap?.idle ?? 0;
   const duration = Math.max(1, activeEffect?.duration || 24);
@@ -6674,7 +6676,7 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
         : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
   const sequence = usesDirectFrames ? null : battleFrameSequences[visualId]?.[animation];
   const motionFrame = activeEffect?.meleeMotion && animation === "melee" ? partyMeleeMotion(unit)?.attackFrame : null;
-  const col = Number.isFinite(motionFrame) ? Math.min(sheet.columns - 1, motionFrame) : sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
+  const col = runSheet ? unit.meleeRunFrame : Number.isFinite(motionFrame) ? Math.min(sheet.columns - 1, motionFrame) : sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
   const targetHeight = (battleSpriteHeights[visualId] || 54) * BATTLE_COMPOSITION_SCALE;
   // Match Sparky's older action drawings to the larger anatomy of his new idle.
   const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight) * (visualId === "Sparky" ? 1.2 : 1);
@@ -8483,7 +8485,9 @@ function drawBattleScene() {
         ctx.rotate(motion.rotation);
         ctx.translate(-x, -(y - 24));
       }
-      const poseUnit = motion?.attackFrame === -1 ? { ...unit, anim: "idle", meleeIdleFrame: effect.meleeMotion.idleFrame } : unit;
+      const poseUnit = Number.isFinite(motion?.runFrame) && motion.runFrame >= 0
+        ? { ...unit, anim: "melee", meleeRunFrame: motion.runFrame }
+        : motion?.attackFrame === -1 ? { ...unit, anim: "idle", meleeIdleFrame: effect.meleeMotion.idleFrame } : unit;
       if (!drawBattlePartySprite(poseUnit, x, y, tick)) drawSprite(unit.id, x - 24, y - 52, 0, poseUnit.anim || "idle", tick);
       ctx.restore();
     };
@@ -8507,7 +8511,7 @@ function drawBattleScene() {
     }
     if (enemyUnit.hp <= 0 && tick >= enemyUnit.defeatUntil && battle.phaseTransition?.step !== "fallen") return;
     const [anchorX, baseline] = enemyBattlePosition(index, battle.enemies.length);
-    if (advancingAttacker && advancingAttacker.groundY <= baseline) {
+    if (advancingAttacker && advancingAttacker.groundY < baseline) {
       advancingAttacker.draw();
       advancingAttacker = null;
     }
@@ -8675,7 +8679,7 @@ function partyMeleeMotion(unit, now = performance.now()) {
   const route = fx.meleeMotion.route;
   const [endX,endY] = route.end;
   const control = route.control;
-  const x = control ? (1-travel)**2*homeX+2*(1-travel)*travel*control[0]+travel*travel*endX : homeX+(endX-homeX)*travel;
+  let x = control ? (1-travel)**2*homeX+2*(1-travel)*travel*control[0]+travel*travel*endX : homeX+(endX-homeX)*travel;
   const groundY = control ? (1-travel)**2*homeY+2*(1-travel)*travel*control[1]+travel*travel*endY : homeY+(endY-homeY)*travel;
   const returning = retreat > 0;
   const leg = returning ? retreat : travel;
@@ -8706,8 +8710,13 @@ function partyMeleeMotion(unit, now = performance.now()) {
     case "lute": lift = arc * 6; rotation = drive * .16; break;
     case "staff": lift = presence * 9; rotation = drive * .08; break;
     case "mug": {
-      const mugContact = smooth((elapsed - impact + 160) / 160) * (1 - smooth((elapsed - impact) / 160));
-      lift = arc * 3; rotation = drive * .15 + mugContact * .3; break;
+      const jab = time => smooth((elapsed - time + 55) / 55) * (1 - smooth((elapsed - time) / 55));
+      const mugContact = Math.max(jab(impact - 85), jab(impact));
+      const faceHeight = fx.meleeMotion.faceHeight || 34;
+      lift = Math.max(0, faceHeight - 40) * mugContact;
+      rotation = drive * .08 + mugContact * Math.max(-.12, Math.min(.4, (40 - faceHeight) / 40));
+      x += mugContact * 2;
+      break;
     }
   }
   // Hold a braced approach, wind up immediately before contact, then recover.
@@ -8715,7 +8724,12 @@ function partyMeleeMotion(unit, now = performance.now()) {
   const strikeStart = impact - 150;
   let attackFrame = elapsed < strikeStart || elapsed > fx.timing.totalMs - 100 ? -1 : elapsed < impact - 45 ? 1 : elapsed < returnAt ? 2 : 3;
   if (profile.style === "daggers" && elapsed >= impact && elapsed < returnAt) attackFrame = Math.floor((elapsed - impact) / 45) % 2 ? 3 : 2;
-  return { x, y: groundY - lift, groundY, rotation, lift, style: profile.style, attackFrame,
+  if (profile.style === "mug" && elapsed >= impact - 145 && elapsed < returnAt) {
+    attackFrame = elapsed < impact - 115 || elapsed >= impact - 50 && elapsed < impact - 30 ? 0 : elapsed < impact - 50 ? 1 : elapsed < impact + 65 ? 2 : 3;
+  }
+  const runFrame = profile.style === "mug" && (elapsed > 70 && elapsed < impact - 145 || returning && elapsed < fx.timing.totalMs - 90)
+    ? returning ? 3 - Math.floor((elapsed - returnAt) / 85) % 4 : Math.floor((elapsed - 70) / 65) % 4 : -1;
+  return { x, y: groundY - lift, groundY, rotation, lift, style: profile.style, attackFrame, runFrame,
     jet: profile.style === "rocket" && elapsed > 70 && elapsed < fx.timing.totalMs - 35,
     returning, elapsed, drive, activity: Math.max(0, arc), presence };
 }
@@ -8905,7 +8919,8 @@ function drawEffect() {
   if (effect.meleeMotion) {
     const elapsed = performance.now() - effect.startedAt;
     effect.t = elapsed / effect.timing.totalMs * effect.duration;
-    const hit = (elapsed - effect.timing.impactMs) / 180;
+    const visualImpact = effect.source.id === "Tinus" && elapsed < effect.timing.impactMs - 35 ? effect.timing.impactMs - 85 : effect.timing.impactMs;
+    const hit = (elapsed - visualImpact) / (effect.source.id === "Tinus" ? 85 : 180);
     if (hit >= -.18 && hit <= 1) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, 1 - Math.max(0, hit));
@@ -11083,9 +11098,10 @@ function makeBattleEffect(caster, skillData, target) {
     const targetKey = enemyAnimationKey(target);
     const neckHeight = Math.max(25, Math.min(65, (enemyAnimationHeights[targetKey] || 44) * enemyBattleScale(targetKey) * BATTLE_COMPOSITION_SCALE * .7));
     const neckLift = Math.max(7, neckHeight - 18);
+    const faceHeight = Math.max(27, Math.min(65, (enemyAnimationHeights[targetKey] || 44) * enemyBattleScale(targetKey) * BATTLE_COMPOSITION_SCALE * .82));
     return { kind: "melee", caster: caster.id, source: caster, skill: skillData.name,
-      meleeMotion: { targetPosition, neckLift, route: partyMeleeRoute(caster, targetPosition, PARTY_MELEE_STYLES[caster.id]?.reach || 28), idleFrame: window.FlameguardIdle?.poseAt(caster) }, timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
-      t: 0, duration: 80, impactTicks: 39, toX: targetPosition[0], toY: targetPosition[1] - (caster.id === "Sparky" ? neckHeight : 23) };
+      meleeMotion: { targetPosition, neckLift, faceHeight, route: partyMeleeRoute(caster, targetPosition, PARTY_MELEE_STYLES[caster.id]?.reach || 28), idleFrame: window.FlameguardIdle?.poseAt(caster) }, timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
+      t: 0, duration: 80, impactTicks: 39, toX: targetPosition[0], toY: targetPosition[1] - (caster.id === "Sparky" ? neckHeight : caster.id === "Tinus" ? faceHeight : 23) };
   }
   const vfxRow = characterVfxRow(caster, skillData);
   const spriteId = battleVisualId(caster);

@@ -8,7 +8,7 @@ const output=path.resolve(__dirname,'../../../outputs/flameguard-charges-226/loo
   await page.waitForFunction('runtimeAssetsReady',null,{timeout:120000});
   await page.evaluate(()=>Promise.all([FlameguardIdle.ready,TinusCharacter.ready]));
   await page.evaluate(()=>{runCurrentTurn=()=>{};window.qaNow=performance.now();Object.defineProperty(performance,'now',{value:()=>qaNow});});
-  for(const id of ['Glimmer','Seerin','Mira','Sparky','Verseborn','Torren','Kael','Tinus']){
+  for(const id of (process.argv.length>2?process.argv.slice(2):['Glimmer','Seerin','Mira','Sparky','Verseborn','Torren','Kael','Tinus'])){
    const dir=path.join(output,id);fs.mkdirSync(dir,{recursive:true});
    await page.evaluate(id=>{battle.party=[battleUnit(id)];const unit=battle.party[0];battle.resolving=true;unit.anim='melee';effect=makeBattleEffect(unit,{anim:id==='Tinus'?'magic':'melee',power:1,basicAttack:true},battle.enemies[0]);window.qaStart=effect.startedAt;},id);
    for(let ms=0,index=0;ms<=1590;ms+=30,index++){

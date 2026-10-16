@@ -38,7 +38,7 @@ fs.mkdirSync(output, { recursive: true });
     for (const { id, home, samples, target, reach, ended } of results) {
       assert.equal(samples[0].x, home[0], id+' starts at home');
       assert.equal(samples[0].y, home[1]);
-      assert.equal(samples[2].x, target[0]-reach, id+' reaches weapon range');
+      assert.equal(samples[2].x, target[0]-reach+(id==='Tinus'?2:0), id+' reaches weapon range');
       assert.equal(samples[2].groundY, target[1]);
       assert.ok(Math.abs(samples[4].x-home[0])<.01, id+' returns home');
       assert.equal(ended,null);
