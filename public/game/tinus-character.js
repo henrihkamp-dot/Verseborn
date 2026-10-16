@@ -92,16 +92,17 @@
   const images = {}, frameCache = new Map();
   let manifest;
   const ready = (async () => {
-    const response = await fetch(BASE + 'manifest.json?v=tinus-anchored-210');
+    const response = await fetch(BASE + 'manifest.json?v=tinus-mug-226');
     if (!response.ok) throw new Error('Tinus frame manifest could not load.');
     manifest = await response.json();
-    await Promise.all(['hall', 'battle', 'effects'].map(key => new Promise((resolve, reject) => {
+    await Promise.all(['hall', 'battle', 'effects', 'mugMelee'].map(key => new Promise((resolve, reject) => {
       const image = new Image();
       image.onload = () => { images[key] = image; resolve(); };
       image.onerror = () => reject(new Error('Tinus ' + key + ' artwork could not load.'));
       image.src = BASE + manifest[key].file;
     })));
     battleAnimationSheets[ID] = { ...manifest.battle, image: images.battle };
+    battleMeleeSheets[ID] = { ...manifest.mugMelee, image: images.mugMelee };
     characterVfxSheets[ID] = { ...manifest.effects, image: images.effects };
     return true;
   })();

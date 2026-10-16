@@ -353,6 +353,7 @@ const spriteSheets = {};
 const walkSpriteSheets = {};
 const animationSheets = {};
 const battleAnimationSheets = {};
+const battleMeleeSheets = {};
 const battleSpriteHeights = {
   Verseborn: 46, Mira: 48, Sparky: 34, Glimmer: 43, GlimmerMech: 52,
   Kael: 47, KaelShadow: 50, Torren: 49, Seerin: 48
@@ -6105,6 +6106,7 @@ function battleSkills(id, unit = null) {
 }
 
 function battleAnimationName(sk, unit = null) {
+  if (partyMeleeSkill(unit, sk)) return "melee";
   if (sk.anim !== "ultimate") return sk.anim;
   if (!unit?.form && ["Kael", "Glimmer"].includes(unit?.id) && !sk.transform) return "magic";
   return "ultimate";
@@ -6651,12 +6653,12 @@ function battleVisualId(unit) {
 
 function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
   const visualId = battleVisualId(unit);
-  const sheet = battleAnimationSheets[visualId];
+  const activeEffect = effect?.caster === unit.id ? effect : null;
+  const sheet = activeEffect?.meleeMotion && unit.anim === "melee" ? battleMeleeSheets[visualId] || battleAnimationSheets[visualId] : battleAnimationSheets[visualId];
   if (!sheet) return false;
   let animation = unit.anim || "idle";
   if (animation === "ultimate") animation = "ultimate1";
   const row = sheet.rowMap?.[animation] ?? sheet.rowMap?.idle ?? 0;
-  const activeEffect = effect?.caster === unit.id ? effect : null;
   const duration = Math.max(1, activeEffect?.duration || 24);
   const progress = activeEffect?.meleeMotion
     ? Math.min(1, Math.max(0, (performance.now() - activeEffect.startedAt) / activeEffect.timing.impactMs) * .75)
@@ -6671,7 +6673,8 @@ function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
         ? Math.min(sheet.columns - 1, Math.floor(progress * sheet.columns))
         : Math.min(sheet.columns - 1, 1 + Math.floor(progress * (sheet.columns - 1)));
   const sequence = usesDirectFrames ? null : battleFrameSequences[visualId]?.[animation];
-  const col = sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
+  const motionFrame = activeEffect?.meleeMotion && animation === "melee" ? partyMeleeMotion(unit)?.attackFrame : null;
+  const col = Number.isFinite(motionFrame) ? Math.min(sheet.columns - 1, motionFrame) : sequence ? sequence[Math.min(sequence.length - 1, defaultColumn)] : defaultColumn;
   const targetHeight = (battleSpriteHeights[visualId] || 54) * BATTLE_COMPOSITION_SCALE;
   // Match Sparky's older action drawings to the larger anatomy of his new idle.
   const scale = targetHeight / Math.max(1, sheet.referenceHeight || sheet.cellHeight) * (visualId === "Sparky" ? 1.2 : 1);
@@ -8475,12 +8478,13 @@ function drawBattleScene() {
       const y = motion?.y ?? baseline;
       if (motion) {
         drawFieldShadow(x, motion.groundY + 1, unit.id === "Torren" ? 14 : 10);
-        drawMeleeBootTrail(unit, motion);
+        drawMeleeChargeTrail(unit, motion);
         ctx.translate(x, y - 24);
         ctx.rotate(motion.rotation);
         ctx.translate(-x, -(y - 24));
       }
-      if (!drawBattlePartySprite(unit, x, y, tick)) drawSprite(unit.id, x - 24, y - 52, 0, unit.anim || "idle", tick);
+      const poseUnit = motion?.attackFrame === -1 ? { ...unit, anim: "idle", meleeIdleFrame: effect.meleeMotion.idleFrame } : unit;
+      if (!drawBattlePartySprite(poseUnit, x, y, tick)) drawSprite(unit.id, x - 24, y - 52, 0, poseUnit.anim || "idle", tick);
       ctx.restore();
     };
     if (motion) advancingAttacker = { draw: drawUnit, groundY: motion.groundY };
@@ -8620,6 +8624,38 @@ function drawBattleAmbient(arenaId) {
   if (frame === 2) drawRect(x - 1, y + 1, 4, 1, "#fff0b0aa");
 }
 
+function partyMeleeSkill(unit, sk) {
+  return Boolean(unit && skillTargetsEnemies(sk) && !(sk.power < 0)
+    && (sk.anim === "melee" || unit.id === "Tinus" && sk.basicAttack));
+}
+
+const PARTY_MELEE_STYLES = {
+  Verseborn: { style: "lute", reach: 27 },
+  Mira: { style: "daggers", reach: 24 },
+  Seerin: { style: "sword", reach: 28 },
+  Torren: { style: "shield", reach: 25 },
+  Glimmer: { style: "rocket", reach: 28 },
+  Sparky: { style: "bite", reach: 19 },
+  Kael: { style: "staff", reach: 28 },
+  Tinus: { style: "mug", reach: 25 }
+};
+
+function partyMeleeRoute(unit, targetPosition, reach) {
+  const home = partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
+  const end = [targetPosition[0] - reach, targetPosition[1]];
+  const obstacles = battle.enemies.map((foe,index)=>enemyBattlePosition(index,battle.enemies.length))
+    .filter(point => point[0] !== targetPosition[0] || point[1] !== targetPosition[1]);
+  const sample = (control,t) => control
+    ? [(1-t)**2*home[0]+2*(1-t)*t*control[0]+t*t*end[0],(1-t)**2*home[1]+2*(1-t)*t*control[1]+t*t*end[1]]
+    : [home[0]+(end[0]-home[0])*t,home[1]+(end[1]-home[1])*t];
+  const clear = control => Array.from({length:65},(_,index)=>sample(control,index/64)).every(([x,y])=>
+    y>=60&&y<=BATTLE_ARENA_HEIGHT-7&&obstacles.every(([ox,oy])=>((x-ox)/27)**2+((y-oy)/24)**2>=1));
+  const middleX = (home[0]+end[0])/2, middleY = (home[1]+end[1])/2;
+  const candidates = [null,...[-28,28,-48,48,-70,70].map(offset=>[middleX,Math.max(45,Math.min(195,middleY+offset))]),[home[0],end[1]]];
+  const control = candidates.find(clear);
+  return { home, end, control: control || null };
+}
+
 // Move the complete action sprite; formation anchors and combat targeting stay fixed.
 function partyMeleeMotion(unit, now = performance.now()) {
   const fx = effect;
@@ -8628,35 +8664,92 @@ function partyMeleeMotion(unit, now = performance.now()) {
   if (elapsed >= fx.timing.totalMs) return null;
   const [homeX, homeY] = partyBattlePosition(battle.party.indexOf(unit), battle.party.length);
   const [targetX, targetY] = fx.meleeMotion.targetPosition;
+  const profile = PARTY_MELEE_STYLES[unit.id] || { style: "lute", reach: 28 };
   const impact = fx.timing.impactMs;
   const arrive = impact - 120, returnAt = impact + 100;
   const smooth = value => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
   const outbound = elapsed < arrive;
   const retreat = Math.max(0, Math.min(1, (elapsed - returnAt) / (fx.timing.totalMs - returnAt)));
   const travel = outbound ? smooth((elapsed - 70) / (arrive - 70)) : 1 - smooth(retreat);
-  // Align with the target outside the formation, then close in along its lane.
-  // Reverse the same route on retreat instead of cutting through another enemy.
-  const stagingX = Math.min(homeX + 24, ...battle.enemies.map((enemy, index) => enemyBattlePosition(index, battle.enemies.length)[0] - 48));
-  const align = smooth(travel / .55);
-  const approach = smooth((travel - .55) / .45);
-  const x = homeX + (stagingX - homeX) * align + (targetX - 28 - stagingX) * approach;
-  const groundY = homeY + (targetY - homeY) * align;
-  const leap = unit.id === "Seerin" ? (outbound ? Math.sin(Math.PI * travel) * 18 : Math.sin(Math.PI * retreat) * 23) : 0;
-  return { x, y: groundY - leap, groundY, rotation: unit.id === "Seerin" ? -Math.PI * 2 * smooth(retreat) : 0,
-    jet: unit.id === "Glimmer" && (outbound ? travel > 0 : retreat > 0 && retreat < 1), returning: !outbound && retreat > 0, elapsed };
+  // Use a direct approach unless another footprint requires a continuous curve.
+  const route = fx.meleeMotion.route;
+  const [endX,endY] = route.end;
+  const control = route.control;
+  const x = control ? (1-travel)**2*homeX+2*(1-travel)*travel*control[0]+travel*travel*endX : homeX+(endX-homeX)*travel;
+  const groundY = control ? (1-travel)**2*homeY+2*(1-travel)*travel*control[1]+travel*travel*endY : homeY+(endY-homeY)*travel;
+  const returning = retreat > 0;
+  const leg = returning ? retreat : travel;
+  const arc = Math.sin(Math.PI * leg);
+  const presence = Math.sin(Math.PI * Math.min(1, elapsed / fx.timing.totalMs));
+  const drive = returning ? -Math.sin(Math.PI * retreat) : Math.sin(Math.PI * travel);
+  let lift = 0, rotation = 0;
+  switch (profile.style) {
+    case "rocket":
+      lift = Math.pow(Math.max(0, arc), .7) * (unit.form === "mech" ? 10 : 23) + presence * 4;
+      rotation = drive * .34;
+      break;
+    case "sword":
+      lift = arc * (returning ? 23 : 18);
+      rotation = returning ? -Math.PI * 2 * smooth(retreat) : drive * .12;
+      break;
+    case "daggers":
+      lift = returning ? arc * 17 : -arc * 2;
+      rotation = returning ? -Math.PI * 2 * smooth(retreat) : drive * .18;
+      break;
+    case "bite": {
+      const neckLift = fx.meleeMotion.neckLift || 10;
+      lift = returning ? arc * 13 + neckLift * (1 - smooth(retreat / .5)) : arc * 14 + neckLift * smooth(travel / .8);
+      rotation = returning ? -arc * .18 : drive * .28;
+      break;
+    }
+    case "shield": lift = Math.sin(leg * Math.PI * 4) * arc * 1.3; rotation = drive * .14; break;
+    case "lute": lift = arc * 6; rotation = drive * .16; break;
+    case "staff": lift = presence * 9; rotation = drive * .08; break;
+    case "mug": {
+      const mugContact = smooth((elapsed - impact + 160) / 160) * (1 - smooth((elapsed - impact) / 160));
+      lift = arc * 3; rotation = drive * .15 + mugContact * .3; break;
+    }
+  }
+  // Hold a braced approach, wind up immediately before contact, then recover.
+  // Mira's rapid native dagger poses give two visual cuts within the existing hit.
+  const strikeStart = impact - 150;
+  let attackFrame = elapsed < strikeStart || elapsed > fx.timing.totalMs - 100 ? -1 : elapsed < impact - 45 ? 1 : elapsed < returnAt ? 2 : 3;
+  if (profile.style === "daggers" && elapsed >= impact && elapsed < returnAt) attackFrame = Math.floor((elapsed - impact) / 45) % 2 ? 3 : 2;
+  return { x, y: groundY - lift, groundY, rotation, lift, style: profile.style, attackFrame,
+    jet: profile.style === "rocket" && elapsed > 70 && elapsed < fx.timing.totalMs - 35,
+    returning, elapsed, drive, activity: Math.max(0, arc), presence };
 }
 
-function drawMeleeBootTrail(unit, motion) {
-  if (!motion.jet) return;
+function drawMeleeChargeTrail(unit, motion) {
   const direction = motion.returning ? 1 : -1;
   ctx.save();
-  for (const offset of [-5, 5]) {
-    const x = motion.x + offset, y = motion.y - 2;
-    const flicker = 2 + Math.sin(motion.elapsed * .08 + offset) * 1.5;
-    ctx.fillStyle = "#f4b44caa";
-    ctx.beginPath();ctx.moveTo(x, y - 3);ctx.lineTo(x + direction * (13 + flicker), y + 2);ctx.lineTo(x, y + 3);ctx.fill();
-    ctx.fillStyle = "#b8f5ff";
-    ctx.beginPath();ctx.moveTo(x, y - 2);ctx.lineTo(x + direction * 8, y + 1);ctx.lineTo(x, y + 2);ctx.fill();
+  const { x, y, activity } = motion;
+  if (motion.jet) {
+    // Exhaust begins at the rotated boots, so it stays attached during flight banking.
+    const pivotY = y - 24, sine = Math.sin(motion.rotation), cosine = Math.cos(motion.rotation);
+    for (const offset of [-5, 5]) {
+      const bootX = x + offset * cosine - 22 * sine, bootY = pivotY + offset * sine + 22 * cosine;
+      const flicker = 2 + Math.sin(motion.elapsed * .08 + offset) * 1.5;
+      ctx.fillStyle = "#ed9e3bcc";
+      ctx.beginPath();ctx.moveTo(bootX, bootY - 2);ctx.lineTo(bootX + direction * (16 + flicker), bootY + 11);ctx.lineTo(bootX + 3, bootY + 3);ctx.fill();
+      ctx.fillStyle = "#c6f9ff";
+      ctx.beginPath();ctx.moveTo(bootX, bootY - 1);ctx.lineTo(bootX + direction * 10, bootY + 7);ctx.lineTo(bootX + 2, bootY + 2);ctx.fill();
+    }
+  } else if (activity > .08 && ["shield", "lute", "daggers"].includes(motion.style)) {
+    ctx.fillStyle = motion.style === "daggers" ? "#b39ad166" : "#d1b48466";
+    for (let i = 0; i < 4; i++) {
+      ctx.globalAlpha = activity * (1 - i / 5);
+      const age = (motion.elapsed / 60 + i * .7) % 3;
+      ctx.beginPath();ctx.ellipse(x + direction * (7 + i * 4), motion.groundY - age * 2, 2 + age, 1 + age * .3, 0, 0, Math.PI * 2);ctx.fill();
+    }
+  } else if (["staff", "mug", "bite"].includes(motion.style)) {
+    ctx.globalAlpha = motion.presence * .65;
+    ctx.strokeStyle = motion.style === "mug" ? "#dbac53" : motion.style === "bite" ? "#bc7bfa" : unit.form === "shadowpriest" ? "#a178df" : "#ffe7a8";
+    ctx.lineWidth = .8;
+    for (let i = 0; i < 3; i++) {
+      const drift = (motion.elapsed / 100 + i) % 3;
+      ctx.beginPath();ctx.arc(x + direction * (5 + drift * 5), y - 8 - i * 5, 2 + i, motion.elapsed / 140, motion.elapsed / 140 + Math.PI);ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -8816,8 +8909,16 @@ function drawEffect() {
     if (hit >= -.18 && hit <= 1) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, 1 - Math.max(0, hit));
-      ctx.strokeStyle = "#fff0bc";ctx.lineWidth = 2;
-      ctx.beginPath();ctx.arc(effect.toX, effect.toY, 9 + Math.max(0, hit) * 8, -.8, 1.5);ctx.stroke();
+      const style = PARTY_MELEE_STYLES[effect.source.id]?.style;
+      ctx.strokeStyle = style === "bite" ? "#edabff" : "#fff0bc";ctx.lineWidth = 2;
+      if (style === "daggers") {
+        for (let cut = 0; cut < 2; cut++) {
+          const offset = cut ? 5 : -5;
+          ctx.beginPath();ctx.moveTo(effect.toX - 9, effect.toY - offset);ctx.lineTo(effect.toX + 9, effect.toY + offset);ctx.stroke();
+        }
+      } else {
+        ctx.beginPath();ctx.arc(effect.toX, effect.toY, (style === "shield" ? 12 : 9) + Math.max(0, hit) * 8, -.8, 1.5);ctx.stroke();
+      }
       ctx.restore();
     }
     if (elapsed >= effect.timing.totalMs) effect = null;
@@ -10879,7 +10980,7 @@ function characterVfxRow(caster, sk) {
 }
 
 function skillVisualTiming(caster, sk) {
-  if (sk.anim === "melee" && skillTargetsEnemies(sk) && !(sk.power < 0)) {
+  if (partyMeleeSkill(caster, sk)) {
     return { effectTicks: 80, impactTicks: 39, impactMs: 650, totalMs: 1350 };
   }
   const timing = battleActionTiming(sk.anim);
@@ -10977,11 +11078,14 @@ function drawCharacterVfx(fx) {
 }
 
 function makeBattleEffect(caster, skillData, target) {
-  if (skillData.anim === "melee" && skillTargetsEnemies(skillData) && battle.enemies.includes(target)) {
+  if (partyMeleeSkill(caster, skillData) && battle.enemies.includes(target)) {
     const targetPosition = enemyBattlePosition(battle.enemies.indexOf(target), battle.enemies.length);
+    const targetKey = enemyAnimationKey(target);
+    const neckHeight = Math.max(25, Math.min(65, (enemyAnimationHeights[targetKey] || 44) * enemyBattleScale(targetKey) * BATTLE_COMPOSITION_SCALE * .7));
+    const neckLift = Math.max(7, neckHeight - 18);
     return { kind: "melee", caster: caster.id, source: caster, skill: skillData.name,
-      meleeMotion: { targetPosition }, timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
-      t: 0, duration: 80, impactTicks: 39, toX: targetPosition[0], toY: targetPosition[1] - 23 };
+      meleeMotion: { targetPosition, neckLift, route: partyMeleeRoute(caster, targetPosition, PARTY_MELEE_STYLES[caster.id]?.reach || 28), idleFrame: window.FlameguardIdle?.poseAt(caster) }, timing: skillVisualTiming(caster, skillData), startedAt: performance.now(),
+      t: 0, duration: 80, impactTicks: 39, toX: targetPosition[0], toY: targetPosition[1] - (caster.id === "Sparky" ? neckHeight : 23) };
   }
   const vfxRow = characterVfxRow(caster, skillData);
   const spriteId = battleVisualId(caster);
@@ -11279,7 +11383,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     u.statuses = ensureStatuses(u).filter(status => status !== audit);
   }
   if (!selectedSkill.basicAttack && selectedSkill.anim !== "ultimate") u.lastActiveSkill = selectedSkill.name;
-  playSfx(sk.anim);
+  playSfx(partyMeleeSkill(u, sk) ? "melee" : sk.anim);
   updatePanels();
   const livingAtStart = battle.party.filter(p => p.hp > 0);
   const woundedAtStart = livingAtStart.slice().sort((a, b) => (a.hp / a.max) - (b.hp / b.max))[0] || u;

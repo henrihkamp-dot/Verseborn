@@ -38,7 +38,7 @@
     const now = performance.now();
     const owner = battle || unit;
     if (!clocks.has(owner)) clocks.set(owner, now);
-    const col = frameAt(sheet, now - clocks.get(owner));
+    const col = Number.isFinite(unit.meleeIdleFrame) ? unit.meleeIdleFrame : frameAt(sheet, now - clocks.get(owner));
     const scale = (battleSpriteHeights[visualId] || 54) * BATTLE_COMPOSITION_SCALE / sheet.referenceHeight;
     ctx.save();
     ctx.imageSmoothingEnabled = true;
@@ -49,5 +49,9 @@
     return true;
   };
   // Diagnostics share the actual playback schedule; no changes to saves or battle rules.
-  window.FlameguardIdle = { ready, frameAt, get manifest() { return manifest; } };
+  window.FlameguardIdle = { ready, frameAt, poseAt(unit) {
+    const config = sheets.get(battleVisualId(unit));
+    const owner = battle || unit;
+    return config ? frameAt(config, performance.now() - (clocks.get(owner) ?? performance.now())) : undefined;
+  }, get manifest() { return manifest; } };
 })();
