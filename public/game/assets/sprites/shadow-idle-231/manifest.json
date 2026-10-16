@@ -28,7 +28,50 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        -2,
+        -1
+      ],
+      [
+        -5,
+        -2
+      ],
+      [
+        -7,
+        0
+      ],
+      [
+        -7,
+        -2
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        -3,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        126,
+        270,
+        311,
+        290
+      ]
+    }
   },
   "Sparky": {
     "file": "sparky.webp",
@@ -59,7 +102,50 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        -5,
+        0
+      ],
+      [
+        -5,
+        0
+      ],
+      [
+        -5,
+        0
+      ],
+      [
+        -2,
+        0
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        -7,
+        0
+      ],
+      [
+        -2,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        50,
+        270,
+        241,
+        290
+      ]
+    }
   },
   "Torren": {
     "file": "torren.webp",
@@ -90,7 +176,50 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        -6,
+        -1
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        -3,
+        1
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        90,
+        270,
+        246,
+        290
+      ]
+    }
   },
   "Mira": {
     "file": "mira.webp",
@@ -121,7 +250,50 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        21,
+        0
+      ],
+      [
+        23,
+        0
+      ],
+      [
+        29,
+        0
+      ],
+      [
+        30,
+        -1
+      ],
+      [
+        27,
+        0
+      ],
+      [
+        45,
+        -1
+      ],
+      [
+        29,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        145,
+        270,
+        265,
+        290
+      ]
+    }
   },
   "Verseborn": {
     "file": "verseborn.webp",
@@ -152,7 +324,50 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        158,
+        270,
+        341,
+        290
+      ]
+    }
   },
   "Kael": {
     "file": "kael.webp",
@@ -183,7 +398,50 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        -28,
+        0
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        -17,
+        0
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        145,
+        270,
+        305,
+        290
+      ]
+    }
   },
   "Glimmer": {
     "file": "glimmer.webp",
@@ -214,6 +472,49 @@
       550,
       1250
     ],
-    "cycleMs": 4460
+    "cycleMs": 4460,
+    "frameOffsets": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        31,
+        -1
+      ],
+      [
+        28,
+        2
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        25,
+        0
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        28,
+        0
+      ]
+    ],
+    "registration": {
+      "kind": "planted-foot",
+      "referenceRect": [
+        90,
+        270,
+        210,
+        290
+      ]
+    }
   }
 }
