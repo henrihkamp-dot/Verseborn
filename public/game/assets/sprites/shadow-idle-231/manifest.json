@@ -1,0 +1,219 @@
+{
+  "Seerin": {
+    "file": "seerin.webp",
+    "cellWidth": 443,
+    "cellHeight": 310,
+    "anchorX": 233.0744794833259,
+    "baseline": 290,
+    "referenceHeight": 211.84020038633807,
+    "sourceBodyRatio": 0.9389312977099237,
+    "sourceFootOffset": -0.05463778575651472,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  },
+  "Sparky": {
+    "file": "sparky.webp",
+    "cellWidth": 402,
+    "cellHeight": 310,
+    "anchorX": 192.38309162349506,
+    "baseline": 288.3353217211485,
+    "referenceHeight": 233.054959039211,
+    "sourceBodyRatio": 0.9428571428571428,
+    "sourceFootOffset": 0.03697371818230723,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  },
+  "Torren": {
+    "file": "torren.webp",
+    "cellWidth": 343,
+    "cellHeight": 310,
+    "anchorX": 174.0340521068964,
+    "baseline": 290,
+    "referenceHeight": 233.77192982456143,
+    "sourceBodyRatio": 0.95,
+    "sourceFootOffset": -0.010839847661770716,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  },
+  "Mira": {
+    "file": "mira.webp",
+    "cellWidth": 436,
+    "cellHeight": 310,
+    "anchorX": 207.13919963820052,
+    "baseline": 288.3191247513498,
+    "referenceHeight": 245.40778630292695,
+    "sourceBodyRatio": 0.9452054794520548,
+    "sourceFootOffset": 0.044256135982552354,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  },
+  "Verseborn": {
+    "file": "verseborn.webp",
+    "cellWidth": 493,
+    "cellHeight": 310,
+    "anchorX": 257.36212883073193,
+    "baseline": 288.0522441534753,
+    "referenceHeight": 268.7903068204025,
+    "sourceBodyRatio": 0.9347826086956522,
+    "sourceFootOffset": -0.04041116273582612,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  },
+  "Kael": {
+    "file": "kael.webp",
+    "cellWidth": 507,
+    "cellHeight": 310,
+    "anchorX": 247.91470492874143,
+    "baseline": 288.08196721311475,
+    "referenceHeight": 249.34426229508196,
+    "sourceBodyRatio": 0.9384615384615385,
+    "sourceFootOffset": 0.022399934210833167,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  },
+  "Glimmer": {
+    "file": "glimmer.webp",
+    "cellWidth": 351,
+    "cellHeight": 310,
+    "anchorX": 163.81113926859095,
+    "baseline": 287.80266593376393,
+    "referenceHeight": 265.87742201456643,
+    "sourceBodyRatio": 0.9421487603305785,
+    "sourceFootOffset": 0.043963344622653486,
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "durations": [
+      700,
+      450,
+      180,
+      500,
+      650,
+      180,
+      550,
+      1250
+    ],
+    "cycleMs": 4460
+  }
+}
