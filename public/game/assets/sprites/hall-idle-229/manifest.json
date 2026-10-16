@@ -1,0 +1,770 @@
+{
+  "Inkbound Auditor": {
+    "file": "inkbound-auditor.webp",
+    "width": 192,
+    "height": 230,
+    "anchorX": 96,
+    "baseline": 210,
+    "referenceHeight": 197,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 152,
+      "height": 190
+    },
+    "nativeColumn": 1,
+    "removedFragments": 0
+  },
+  "King Maeric": {
+    "file": "king-maeric.webp",
+    "width": 249,
+    "height": 289,
+    "anchorX": 95.5,
+    "baseline": 298,
+    "referenceHeight": 245,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 209,
+      "height": 249
+    },
+    "nativeColumn": 0,
+    "removedFragments": 11
+  },
+  "Grumm": {
+    "file": "grumm.webp",
+    "width": 261,
+    "height": 288,
+    "anchorX": 117,
+    "baseline": 273,
+    "referenceHeight": 250,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 221,
+      "height": 248
+    },
+    "nativeColumn": 0,
+    "removedFragments": 5
+  },
+  "Kaeldrin": {
+    "file": "kaeldrin.webp",
+    "width": 300,
+    "height": 289,
+    "anchorX": 157.5,
+    "baseline": 278,
+    "referenceHeight": 249,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 260,
+      "height": 249
+    },
+    "nativeColumn": 0,
+    "removedFragments": 3
+  },
+  "Marla": {
+    "file": "marla.webp",
+    "width": 246,
+    "height": 315,
+    "anchorX": 120,
+    "baseline": 294,
+    "referenceHeight": 272,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 206,
+      "height": 275
+    },
+    "nativeColumn": 0,
+    "removedFragments": 7
+  },
+  "Rava": {
+    "file": "rava.webp",
+    "width": 181,
+    "height": 225,
+    "anchorX": 91,
+    "baseline": 205,
+    "referenceHeight": 184,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 141,
+      "height": 185
+    },
+    "nativeColumn": 0,
+    "removedFragments": 0
+  },
+  "Shade": {
+    "file": "shade.webp",
+    "width": 257,
+    "height": 303,
+    "anchorX": 110.5,
+    "baseline": 274,
+    "referenceHeight": 264,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 217,
+      "height": 263
+    },
+    "nativeColumn": 0,
+    "removedFragments": 9
+  },
+  "Tja": {
+    "file": "tja.webp",
+    "width": 221,
+    "height": 323,
+    "anchorX": 83.5,
+    "baseline": 291,
+    "referenceHeight": 287,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 181,
+      "height": 283
+    },
+    "nativeColumn": 0,
+    "removedFragments": 7
+  },
+  "Archive Custodian": {
+    "file": "archive-custodian.webp",
+    "width": 186,
+    "height": 251,
+    "anchorX": 93,
+    "baseline": 231,
+    "referenceHeight": 211,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 146,
+      "height": 211
+    },
+    "nativeColumn": 0,
+    "removedFragments": 0
+  },
+  "Ash Wyrm": {
+    "file": "ash-wyrm.webp",
+    "width": 240,
+    "height": 235,
+    "anchorX": 120,
+    "baseline": 214,
+    "referenceHeight": 224,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 200,
+      "height": 195
+    },
+    "nativeColumn": 0,
+    "removedFragments": 0
+  },
+  "Cracked Pillar": {
+    "file": "cracked-pillar.webp",
+    "width": 182,
+    "height": 255,
+    "anchorX": 91,
+    "baseline": 235,
+    "referenceHeight": 215,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 142,
+      "height": 215
+    },
+    "nativeColumn": 0,
+    "removedFragments": 0
+  },
+  "Seal Bearer": {
+    "file": "seal-bearer.webp",
+    "width": 213,
+    "height": 255,
+    "anchorX": 107,
+    "baseline": 235,
+    "referenceHeight": 215,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 173,
+      "height": 215
+    },
+    "nativeColumn": 1,
+    "removedFragments": 0
+  },
+  "Dock Foreman": {
+    "file": "dock-foreman.webp",
+    "width": 167,
+    "height": 235,
+    "anchorX": 84,
+    "baseline": 215,
+    "referenceHeight": 195,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 127,
+      "height": 195
+    },
+    "nativeColumn": 0,
+    "removedFragments": 0
+  },
+  "Dawn Gate Sentinel": {
+    "file": "dawn-gate-sentinel.webp",
+    "width": 204,
+    "height": 284,
+    "anchorX": 102,
+    "baseline": 264,
+    "referenceHeight": 233,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 164,
+      "height": 244
+    },
+    "nativeColumn": 1,
+    "removedFragments": 0
+  },
+  "Brokk": {
+    "file": "brokk.webp",
+    "width": 276,
+    "height": 267,
+    "anchorX": 113,
+    "baseline": 263,
+    "referenceHeight": 236,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 236,
+      "height": 227
+    },
+    "nativeColumn": 0,
+    "removedFragments": 3
+  },
+  "Baron Revus Veln": {
+    "file": "baron-revus-veln.webp",
+    "width": 278,
+    "height": 276,
+    "anchorX": 121.5,
+    "baseline": 268,
+    "referenceHeight": 236,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 238,
+      "height": 236
+    },
+    "nativeColumn": 0,
+    "removedFragments": 8
+  },
+  "Gorg": {
+    "file": "gorg.webp",
+    "width": 300,
+    "height": 260,
+    "anchorX": 127,
+    "baseline": 274,
+    "referenceHeight": 223,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 260,
+      "height": 220
+    },
+    "nativeColumn": 0,
+    "removedFragments": 8
+  },
+  "Sir Reginald": {
+    "file": "sir-reginald.webp",
+    "width": 287,
+    "height": 288,
+    "anchorX": 158,
+    "baseline": 249,
+    "referenceHeight": 248,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 247,
+      "height": 248
+    },
+    "nativeColumn": 0,
+    "removedFragments": 4
+  },
+  "High Administrator Thaddeus": {
+    "file": "high-administrator-thaddeus.webp",
+    "width": 276,
+    "height": 266,
+    "anchorX": 114,
+    "baseline": 281,
+    "referenceHeight": 226,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 236,
+      "height": 226
+    },
+    "nativeColumn": 0,
+    "removedFragments": 4
+  },
+  "Clock Goblin": {
+    "file": "clock-goblin.webp",
+    "width": 250,
+    "height": 245,
+    "anchorX": 122.5,
+    "baseline": 250,
+    "referenceHeight": 208,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 210,
+      "height": 205
+    },
+    "nativeColumn": 0,
+    "removedFragments": 4
+  },
+  "Slobbo": {
+    "file": "slobbo.webp",
+    "width": 272,
+    "height": 274,
+    "anchorX": 132,
+    "baseline": 272,
+    "referenceHeight": 232,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 232,
+      "height": 234
+    },
+    "nativeColumn": 0,
+    "removedFragments": 1
+  },
+  "Elder Plumpin": {
+    "file": "elder-plumpin.webp",
+    "width": 275,
+    "height": 268,
+    "anchorX": 114,
+    "baseline": 266,
+    "referenceHeight": 229,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 235,
+      "height": 228
+    },
+    "nativeColumn": 0,
+    "removedFragments": 11
+  },
+  "Lord Sprocket": {
+    "file": "lord-sprocket.webp",
+    "width": 268,
+    "height": 283,
+    "anchorX": 108,
+    "baseline": 281,
+    "referenceHeight": 242,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 228,
+      "height": 243
+    },
+    "nativeColumn": 0,
+    "removedFragments": 6
+  },
+  "Saint Justin": {
+    "file": "saint-justin.webp",
+    "width": 252,
+    "height": 296,
+    "anchorX": 83.5,
+    "baseline": 281,
+    "referenceHeight": 256,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 212,
+      "height": 256
+    },
+    "nativeColumn": 0,
+    "removedFragments": 5
+  },
+  "Berend Blimpstone": {
+    "file": "berend-blimpstone.webp",
+    "width": 261,
+    "height": 300,
+    "anchorX": 79.5,
+    "baseline": 286,
+    "referenceHeight": 258,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 221,
+      "height": 260
+    },
+    "nativeColumn": 0,
+    "removedFragments": 6
+  },
+  "Lysra": {
+    "file": "lysra.webp",
+    "width": 276,
+    "height": 295,
+    "anchorX": 86.5,
+    "baseline": 279,
+    "referenceHeight": 253,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 236,
+      "height": 255
+    },
+    "nativeColumn": 0,
+    "removedFragments": 3
+  },
+  "Jory Bellwick": {
+    "file": "jory-bellwick.webp",
+    "width": 226,
+    "height": 293,
+    "anchorX": 64.5,
+    "baseline": 282,
+    "referenceHeight": 251,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 186,
+      "height": 253
+    },
+    "nativeColumn": 0,
+    "removedFragments": 6
+  },
+  "Nyx Vael": {
+    "file": "nyx-vael.webp",
+    "width": 252,
+    "height": 292,
+    "anchorX": 112,
+    "baseline": 271,
+    "referenceHeight": 254,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 212,
+      "height": 252
+    },
+    "nativeColumn": 0,
+    "removedFragments": 6
+  },
+  "Prince Lucan Cindralis": {
+    "file": "prince-lucan-cindralis.webp",
+    "width": 237,
+    "height": 309,
+    "anchorX": 88.5,
+    "baseline": 279,
+    "referenceHeight": 270,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 197,
+      "height": 269
+    },
+    "nativeColumn": 0,
+    "removedFragments": 5
+  },
+  "Tibby": {
+    "file": "tibby.webp",
+    "width": 279,
+    "height": 296,
+    "anchorX": 115.5,
+    "baseline": 261,
+    "referenceHeight": 265,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 239,
+      "height": 256
+    },
+    "nativeColumn": 0,
+    "removedFragments": 9
+  },
+  "Red Dragon Lord": {
+    "file": "red-dragon-lord.webp",
+    "width": 265,
+    "height": 322,
+    "anchorX": 114,
+    "baseline": 294,
+    "referenceHeight": 283,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 225,
+      "height": 282
+    },
+    "nativeColumn": 0,
+    "removedFragments": 23
+  },
+  "Corrupt Clergy": {
+    "file": "corrupt-clergy.webp",
+    "width": 259,
+    "height": 282,
+    "anchorX": 75.5,
+    "baseline": 291,
+    "referenceHeight": 240,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 219,
+      "height": 242
+    },
+    "nativeColumn": 0,
+    "removedFragments": 19
+  },
+  "Ash Quarter Thugg": {
+    "file": "ash-quarter-thugg.webp",
+    "width": 243,
+    "height": 319,
+    "anchorX": 143.5,
+    "baseline": 294,
+    "referenceHeight": 280,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 203,
+      "height": 279
+    },
+    "nativeColumn": 0,
+    "removedFragments": 7
+  },
+  "Angry Gnome Mob": {
+    "file": "angry-gnome-mob.webp",
+    "width": 290,
+    "height": 285,
+    "anchorX": 147,
+    "baseline": 292,
+    "referenceHeight": 246,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 250,
+      "height": 245
+    },
+    "nativeColumn": 0,
+    "removedFragments": 7
+  },
+  "Solinar": {
+    "file": "solinar.webp",
+    "width": 286,
+    "height": 312,
+    "anchorX": 130.5,
+    "baseline": 308,
+    "referenceHeight": 272,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 246,
+      "height": 272
+    },
+    "nativeColumn": 0,
+    "removedFragments": 3
+  },
+  "Frostmile Wyrm": {
+    "file": "frostmile-wyrm.webp",
+    "width": 301,
+    "height": 292,
+    "anchorX": 148,
+    "baseline": 291,
+    "referenceHeight": 258,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 261,
+      "height": 252
+    },
+    "nativeColumn": 0,
+    "removedFragments": 9
+  },
+  "Ember Leviathan": {
+    "file": "ember-leviathan.webp",
+    "width": 286,
+    "height": 287,
+    "anchorX": 130.5,
+    "baseline": 305,
+    "referenceHeight": 245,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 246,
+      "height": 247
+    },
+    "nativeColumn": 0,
+    "removedFragments": 12
+  },
+  "Solinar Enraged": {
+    "file": "solinar-enraged.webp",
+    "width": 322,
+    "height": 313,
+    "anchorX": 162,
+    "baseline": 308,
+    "referenceHeight": 273,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 282,
+      "height": 273
+    },
+    "nativeColumn": 0,
+    "removedFragments": 15
+  },
+  "Malkhius": {
+    "file": "malkhius.webp",
+    "width": 194,
+    "height": 222,
+    "anchorX": 80,
+    "baseline": 213,
+    "referenceHeight": 194,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 154,
+      "height": 182
+    },
+    "nativeColumn": 0,
+    "removedFragments": 3
+  },
+  "Draconic Guide": {
+    "file": "draconic-guide.webp",
+    "width": 247,
+    "height": 250,
+    "anchorX": 106,
+    "baseline": 241,
+    "referenceHeight": 226,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 207,
+      "height": 210
+    },
+    "nativeColumn": 0,
+    "removedFragments": 12
+  },
+  "Memory Root Guardian": {
+    "file": "memory-root-guardian.webp",
+    "width": 257,
+    "height": 251,
+    "anchorX": 117.5,
+    "baseline": 230,
+    "referenceHeight": 224,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 217,
+      "height": 211
+    },
+    "nativeColumn": 0,
+    "removedFragments": 10
+  },
+  "Sister Maelin": {
+    "file": "sister-maelin.webp",
+    "width": 227,
+    "height": 254,
+    "anchorX": 105,
+    "baseline": 240,
+    "referenceHeight": 224,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 187,
+      "height": 214
+    },
+    "nativeColumn": 0,
+    "removedFragments": 5
+  },
+  "Guild Inspector Voss": {
+    "file": "guild-inspector-voss.webp",
+    "width": 211,
+    "height": 219,
+    "anchorX": 90,
+    "baseline": 201,
+    "referenceHeight": 186,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 171,
+      "height": 179
+    },
+    "nativeColumn": 0,
+    "removedFragments": 4
+  },
+  "Concierge Veyr": {
+    "file": "concierge-veyr.webp",
+    "width": 204,
+    "height": 231,
+    "anchorX": 68,
+    "baseline": 229,
+    "referenceHeight": 214,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 164,
+      "height": 191
+    },
+    "nativeColumn": 0,
+    "removedFragments": 7
+  },
+  "Lady Morvanna": {
+    "file": "lady-morvanna.webp",
+    "width": 225,
+    "height": 225,
+    "anchorX": 99,
+    "baseline": 215,
+    "referenceHeight": 198,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 185,
+      "height": 185
+    },
+    "nativeColumn": 0,
+    "removedFragments": 0
+  },
+  "Koru-Vak, the Iron Oathkeeper": {
+    "file": "koru-vak-the-iron-oathkeeper.webp",
+    "width": 235,
+    "height": 234,
+    "anchorX": 85,
+    "baseline": 223,
+    "referenceHeight": 206,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 195,
+      "height": 194
+    },
+    "nativeColumn": 0,
+    "removedFragments": 2
+  },
+  "Selyra Quill, the Grand Cantor": {
+    "file": "selyra-quill-the-grand-cantor.webp",
+    "width": 228,
+    "height": 225,
+    "anchorX": 98,
+    "baseline": 217,
+    "referenceHeight": 212,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 188,
+      "height": 185
+    },
+    "nativeColumn": 0,
+    "removedFragments": 6
+  },
+  "Ilyss Vanthe, the First Archivist": {
+    "file": "ilyss-vanthe-the-first-archivist.webp",
+    "width": 227,
+    "height": 264,
+    "anchorX": 105,
+    "baseline": 244,
+    "referenceHeight": 229,
+    "body": {
+      "x": 20,
+      "y": 20,
+      "width": 187,
+      "height": 224
+    },
+    "nativeColumn": 0,
+    "removedFragments": 12
+  }
+}

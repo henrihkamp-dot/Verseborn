@@ -157,7 +157,7 @@
     replay.actor.alpha = 0;
     emberHallWorld.clearNavigation(); heldDirection = null; activePoint = null;
     state.map = 'emberHallBattles'; Object.assign(emberHallWorld.player, { x: 296, y: 328, facing: 2, walking: false });
-    el.menu.classList.add('hidden'); mode = 'walk'; updateSkillPointNotice();
+    el.menu.classList.add('hidden'); mode = 'walk'; updateSkillPointNotice(); updateMusic();
     return true;
   }
   function finishReplay() {
@@ -170,7 +170,7 @@
     replay = null; last = performance.now(); heldDirection = null;
     mode = original.mode; menuTab = original.menuTab;
     el.menu.classList.remove('hidden'); document.querySelector('.menu-tabs').classList.toggle('hidden', original.tabsHidden);
-    renderMenu(); updateSkillPointNotice(); queueSave();
+    renderMenu(); updateSkillPointNotice(); updateMusic(); queueSave();
   }
   function tickReplay(now) {
     const scene = replay, dt = Math.max(0, Math.min(.05, (now - scene.last) / 1000)); scene.last = now;

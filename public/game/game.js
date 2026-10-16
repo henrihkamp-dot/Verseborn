@@ -267,7 +267,7 @@ function battleMusicForEncounter(hallBoss = false) {
 function trackForScene() {
   if (mode === "title") return "title";
   if (mode === "battle" || mode === "battleResult") return battle?.musicTrack || (battle?.hallBoss ? "hallBoss" : "battle");
-  if (mode === "talk" && activeRecruitScene) return "cutscene";
+  if (mode === "talk" && activeRecruitScene || window.TinusRecruitment?.replaying) return "cutscene";
   if (state.map === "emberRiftVault") return "emberRift";
   return currentMap()?.music === "overworld" ? "overworld" : "inhouse";
 }
