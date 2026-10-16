@@ -199,11 +199,11 @@
     "cycleMs": 15000
   },
   "Glimmer": {
-    "file": "glimmer-combat-v4.webp",
+    "file": "glimmer-energy-v8.webp",
     "cellWidth": 320,
-    "cellHeight": 310,
+    "cellHeight": 350,
     "anchorX": 160,
-    "baseline": 295,
+    "baseline": 330,
     "referenceHeight": 265,
     "order": [
       0,
@@ -216,16 +216,16 @@
       7
     ],
     "durations": [
-      500,
-      500,
-      500,
-      500,
-      500,
+      600,
+      220,
+      160,
+      200,
+      160,
       100,
-      500,
-      500
+      260,
+      900
     ],
-    "cycleMs": 3600
+    "cycleMs": 2600
   },
   "Sparky": {
     "file": "sparky-combat-v4.webp",
