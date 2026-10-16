@@ -1127,6 +1127,16 @@ async function loadBattleAnimationSheets() {
       image.onerror = resolve;
       image.src = `assets/sprites/battle-v2/${config.file}?v=party-release-75`;
     })));
+    const meleeResponse = await fetch("assets/sprites/flameguard-melee/manifest.json?v=228");
+    if (meleeResponse.ok) {
+      const meleeManifest = await meleeResponse.json();
+      await Promise.all(Object.entries(meleeManifest).map(([id, config]) => new Promise(resolve => {
+        const image = new Image();
+        image.onload = () => { battleMeleeSheets[id] = { ...config, image }; resolve(); };
+        image.onerror = resolve;
+        image.src = `assets/sprites/flameguard-melee/${config.file}`;
+      })));
+    }
   } catch (_) {
     // Stable world sprites remain the fallback if a battle-only asset fails.
   }
@@ -8707,7 +8717,12 @@ function partyMeleeMotion(unit, now = performance.now()) {
       break;
     }
     case "shield": lift = Math.sin(leg * Math.PI * 4) * arc * 1.3; rotation = drive * .14; break;
-    case "lute": lift = arc * 6; rotation = drive * .16; break;
+    case "lute": {
+      const raisedHeight = (battleMeleeSheets[unit.id]?.raisedReach || 1.62) * battleSpriteHeights[unit.id] * BATTLE_COMPOSITION_SCALE;
+      lift = Math.min(arc * (returning ? 5 : 16), Math.max(0, groundY - 23 - raisedHeight));
+      rotation = drive * .05;
+      break;
+    }
     case "staff": lift = presence * 9; rotation = drive * .08; break;
     case "mug": {
       const jab = time => smooth((elapsed - time + 55) / 55) * (1 - smooth((elapsed - time) / 55));
@@ -8724,6 +8739,9 @@ function partyMeleeMotion(unit, now = performance.now()) {
   const strikeStart = impact - 150;
   let attackFrame = elapsed < strikeStart || elapsed > fx.timing.totalMs - 100 ? -1 : elapsed < impact - 45 ? 1 : elapsed < returnAt ? 2 : 3;
   if (profile.style === "daggers" && elapsed >= impact && elapsed < returnAt) attackFrame = Math.floor((elapsed - impact) / 45) % 2 ? 3 : 2;
+  if (profile.style === "lute" && elapsed >= 70 && elapsed < fx.timing.totalMs - 100) {
+    attackFrame = elapsed < impact - 145 ? 0 : elapsed < impact - 35 ? 1 : elapsed < returnAt ? 2 : 3;
+  }
   if (profile.style === "mug" && elapsed >= impact - 145 && elapsed < returnAt) {
     attackFrame = elapsed < impact - 115 || elapsed >= impact - 50 && elapsed < impact - 30 ? 0 : elapsed < impact - 50 ? 1 : elapsed < impact + 65 ? 2 : 3;
   }

@@ -1,0 +1,17 @@
+{
+  "Verseborn": {
+    "file": "verseborn-overhead-228.webp",
+    "columns": 4,
+    "rows": 1,
+    "cellWidth": 640,
+    "cellHeight": 640,
+    "baseline": 475,
+    "referenceHeight": 266,
+    "anchorX": 320,
+    "directFrames": true,
+    "raisedReach": 1.62,
+    "rowMap": {
+      "melee": 0
+    }
+  }
+}
