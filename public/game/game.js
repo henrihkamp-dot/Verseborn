@@ -8504,7 +8504,7 @@ function drawBattleScene() {
   drawEffect();
   drawBossTelegraphs();
   drawBattleTurnRail();
-  if (!(battle.hallStage > 50)) drawBattleRoleRosters();
+  if (!battle.hallStage) drawBattleRoleRosters();
   drawBattleFloaters();
   updateStatusTooltip();
   if (battle.phaseTransition?.step === "incoming") {
