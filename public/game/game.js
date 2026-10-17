@@ -14473,7 +14473,7 @@ function fitGearHoverTooltipToViewport() {
 }
 
 function showGearHoverTooltip(element, context) {
-  if (el.menu.dataset.menuView === "gear") { hideGearHoverTooltip(); return; }
+  if (["gear","glimmer-shop"].includes(el.menu.dataset.menuView)) { hideGearHoverTooltip(); return; }
   if (!context || !gearByName(context.ref)) return;
   keepGearHoverTooltipOpen();
   if (!gearHoverTooltip) {

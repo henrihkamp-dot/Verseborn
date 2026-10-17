@@ -101,11 +101,11 @@
   // Rebuild only when recruitment changes. Foreground occlusion uses this same
   // composite so covered furniture never flashes back to its inhabited artwork.
   const closedRooms=[
-    {owner:'Torren',rect:[0,0,201,118]},
-    {owner:'Glimmer',rect:[438,0,202,118]},
-    {owner:'Seerin',rect:[0,118,201,93]},
-    {owner:'Mira',rect:[0,211,201,145]},
-    {owner:'Kael',rect:[438,211,202,145]},
+    {owner:'Torren',rect:[0,0,245,118]},
+    {owner:'Glimmer',rect:[395,0,245,118]},
+    {owner:'Seerin',rect:[0,118,245,93]},
+    {owner:'Mira',rect:[0,211,245,145]},
+    {owner:'Kael',rect:[395,211,245,145]},
     {owner:'Sparky',rect:[132,48,54,41]},
     {owner:'Torren',rect:[218,64,24,50]},
     {owner:'Glimmer',rect:[390,64,25,50]},
@@ -130,7 +130,7 @@
       const layer=document.createElement('canvas');layer.width=Math.ceil(w*sx);layer.height=Math.ceil(h*sy);
       const blend=layer.getContext('2d');blend.drawImage(vacant,x*sx,y*sy,w*sx,h*sy,0,0,layer.width,layer.height);
       blend.globalCompositeOperation='destination-in';
-      const feather=Math.min(9,w/5,h/5);
+      const feather=w>200?48:Math.min(9,w/5,h/5);
       const edges=[
         [x>0,0,0,feather*sx,0],
         [x+w<W,layer.width,0,layer.width-feather*sx,0],
@@ -224,23 +224,32 @@
     return inside;
   }
   const onFloor=(x,y)=>floors.some(points=>inPolygon(x,y,points));
-  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>{const padding=l===381&&t===85?2:7;return x>l-padding&&x<l+w+padding&&y>t-3&&y<t+h+3;})||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
-  function clearSegment(ax,ay,bx,by){
+  // Floor-level footprints only: paper and cobwebs remain walkable.
+  const vacantClutter=[
+    ['Torren',105,84,10,7],['Torren',147,88,10,6],
+    ['Glimmer',458,80,9,7],['Glimmer',509,81,10,7],['Glimmer',576,85,10,7],
+    ['Seerin',66,169,13,10],['Seerin',60,184,9,5],['Seerin',151,176,11,9],['Seerin',177,185,12,8],['Seerin',148,195,11,7],
+    ['Mira',66,318,12,9],['Mira',108,291,10,8],['Mira',151,302,11,8],
+    ['Kael',489,329,12,8],['Kael',553,336,10,7]
+  ];
+  const clutterCollision=(x,y)=>vacantClutter.some(([owner,cx,cy,rx,ry])=>!state.party.includes(owner)&&Math.abs(x-cx)<rx+4&&Math.abs(y-cy)<ry+2);
+  const collision=(x,y,ignoreClutter=false)=>!ignoreClutter&&clutterCollision(x,y)||![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>{const padding=l===381&&t===85?2:7;return x>l-padding&&x<l+w+padding&&y>t-3&&y<t+h+3;})||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
+  function clearSegment(ax,ay,bx,by,ignoreClutter=false){
     const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.5);
-    for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;
+    for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n,ignoreClutter))return false;
     return true;
   }
   // Cache the floor grid and safe diagonal edges; clicks only search its reachable component.
   const navStep=2,navCols=W/navStep,navRows=H/navStep,navNodes=new Map();
   const nodeKey=(x,y)=>y*navCols+x;
   for(let y=1;y<navRows;y++)for(let x=1;x<navCols;x++){
-    if(!collision(x*navStep,y*navStep))navNodes.set(nodeKey(x,y),{x:x*navStep,y:y*navStep,edges:[]});
+    if(!collision(x*navStep,y*navStep,true))navNodes.set(nodeKey(x,y),{x:x*navStep,y:y*navStep,edges:[]});
   }
   for(const [key,node] of navNodes){
     const gx=node.x/navStep,gy=node.y/navStep;
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
       const nextKey=nodeKey(gx+dx,gy+dy),next=navNodes.get(nextKey);
-      if(next&&clearSegment(node.x,node.y,next.x,next.y))node.edges.push(nextKey);
+      if(next&&clearSegment(node.x,node.y,next.x,next.y,true))node.edges.push(nextKey);
     }
   }
   function findPath(from,x,y){
@@ -258,7 +267,11 @@
       const key=queue[i],node=navNodes.get(key),distance=Math.hypot(node.x-x,node.y-y);
       if(distance<bestDistance){end=key;bestDistance=distance;}
       if(distance<.5)break;
-      for(const next of node.edges)if(!previous.has(next)){previous.set(next,key);queue.push(next);}
+      for(const next of node.edges)if(!previous.has(next)){
+        const neighbor=navNodes.get(next);
+        if(clutterCollision(neighbor.x,neighbor.y)||clutterCollision((node.x+neighbor.x)/2,(node.y+neighbor.y)/2))continue;
+        previous.set(next,key);queue.push(next);
+      }
     }
     // Snap near-edge clicks to reachable floor, never to a distant room through a wall.
     if(bestDistance>18)return null;
@@ -532,7 +545,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={hallBackground,closedRooms,findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={hallBackground,closedRooms,vacantClutter,findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
