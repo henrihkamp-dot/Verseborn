@@ -15,12 +15,12 @@
     const response=await fetch('assets/rift/idle-246/manifest.json?v=246');if(!response.ok)throw Error('Rift idle manifest unavailable');
     const manifest=await response.json();
     const load=file=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error('Rift idle '+file));image.src='assets/rift/idle-246/'+file;});
-    await Promise.all(Object.entries(manifest).map(async([key,c])=>{const image=await load(c.file);sheets.set(key,{...c,image});}));
+    await Promise.all(Object.entries(manifest).map(async([key,c])=>{const image=await load(c.file);sheets.set(key,{...c,image,durations:[600,200,180,220,300,200,200,600],cycleMs:2500});}));
   })();ready.catch(error=>console.error(error));
   function draw(key,c,x,y,elapsed,height){
     const scale=height/c.referenceHeight,groundX=Math.max(2+c.leftExtent*scale,Math.min(LOGICAL_WIDTH-2-c.rightExtent*scale,x));
     const frame=phaseAt(c,elapsed).frame;
-    ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(c.image,frame*c.cellWidth,0,c.cellWidth,c.cellHeight,groundX-c.anchorX*scale,y-c.baseline*scale,c.cellWidth*scale,c.cellHeight*scale);ctx.restore();
+    ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(c.image,frame*c.cellWidth,0,c.cellWidth,c.cellHeight,groundX-c.anchorX*scale,y-c.baseline*scale,c.cellWidth*scale,c.cellHeight*scale);ctx.restore();
   }
   const original=drawAnimatedEnemy;
   drawAnimatedEnemy=function(unit,px,py){
@@ -33,4 +33,5 @@
   };
   window.RiftEnemyIdle={ready,phaseAt,preview(key,x,y,t,height=90){const c=sheets.get(key);if(c)draw(key,c,x,y,t,height);},get manifest(){return Object.fromEntries(sheets);}};
 })();
+
 
