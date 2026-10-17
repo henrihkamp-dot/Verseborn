@@ -120,11 +120,13 @@
     return canvas;
   }
   const blended = document.createElement('canvas');
+  // A quiet seat at the bar: one complete sip, then a long relaxed pause.
+  function seatedPhase(now) { const t=((now%24000)+24000)%24000;return t<20000?0:(t-20000)/500; }
   function drawField(actor, camera = { x: 0, y: 0 }, now = performance.now()) {
     if (!manifest || !images.hall) return false;
     const pose = actor.pose || 'idle', moving = pose === 'walk' || pose === 'backWalk';
     const row = pose === 'seated' ? 3 : pose === 'backWalk' ? 2 : pose === 'walk' ? 1 : 0;
-    const phase = Number.isFinite(actor.phase) ? actor.phase : now / (moving ? 120 : 220);
+    const phase = pose === 'seated' ? seatedPhase(now) : Number.isFinite(actor.phase) ? actor.phase : now / (moving ? 120 : 220);
     const col = ((Math.floor(phase) % 8) + 8) % 8;
     const config = manifest.hall, targetHeight = actor.size || 40;
     const scale = targetHeight / config.referenceHeight;
@@ -198,5 +200,5 @@
     updatePanels();
     return true;
   }
-  window.TinusCharacter = { ready, recruit, drawField, signatureNames: signatures.map(entry => entry[0]) };
+  window.TinusCharacter = { ready, recruit, drawField, seatedPhase, signatureNames: signatures.map(entry => entry[0]) };
 })();

@@ -114,6 +114,29 @@
   handleControl=function(control){if(inHall()&&mode==='walk'&&!activeRecruitScene&&['up','down','left','right'].includes(control))return;oldControl(control);};
   cycleLeader=function(direction){if(inHall()&&mode==='walk')return;oldCycleLeader(direction);};
   const residents=()=>{const tinus=window.TinusRecruitment?.resident();return [...actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id)),...(tinus?[tinus]:[])];};
+  const barLines=[
+    [['Tinus','The portal owes me a refill.'],['Marla','Put it on your tab.']],
+    [['Marla','Coffee, or something that counts as lunch?'],['Tinus','Let us not rush a difficult decision.']],
+    [['Tinus','Any quiet dimensions on the menu?'],['Marla','Soup first. Existential crises after.']]
+  ];
+  let barStarted=null,barBubble=null;
+  function marlaIdleFrame(now){const t=((now%18000)+18000)%18000;if(t<11000)return [4,5,4,5][Math.floor(t/750)%4];if(t<13500)return [9,10,11,10][Math.floor((t-11000)/625)];return 0;}
+  function residentIdleFrame(id,now){if(id==='Marla')return marlaIdleFrame(now);const rest=id==='Sparky'?7000:12000,t=((now+actors.findIndex(a=>a.id===id)*731)%(rest+3000)+(rest+3000))%(rest+3000);return t<rest?0:Math.min(15,Math.floor((t-rest)/187.5));}
+  function barMoment(elapsed){if(elapsed<12000)return null;const t=elapsed-12000,phase=t%60000,index=phase<4200?0:phase>=5200&&phase<9400?1:-1;return index<0?null:barLines[Math.floor(t/60000)%barLines.length][index];}
+  function barChatter(now){
+    const tinus=window.TinusRecruitment?.resident(),eligible=tinus?.pose==='seated'&&window.TinusRecruitment?.progress().recruited&&!window.TinusRecruitment?.replaying;
+    if(!eligible){barStarted=null;if(barBubble)barBubble.hidden=true;return null;}
+    if(barStarted===null)barStarted=now;
+    const line=mode==='walk'&&!activeRecruitScene&&!(scene&&now-scene.started<scene.duration)?barMoment(now-barStarted):null;
+    if(!line){if(barBubble)barBubble.hidden=true;return null;}
+    const actor=line[0]==='Tinus'?tinus:actors.find(a=>a.id==='Marla'),x=actor.x-camera.x,y=actor.y-camera.y-actor.size-7;
+    if(x<0||x>LOGICAL_WIDTH||y<10||y>LOGICAL_HEIGHT){if(barBubble)barBubble.hidden=true;return null;}
+    if(!barBubble){barBubble=document.createElement('div');barBubble.className='hall-banter';barBubble.innerHTML='<strong></strong><span></span>';document.querySelector('.game').append(barBubble);const observer=new MutationObserver(()=>{if(mode!=='walk')barBubble.hidden=true;});for(const node of [el.menu,el.dialogue,el.battle])if(node)observer.observe(node,{attributes:true,attributeFilter:['class']});}
+    barBubble.querySelector('strong').textContent=line[0];barBubble.querySelector('span').textContent=line[1];barBubble.hidden=false;
+    const rect=canvas.getBoundingClientRect(),gameNode=document.querySelector('.game'),game=gameNode.getBoundingClientRect(),scaleX=game.width/gameNode.offsetWidth,scaleY=game.height/gameNode.offsetHeight;
+    barBubble.style.left=Math.max(105,Math.min(gameNode.offsetWidth-105,(rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX))+'px';barBubble.style.top=((rect.top-game.top+y/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
+    return line[0];
+  }
   function resetNavigation(position=state.hallPosition){
     keys.clear();target=null;route=[];pendingActor=null;scene=null;last=performance.now();
     const valid=position&&Number.isFinite(position.x)&&Number.isFinite(position.y)&&!collision(position.x,position.y);
@@ -378,6 +401,7 @@
     }
     ctx.globalAlpha=.23;ctx.drawImage(fx,frame*cw,ch,cw,ch,479-camera.x,141-camera.y,12,17);ctx.restore();
     const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true},...foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>a.y-b.y);
+    const speaking=barChatter(now);
     for(const actor of things){
       if(actor.prop){drawForegroundProp(actor.prop);continue;}
       if(actor.machine){
@@ -394,7 +418,9 @@
         const elapsed=acting?now-scene.started:now+actors.indexOf(actor)*731;
         const cycle=practice&&!acting?32:16,phase=Math.floor(elapsed*fps/1000)%cycle;
         col=phase<16?phase:0;
+        if(!acting)col=residentIdleFrame(actor.id,now);
         if(actor.id==='Seerin')col=[0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,0][col];
+        if(actor.id==='Marla'&&!acting)col=speaking==='Marla'?12:marlaIdleFrame(now);
       }
       if(!actor.clipY)drawFieldShadow(actor.x-camera.x,actor.y-camera.y,actor.id==='Sparky'?3:5);
       drawActor(actor,row,col);
@@ -429,7 +455,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
