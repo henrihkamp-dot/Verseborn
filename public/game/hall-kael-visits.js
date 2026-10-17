@@ -26,7 +26,7 @@
   };
   const destinations = { Mira:{x:124,y:310}, Seerin:{x:120,y:188}, Glimmer:{x:448,y:86} };
   const order=Object.keys(conversations),variants={Mira:0,Seerin:0,Glimmer:0};
-  let visit=null,home=null,wait=45000,last=null,cursor=0,loaded=false,savedProgress=null;
+  let visit=null,home=null,wait=15000,last=null,cursor=0,loaded=false,savedProgress=null;
   const walkImage=new Image();
   const ready=new Promise((resolve,reject)=>{walkImage.onload=()=>{loaded=true;resolve();};walkImage.onerror=()=>reject(Error('Kael walk sheet unavailable'));});
   walkImage.src='assets/hall/kael-walk-v237.webp';
@@ -43,11 +43,11 @@
     kael.visiting=true;kael.walking=false;
     return true;
   }
-  function finish(){const kael=actor();Object.assign(kael,{x:home.x,y:home.y,approach:{...home.approach},visiting:false,walking:false});visit=null;wait=180000;window.emberHallWorld.hideAmbientChat('kael-visit');}
+  function finish(){const kael=actor();Object.assign(kael,{x:home.x,y:home.y,approach:{...home.approach},visiting:false,walking:false});visit=null;wait=45000;window.emberHallWorld.hideAmbientChat('kael-visit');}
   function tick(now){
     const dt=last===null?0:Math.min(50,Math.max(0,now-last));last=now;
     const world=window.emberHallWorld,kael=actor();if(!world||!kael)return;
-    const progress=hallBattleProgress();if(savedProgress!==progress){if(savedProgress&&home){Object.assign(kael,{x:home.x,y:home.y,approach:{...home.approach},visiting:false,walking:false});visit=null;wait=45000;cursor=0;Object.keys(variants).forEach(id=>variants[id]=0);world.hideAmbientChat('kael-visit');}savedProgress=progress;}
+    const progress=hallBattleProgress();if(savedProgress!==progress){if(savedProgress&&home){Object.assign(kael,{x:home.x,y:home.y,approach:{...home.approach},visiting:false,walking:false});visit=null;wait=15000;cursor=0;Object.keys(variants).forEach(id=>variants[id]=0);world.hideAmbientChat('kael-visit');}savedProgress=progress;}
     const busy=mode!=='walk'||activeRecruitScene||window.TinusRecruitment?.replaying||(world.scene&&now-world.scene.started<world.scene.duration);
     if(busy){kael.walking=false;world.hideAmbientChat('kael-visit');return;}
     if(!visit){
