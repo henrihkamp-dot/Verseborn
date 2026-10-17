@@ -130,10 +130,10 @@
     const index=Math.floor(phase/5200);
     return index<lines[conversation].length&&phase%5200<4200?lines[conversation][index]:null;
   }
-  function ambientChat(key,lines,participants,viewCamera,now,cycle=72000){
+  function ambientChat(key,lines,participants,viewCamera,now,cycle=72000,delay=12000){
     let barBubble=ambientBubbles.get(key);
     if(!ambientClocks.has(key))ambientClocks.set(key,now);
-    const line=mode==='walk'?ambientMoment(lines,now-ambientClocks.get(key),12000,cycle):null;
+    const line=mode==='walk'?ambientMoment(lines,now-ambientClocks.get(key),delay,cycle):null;
     if(!line){if(barBubble)barBubble.hidden=true;return null;}
     const actor=participants.find(a=>a.id===line[0]);
     if(!actor){if(barBubble)barBubble.hidden=true;return null;}
@@ -144,6 +144,7 @@
     barBubble.style.left=((rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX)+'px';barBubble.style.top=((rect.top-game.top+y/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
     return line[0];
   }
+  function resetAmbientChat(key){ambientClocks.delete(key);hideAmbientChat(key);}
   function hideAmbientChat(key=null){for(const[id,bubble]of ambientBubbles)if(key===null||key===id)bubble.hidden=true;}
   function barChatter(now){
     hideAmbientChat('rift-brothers');
@@ -225,6 +226,12 @@
     if(actor.id==='Tinus'&&window.TinusCharacter){window.TinusRecruitment?.drawPortal(actor,camera,performance.now());ctx.save();ctx.globalAlpha=actor.alpha??1;window.TinusCharacter.drawField(actor,camera,performance.now());ctx.restore();return;}
     // Scale Hall art around its existing foot anchor; size still defines interaction bounds.
     const size=actor.size*(actors.find(resident=>resident.id===actor.id)?.renderScale??1);
+    if(actor.id==='Kael'&&actor.visiting&&window.KaelHallVisits?.walkImage.complete){
+      const image=window.KaelHallVisits.walkImage,frame=actor.walking?Math.floor(actor.walkPhase||0)%8:8,facing=actor.facing||0,sheetRow=[0,1,2,2,3,3,4,4][facing];
+      ctx.save();ctx.translate(Math.round(actor.x-camera.x),Math.round(actor.y-camera.y-size*.94));
+      if([2,4,6].includes(facing))ctx.scale(-1,1);
+      const bodyWidth=size*1.12;ctx.drawImage(image,frame*128,sheetRow*128,128,128,-bodyWidth/2,0,bodyWidth,size);ctx.restore();return;
+    }
     if(actor.id==='Verseborn'&&row===8&&images.VersebornLute){
       const index=Math.max(0,Math.min(15,col));
       ctx.drawImage(images.VersebornLute,index%4*100,Math.floor(index/4)*100,100,100,Math.round(actor.x-camera.x-size/2),Math.round(actor.y-camera.y-size*.94),size,size);return;
@@ -418,6 +425,7 @@
       ctx.drawImage(fx,frame*cw,0,cw,ch,x-camera.x-2,y-camera.y-1,w+4,h+2);ctx.restore();
     }
     ctx.globalAlpha=.23;ctx.drawImage(fx,frame*cw,ch,cw,ch,479-camera.x,141-camera.y,12,17);ctx.restore();
+    window.KaelHallVisits?.tick(now);
     const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true},...foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>a.y-b.y);
     const speaking=barChatter(now);
     for(const actor of things){
@@ -429,6 +437,7 @@
       }
       let row=0,col=0;
       if(actor.player){row=player.facing;col=player.walking?walkFrame(actor.id,row,player.phase):0;}
+      else if(actor.id==='Kael'&&actor.visiting){row=[0,1,2,3,2,3,2,3][actor.facing||0];col=0;}
       else {
         const acting=scene?.id===actor.id&&now-scene.started<scene.duration;
         row=4;
@@ -473,7 +482,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
