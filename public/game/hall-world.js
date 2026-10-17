@@ -48,7 +48,7 @@
     [16,211,166,21],[468,211,156,26],
     [38,244,89,36],[481,266,123,54],
     [197,220,19,62],[421,220,19,62],
-    [239,85,13,51],[381,85,15,51],[251,80,130,17],
+    [239,85,13,51],[381,85,10,51],[251,80,130,17],
     [250,143,40,12],[339,143,40,12]
   ];
   // Footprints at floor level, rather than the tall foliage or pillar artwork.
@@ -125,7 +125,25 @@
     for(const room of closedRooms){
       if(state.party.includes(room.owner))continue;
       const [x,y,w,h]=room.rect;
-      paint.drawImage(vacant,x*sx,y*sy,w*sx,h*sy,x*sx,y*sy,w*sx,h*sy);
+      // Blend within the room perimeter instead of cutting a dark rectangle
+      // across continuous floorboards and masonry.
+      const layer=document.createElement('canvas');layer.width=Math.ceil(w*sx);layer.height=Math.ceil(h*sy);
+      const blend=layer.getContext('2d');blend.drawImage(vacant,x*sx,y*sy,w*sx,h*sy,0,0,layer.width,layer.height);
+      blend.globalCompositeOperation='destination-in';
+      const feather=Math.min(9,w/5,h/5);
+      const edges=[
+        [x>0,0,0,feather*sx,0],
+        [x+w<W,layer.width,0,layer.width-feather*sx,0],
+        [w<100&&y>0,0,0,0,feather*sy],
+        [w<100&&y+h<H,0,layer.height,0,layer.height-feather*sy]
+      ];
+      for(const [enabled,x0,y0,x1,y1] of edges){
+        if(!enabled)continue;
+        const gradient=blend.createLinearGradient(x0,y0,x1,y1);
+        gradient.addColorStop(0,'rgba(255,255,255,0)');gradient.addColorStop(1,'rgba(255,255,255,1)');
+        blend.fillStyle=gradient;blend.fillRect(0,0,layer.width,layer.height);
+      }
+      paint.drawImage(layer,x*sx,y*sy);
     }
     roomSignature=signature;roomBackground=surface;return surface;
   }
@@ -206,7 +224,7 @@
     return inside;
   }
   const onFloor=(x,y)=>floors.some(points=>inPolygon(x,y,points));
-  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>x>l-7&&x<l+w+7&&y>t-3&&y<t+h+3)||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
+  const collision=(x,y)=>![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>{const padding=l===381&&t===85?2:7;return x>l-padding&&x<l+w+padding&&y>t-3&&y<t+h+3;})||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
   function clearSegment(ax,ay,bx,by){
     const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.5);
     for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;
