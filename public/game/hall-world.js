@@ -111,7 +111,10 @@
     {owner:'Glimmer',rect:[390,64,25,50]},
     {owner:'Seerin',rect:[249,117,28,70]},
     {owner:'Mira',rect:[214,222,23,55]},
-    {owner:'Kael',rect:[404,222,23,55]}
+    {owner:'Kael',rect:[404,222,23,55]},
+    {owner:'Seerin',rect:[42,113,16,28]},
+    {owner:'Seerin',rect:[143,113,16,28]},
+    {owner:'Seerin',rect:[166,119,15,28]}
   ];
   let roomSignature=null,roomBackground=null;
   function hallBackground(){
@@ -124,7 +127,12 @@
     paint.drawImage(original,0,0);
     for(const room of closedRooms){
       if(state.party.includes(room.owner))continue;
-      const [x,y,w,h]=room.rect;
+      let [x,y,w,h]=room.rect;
+      const adjoining={Torren:[null,'Seerin'],Seerin:['Torren','Mira'],Mira:['Seerin',null]}[room.owner];
+      const softenTop=w>200&&adjoining?.[0]&&state.party.includes(adjoining[0]);
+      const softenBottom=w>200&&adjoining?.[1]&&state.party.includes(adjoining[1]);
+      if(softenTop){y-=12;h+=12;}
+      if(softenBottom)h+=12;
       // Blend within the room perimeter instead of cutting a dark rectangle
       // across continuous floorboards and masonry.
       const layer=document.createElement('canvas');layer.width=Math.ceil(w*sx);layer.height=Math.ceil(h*sy);
@@ -134,8 +142,8 @@
       const edges=[
         [x>0,0,0,feather*sx,0],
         [x+w<W,layer.width,0,layer.width-feather*sx,0],
-        [w<100&&y>0,0,0,0,feather*sy],
-        [w<100&&y+h<H,0,layer.height,0,layer.height-feather*sy]
+        [(w<100&&y>0)||softenTop,0,0,0,(softenTop?24:feather)*sy],
+        [(w<100&&y+h<H)||softenBottom,0,layer.height,0,layer.height-(softenBottom?24:feather)*sy]
       ];
       for(const [enabled,x0,y0,x1,y1] of edges){
         if(!enabled)continue;
