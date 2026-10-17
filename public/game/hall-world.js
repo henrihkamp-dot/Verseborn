@@ -98,9 +98,40 @@
     {id:'mira-cabinet',depth:291,outline:[[130,266],[141,259],[152,260],[153,253],[158,253],[160,266],[165,270],[164,285],[151,291],[130,285]]},
     {id:'mira-entry-pot',depth:295,outline:[[176,280],[178,265],[187,260],[196,267],[199,281],[198,291],[185,295],[174,290]]}
   ];
-  function drawForegroundProp(prop){ctx.save();ctx.beginPath();prop.outline.forEach(([x,y],i)=>{if(i)ctx.lineTo(x-camera.x,y-camera.y);else ctx.moveTo(x-camera.x,y-camera.y);});ctx.closePath();ctx.clip();ctx.drawImage(images.hall,-camera.x,-camera.y,W,H);ctx.restore();}
-  const ready=Promise.all(['Verseborn',...actors.map(a=>a.id),'hall','effects','hearths'].map(name=>new Promise((resolve,reject)=>{
-    const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error(name+' asset missing'));image.src='assets/hall/'+(['hall','effects','hearths'].includes(name)?name:name.toLowerCase()+'-clean-v3')+'.webp';
+  // Rebuild only when recruitment changes. Foreground occlusion uses this same
+  // composite so covered furniture never flashes back to its inhabited artwork.
+  const closedRooms=[
+    {owner:'Torren',rect:[0,0,201,118]},
+    {owner:'Glimmer',rect:[438,0,202,118]},
+    {owner:'Seerin',rect:[0,118,201,93]},
+    {owner:'Mira',rect:[0,211,201,145]},
+    {owner:'Kael',rect:[438,211,202,145]},
+    {owner:'Sparky',rect:[132,48,54,41]},
+    {owner:'Torren',rect:[218,64,24,50]},
+    {owner:'Glimmer',rect:[390,64,25,50]},
+    {owner:'Seerin',rect:[249,117,28,70]},
+    {owner:'Mira',rect:[214,222,23,55]},
+    {owner:'Kael',rect:[404,222,23,55]}
+  ];
+  let roomSignature=null,roomBackground=null;
+  function hallBackground(){
+    const signature=closedRooms.map(room=>state.party.includes(room.owner)?'1':'0').join('');
+    if(roomSignature===signature&&roomBackground)return roomBackground;
+    const original=images.hall,vacant=images['hall-uninhabited-v239'];
+    if(!original||!vacant)return original;
+    const surface=document.createElement('canvas');surface.width=original.width;surface.height=original.height;
+    const paint=surface.getContext('2d'),sx=surface.width/W,sy=surface.height/H;
+    paint.drawImage(original,0,0);
+    for(const room of closedRooms){
+      if(state.party.includes(room.owner))continue;
+      const [x,y,w,h]=room.rect;
+      paint.drawImage(vacant,x*sx,y*sy,w*sx,h*sy,x*sx,y*sy,w*sx,h*sy);
+    }
+    roomSignature=signature;roomBackground=surface;return surface;
+  }
+  function drawForegroundProp(prop){ctx.save();ctx.beginPath();prop.outline.forEach(([x,y],i)=>{if(i)ctx.lineTo(x-camera.x,y-camera.y);else ctx.moveTo(x-camera.x,y-camera.y);});ctx.closePath();ctx.clip();ctx.drawImage(hallBackground(),-camera.x,-camera.y,W,H);ctx.restore();}
+  const ready=Promise.all(['hall-uninhabited-v239','Verseborn',...actors.map(a=>a.id),'hall','effects','hearths'].map(name=>new Promise((resolve,reject)=>{
+    const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error(name+' asset missing'));image.src='assets/hall/'+(['hall','hall-uninhabited-v239','effects','hearths'].includes(name)?name:name.toLowerCase()+'-clean-v3')+'.webp';
   })));
   const walkReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornWalk=image;resolve();};image.onerror=()=>reject(Error('Verseborn walk asset missing'));image.src='assets/hall/verseborn-walk-v2.webp';});
   const actionsReady=Promise.all(actors.map(actor=>new Promise((resolve,reject)=>{
@@ -333,7 +364,7 @@
     const previousCamera={...camera};camera.x=0;camera.y=0;
     ctx.fillStyle='#171018';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
     ctx.save();ctx.scale(zoom,zoom);ctx.translate(-view.x,-view.y);
-    ctx.drawImage(images.hall,0,0,W,H);
+    ctx.drawImage(hallBackground(),0,0,W,H);
     if(stageSelectorImage){const frame=Math.floor(performance.now()/220)%3,cw=stageSelectorImage.width/4;
       ctx.drawImage(stageSelectorImage,frame*cw,0,cw,stageSelectorImage.height,resonance.x-resonance.width/2,resonance.y-resonance.height,resonance.width,resonance.height);
     }
@@ -414,12 +445,13 @@
     const focus=window.TinusRecruitment?.focus()||player;
     camera.x=Math.max(0,Math.min(W-LOGICAL_WIDTH,focus.x-LOGICAL_WIDTH/2));
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,focus.y-LOGICAL_HEIGHT*.6));
-    ctx.drawImage(images.hall,-camera.x,-camera.y,W,H);
+    ctx.drawImage(hallBackground(),-camera.x,-camera.y,W,H);
     window.EmberRift?.drawHallDoor(camera,now);
     window.HallHub?.drawAreas(camera);
     const fx=images.effects,cw=fx.width/4,ch=fx.height/2,frame=Math.floor(now/180)%4;
     ctx.save();
     for(const [i,[x,y,w,h]] of [[77,23,25,21],[564,136,19,19]].entries()){
+      if(i===0&&!state.party.includes('Torren'))continue;
       ctx.save();ctx.beginPath();ctx.rect(x-camera.x,y-camera.y,w,h);ctx.clip();
       ctx.drawImage(images.hearths,i*32,0,32,32,x-camera.x,y-camera.y,w,h);
       ctx.drawImage(fx,frame*cw,0,cw,ch,x-camera.x-2,y-camera.y-1,w+4,h+2);ctx.restore();
@@ -482,7 +514,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={hallBackground,closedRooms,findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
