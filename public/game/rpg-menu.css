@@ -153,3 +153,38 @@
 .menu .shop-mode-tabs button:is(.is-active,:hover,:focus-visible){color:#ffe8ba;background:linear-gradient(120deg,#6b4c36,#352534);border-color:#e1b575;box-shadow:inset 0 -3px #dfb575;text-shadow:none}
 .menu .shop-character-selector>button:is(.is-active,:hover,:focus-visible){background:linear-gradient(120deg,#6b4c36,#302333);color:#fff0d2;border-color:#e1b575}
 .menu .shop-character-selector>button:is(.is-active,:hover,:focus-visible) :is(b,strong,small){color:#fff0d2}
+
+/* Hall merchants use the brothers' Rift catalogue and carved button artwork. */
+.menu:not([data-menu-view="glimmer-shop"]) .shop-list{grid-template-columns:minmax(0,1fr);gap:10px}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row{grid-template-columns:60px minmax(0,1fr) auto auto;grid-template-rows:1fr;min-height:94px;padding:14px!important;gap:12px 18px;border:1px solid #907044!important;border-radius:3px;background:linear-gradient(120deg,#dca25712,transparent 40%),linear-gradient(180deg,#251b2beb,#100d19f5);box-shadow:inset 0 0 0 2px #09070f,0 3px 8px #0004!important}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row .shop-icon{grid-row:1;width:56px!important;height:56px!important;min-width:56px}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row>div{grid-column:2;grid-row:1}.menu:not([data-menu-view="glimmer-shop"]) .shop-row>span{grid-column:3;grid-row:1;min-width:66px;text-align:right;justify-self:end}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row>button{grid-column:4;grid-row:1;min-width:150px;min-height:46px;padding:12px 24px;border:0;border-radius:0;color:#ffe6a8;font-weight:700;text-shadow:0 1px 2px #000;background:transparent url('assets/menu/rift-button.webp') center/100% 100% no-repeat}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row>button:hover:not(:disabled){background:transparent url('assets/menu/rift-button.webp') center/100% 100% no-repeat;filter:brightness(1.25)}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row>button:disabled{color:#c1b6a1;background:transparent url('assets/menu/rift-button.webp') center/100% 100% no-repeat;filter:saturate(.35);opacity:.8}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row strong{color:#f4d899}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-head{background:linear-gradient(120deg,#251b2beb,#100d19f5);border-color:#907044;border-radius:3px}
+.menu:not([data-menu-view="glimmer-shop"]) .shopkeeper-portrait{width:128px!important;height:156px!important;object-fit:contain;clip-path:none;border:0;transform:none;filter:drop-shadow(0 5px 7px #0009)}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-wallet{padding:14px;border:1px solid #ad965b;border-radius:6px;background:#102b2b;color:#efdfb9}
+@media(max-width:700px){.menu:not([data-menu-view="glimmer-shop"]) .shop-row{grid-template-columns:48px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:8px 12px}.menu:not([data-menu-view="glimmer-shop"]) .shop-row .shop-icon{grid-row:1/3;width:44px!important;height:44px!important;min-width:44px}.menu:not([data-menu-view="glimmer-shop"]) .shop-row>div{grid-column:2/4;grid-row:1}.menu:not([data-menu-view="glimmer-shop"]) .shop-row>span{grid-column:2;grid-row:2;justify-self:start;text-align:left}.menu:not([data-menu-view="glimmer-shop"]) .shop-row>button{grid-column:3;grid-row:2;min-width:100px;padding:10px 15px}.menu:not([data-menu-view="glimmer-shop"]) .shopkeeper-portrait{width:88px!important;height:112px!important}.menu:not([data-menu-view="glimmer-shop"]) .shop-wallet{padding:8px;font-size:13px}}
+
+/* Challenge catalogues follow the Rift merchants' framed, readable rows. */
+.menu:not([data-menu-view="glimmer-shop"]) .shop-row .shop-icon{grid-column:1!important}
+.menu .shadow-grid .shadow-stage::before,.menu .shadow-grid .shadow-stage::after{display:none!important}
+.menu .shadow-grid .shadow-stage>span{position:static;inset:auto;display:block;padding:0;border:0;background:none;box-shadow:none;width:auto}
+.menu .whirlpool-menu>header{position:static;inset:auto;padding:18px;margin:0 0 16px;min-height:0}
+.menu .whirlpool-intro{position:static;margin:16px 0;line-height:1.6}
+.menu :is(.shadow-grid,.whirlpool-grid){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.menu :is(.shadow-grid .shadow-stage,.whirlpool-grid .whirlpool-card){display:grid!important;grid-template-columns:112px minmax(0,1fr);grid-template-rows:repeat(5,auto);align-content:center;gap:5px 16px;min-width:0;min-height:172px;padding:16px!important;text-align:left;white-space:normal;border:1px solid #907044!important;border-radius:3px;background:linear-gradient(120deg,#dca25712,transparent 40%),linear-gradient(180deg,#251b2beb,#100d19f5)!important;box-shadow:inset 0 0 0 2px #09070f,0 3px 8px #0004;color:#f4d899}
+.menu :is(.shadow-stage,.whirlpool-card)>img{position:static!important;grid-column:1;grid-row:1/7;width:112px!important;height:136px!important;object-fit:contain;align-self:center;margin:0;filter:drop-shadow(0 4px 5px #0007)}
+.menu :is(.shadow-stage,.whirlpool-card)>:not(img){grid-column:2;min-width:0;margin:0;text-align:left;overflow-wrap:anywhere}
+.menu :is(.shadow-stage,.whirlpool-card)>strong{font:700 20px/1.3 Georgia,serif;color:#f4d899}.menu :is(.shadow-stage,.whirlpool-card)>:is(small,span,i){font-size:12px;line-height:1.45;color:#cbbda8;font-style:normal}.menu :is(.shadow-stage,.whirlpool-card)>em{font-size:13px;line-height:1.45;color:#e4c38b;font-style:normal}
+.menu :is(.shadow-stage,.whirlpool-card):is(.is-selected,:hover:not(:disabled),:focus-visible){border-color:#efc77e!important;box-shadow:inset 3px 0 #e6b975,inset 0 0 0 2px #09070f;background:linear-gradient(110deg,#60453299,#241c2a)!important;outline:0}
+.menu :is(.shadow-detail,.whirlpool-detail){padding:22px;border:1px solid #907044;border-radius:3px;background:linear-gradient(120deg,#dca2570d,transparent 40%),linear-gradient(180deg,#251b2beb,#100d19f5);margin-top:18px}
+.menu :is(.shadow-preview,.whirlpool-preview){display:flex;align-items:center;gap:24px}.menu :is(.shadow-preview,.whirlpool-preview)>img{width:148px;height:180px;object-fit:contain;flex:none}
+.menu .whirlpool-reward{border:1px solid #907044;border-left:3px solid #d7b072;background:#29212b;padding:16px}.menu .whirlpool-reward h3{color:#f4d899}
+.menu :is(.shadow-path-nav button,.shadow-detail footer button,.whirlpool-detail footer button,.whirlpool-welcome button,.hub-screen:has(.shadow-grid)>.hub-header button,.whirlpool-menu header>button){min-height:46px;padding:12px 24px;border:0;border-radius:0;color:#ffe6a8;font-weight:700;text-shadow:0 1px 2px #000;background:transparent url('assets/menu/rift-button.webp') center/100% 100% no-repeat;box-shadow:none}
+.menu :is(.shadow-path-nav button,.shadow-detail footer button,.whirlpool-detail footer button,.whirlpool-welcome button):hover:not(:disabled){filter:brightness(1.25)}
+.menu :is(.shadow-party>button,.whirlpool-member){background:linear-gradient(120deg,#322735,#1d1823);border:1px solid #907044;color:#ebddc4;box-shadow:none;border-radius:3px}
+.menu :is(.shadow-party>button[aria-pressed="true"],.whirlpool-member.is-selected){background:#4c392e;border-color:#ecc37d;box-shadow:inset 0 -3px #dfb575;color:#fff0ca}
+@media(max-width:700px){.menu :is(.shadow-grid,.whirlpool-grid){grid-template-columns:minmax(0,1fr)}.menu :is(.shadow-grid .shadow-stage,.whirlpool-grid .whirlpool-card){grid-template-columns:82px minmax(0,1fr);gap:5px 12px;padding:12px!important}.menu :is(.shadow-stage,.whirlpool-card)>img{width:82px!important;height:112px!important}.menu :is(.shadow-detail,.whirlpool-detail){padding:12px}.menu :is(.shadow-preview,.whirlpool-preview){gap:12px;align-items:flex-start}.menu :is(.shadow-preview,.whirlpool-preview)>img{width:88px;height:125px}}
