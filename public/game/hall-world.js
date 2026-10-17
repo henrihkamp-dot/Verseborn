@@ -114,45 +114,46 @@
   handleControl=function(control){if(inHall()&&mode==='walk'&&!activeRecruitScene&&['up','down','left','right'].includes(control))return;oldControl(control);};
   cycleLeader=function(direction){if(inHall()&&mode==='walk')return;oldCycleLeader(direction);};
   const residents=()=>{const tinus=window.TinusRecruitment?.resident();return [...actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id)),...(tinus?[tinus]:[])];};
-  const barLines=[
-    [['Tinus','The portal owes me a refill.'],['Marla','Put it on your tab.']],
-    [['Marla','Coffee, or something that counts as lunch?'],['Tinus','Let us not rush a difficult decision.']],
-    [['Tinus','Any quiet dimensions on the menu?'],['Marla','Soup first. Existential crises after.']]
-  ];
-  let barBubble=null;
+  const barLines=[[["Tinus", "The portal owes me a refill."], ["Marla", "Put it on your tab."], ["Tinus", "Does the tab follow me across dimensions?"], ["Marla", "Try me. I have a very long ladle."]], [["Marla", "Coffee, or something that counts as lunch?"], ["Tinus", "Coffee has beans. Practically a vegetable."], ["Marla", "Then this soup is a three-course banquet."], ["Tinus", "Fine. But leave room for the vegetables in my mug."]], [["Tinus", "I found a dimension where nobody needed saving."], ["Marla", "Sounds restful. Why leave?"], ["Tinus", "Terrible coffee. Some sacrifices are too great."], ["Marla", "Well, save this bowl before it gets cold."]], [["Tinus", "You feed everyone who wanders in through a portal?"], ["Marla", "A warm meal first. Questions can wait until they stop shivering."], ["Tinus", "Dangerous policy. They might decide to stay."], ["Marla", "You are still on that stool, are you not?"]], [["Tinus", "Does Verseborn ever stop singing?"], ["Marla", "When Mira turns a corner. Then he follows like a lost puppy."], ["Tinus", "So she gets a soundtrack and a shadow?"], ["Marla", "And somehow I am still the one fetching him water."]]];
+  const ambientBubbles=new Map();
   function marlaIdleFrame(now){const t=((now%18000)+18000)%18000;if(t<11000)return [4,5,4,5][Math.floor(t/750)%4];if(t<13500)return [9,10,11,10][Math.floor((t-11000)/625)];return 0;}
   function residentIdleFrame(id,now){if(id==='Marla')return marlaIdleFrame(now);const rest=id==='Sparky'?7000:12000,t=((now+actors.findIndex(a=>a.id===id)*731)%(rest+3000)+(rest+3000))%(rest+3000);return t<rest?0:Math.min(15,Math.floor((t-rest)/187.5));}
-  function barMoment(elapsed){if(elapsed<12000)return null;const t=elapsed-12000,phase=t%60000,index=phase<4200?0:phase>=5200&&phase<9400?1:-1;return index<0?null:barLines[Math.floor(t/60000)%barLines.length][index];}
-  const kitchenLines=[
-    [['Torren','That stew is for everyone, little furnace.'],['Sparky','Prrrp… grrr?']],
-    [['Sparky','Hrrrm… BUURP.'],['Torren','A fine compliment. Mind the curtains.']],
-    [['Torren','One bowl. Then we train.'],['Sparky','Rrrr! Chrrp!']],
-    [['Sparky','Grrr… prrrp.'],['Torren','Yes, yes. I saved you the crispy bits.']]
-  ];
+  function barMoment(elapsed){return ambientMoment(barLines,elapsed,12000,60000);}
+  const kitchenLines=[[["Torren", "That stew is for everyone, little furnace."], ["Sparky", "Prrrp… grrr?"], ["Torren", "Those eyes will not get you a second bowl."], ["Sparky", "Chrrp… prrrr."]], [["Sparky", "Hrrrm… BUURP."], ["Torren", "A fine compliment. Mind the curtains."], ["Sparky", "Rrr? Hrrmph."], ["Torren", "Yes, even the expensive curtains."]], [["Torren", "One bowl. Then we train."], ["Sparky", "Rrrr! Chrrp!"], ["Torren", "Chasing the ladle does not count as training."], ["Sparky", "Grrr… prrrp!"]], [["Sparky", "Grrr… prrrp."], ["Torren", "Yes, yes. I saved you the crispy bits."], ["Sparky", "Chrrr! Prrrp!"], ["Torren", "Easy. I would like to keep all my fingers."]], [["Torren", "You kept watch while I slept, did you?"], ["Sparky", "Hrrm… rrr."], ["Torren", "Then you have earned the warm spot by the stove."], ["Sparky", "Prrrr… chrrp."]]];
   const ambientClocks=new Map();
-  function ambientMoment(lines,elapsed,delay=12000,cycle=72000){if(elapsed<delay)return null;const t=elapsed-delay,phase=t%cycle,index=phase<4200?0:phase>=5200&&phase<9400?1:-1;return index<0?null:lines[Math.floor(t/cycle)%lines.length][index];}
+  function ambientMoment(lines,elapsed,delay=12000,cycle=72000){
+    if(elapsed<delay||!lines.length)return null;
+    // Preserve the original quiet interval after the last reply, even for longer conversations.
+    const quiet=cycle-9400,durations=lines.map(conversation=>conversation.length*5200-1000+quiet);
+    let phase=(elapsed-delay)%durations.reduce((sum,duration)=>sum+duration,0),conversation=0;
+    while(phase>=durations[conversation])phase-=durations[conversation++];
+    const index=Math.floor(phase/5200);
+    return index<lines[conversation].length&&phase%5200<4200?lines[conversation][index]:null;
+  }
   function ambientChat(key,lines,participants,viewCamera,now,cycle=72000){
+    let barBubble=ambientBubbles.get(key);
     if(!ambientClocks.has(key))ambientClocks.set(key,now);
     const line=mode==='walk'?ambientMoment(lines,now-ambientClocks.get(key),12000,cycle):null;
     if(!line){if(barBubble)barBubble.hidden=true;return null;}
     const actor=participants.find(a=>a.id===line[0]);
     if(!actor){if(barBubble)barBubble.hidden=true;return null;}
     const x=actor.x-viewCamera.x,y=actor.y-viewCamera.y-(actor.size||40)-7;
-    if(x<0||x>LOGICAL_WIDTH||y<10||y>LOGICAL_HEIGHT){if(barBubble)barBubble.hidden=true;return null;}
-    if(!barBubble){barBubble=document.createElement('div');barBubble.className='hall-banter';barBubble.innerHTML='<strong></strong><span></span>';document.querySelector('.game').append(barBubble);const observer=new MutationObserver(()=>{if(mode!=='walk')barBubble.hidden=true;});for(const node of [el.menu,el.dialogue,el.battle])if(node)observer.observe(node,{attributes:true,attributeFilter:['class']});}
+    if(!barBubble){barBubble=document.createElement('div');barBubble.className='hall-banter';barBubble.innerHTML='<strong></strong><span></span>';document.querySelector('.game').append(barBubble);ambientBubbles.set(key,barBubble);const observer=new MutationObserver(()=>{if(mode!=='walk')barBubble.hidden=true;});for(const node of [el.menu,el.dialogue,el.battle])if(node)observer.observe(node,{attributes:true,attributeFilter:['class']});}
     barBubble.dataset.conversation=key;barBubble.querySelector('strong').textContent=line[0];barBubble.querySelector('span').textContent=line[1];barBubble.hidden=false;
     const rect=canvas.getBoundingClientRect(),gameNode=document.querySelector('.game'),game=gameNode.getBoundingClientRect(),scaleX=game.width/gameNode.offsetWidth,scaleY=game.height/gameNode.offsetHeight;
-    barBubble.style.left=Math.max(105,Math.min(gameNode.offsetWidth-105,(rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX))+'px';barBubble.style.top=((rect.top-game.top+y/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
+    barBubble.style.left=((rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX)+'px';barBubble.style.top=((rect.top-game.top+y/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
     return line[0];
   }
-  function hideAmbientChat(){if(barBubble)barBubble.hidden=true;}
+  function hideAmbientChat(key=null){for(const[id,bubble]of ambientBubbles)if(key===null||key===id)bubble.hidden=true;}
   function barChatter(now){
+    hideAmbientChat('rift-brothers');
     if(mode!=='walk'||activeRecruitScene||(scene&&now-scene.started<scene.duration)){hideAmbientChat();return null;}
     const kitchenReady=['Torren','Sparky'].every(id=>state.party.includes(id));
-    if(kitchenReady&&Math.hypot(player.x-123,player.y-80)<160)return ambientChat('kitchen',kitchenLines,actors,camera,now);
+    const kitchenSpeaker=kitchenReady?ambientChat('kitchen',kitchenLines,actors,camera,now):null;
+    if(!kitchenReady)hideAmbientChat('kitchen');
     const tinus=window.TinusRecruitment?.resident(),eligible=tinus?.pose==='seated'&&window.TinusRecruitment?.progress().recruited&&!window.TinusRecruitment?.replaying;
-    if(!eligible){ambientClocks.delete('bar');hideAmbientChat();return null;}
-    return ambientChat('bar',barLines,[tinus,actors.find(a=>a.id==='Marla')],camera,now,60000);
+    if(!eligible){ambientClocks.delete('bar');hideAmbientChat('bar');return kitchenSpeaker;}
+    return ambientChat('bar',barLines,[tinus,actors.find(a=>a.id==='Marla')],camera,now,60000)||kitchenSpeaker;
   }
   function resetNavigation(position=state.hallPosition){
     keys.clear();target=null;route=[];pendingActor=null;scene=null;last=performance.now();
@@ -472,7 +473,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,kitchenLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
