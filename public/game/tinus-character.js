@@ -81,7 +81,7 @@
   ];
 
   const oldEquipmentArtwork = equipmentArtwork;
-  equipmentArtwork = id => id === ID ? BASE + 'equipment.webp' : oldEquipmentArtwork(id);
+  equipmentArtwork = id => id === ID ? BASE + 'equipment-fit-253.webp' : oldEquipmentArtwork(id);
   const oldGearIcon = gearIconHtml;
   gearIconHtml = (gear, heroId, index, className = '', ref = null) => {
     const signature = signatures.find(entry => entry[0] === gear?.name);
@@ -202,3 +202,4 @@
   }
   window.TinusCharacter = { ready, recruit, drawField, seatedPhase, signatureNames: signatures.map(entry => entry[0]) };
 })();
+
