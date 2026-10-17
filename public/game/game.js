@@ -4624,7 +4624,7 @@ const RECRUIT_SCENE_ROOM_NAMES = {
 const EMBER_HALL_INTRO_ID = "ember-hall-welcome";
 const RECRUIT_SCENES = [
   {
-    id: EMBER_HALL_INTRO_ID, recruit: "Verseborn", variant: "welcome", title: "Welcome to Ember Hall", room: "trial-room", preferred: [],
+    id: EMBER_HALL_INTRO_ID, recruit: "Verseborn", variant: "welcome", title: "The Song of the City", room: "trial-room", preferred: [],
     cast: ["Verseborn", "Marla", "Glimmer"], guests: ["Marla", "Glimmer"], allowWithoutPartner: true,
     build: () => [
       ["Marla", "So. This is Ember Hall.", { actor: "Marla", anim: "melee", motion: "welcome-step", dx: 5, facing: 3, duration: 72 }],
@@ -6853,7 +6853,7 @@ function drawNpc(id, px, py, dir, anim, frame) {
     const baseline = py + 32;
     if (stageSelectorImage) {
       const sourceWidth = stageSelectorImage.width / STAGE_SELECTOR_FRAMES;
-      const sourceFrame = Math.floor(frame / 10) % STAGE_SELECTOR_FRAMES;
+      const sourceFrame = 0;
       const width = 43;
       const height = 43;
       drawFieldShadow(px + 8, baseline + 1, 11);
@@ -7249,8 +7249,13 @@ function startHallBattles(continueGame = false) {
   const needsStartingParty = !progress.startingWelcomeComplete && progress.startingCompanions.length !== 2;
   const needsStartingWelcome = !progress.startingWelcomeComplete && progress.startingCompanions.length === 2;
   showHudNotice(loaded ? "EMBER HALL BATTLE - record restored" : "EMBER HALL BATTLE - choose your starting Flameguard");
-  if (needsStartingParty) openHallStartingPartySelection();
-  else if (needsStartingWelcome) playHallStartingWelcomeSequence(progress.startingCompanions);
+  if (needsStartingParty) {
+    if (!progress.openingComplete && window.HallOpening) HallOpening.start({ after: openHallStartingPartySelection });
+    else openHallStartingPartySelection();
+  } else if (needsStartingWelcome) {
+    if (!progress.openingComplete && window.HallOpening) HallOpening.start({ after: () => playHallStartingWelcomeSequence(progress.startingCompanions) });
+    else playHallStartingWelcomeSequence(progress.startingCompanions);
+  }
 }
 
 function activateTitleSelection() {

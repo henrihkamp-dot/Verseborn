@@ -405,8 +405,9 @@
     ctx.fillStyle='#171018';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
     ctx.save();ctx.scale(zoom,zoom);ctx.translate(-view.x,-view.y);
     ctx.drawImage(hallBackground(),0,0,W,H);
-    if(stageSelectorImage){const frame=Math.floor(performance.now()/220)%3,cw=stageSelectorImage.width/4;
-      ctx.drawImage(stageSelectorImage,frame*cw,0,cw,stageSelectorImage.height,resonance.x-resonance.width/2,resonance.y-resonance.height,resonance.width,resonance.height);
+    if(stageSelectorImage){
+      if(window.HallOpening)HallOpening.drawMachine(ctx,stageSelectorImage,resonance.x,resonance.y,resonance.width,resonance.height);
+      else ctx.drawImage(stageSelectorImage,0,0,stageSelectorImage.width/4,stageSelectorImage.height,resonance.x-resonance.width/2,resonance.y-resonance.height,resonance.width,resonance.height);
     }
     const host={'torren-kitchen':'Torren','sparky-coop':'Sparky','training-room':'Seerin','glimmer-lab':'Glimmer','kael-library':'Kael','relaxation-lounge':'Mira','music-studio':'Verseborn'}[room];
     const lead=recruitScene.actors.some(a=>a.id===host)?host:recruitScene.recruit;
@@ -505,7 +506,7 @@
       if(actor.prop){drawForegroundProp(actor.prop);continue;}
       if(actor.machine){
         const image=stageSelectorImage;
-        if(image){const cw=image.width/4,frame=Math.floor(now/220)%3;ctx.drawImage(image,frame*cw,0,cw,image.height,actor.x-camera.x-actor.width/2,actor.y-camera.y-actor.height,actor.width,actor.height);}
+        if(image){if(window.HallOpening)HallOpening.drawMachine(ctx,image,actor.x-camera.x,actor.y-camera.y,actor.width,actor.height,now);else ctx.drawImage(image,0,0,image.width/4,image.height,actor.x-camera.x-actor.width/2,actor.y-camera.y-actor.height,actor.width,actor.height);}
         continue;
       }
       let row=0,col=0;
