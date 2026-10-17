@@ -20,6 +20,9 @@
     clock+=dt;
     if(loaded&&state.party.includes('Glimmer')){
       const chatting=window.KaelHallVisits?.visit?.id==='Glimmer';
+      if(chatting&&flight?.next!==0&&Math.hypot(g.x-stops[0].x,g.y-stops[0].y)>1){
+        flight={from:{x:g.x,y:g.y},to:stops[0],next:0,elapsed:0,duration:1200+Math.abs(stops[0].x-g.x)*12,fromLift:g.labLift||0};
+      }
       if(flight){
         flight.elapsed+=dt;const t=Math.min(1,flight.elapsed/flight.duration),ease=t*t*(3-2*t);
         g.x=flight.from.x+(flight.to.x-flight.from.x)*ease;g.y=flight.from.y+(flight.to.y-flight.from.y)*ease;
