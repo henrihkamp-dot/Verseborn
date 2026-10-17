@@ -14853,6 +14853,21 @@ function renderMenu() {
   }
   if (menuTab === "developer") {
     el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;
+    const developerRift = window.EmberRift?.progress();
+    if (developerRift) {
+      el.menuBody.querySelector(".developer-gold").insertAdjacentHTML("afterend", `<div class="developer-gold"><strong>Rift Shards: ${developerRift.shards}</strong><input type="number" step="1" value="100" aria-label="Rift Shard adjustment" data-shard-delta><button type="button" data-adjust-shards>Apply Shards</button></div>`);
+      el.menuBody.querySelector("[data-adjust-shards]").addEventListener("click", () => {
+        const input = el.menuBody.querySelector("[data-shard-delta]");
+        if (!input.value.trim()) return;
+        const delta = Number(input.value);
+        if (!Number.isFinite(delta)) return;
+        const rift = EmberRift.progress();
+        rift.shards = Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, rift.shards + Math.round(delta)));
+        updatePanels();
+        queueSave();
+        renderMenu();
+      });
+    }
     el.menuBody.querySelectorAll(".developer-controls > section").forEach((section, index) => {
       const side = index === 0 ? "party" : "enemy";
       section.insertAdjacentHTML("beforeend", [["healing", "Healing"], ["burn", "Burn Damage"], ["poison", "Poison Damage"], ["bleed", "Bleed Damage"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join(""));
