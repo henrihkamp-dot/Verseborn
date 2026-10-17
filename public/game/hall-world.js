@@ -429,6 +429,7 @@
     if(collision(player.x,player.y)){
       let nearest=null,distance=Infinity;
       for(const node of navNodes.values()){
+        if(collision(node.x,node.y))continue;
         const d=Math.hypot(node.x-player.x,node.y-player.y);
         if(d<distance){nearest=node;distance=d;}
       }
