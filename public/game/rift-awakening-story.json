@@ -2,37 +2,231 @@
   "title": "The Flame That Remembers",
   "memoryId": "rift-stone-sleeper-awakening",
   "beats": [
-    {"phase":"tremor","auto":true,"minMs":2800,"speaker":"","text":"","cue":"The return from Heart of the Vortex is silent. A low tremor ripples across the cavern; grit falls, followed by distinct loose ceiling stones."},
-    {"phase":"tremor","minMs":1400,"speaker":"Orivell","text":"Brother. Was the ceiling always coming towards us?","cue":"Orivell backs away from a falling stone. Aethren steadies himself beside the vortex."},
-    {"phase":"stir","minMs":1800,"speaker":"Aethren","text":"The final seal has answered. Nobody touch the carvings. Or the dragon. Especially the dragon.","cue":"Gold cracks brighten along the statue. One violet eye opens. The massive head lifts a little; dust slides from its horns."},
-    {"phase":"stir","minMs":1200,"speaker":"Orivell","text":"The last seal, the waking elder... I KNEW someone had removed a page from that prophecy!"},
-    {"phase":"warning","minMs":1400,"speaker":"Aethren","text":"You removed it. You wrapped a teapot in it. Now get behind the shield!","cue":"The jaw opens into a warning growl. Torren braces his shield. Mira pulls Orivell clear; Seerin steps between the dragon and the brothers."},
-    {"phase":"warning","minMs":1200,"speaker":"Stone Sleeper","text":"Who has opened the wound?"},
-    {"phase":"warning","minMs":1000,"speaker":"Verseborn","text":"We stopped the Heart. We aren't here to hurt you."},
-    {"phase":"warning","minMs":1000,"speaker":"Seerin","text":"Lower your weapons. Give him room!","cue":"Kael raises a protective ward, while Glimmer shuts down a sparking device. Nobody attacks the dragon."},
-    {"phase":"warning","minMs":1200,"speaker":"Orivell","text":"What if it is the Returning Crown? The Unwritten Prince? The extremely poorly translated breakfast omen?"},
-    {"phase":"warning","minMs":1000,"speaker":"Aethren","text":"Stop naming prophecies and help me keep the roof above us!"},
-    {"phase":"arrival","minMs":4200,"speaker":"Verseborn","text":"Sparky? Wait—!","cue":"Sparky's familiar Ember Hall sprite flies in from the Hall passage. He crosses the room above the party and hovers beside the dragon's muzzle."},
-    {"phase":"essence","minMs":3500,"speaker":"Sparky","text":"Krrr... prrrr...","cue":"Violet flame gathers around Sparky's chest and tail, then curls gently towards the elder. The elder turns his eye to it. Falling stones become less frequent."},
-    {"phase":"calm","minMs":3200,"speaker":"Stone Sleeper","text":"That warmth... I know what you carry, little one.","cue":"The growl stops. The jaw relaxes, the head lowers and the tremor fades. The eye stays open. Dust settles in the returning silence."},
-    {"phase":"calm","minMs":1200,"speaker":"Orivell","text":"He has stopped trying to turn us into a cautionary tale."},
-    {"phase":"calm","minMs":1000,"speaker":"Aethren","text":"Quiet, brother. Listen."},
-    {"phase":"memory","vision":0,"minMs":2200,"speaker":"Stone Sleeper","text":"I remember when those streets had room for all of us. Human voices below. Wings above. Neither was a reason to be afraid.","cue":"The comic's ancient city appears above the cavern's far side: luminous, translucent, with feathered edges and drifting violet mist. The party remains visible."},
-    {"phase":"memory","vision":0,"minMs":1800,"speaker":"Stone Sleeper","text":"We argued. We traded. We raised our young beneath the same sky. Peace had a thousand different voices."},
-    {"phase":"memory","vision":1,"minMs":2200,"speaker":"Stone Sleeper","text":"Then Solinar offered an end to every fear. Hungry people heard a promise. Tired people saw a light.","cue":"A second comic memory forms against another wall: Solinar's radiant figure above Cindervale. The first city vision remains faintly visible elsewhere in the room."},
-    {"phase":"memory","vision":1,"minMs":2000,"speaker":"Stone Sleeper","text":"But each answer had to become his answer. A remembered wrong became disloyalty. A different voice became something to silence."},
-    {"phase":"memory","vision":2,"minMs":2000,"speaker":"Stone Sleeper","text":"The Elder Ember held what he wanted forgotten. Lives. Names. Choices. He reached for it as though every flame owed him obedience.","cue":"The comic image of the Elder Ember between dragons gathers above the vortex. Reflected purple light reaches the elder's stone face."},
-    {"phase":"memory","vision":3,"minMs":2200,"speaker":"Stone Sleeper","text":"It would not yield. So it was hidden where power would see nothing worth fearing. Somewhere small. Somewhere hungry. Somewhere still capable of loving.","cue":"The comic's remembered faces appear as a fourth ethereal vision. Wisps connect the memories to Sparky's violet essence without forming a physical portal."},
-    {"phase":"memory","vision":3,"minMs":1300,"speaker":"Sparky","text":"Hrrm... chrrp."},
-    {"phase":"memory","vision":3,"minMs":1500,"speaker":"Verseborn","text":"He remembered all that... and still chose to stay with us."},
-    {"phase":"memory","vision":0,"minMs":1400,"speaker":"Aethren","text":"The prince who brings the voices together. Orivell... the old accounts may have meant this."},
-    {"phase":"calm","minMs":1500,"speaker":"Stone Sleeper","text":"Perhaps. But do not bury him beneath your predictions. What he carries matters. What he chooses will matter more.","cue":"The visions fade into motes around the cavern. The brothers lower their hands. Sparky settles close to the elder."},
-    {"phase":"calm","minMs":1200,"speaker":"Verseborn","text":"Then we'll listen. Tell us what they tried to erase."},
-    {"phase":"restored","minMs":1500,"speaker":"Stone Sleeper","text":"Come closer, Flameguard. There is much more to remember.","cue":"Warm light returns to the carvings and small motes move through the cavern. The elder remains awake; the full memory can be replayed from Memories."}
+    {
+      "phase": "tremor",
+      "auto": true,
+      "minMs": 2800,
+      "speaker": "",
+      "text": "",
+      "cue": "The return from Heart of the Vortex is silent. A low tremor ripples across the cavern; grit falls, followed by distinct loose ceiling stones."
+    },
+    {
+      "phase": "tremor",
+      "minMs": 1400,
+      "speaker": "Orivell",
+      "text": "Brother. Was the ceiling always coming towards us?",
+      "cue": "Orivell backs away from a falling stone. Aethren steadies himself beside the vortex."
+    },
+    {
+      "phase": "stir",
+      "minMs": 1800,
+      "speaker": "Aethren",
+      "text": "The final seal has answered. Nobody touch the carvings. Or the dragon. Especially the dragon.",
+      "cue": "Gold cracks brighten along the statue. One violet eye opens. The massive head lifts a little; dust slides from its horns."
+    },
+    {
+      "phase": "stir",
+      "minMs": 1200,
+      "speaker": "Orivell",
+      "text": "The last seal, the waking elder... I KNEW someone had removed a page from that prophecy!"
+    },
+    {
+      "phase": "warning",
+      "minMs": 1400,
+      "speaker": "Aethren",
+      "text": "You removed it. You wrapped a teapot in it. Verseborn, stay clear of his jaw!",
+      "cue": "The brothers panic while Verseborn keeps his distance from the warning growl."
+    },
+    {
+      "phase": "warning",
+      "minMs": 1200,
+      "speaker": "Stone Sleeper",
+      "text": "Who has opened the wound?"
+    },
+    {
+      "phase": "warning",
+      "minMs": 1000,
+      "speaker": "Verseborn",
+      "text": "We stopped the Heart. We aren't here to hurt you."
+    },
+    {
+      "phase": "warning",
+      "minMs": 1000,
+      "speaker": "Verseborn",
+      "text": "Easy. Nobody is going to attack you.",
+      "cue": "Verseborn raises his empty hand. Only he and the brothers stand in the cavern."
+    },
+    {
+      "phase": "warning",
+      "minMs": 1200,
+      "speaker": "Orivell",
+      "text": "What if it is the Returning Crown? The Unwritten Prince? The extremely poorly translated breakfast omen?"
+    },
+    {
+      "phase": "warning",
+      "minMs": 1000,
+      "speaker": "Aethren",
+      "text": "Stop naming prophecies and help me keep the roof above us!"
+    },
+    {
+      "phase": "arrival",
+      "minMs": 4200,
+      "speaker": "Verseborn",
+      "text": "Sparky? Wait—!",
+      "cue": "Sparky flies in from behind, diagonally left from the Hall passage, wings flapping and feet tucked. He descends onto the front-left rim of the Ember Rift.",
+      "auto": true
+    },
+    {
+      "phase": "landing",
+      "auto": true,
+      "minMs": 700,
+      "speaker": "",
+      "text": "",
+      "cue": "Sparky lands and folds his wings into his familiar cute Hall pose."
+    },
+    {
+      "phase": "burp",
+      "auto": true,
+      "minMs": 1400,
+      "speaker": "Sparky",
+      "text": "Brrruup!",
+      "cue": "A small satisfied burp. The elder notices his flame essence."
+    },
+    {
+      "phase": "essence",
+      "minMs": 3500,
+      "speaker": "Sparky",
+      "text": "Krrr... prrrr...",
+      "cue": "Violet flame gathers around Sparky's chest and tail, then curls gently towards the elder. The elder turns his eye to it. Falling stones become less frequent."
+    },
+    {
+      "phase": "calm",
+      "minMs": 3200,
+      "speaker": "Stone Sleeper",
+      "text": "That warmth... I know what you carry, little one.",
+      "cue": "The growl stops. The jaw relaxes, the head lowers and the tremor fades. The eye stays open. Dust settles in the returning silence."
+    },
+    {
+      "phase": "calm",
+      "minMs": 1200,
+      "speaker": "Orivell",
+      "text": "He has stopped trying to turn us into a cautionary tale."
+    },
+    {
+      "phase": "calm",
+      "minMs": 1000,
+      "speaker": "Aethren",
+      "text": "Quiet, brother. Listen."
+    },
+    {
+      "phase": "memory",
+      "vision": 0,
+      "minMs": 2200,
+      "speaker": "Stone Sleeper",
+      "text": "I remember when those streets had room for all of us. Human voices below. Wings above. Neither was a reason to be afraid.",
+      "cue": "The comic's ancient city appears above the cavern's far side: luminous, translucent, with feathered edges and drifting violet mist. The party remains visible."
+    },
+    {
+      "phase": "memory",
+      "vision": 0,
+      "minMs": 1800,
+      "speaker": "Stone Sleeper",
+      "text": "We argued. We traded. We raised our young beneath the same sky. Peace had a thousand different voices."
+    },
+    {
+      "phase": "memory",
+      "vision": 1,
+      "minMs": 2200,
+      "speaker": "Stone Sleeper",
+      "text": "Then Solinar offered an end to every fear. Hungry people heard a promise. Tired people saw a light.",
+      "cue": "A second comic memory forms against another wall: Solinar's radiant figure above Cindervale. The first city vision remains faintly visible elsewhere in the room."
+    },
+    {
+      "phase": "memory",
+      "vision": 1,
+      "minMs": 2000,
+      "speaker": "Stone Sleeper",
+      "text": "But each answer had to become his answer. A remembered wrong became disloyalty. A different voice became something to silence."
+    },
+    {
+      "phase": "memory",
+      "vision": 2,
+      "minMs": 2000,
+      "speaker": "Stone Sleeper",
+      "text": "The Elder Ember held what he wanted forgotten. Lives. Names. Choices. He reached for it as though every flame owed him obedience.",
+      "cue": "The comic image of the Elder Ember between dragons gathers above the vortex. Reflected purple light reaches the elder's stone face."
+    },
+    {
+      "phase": "memory",
+      "vision": 3,
+      "minMs": 2200,
+      "speaker": "Stone Sleeper",
+      "text": "It would not yield. So it was hidden where power would see nothing worth fearing. Somewhere small. Somewhere hungry. Somewhere still capable of loving.",
+      "cue": "The comic's remembered faces appear as a fourth ethereal vision. Wisps connect the memories to Sparky's violet essence without forming a physical portal."
+    },
+    {
+      "phase": "memory",
+      "vision": 3,
+      "minMs": 1300,
+      "speaker": "Sparky",
+      "text": "Hrrm... chrrp."
+    },
+    {
+      "phase": "memory",
+      "vision": 3,
+      "minMs": 1500,
+      "speaker": "Verseborn",
+      "text": "He remembered all that... and still chose to stay with us."
+    },
+    {
+      "phase": "memory",
+      "vision": 0,
+      "minMs": 1400,
+      "speaker": "Aethren",
+      "text": "The prince who brings the voices together. Orivell... the old accounts may have meant this."
+    },
+    {
+      "phase": "calm",
+      "minMs": 1500,
+      "speaker": "Stone Sleeper",
+      "text": "Perhaps. But do not bury him beneath your predictions. What he carries matters. What he chooses will matter more.",
+      "cue": "The visions fade into motes around the cavern. The brothers lower their hands. Sparky settles close to the elder."
+    },
+    {
+      "phase": "calm",
+      "minMs": 1200,
+      "speaker": "Verseborn",
+      "text": "Then we'll listen. Tell us what they tried to erase."
+    },
+    {
+      "phase": "restored",
+      "minMs": 1500,
+      "speaker": "Stone Sleeper",
+      "text": "Come closer, Flameguard. There is much more to remember.",
+      "cue": "Warm light returns to the carvings and small motes move through the cavern. The elder remains awake; the full memory can be replayed from Memories."
+    }
   ],
   "sources": [
-    {"comic":"Verseborn Original Issue 09","pdfPages":[10,11,12,13],"notes":"Sparky reveals Solinar's erased name and a memory of Cindervale with dragons; the radiant figure treats memory as rebellion."},
-    {"comic":"Verseborn Original Issue 10","pdfPages":[11,12,13,19],"notes":"Ancient shared city; Solinar's promised perfection; Elder Ember's resistance and its concealment in a baby dragon."}
+    {
+      "comic": "Verseborn Original Issue 09",
+      "pdfPages": [
+        10,
+        11,
+        12,
+        13
+      ],
+      "notes": "Sparky reveals Solinar's erased name and a memory of Cindervale with dragons; the radiant figure treats memory as rebellion."
+    },
+    {
+      "comic": "Verseborn Original Issue 10",
+      "pdfPages": [
+        11,
+        12,
+        13,
+        19
+      ],
+      "notes": "Ancient shared city; Solinar's promised perfection; Elder Ember's resistance and its concealment in a baby dragon."
+    }
   ],
-  "draftNote":"New adaptation dialogue and Rift staging; the comic memories are reused directly. The Stone Sleeper is not identified as Solinar or assigned an unverified ancient name. The brothers' prophecy interpretations remain their speculation. Sparky communicates only through creature sounds."
+  "draftNote": "New adaptation dialogue and Rift staging; the comic memories are reused directly. The Stone Sleeper is not identified as Solinar or assigned an unverified ancient name. The brothers' prophecy interpretations remain their speculation. Sparky communicates only through creature sounds."
 }

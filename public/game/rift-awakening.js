@@ -3,29 +3,20 @@
 (() => {
   'use strict';
   const BASE='assets/rift/awakening-250/',MAP='emberRiftVault',memoryId='rift-stone-sleeper-awakening';
+  let details,settingTalk=false;
   let story,art,scene=null,loaded=false,opening=false,overlay,film,g,speaker,text,nextButton,raf,rumble;
   const images={},masks=[];
   const load=(key,file)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[key]=image;resolve(image);};image.onerror=()=>reject(Error('Awakening asset missing: '+file));image.src=file;});
-  const ready=Promise.all([fetch('rift-awakening-story.json?v=250').then(r=>{if(!r.ok)throw Error('Awakening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>{if(!r.ok)throw Error('Awakening art unavailable');return r.json();}).then(async data=>{art=data;await Promise.all([load('dragon',BASE+data.file),load('room','assets/rift/dungeon-room.webp'),load('sleep','assets/rift/sleeping-rock-dragon.webp'),load('portal','assets/rift/portal-sheet.webp'),...data.visions.map((file,i)=>load('vision'+i,BASE+file))]);}),EmberRift.ready,emberHallWorld.ready]).then(()=>{
-    for(let i=0;i<4;i++){const image=images['vision'+i],c=document.createElement('canvas');c.width=image.width;c.height=image.height;const p=c.getContext('2d');p.drawImage(image,0,0);p.globalCompositeOperation='source-atop';p.fillStyle='#6b38aa20';p.fillRect(0,0,c.width,c.height);p.globalCompositeOperation='destination-in';p.save();p.translate(c.width/2,c.height/2);p.scale(c.width/2,c.height/2);const fade=p.createRadialGradient(0,0,.48,0,0,1);fade.addColorStop(0,'#fff');fade.addColorStop(.78,'#ffffffb0');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(-1,-1,2,2);p.restore();masks.push(c);}
+  const ready=Promise.all([fetch('rift-awakening-story.json?v=250').then(r=>{if(!r.ok)throw Error('Awakening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>{if(!r.ok)throw Error('Awakening art unavailable');return r.json();}).then(async data=>{art=data;await Promise.all([load('dragon',BASE+data.file),load('room','assets/rift/dungeon-room.webp'),load('sleep','assets/rift/sleeping-rock-dragon.webp'),load('portal','assets/rift/portal-sheet.webp'),...data.visions.map((file,i)=>load('vision'+i,BASE+file))]);}),fetch('assets/rift/awakening-251/manifest.json').then(r=>r.json()).then(async data=>{details=data;await Promise.all(Object.entries(data).map(([key,value])=>load(key,'assets/rift/awakening-251/'+value.file)));}),EmberRift.ready,emberHallWorld.ready]).then(()=>{
+    for(let i=0;i<4;i++){const image=images['vision'+i],c=document.createElement('canvas');c.width=image.width;c.height=image.height;const p=c.getContext('2d');p.drawImage(image,0,0);p.globalCompositeOperation='source-atop';p.fillStyle='#6b38aa20';p.fillRect(0,0,c.width,c.height);p.globalCompositeOperation='destination-in';p.save();p.translate(c.width/2,c.height/2);p.scale(c.width/2,c.height/2);const fade=p.createRadialGradient(0,0,.70,0,0,1);fade.addColorStop(0,'#fff');fade.addColorStop(.86,'#fffffff0');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(-1,-1,2,2);p.restore();masks.push(c);}
     loaded=true;maybeStart();
   });ready.catch(error=>console.error(error));
   const eligible=()=>state.gameMode==='hallBattles'&&EmberRift.progress().cleared.includes(10);
   function makeOverlay(){
-    if(overlay)return;
-    const style=document.createElement('style');style.textContent=`
-      .rift-story{position:absolute;inset:0;z-index:95;display:flex;flex-direction:column;justify-content:center;background:#100d17;color:#f6e2bc;font-family:Georgia,serif;padding:10px;gap:8px;box-sizing:border-box}
-      .rift-story[hidden]{display:none}.rift-story-stage{position:relative;min-height:0;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#100d17}
-      .rift-story canvas{width:100%;height:100%;max-height:100%;object-fit:contain;aspect-ratio:640/356}
-      .rift-story-title{position:absolute;top:10px;left:12px;font-size:clamp(12px,1.5vw,20px);letter-spacing:.05em;color:#ffe0a3;text-shadow:0 2px 5px #000}
-      .rift-story-dialogue{flex:0 0 auto;min-height:130px;border:1px solid #b58b4e;border-radius:7px;background:linear-gradient(125deg,#241b27,#15121d);padding:14px 18px;box-shadow:inset 0 0 20px #8b62331c;display:grid;grid-template-columns:1fr auto;gap:8px 16px}
-      .rift-story-speaker{color:#f2bd69;font-weight:bold;font-size:clamp(15px,1.6vw,22px)}.rift-story-line{grid-column:1/-1;margin:0;font-size:clamp(15px,1.6vw,22px);line-height:1.45;min-height:2.9em}
-      .rift-story-controls{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:16px}.rift-story button{font:inherit;color:#f5d49b;background:linear-gradient(#42303b,#211924);border:1px solid #b88a4a;border-radius:4px;padding:7px 15px;cursor:pointer}.rift-story button:disabled{opacity:.45;cursor:default}.rift-story .rift-story-skip{font-size:13px;background:transparent;color:#c5b59f;border-color:#67513e}
-      @media(max-width:600px){.rift-story{padding:5px;gap:4px}.rift-story-dialogue{padding:9px 11px;min-height:145px}.rift-story-title{font-size:12px}.rift-story-line{font-size:15px}}
-    `;document.head.append(style);
-    overlay=document.createElement('section');overlay.className='rift-story';overlay.hidden=true;overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','The Flame That Remembers');
-    overlay.innerHTML=`<div class="rift-story-stage"><canvas width="1280" height="712" aria-label="The Stone Sleeper awakens in the Ember Rift"></canvas><span class="rift-story-title">The Flame That Remembers</span></div><div class="rift-story-dialogue"><strong class="rift-story-speaker"></strong><p class="rift-story-line" aria-live="polite"></p><div class="rift-story-controls"><button class="rift-story-skip" type="button">Skip scene</button><button class="rift-story-next" type="button">Continue ›</button></div></div>`;
-    document.querySelector('.game').append(overlay);film=overlay.querySelector('canvas');g=film.getContext('2d');speaker=overlay.querySelector('.rift-story-speaker');text=overlay.querySelector('.rift-story-line');nextButton=overlay.querySelector('.rift-story-next');nextButton.onclick=()=>next();overlay.querySelector('.rift-story-skip').onclick=()=>finish();
+    if(film)return;
+    film=document.createElement('canvas');film.width=1280;film.height=712;g=film.getContext('2d');
+    const style=document.createElement('style');style.textContent='.game.rift-cinematic .hud{display:none}.rift-lore-topics{display:flex;flex-wrap:wrap;gap:8px}.rift-lore-topics button{font:inherit;color:#ffe2af;background:#302535;border:1px solid #b58b4e;border-radius:5px;padding:7px 12px}';document.head.append(style);
+    nextButton={focus(){},set disabled(value){const hint=document.querySelector('.dialogue-continue');if(hint)hint.style.visibility=value?'hidden':'';}};
   }
   function startAudio(){
     if(musicMuted||!musicUnlocked)return;
@@ -37,27 +28,28 @@
     if(!scene)return;if(index>=story.beats.length)return finish();scene.index=index;scene.beatAt=scene.clock;const beat=story.beats[index];
     if(scene.phase!==beat.phase){scene.phase=beat.phase;scene.phaseAt=scene.clock;if(beat.phase==='calm'&&scene.calmAt===undefined)scene.calmAt=scene.clock;if(beat.phase==='arrival')playSfx('magic',.3);if(beat.phase==='warning')playSfx('boss',.35);}
     if(beat.vision!==undefined&&beat.vision!==scene.vision){scene.previousVision=scene.vision;scene.vision=beat.vision;scene.visionAt=scene.clock;playSfx('magic',.18);}
-    speaker.textContent=beat.speaker;text.textContent=beat.text||'The cavern stirs…';nextButton.textContent=index===story.beats.length-1?'Return to the cavern':'Continue ›';nextButton.disabled=true;
+    settingTalk=true;try{if(beat.text)showTalk([[beat.speaker,beat.text]],{portraits:[],skippable:true});else{mode='riftScene';el.dialogue.classList.add('hidden');}}finally{settingTalk=false;}nextButton.disabled=true;
   }
   async function start({replay=false}={}){
     if(scene||opening||!eligible()||mode==='battle'||mode==='battleResult')return false;opening=true;
     try{await ready;if(!loaded||scene||!eligible())return false;makeOverlay();
-      const original={mode,menuTab,menuHidden:el.menu.classList.contains('hidden'),dialogueHidden:el.dialogue.classList.contains('hidden'),focus:document.activeElement};
+      const original={mode,menuTab,activePoint,menuHidden:el.menu.classList.contains('hidden'),dialogueHidden:el.dialogue.classList.contains('hidden'),focus:document.activeElement};
       clearTimeout(saveTimer);heldDirection=null;fieldDestination=null;emberHallWorld.clearNavigation();emberHallWorld.hideAmbientChat();
       scene={index:0,replay,original,phase:null,clock:0,last:performance.now(),beatAt:0,phaseAt:0,vision:-1,previousVision:-1,visionAt:0,impactAt:0};
-      mode='riftScene';el.menu.classList.add('hidden');el.dialogue.classList.add('hidden');overlay.hidden=false;setBeat(0);updateMusic();startAudio();nextButton.focus();raf=requestAnimationFrame(frame);return true;
+      mode='riftScene';el.menu.classList.add('hidden');el.dialogue.classList.add('hidden');activePoint=null;document.querySelector('.game').classList.add('rift-cinematic');setBeat(0);updateMusic();startAudio();nextButton.focus();raf=requestAnimationFrame(frame);return true;
     }catch(error){console.error(error);showHudNotice('The memory could not load. It will be available when you return to the cavern.');return false;}finally{opening=false;}
   }
   function maybeStart(){if(loaded&&!scene&&!opening&&eligible()&&!EmberRift.progress().awakeningSeen&&state.map===MAP&&mode==='walk')return start();return false;}
   function next(force=false){if(!scene)return false;const beat=story.beats[scene.index];if(!force&&scene.clock-scene.beatAt<(beat.minMs||0))return false;setBeat(scene.index+1);return true;}
   function finish(){
-    if(!scene)return false;const current=scene,original=current.original;cancelAnimationFrame(raf);stopAudio();scene=null;overlay.hidden=true;
+    if(!scene)return false;const current=scene,original=current.original;cancelAnimationFrame(raf);stopAudio();scene=null;document.querySelector('.game').classList.remove('rift-cinematic');talkQueue=[];talkAfter=null;talkPortraits=[];talkSkippable=false;el.dialogueSkip.classList.add('hidden');renderDialoguePortraits();
     if(!current.replay){const p=EmberRift.progress();p.awakeningSeen=true;p.awakeningPending=false;}
-    mode=original.mode;menuTab=original.menuTab;el.menu.classList.toggle('hidden',original.menuHidden);el.dialogue.classList.toggle('hidden',original.dialogueHidden);heldDirection=null;
+    activePoint=original.activePoint;mode=original.mode;menuTab=original.menuTab;el.menu.classList.toggle('hidden',original.menuHidden);el.dialogue.classList.toggle('hidden',original.dialogueHidden);heldDirection=null;
     if(mode==='menu')renderMenu();updatePanels();updateMusic();if(!current.replay){saveGame(hallSaveKey());showHudNotice('Memory unlocked: The Flame That Remembers.');}else queueSave();original.focus?.focus?.();return true;
   }
   function dragonPose(context,pose,x,baseline,width,now,life=false){
     if(!loaded)return;const scale=width/art.referenceWidth;
+    if(life&&pose===3&&details){const speaking=scene?story.beats[scene.index].speaker==='Stone Sleeper':mode==='talk'&&el.speaker.textContent==='Stone Sleeper',cycle=now%7400,frame=cycle<120?4:cycle<240?5:speaking?[0,1,2,1,3,0][Math.floor(now/180)%6]:cycle>5400&&cycle<5750?6:0;const cell=details.face.cell;context.save();context.imageSmoothingEnabled=true;context.drawImage(images.face,frame*cell,0,cell,cell,x-6,baseline-width*1.014,width*1.04,width*1.04);context.restore();return;}
     // All poses retain their neck anchor and fixed scale; breathing changes
     // highlights, never the size of the head or its stone plates.
     context.save();context.imageSmoothingEnabled=true;context.drawImage(images.dragon,pose*art.cellWidth,0,art.cellWidth,art.cellHeight,x-art.left*scale,baseline-art.baseline*scale,art.cellWidth*scale,art.cellHeight*scale);
@@ -70,43 +62,53 @@
   function actor(id,x,y,size,now,alert=false){const image=emberHallWorld.images[id];if(!image)return;const cols=id==='Verseborn'?4:8,rows=id==='Verseborn'?4:5,col=alert&&id!=='Verseborn'?Math.floor(now/260)%3:0,row=id==='Verseborn'?0:alert?3:0;g.drawImage(image,col*image.width/cols,row*image.height/rows,image.width/cols,image.height/rows,x-size/2,y-size*.94,size,size);}
   function brother(key,x,y,now,alarm){const s=EmberRift.npcSheets[key];if(!s)return;const i=alarm?8+Math.floor(now/200)%4:0,cell=s.cells[i],a=s.frameAnchors[i],size=key==='guide'?43:39,scale=size/s.referenceHeight;g.drawImage(s.image,...cell,x-a[0]*scale,y-a[1]*scale,cell[2]*scale,cell[3]*scale);}
   function vision(index,x,y,w,h,alpha,now){
-    if(index<0)return;g.save();g.globalAlpha=alpha;g.globalCompositeOperation='screen';g.translate(x,y+Math.sin(now/2300+index)*1.3);g.drawImage(masks[index],-w/2,-h/2,w,h);g.restore();
+    if(index<0)return;g.save();g.globalAlpha=alpha;g.globalCompositeOperation='source-over';g.translate(x,y+Math.sin(now/2300+index)*1.3);g.drawImage(masks[index],-w/2,-h/2,w,h);g.restore();
     for(let j=0;j<9;j++){const t=(now/9000+j/9)%1;particle(g,x-w*.45+t*w*.9,y+Math.sin(t*7+index)*h*.45,2+j%3,'#d3b2ff',alpha*.23);}
   }
   function paint(now){
     const phase=scene.phase,t=scene.clock,phaseT=(t-scene.phaseAt)/1000,quake=quakeLevel();g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,640,356);g.fillStyle='#100d17';g.fillRect(0,0,640,356);g.save();g.translate(Math.sin(t*.041)*quake*1.7,Math.sin(t*.057)*quake*1.1);g.drawImage(images.room,0,0,640,356);
-    if(phase==='memory'){g.fillStyle='#21132938';g.fillRect(0,0,640,356);const v=scene.vision,fade=Math.min(1,(t-scene.visionAt)/1100);if(scene.previousVision>=0)vision(scene.previousVision,314,67,184,75,.25,now);vision(v,479,133,262,111,.78*fade,now);if(v>=2)vision(0,270,249,180,74,.20,now);if(v===3)vision(2,484,248,206,82,.32,now);}
+    if(phase==='memory'){g.fillStyle='#21132938';g.fillRect(0,0,640,356);const v=scene.vision,fade=Math.min(1,(t-scene.visionAt)/1100);if(scene.previousVision>=0)vision(scene.previousVision,314,67,184,75,.25,now);vision(v,455,119,335,140,.97*fade,now);if(v>=2)vision(0,270,249,180,74,.20,now);if(v===3)vision(2,484,248,206,82,.32,now);}
     const portal=images.portal,cw=portal.width/4;g.globalAlpha=.65;g.drawImage(portal,Math.floor(t/220)%4*cw,0,cw,portal.height,281,87,78,111);g.globalAlpha=1;
     const pose=phase==='tremor'?0:phase==='stir'?1:['warning','arrival','essence'].includes(phase)?2:3;
     const lift=phase==='stir'?Math.min(3,phaseT*1.4):['warning','arrival','essence'].includes(phase)?3:0;
     dragonPose(g,pose,-15,192-lift,211,now,pose>0);
     const alarm=quake>.15;brother('merchant',alarm?270+Math.sin(t/450)*2:269,197,now,alarm);brother('guide',alarm?376:373,194,now,alarm);
-    actor('Torren',243,252,43,now,alarm);actor('Seerin',211,227,44,now,alarm);actor('Mira',294,249,35,now,alarm);actor('Kael',370,254,40,now,alarm);actor('Glimmer',405,238,32,now,alarm);actor('Verseborn',319,276,41,now,false);
-    if(phase==='warning'&&state.party.includes('Kael')){g.strokeStyle='#dac0ff66';g.lineWidth=1.2;g.beginPath();g.ellipse(301,234,112,35,0,Math.PI,Math.PI*2);g.stroke();}
-    if(['arrival','essence','calm','memory','restored'].includes(phase)){
-      const p=phase==='arrival'?Math.min(1,phaseT/4):1,e=p*p*(3-2*p),x=320-109*e,y=335-136*e-Math.sin(p*Math.PI)*42+(p===1?Math.sin(now/850)*1.4:0),image=emberHallWorld.images.Sparky,col=phase==='arrival'?[2,3,4,3][Math.floor(now/160)%4]:0;
-      // The exact Ember Hall sprite and proportions, travelling from its doorway.
-      if(image)g.drawImage(image,col*image.width/8,3*image.height/5,image.width/8,image.height/5,x-18,y-36,36,36);
-      const essence=phase==='arrival'?Math.max(0,(p-.65)/.35):1;for(let j=0;j<16;j++){const a=(now/2400+j/16)%1;particle(g,x-20-a*69,y-22-Math.sin(a*Math.PI)*30,3+(j%3),'#c696ff',essence*.32);}
-      if(phase!=='arrival'){g.strokeStyle='#c7a0ff66';g.lineWidth=1;g.beginPath();g.moveTo(x-8,y-18);g.bezierCurveTo(x-42,y-53,138,143,130,126);g.stroke();}
+    actor('Verseborn',319,276,43,now,false);
+    if(['arrival','landing','burp','essence','calm','memory','restored'].includes(phase)){
+      const flying=phase==='arrival',p=flying?Math.min(1,phaseT/4):1,e=p*p*(3-2*p),x=320-27*e,ground=348-126*e,y=ground-(flying?Math.sin(p*Math.PI)*45+6:0),image=emberHallWorld.images.Sparky;
+      if(flying){const cell=details.flight.cell,frame=[0,1,0,2,3,2][Math.floor(t/135)%6];g.save();g.translate(x,y);g.scale(-1,1);g.drawImage(images.flight,frame*cell,0,cell,cell,-29,-49,58,58);g.restore();}
+      else if(image){const burp=phase==='burp',row=burp?4:0,col=burp?2:0,settle=phase==='landing'?Math.sin(Math.min(1,phaseT/.7)*Math.PI)*2:0;g.drawImage(image,col*image.width/8,row*image.height/5,image.width/8,image.height/5,x-19,y-38+settle,38,38);}
+      if(phase==='burp'){g.save();g.globalAlpha=Math.sin(Math.min(1,phaseT/1.2)*Math.PI)*.6;g.fillStyle='#ceb1ed';g.font='bold 8px Georgia';g.fillText('brrup!',x-38,y-36-phaseT*5);g.restore();}
+      if(!flying&&phase!=='landing'&&phase!=='burp')for(let j=0;j<16;j++){const a=(now/2400+j/16)%1;particle(g,x-20-a*69,y-22-Math.sin(a*Math.PI)*30,3+(j%3),'#c696ff',.32);}
     }
     // Falling stones use individual deterministic paths, distinct impacts and
     // dust plumes; no bouncing sprites or changing body scale sells the quake.
-    if(quake>.01){for(let j=0;j<20;j++){const cycle=2100+(j%5)*210,age=(t+j*337)%cycle/cycle,x=42+(j*73)%554,end=170+(j*29)%145,y=-22+age*age*(end+22);g.save();g.translate(x,y);g.rotate(age*(j%2?2:-2));g.fillStyle=j%2?'#726451':'#9a8768';g.beginPath();g.moveTo(-3,-3);g.lineTo(2,-4);g.lineTo(4,1);g.lineTo(0,4);g.lineTo(-4,1);g.closePath();g.globalAlpha=quake;g.fill();g.restore();if(age>.82){g.fillStyle=`rgba(173,151,119,${(1-age)*quake*.7})`;g.beginPath();g.ellipse(x,end,(age-.82)*72,3,0,0,Math.PI*2);g.fill();}}
-      for(let j=0;j<12;j++){const age=(t/4800+j/12)%1;g.fillStyle=`rgba(207,184,143,${Math.sin(age*Math.PI)*.10*quake})`;g.beginPath();g.ellipse(35+j*51,65+age*250,7+age*7,2+age*2,0,0,Math.PI*2);g.fill();}
-      if(t-scene.impactAt>1100&&!document.hidden){scene.impactAt=t;playSfx('hit',.12*quake);}
-    }
+    if(quake>.01){for(let j=0;j<24;j++){const cycle=2300+(j%5)*270,age=(t+j*337)%cycle/cycle,x=38+(j*73)%558,end=176+(j*29)%140,size=7+(j%5)*2.5,fall=Math.min(1,age/.78),y=-22+fall*fall*(end+22),cell=details.debris.cell;
+      g.save();g.globalAlpha=quake;g.translate(x,y);g.rotate(fall*(j%2?2:-2));g.drawImage(images.debris,(j%12)*cell,0,cell,cell,-size/2,-size/2,size,size);g.restore();
+      if(age>.78){const impact=(age-.78)/.22;for(let k=0;k<5;k++){g.save();g.globalAlpha=(1-impact)*quake*.28;g.fillStyle=k%2?'#b9a18a':'#807567';g.beginPath();g.ellipse(x+(k-2)*impact*16,end-3-impact*(5+k),3+impact*8,2+impact*3,.2*k,0,Math.PI*2);g.fill();g.restore();}}
+    }if(t-scene.impactAt>950&&!document.hidden){scene.impactAt=t;playSfx('hit',.17*quake);}}
     if(['calm','memory','restored'].includes(phase))for(let j=0;j<22;j++){const a=(now/15000+j/22)%1;particle(g,70+(j*97)%520,310-a*225,2.5,'#e3c781',Math.sin(a*Math.PI)*.24);}
     g.restore();if(rumble)rumble.gain.gain.setTargetAtTime(musicMuted||document.hidden?0:quake*.13,rumble.ac.currentTime,.15);
   }
   function frame(now){if(!scene)return;const dt=document.hidden?0:Math.min(100,Math.max(0,now-scene.last));scene.last=now;scene.clock+=dt;paint(now);const beat=story.beats[scene.index],elapsed=scene.clock-scene.beatAt;nextButton.disabled=elapsed<(beat.minMs||0);if(beat.auto&&elapsed>=beat.minMs)next();if(scene)raf=requestAnimationFrame(frame);}
+  const oldDraw=drawTileMap,oldNext=nextTalk,oldSkip=skipTalk;
+  drawTileMap=function(...args){if(!scene)return oldDraw(...args);ctx.fillStyle='#100d17';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);const scale=Math.min(LOGICAL_WIDTH/640,LOGICAL_HEIGHT/356);ctx.drawImage(film,0,0,640*scale,356*scale);};
+  nextTalk=function(...args){return scene&&!settingTalk?next():oldNext(...args);};
+  skipTalk=function(...args){return scene?finish():oldSkip(...args);};
   const oldSave=saveGame,oldTrack=trackForScene,oldMemories=sceneMemoriesHtml,oldReplay=replayRecruitScene,oldControl=handleControl;
   saveGame=function(...args){return scene?false:oldSave(...args);};
   trackForScene=function(){return scene?'cutscene':oldTrack();};
   sceneMemoriesHtml=function(){const html=oldMemories();if(!eligible())return html;const card=`<div class="scene-memory-grid"><section class="scene-memory-group scene-memory-hall"><strong>Ember Rift</strong><div><button type="button" data-replay-scene="${memoryId}">The Flame That Remembers</button></div></section></div>`;return html.replace(/<\/section>$/,card+'</section>');};
   replayRecruitScene=function(id){return id===memoryId?start({replay:Boolean(EmberRift.progress().awakeningSeen)}):oldReplay(id);};
   handleControl=function(control){if(scene){if(control==='confirm')next();else if(control==='cancel')finish();else if(['music','fullscreen'].includes(control))oldControl(control);return;}return oldControl(control);};
-  document.addEventListener('keydown',event=>{if(!scene||event.key==='Tab')return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;if(['Enter',' ','ArrowRight','e'].includes(event.key))next();else if(event.key==='Escape')finish();},true);
-  window.RiftAwakening={ready,start,maybeStart,next,finish,drawDragon,get active(){return Boolean(scene);},get phase(){return scene?.phase||null;},get script(){return story;},get beat(){return scene?.index??-1;},previewBeat(index){if(scene&&Number.isInteger(index)&&index>=0&&index<story.beats.length){setBeat(index);scene.clock+=2000;paint(performance.now());return true;}return false;}};
+  document.addEventListener('keydown',event=>{if(!scene||event.key==='Tab')return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;if(event.target?.closest?.('#dialogueSkip')&&['Enter',' '].includes(event.key))finish();else if(['Enter',' ','ArrowRight','e'].includes(event.key))next();else if(event.key==='Escape')finish();},true);
+  const lore={
+    'Before Solinar':[['Verseborn','What was it like before Solinar?'],['Stone Sleeper','A shared sky. Dragons carried news between cities. Humans kept our stories in ink, and we kept theirs in flame. We disagreed often. We did not need one voice to belong together.']],
+    'The Elder Ember':[['Verseborn','What does Sparky carry?'],['Stone Sleeper','Memory that refused to kneel. Not simply fire, but lives and names Solinar wanted erased. It survived in someone small enough to be overlooked.'],['Stone Sleeper','Do not mistake the little one for a vessel alone. His choices are his own. Care for him, not merely what you hope he can do.']],
+    'The Heir':[['Verseborn','The brothers keep speaking of an Heir. What is expected of him?'],['Stone Sleeper','They have fragments, and a great enthusiasm for arranging them. A title is not an answer.'],['Stone Sleeper','If an heir is to bring those voices together, he must first listen. Human and dragon. Living and remembered. Inheritance is a responsibility, not permission to command.']],
+    'What comes next':[['Verseborn','What should we do now?'],['Stone Sleeper','Keep the memories alive. Learn what was erased before deciding what must be rebuilt. And when someone offers a perfect world, ask whose voice it costs.'],['Stone Sleeper','Return when you have questions. There is time for a conversation now.']]
+  };
+  function converse(){if(scene||!EmberRift.progress().awakeningSeen)return false;const topics=()=>{showTalk([['Stone Sleeper',{html:'What would you remember?<div class="rift-lore-topics">'+[...Object.keys(lore),'Rest'].map((name,i)=>'<button type="button" data-dragon-topic="'+i+'">'+name+'</button>').join('')+'</div>'}]],{portraits:[]});el.line.querySelectorAll('[data-dragon-topic]').forEach(button=>button.onclick=event=>{event.stopPropagation();const key=Object.keys(lore)[Number(button.dataset.dragonTopic)];if(key)showTalk(lore[key],{portraits:[],after:topics});else{talkAfter=null;finishTalk();}});};topics();return true;}
+  window.RiftAwakening={ready,start,maybeStart,next,finish,drawDragon,converse,get active(){return Boolean(scene);},get phase(){return scene?.phase||null;},get script(){return story;},get beat(){return scene?.index??-1;},previewBeat(index){if(scene&&Number.isInteger(index)&&index>=0&&index<story.beats.length){setBeat(index);scene.clock+=2000;paint(performance.now());return true;}return false;}};
 })();
 

@@ -1,0 +1,5 @@
+from pathlib import Path
+p=Path('public/game/rift-awakening.js');p.write_text(p.read_text(encoding='utf-8').replace('baseline-width*.72,width*1.04','baseline-width*1.014,width*1.04'),encoding='utf-8')
+s=Path('tools/check_rift_awakening_250.cjs').read_text(encoding='utf-8').replace('rift-awakening-250','rift-awakening-251').replace("page.locator('.rift-story')","page.locator('.game')")
+s=s.replace('await page.setViewportSize', '''await page.evaluate(()=>{mode='walk';state.map='emberRiftVault';RiftAwakening.converse();});assert.equal(await page.evaluate(()=>RiftAwakening.active),false);await page.locator('[data-dragon-topic="2"]').click();assert.equal(await page.evaluate(()=>el.speaker.textContent),'Verseborn');assert.equal(await page.evaluate(()=>el.line.textContent),'The brothers keep speaking of an Heir. What is expected of him?');await page.evaluate(()=>{talkAfter=null;finishTalk();});await page.setViewportSize''')
+Path('tools/check_rift_awakening_251.cjs').write_text(s,encoding='utf-8')
