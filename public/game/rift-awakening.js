@@ -3,12 +3,18 @@
 (() => {
   'use strict';
   const BASE='assets/rift/awakening-250/',MAP='emberRiftVault',memoryId='rift-stone-sleeper-awakening';
-  let details,settingTalk=false;
+  let details,settingTalk=false,lastSpeechLine='',speechAt=0;
   let story,art,scene=null,loaded=false,opening=false,overlay,film,g,speaker,text,nextButton,raf,rumble;
   const images={},masks=[];
   const load=(key,file)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[key]=image;resolve(image);};image.onerror=()=>reject(Error('Awakening asset missing: '+file));image.src=file;});
-  const ready=Promise.all([fetch('rift-awakening-story.json?v=250').then(r=>{if(!r.ok)throw Error('Awakening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>{if(!r.ok)throw Error('Awakening art unavailable');return r.json();}).then(async data=>{art=data;await Promise.all([load('dragon',BASE+data.file),load('room','assets/rift/dungeon-room.webp'),load('sleep','assets/rift/sleeping-rock-dragon.webp'),load('portal','assets/rift/portal-sheet.webp'),...data.visions.map((file,i)=>load('vision'+i,BASE+file))]);}),fetch('assets/rift/awakening-251/manifest.json').then(r=>r.json()).then(async data=>{details=data;await Promise.all(Object.entries(data).map(([key,value])=>load(key,'assets/rift/awakening-251/'+value.file)));}),EmberRift.ready,emberHallWorld.ready]).then(()=>{
-    for(let i=0;i<4;i++){const image=images['vision'+i],c=document.createElement('canvas');c.width=image.width;c.height=image.height;const p=c.getContext('2d');p.drawImage(image,0,0);p.globalCompositeOperation='source-atop';p.fillStyle='#6b38aa20';p.fillRect(0,0,c.width,c.height);p.globalCompositeOperation='destination-in';p.save();p.translate(c.width/2,c.height/2);p.scale(c.width/2,c.height/2);const fade=p.createRadialGradient(0,0,.70,0,0,1);fade.addColorStop(0,'#fff');fade.addColorStop(.86,'#fffffff0');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(-1,-1,2,2);p.restore();masks.push(c);}
+  const ready=Promise.all([fetch('rift-awakening-story.json?v=252').then(r=>{if(!r.ok)throw Error('Awakening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>{if(!r.ok)throw Error('Awakening art unavailable');return r.json();}).then(async data=>{art=data;await Promise.all([load('dragon',BASE+data.file),load('room','assets/rift/dungeon-room.webp'),load('sleep','assets/rift/sleeping-rock-dragon.webp'),load('portal','assets/rift/portal-sheet.webp'),...data.visions.map((file,i)=>load('vision'+i,BASE+file))]);}),fetch('assets/rift/awakening-251/manifest.json').then(r=>r.json()).then(async data=>{details=data;await Promise.all(Object.entries(data).map(([key,value])=>load(key,'assets/rift/awakening-251/'+value.file)));}),EmberRift.ready,emberHallWorld.ready]).then(()=>{
+    for(let i=0;i<4;i++){
+      const image=images['vision'+i],c=document.createElement('canvas');c.width=image.width;c.height=image.height;const p=c.getContext('2d');p.drawImage(image,0,0);
+      // Feather the panel edges into airborne mist without an oval picture frame.
+      p.globalCompositeOperation='destination-in';
+      for(const horizontal of [true,false]){const extent=horizontal?c.width:c.height,fade=p.createLinearGradient(0,0,horizontal?extent:0,horizontal?0:extent);fade.addColorStop(0,'#fff0');fade.addColorStop(.15,'#fff');fade.addColorStop(.85,'#fff');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(0,0,c.width,c.height);}
+      masks.push(c);
+    }
     loaded=true;maybeStart();
   });ready.catch(error=>console.error(error));
   const eligible=()=>state.gameMode==='hallBattles'&&EmberRift.progress().cleared.includes(10);
@@ -49,14 +55,37 @@
   }
   function dragonPose(context,pose,x,baseline,width,now,life=false){
     if(!loaded)return;const scale=width/art.referenceWidth;
-    if(life&&pose===3&&details){const speaking=scene?story.beats[scene.index].speaker==='Stone Sleeper':mode==='talk'&&el.speaker.textContent==='Stone Sleeper',cycle=now%7400,frame=cycle<120?4:cycle<240?5:speaking?[0,1,2,1,3,0][Math.floor(now/180)%6]:cycle>5400&&cycle<5750?6:0;const cell=details.face.cell;context.save();context.imageSmoothingEnabled=true;context.drawImage(images.face,frame*cell,0,cell,cell,x-6,baseline-width*1.014,width*1.04,width*1.04);context.restore();return;}
+    if(life&&pose===3&&details){
+      const speaking=scene?story.beats[scene.index].speaker==='Stone Sleeper':mode==='talk'&&el.speaker.textContent==='Stone Sleeper',line=scene?story.beats[scene.index].text:el.line.textContent;
+      if(line!==lastSpeechLine){lastSpeechLine=line;speechAt=now;}
+      const seed=Array.from(line||'').reduce((v,c)=>(v*31+c.charCodeAt(0))>>>0,17),elapsed=scene?scene.clock-scene.beatAt:now-speechAt,cycle=now%8700;
+      const beat=Math.floor(elapsed/130),phrase=Math.floor(elapsed/1100),hash=((Math.imul(beat+(seed>>>4),1664525)+1013904223)>>>0),pause=(phrase+seed)%5===2&&elapsed%1100>480;
+      const readTime=Math.max(2200,(line||'').length*63),talking=speaking&&elapsed<readTime&&!pause,accent=hash%11;
+      const frame=cycle<100?4:cycle<210?5:talking?(accent<2?0:accent<6?1:accent<8?2:3):cycle>6100&&cycle<6480?6:0;
+      const cell=details.face.cell;context.save();context.imageSmoothingEnabled=true;context.drawImage(images.face,frame*cell,0,cell,cell,x-6,baseline-width*1.014,width*1.04,width*1.04);context.restore();return;
+    }
     // All poses retain their neck anchor and fixed scale; breathing changes
     // highlights, never the size of the head or its stone plates.
     context.save();context.imageSmoothingEnabled=true;context.drawImage(images.dragon,pose*art.cellWidth,0,art.cellWidth,art.cellHeight,x-art.left*scale,baseline-art.baseline*scale,art.cellWidth*scale,art.cellHeight*scale);
     if(life){const eyeX=x+width*.69,eyeY=baseline-width*.31,glow=context.createRadialGradient(eyeX,eyeY,1,eyeX,eyeY,width*.12);glow.addColorStop(0,`rgba(205,146,255,${.10+Math.sin(now/1100)*.025})`);glow.addColorStop(1,'#a87aff00');context.fillStyle=glow;context.fillRect(eyeX-width*.12,eyeY-width*.12,width*.24,width*.24);}
     context.restore();
   }
-  function drawDragon(now,camera){if(!loaded||!EmberRift.progress().awakeningSeen)return false;dragonPose(ctx,3,-30-camera.x,192-camera.y,198,now,true);for(let j=0;j<9;j++){const a=(now/14000+j/9)%1;particle(ctx,80+j*31-camera.x,220-a*115-camera.y,1.6,'#dbb975',Math.sin(a*Math.PI)*.14);}return true;}
+  function breathMist(context,now,camera={x:0,y:0},strength=1){
+    context.save();context.translate(-camera.x,-camera.y);
+    // Slow successive exhalations disperse into the whole cavern, not a ray.
+    for(let j=0;j<18;j++){
+      const age=(now/19000+j/18)%1,drift=age*age*(3-2*age),x=147+drift*(285+(j%4)*48),y=151-age*(35+(j%5)*12)+Math.sin(age*8+j)*9;
+      const alpha=Math.sin(age*Math.PI)*.065*strength,width=9+age*46,height=4+age*13;
+      context.save();context.translate(x,y);context.rotate(Math.sin(j+age*3)*.18);context.scale(width,height);
+      const fog=context.createRadialGradient(0,0,.05,0,0,1);fog.addColorStop(0,`rgba(188,174,216,${alpha})`);fog.addColorStop(.5,`rgba(167,157,197,${alpha*.5})`);fog.addColorStop(1,'rgba(167,157,197,0)');context.fillStyle=fog;context.fillRect(-1,-1,2,2);context.restore();
+    }
+    for(let j=0;j<48;j++){
+      const age=(now/(17000+(j%7)*1600)+j/48)%1,x=112+age*(360+(j%5)*24)+Math.sin(age*9+j)*13,y=159+(j%6)*22-age*(80+(j%4)*27),alpha=Math.sin(age*Math.PI)*(.25+(j%3)*.09)*strength;
+      particle(context,x,y,1.3+(j%3)*.45,j%4?'#e5bf83':'#c3a4ed',alpha);
+    }
+    context.restore();
+  }
+  function drawDragon(now,camera){if(!loaded||!EmberRift.progress().awakeningSeen)return false;dragonPose(ctx,3,-30-camera.x,192-camera.y,198,now,true);breathMist(ctx,now,camera);return true;}
   function particle(context,x,y,r,color,alpha){context.save();context.globalAlpha=alpha;const light=context.createRadialGradient(x,y,0,x,y,r);light.addColorStop(0,color);light.addColorStop(1,'#a879ff00');context.fillStyle=light;context.fillRect(x-r,y-r,r*2,r*2);context.restore();}
   function quakeLevel(){const phase=scene.phase,t=(scene.clock-scene.phaseAt)/1000;if(phase==='tremor')return Math.min(1,t/2)*.45;if(phase==='stir')return .7;if(phase==='warning'||phase==='arrival')return 1;if(phase==='essence')return Math.max(.15,1-t/5);if(phase==='calm')return Math.max(0,.4-(scene.clock-scene.calmAt)/2000);return 0;}
   function actor(id,x,y,size,now,alert=false){const image=emberHallWorld.images[id];if(!image)return;const cols=id==='Verseborn'?4:8,rows=id==='Verseborn'?4:5,col=alert&&id!=='Verseborn'?Math.floor(now/260)%3:0,row=id==='Verseborn'?0:alert?3:0;g.drawImage(image,col*image.width/cols,row*image.height/rows,image.width/cols,image.height/rows,x-size/2,y-size*.94,size,size);}
@@ -67,19 +96,19 @@
   }
   function paint(now){
     const phase=scene.phase,t=scene.clock,phaseT=(t-scene.phaseAt)/1000,quake=quakeLevel();g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,640,356);g.fillStyle='#100d17';g.fillRect(0,0,640,356);g.save();g.translate(Math.sin(t*.041)*quake*1.7,Math.sin(t*.057)*quake*1.1);g.drawImage(images.room,0,0,640,356);
-    if(phase==='memory'){g.fillStyle='#21132938';g.fillRect(0,0,640,356);const v=scene.vision,fade=Math.min(1,(t-scene.visionAt)/1100);if(scene.previousVision>=0)vision(scene.previousVision,314,67,184,75,.25,now);vision(v,455,119,335,140,.97*fade,now);if(v>=2)vision(0,270,249,180,74,.20,now);if(v===3)vision(2,484,248,206,82,.32,now);}
+    if(phase==='memory'){g.fillStyle='#21132938';g.fillRect(0,0,640,356);const v=scene.vision,fade=Math.min(1,(t-scene.visionAt)/1100);if(scene.previousVision>=0)vision(scene.previousVision,218,112,170,72,.22*(1-fade*.65),now);vision(v,328,104,324,130,.94*fade,now);if(v>=2)vision(0,440,160,145,61,.18*fade,now);}
     const portal=images.portal,cw=portal.width/4;g.globalAlpha=.65;g.drawImage(portal,Math.floor(t/220)%4*cw,0,cw,portal.height,281,87,78,111);g.globalAlpha=1;
     const pose=phase==='tremor'?0:phase==='stir'?1:['warning','arrival','essence'].includes(phase)?2:3;
     const lift=phase==='stir'?Math.min(3,phaseT*1.4):['warning','arrival','essence'].includes(phase)?3:0;
     dragonPose(g,pose,-15,192-lift,211,now,pose>0);
-    const alarm=quake>.15;brother('merchant',alarm?270+Math.sin(t/450)*2:269,197,now,alarm);brother('guide',alarm?376:373,194,now,alarm);
+    const alarm=quake>.15;brother('merchant',alarm?248+Math.sin(t/450)*2:248,215,now,alarm);brother('guide',alarm?376:373,194,now,alarm);
+    if(['calm','memory','restored'].includes(phase))breathMist(g,now,{x:0,y:0},.7);
     actor('Verseborn',319,276,43,now,false);
     if(['arrival','landing','burp','essence','calm','memory','restored'].includes(phase)){
-      const flying=phase==='arrival',p=flying?Math.min(1,phaseT/4):1,e=p*p*(3-2*p),x=320-27*e,ground=348-126*e,y=ground-(flying?Math.sin(p*Math.PI)*45+6:0),image=emberHallWorld.images.Sparky;
+      const flying=phase==='arrival',p=flying?Math.min(1,phaseT/4):1,e=p*p*(3-2*p),x=320-50*e,ground=348-173*e,y=ground-(flying?Math.sin(p*Math.PI)*45+6:0),image=emberHallWorld.images.Sparky;
       if(flying){const cell=details.flight.cell,frame=[0,1,0,2,3,2][Math.floor(t/135)%6];g.save();g.translate(x,y);g.scale(-1,1);g.drawImage(images.flight,frame*cell,0,cell,cell,-29,-49,58,58);g.restore();}
       else if(image){const burp=phase==='burp',row=burp?4:0,col=burp?2:0,settle=phase==='landing'?Math.sin(Math.min(1,phaseT/.7)*Math.PI)*2:0;g.drawImage(image,col*image.width/8,row*image.height/5,image.width/8,image.height/5,x-19,y-38+settle,38,38);}
       if(phase==='burp'){g.save();g.globalAlpha=Math.sin(Math.min(1,phaseT/1.2)*Math.PI)*.6;g.fillStyle='#ceb1ed';g.font='bold 8px Georgia';g.fillText('brrup!',x-38,y-36-phaseT*5);g.restore();}
-      if(!flying&&phase!=='landing'&&phase!=='burp')for(let j=0;j<16;j++){const a=(now/2400+j/16)%1;particle(g,x-20-a*69,y-22-Math.sin(a*Math.PI)*30,3+(j%3),'#c696ff',.32);}
     }
     // Falling stones use individual deterministic paths, distinct impacts and
     // dust plumes; no bouncing sprites or changing body scale sells the quake.
@@ -98,10 +127,10 @@
   const oldSave=saveGame,oldTrack=trackForScene,oldMemories=sceneMemoriesHtml,oldReplay=replayRecruitScene,oldControl=handleControl;
   saveGame=function(...args){return scene?false:oldSave(...args);};
   trackForScene=function(){return scene?'cutscene':oldTrack();};
-  sceneMemoriesHtml=function(){const html=oldMemories();if(!eligible())return html;const card=`<div class="scene-memory-grid"><section class="scene-memory-group scene-memory-hall"><strong>Ember Rift</strong><div><button type="button" data-replay-scene="${memoryId}">The Flame That Remembers</button></div></section></div>`;return html.replace(/<\/section>$/,card+'</section>');};
+  sceneMemoriesHtml=function(){const html=oldMemories();if(!eligible())return html;const card=`<section class="memory-chapter"><h3>Ember Rift</h3><div class="memory-cards"><article class="memory-card memory-card-story"><div><strong>The Flame That Remembers</strong><small>The Stone Sleeper awakens</small></div><button type="button" data-replay-scene="${memoryId}">Replay scene <span aria-hidden="true">▶</span></button></article></div></section>`;return html.replace('<!--memory-story-end-->',card);};
   replayRecruitScene=function(id){return id===memoryId?start({replay:Boolean(EmberRift.progress().awakeningSeen)}):oldReplay(id);};
   handleControl=function(control){if(scene){if(control==='confirm')next();else if(control==='cancel')finish();else if(['music','fullscreen'].includes(control))oldControl(control);return;}return oldControl(control);};
-  document.addEventListener('keydown',event=>{if(!scene||event.key==='Tab')return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;if(event.target?.closest?.('#dialogueSkip')&&['Enter',' '].includes(event.key))finish();else if(['Enter',' ','ArrowRight','e'].includes(event.key))next();else if(event.key==='Escape')finish();},true);
+  document.addEventListener('keydown',event=>{if(!scene||event.key==='Tab')return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;if(event.target?.closest?.('#dialogueSkip')&&['Enter',' '].includes(event.key))finish();else if(['Enter',' ','ArrowRight','e','z','Z'].includes(event.key))next();else if(event.key==='Escape')finish();},true);
   const lore={
     'Before Solinar':[['Verseborn','What was it like before Solinar?'],['Stone Sleeper','A shared sky. Dragons carried news between cities. Humans kept our stories in ink, and we kept theirs in flame. We disagreed often. We did not need one voice to belong together.']],
     'The Elder Ember':[['Verseborn','What does Sparky carry?'],['Stone Sleeper','Memory that refused to kneel. Not simply fire, but lives and names Solinar wanted erased. It survived in someone small enough to be overlooked.'],['Stone Sleeper','Do not mistake the little one for a vessel alone. His choices are his own. Care for him, not merely what you hope he can do.']],

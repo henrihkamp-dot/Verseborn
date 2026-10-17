@@ -10304,31 +10304,15 @@ function playUnseenArrival(id) {
 }
 
 function sceneMemoriesHtml() {
-  if (state.gameMode !== "hallBattles") return "";
-  const history = loadRecruitSceneHistory();
-  const intro = RECRUIT_SCENES.find(scene => scene.id === EMBER_HALL_INTRO_ID);
-  const unseenIntro = intro && !history.seen.includes(intro.id)
-    ? `<button type="button" class="scene-memory-arrival scene-memory-arrival-hall" data-play-arrival-scene="${intro.id}"><span><strong>Ember Hall</strong><small>${intro.title}</small></span></button>`
-    : "";
-  const unseenArrivals = [unseenIntro, ...HALL_RECRUITS.map(recruit => {
-    if (!state.party.includes(recruit)) return "";
-    const welcome = RECRUIT_SCENES.find(scene => scene.recruit === recruit && scene.variant === "welcome");
-    if (!welcome || history.seen.includes(welcome.id)) return "";
-    return `<button type="button" class="scene-memory-arrival" data-play-arrival-scene="${welcome.id}"><img src="${menuPortraitSource(recruit)}" alt=""><span><strong>${recruit}</strong><small>${welcome.title}</small></span></button>`;
-  })].filter(Boolean);
-  const introGroup = intro && history.seen.includes(intro.id)
-    ? `<section class="scene-memory-group scene-memory-hall"><strong>Ember Hall</strong><div><button type="button" data-replay-scene="${intro.id}">${intro.title}</button></div></section>`
-    : "";
-  const groups = introGroup + HALL_RECRUITS.map(recruit => {
-    if (!state.party.includes(recruit)) return "";
-    const scenes = RECRUIT_SCENES.filter(scene => scene.recruit === recruit && history.seen.includes(scene.id));
-    if (!scenes.length) return "";
-    const buttons = scenes.map(scene => `<button type="button" data-replay-scene="${scene.id}">${scene.title} / ${scene.variant}</button>`).join("");
-    return `<section class="scene-memory-group scene-memory-character"><img src="${menuPortraitSource(recruit)}" alt=""><strong>${recruit}</strong><div>${buttons}</div></section>`;
-  }).join("");
-  const arrivals = unseenArrivals.length ? `<section class="scene-memory-group scene-memory-arrivals"><strong>Unseen Arrivals</strong><p>These recruits joined before scenes were added. Play their first welcome whenever you are ready.</p><div>${unseenArrivals.join("")}</div></section>` : "";
-  const memories = groups ? `<div class="scene-memory-grid">${groups}</div>` : `<div class="menu-card"><p>No recruitment scenes have been seen yet.</p></div>`;
-  return `<section class="scene-memory-panel"><header><strong>Scene Memories</strong><p>Play missed arrivals or revisit recruitment moments from this Hall history.</p></header>${arrivals}${memories}</section>`;
+  if (state.gameMode !== 'hallBattles') return '';
+  const history=loadRecruitSceneHistory(),intro=RECRUIT_SCENES.find(scene=>scene.id===EMBER_HALL_INTRO_ID);
+  const button=scene=>{const seen=history.seen.includes(scene.id),attr=seen?'data-replay-scene':'data-play-arrival-scene';return `<button type="button" ${attr}="${scene.id}">${scene.title}${seen?'':' <em>Unseen</em>'}<span aria-hidden="true">▶</span></button>`;};
+  const cards=HALL_RECRUITS.filter(name=>state.party.includes(name)).map(name=>{
+    const scenes=RECRUIT_SCENES.filter(scene=>scene.recruit===name&&(history.seen.includes(scene.id)||scene.variant==='welcome'));
+    if(!scenes.length)return '';
+    return `<article class="memory-card"><img src="${menuPortraitSource(name)}" alt=""><div><strong>${name}</strong><div class="memory-actions">${scenes.map(button).join('')}</div></div></article>`;
+  }).join('');
+  return `<section class="memories-catalog"><header><h2>Scene Memories</h2><p>Revisit the moments that brought the Hall to life.</p></header>${intro?`<section class="memory-chapter"><h3>Ember Hall</h3><article class="memory-card memory-card-story"><div><strong>Where it began</strong></div>${button(intro)}</article></section>`:''}<section class="memory-chapter"><h3>Flameguard arrivals</h3><div class="memory-cards">${cards}<!--memory-character-end--></div></section><!--memory-story-end--></section>`;
 }
 
 function chooseHallRecruit(id) {

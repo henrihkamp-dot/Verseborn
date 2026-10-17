@@ -193,8 +193,8 @@
   sceneMemoriesHtml = function() {
     const html = oldMemories();
     if (state.gameMode !== 'hallBattles' || !state.party.includes('Tinus')) return html;
-    const card = `<div class="scene-memory-grid"><section class="scene-memory-group scene-memory-character"><img src="${menuPortraitSource('Tinus')}" alt=""><strong>Tinus</strong><div><button type="button" data-replay-scene="${memoryId}">An Unscheduled Arrival / welcome</button><small>Portal, recruitment and his seat at Marla’s bar. Back / Esc returns to Memories.</small></div></section></div>`;
-    return html.replace(/<\/section>$/, card + '</section>');
+    const card = `<article class="memory-card"><img src="${menuPortraitSource('Tinus')}" alt=""><div><strong>Tinus</strong><div class="memory-actions"><button type="button" data-replay-scene="${memoryId}">An Unscheduled Arrival<span aria-hidden="true">▶</span></button></div></div></article>`;
+    return html.replace('<!--memory-character-end-->',card+'<!--memory-character-end-->');
   };
   replayRecruitScene = id => id === memoryId ? startReplay() : oldReplay(id);
   const oldControl = handleControl, oldSave = saveGame;

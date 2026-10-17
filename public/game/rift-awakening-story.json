@@ -73,7 +73,7 @@
       "minMs": 4200,
       "speaker": "Verseborn",
       "text": "Sparky? Wait—!",
-      "cue": "Sparky flies in from behind, diagonally left from the Hall passage, wings flapping and feet tucked. He descends onto the front-left rim of the Ember Rift.",
+      "cue": "Sparky flies diagonally left from the Hall passage and lands on the Rift platform directly in front of the elder.",
       "auto": true
     },
     {
@@ -97,7 +97,7 @@
       "minMs": 3500,
       "speaker": "Sparky",
       "text": "Krrr... prrrr...",
-      "cue": "Violet flame gathers around Sparky's chest and tail, then curls gently towards the elder. The elder turns his eye to it. Falling stones become less frequent."
+      "cue": "Sparky sits on the Rift directly before the elder. The elder recognises his familiar flame without a beam or magical stream."
     },
     {
       "phase": "calm",
@@ -124,7 +124,7 @@
       "minMs": 2200,
       "speaker": "Stone Sleeper",
       "text": "I remember when those streets had room for all of us. Human voices below. Wings above. Neither was a reason to be afraid.",
-      "cue": "The comic's ancient city appears above the cavern's far side: luminous, translucent, with feathered edges and drifting violet mist. The party remains visible."
+      "cue": "A clear memory hangs in the air above the centre of the group. Soft mist feathers its edges; faint remembered fragments drift nearby."
     },
     {
       "phase": "memory",
@@ -139,7 +139,7 @@
       "minMs": 2200,
       "speaker": "Stone Sleeper",
       "text": "Then Solinar offered an end to every fear. Hungry people heard a promise. Tired people saw a light.",
-      "cue": "A second comic memory forms against another wall: Solinar's radiant figure above Cindervale. The first city vision remains faintly visible elsewhere in the room."
+      "cue": "A clear memory hangs in the air above the centre of the group. Soft mist feathers its edges; faint remembered fragments drift nearby."
     },
     {
       "phase": "memory",
@@ -154,7 +154,7 @@
       "minMs": 2000,
       "speaker": "Stone Sleeper",
       "text": "The Elder Ember held what he wanted forgotten. Lives. Names. Choices. He reached for it as though every flame owed him obedience.",
-      "cue": "The comic image of the Elder Ember between dragons gathers above the vortex. Reflected purple light reaches the elder's stone face."
+      "cue": "A clear memory hangs in the air above the centre of the group. Soft mist feathers its edges; faint remembered fragments drift nearby."
     },
     {
       "phase": "memory",
@@ -162,7 +162,7 @@
       "minMs": 2200,
       "speaker": "Stone Sleeper",
       "text": "It would not yield. So it was hidden where power would see nothing worth fearing. Somewhere small. Somewhere hungry. Somewhere still capable of loving.",
-      "cue": "The comic's remembered faces appear as a fourth ethereal vision. Wisps connect the memories to Sparky's violet essence without forming a physical portal."
+      "cue": "A clear memory hangs in the air above the centre of the group. Soft mist feathers its edges; faint remembered fragments drift nearby."
     },
     {
       "phase": "memory",
