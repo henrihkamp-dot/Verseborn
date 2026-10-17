@@ -14007,6 +14007,8 @@ function skillOutputBreakdown(id, sk, unit = { id, statuses: [] }) {
     scaling: skillScalingLabel(id, sk),
     normal: Math.round(normal),
     critical: Math.round(critical),
+    normalExact: normal,
+    criticalExact: critical,
     average: Math.round(normal * (1 - critChance) + critical * critChance),
     critChance
   };
@@ -14044,8 +14046,9 @@ function estimatedHeroOutput(id) {
     const base = (sk.coefficient ? statContribution : sk.power + statContribution) + 2.5;
     const damageType = statKey === "mag" ? "magicDamage" : "physicalDamage";
     const gearDamageBonus = effectValue(id, damageType) + typedTalentValue(id, damageType);
-    const damageBeforeCrit = base * (1 + gearDamageBonus);
-    const damageWithoutAgiCrit = damageBeforeCrit * (1 + critInfo.base);
+    const breakdown = skillOutputBreakdown(id, sk);
+    const damageBeforeCrit = breakdown.normalExact;
+    const damageWithoutAgiCrit = breakdown.normalExact * (1 - critInfo.base) + breakdown.criticalExact * critInfo.base;
     const value = skillExpectedOutput(id, sk);
     return {
       name: sk.name,
@@ -14216,7 +14219,7 @@ function statusCardHtml(id) {
   const currentEvasion = combatEvasionChance(evasionUnit);
   const evasionCharges = statusOf(evasionUnit, "evasion")?.incomingCharges || 0;
   const evasionHtml = `<span><small>EVASION</small><strong>${Math.round(currentEvasion * 100)}%</strong><em>${Math.round(baseEvasionValue(evasionUnit) * 100)}% base${activeEvasion ? ` + ${Math.round(activeEvasion * 100)}% temporary / ${evasionCharges} incoming attacks` : ""}</em></span>`;
-  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span class="status-vital-hp"><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} / ${output.damageBeforeCrit} before crit</em></span><span><small>HEAL / ALLY</small><strong>${output.hps}</strong><em>${output.hpsSkill}</em></span>${evasionHtml}</div><section class="status-detail-section"><h4>Equipment slots</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section"><h4>Total equipped gear contribution</h4>${statusGearOverviewHtml(id)}</section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section><details class="status-reference status-combat-detail"><summary>Abilities and combat detail</summary>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section></details></article>`;
+  return `<article class="menu-card status-card"><header class="status-card-head"><img src="${portrait}" alt="${h.name} portrait"><div><small>${activeLabel}</small><strong>${h.name}</strong><span>${h.title} / ${h.element}</span><p>${specialties.join(" / ")}</p></div></header><section class="status-biography"><h4>Biography</h4><p>${biography}</p></section>${xpProgressHtml(id)}<div class="status-core-stats"><span><small>STR</small><strong>${t.str}</strong></span><span><small>AGI</small><strong>${t.agi}</strong></span><span><small>MAG</small><strong>${t.mag}</strong></span><span><small>STAM</small><strong>${t.stam}</strong></span><span><small>ECHO</small><strong>${t.echo}</strong></span><span class="status-vital-hp"><small>HP</small><strong>${h.hp}/${t.max}</strong></span><span><small>MP</small><strong>${h.mp}/${t.mp}</strong></span></div><div class="status-output"><span><small>CRIT RATE</small><strong>${Math.round(output.crit * 100)}%</strong><em>${baseCrit}% base/gear/talents + ${agiCrit}% AGI${afflictedText}</em></span><span title="Strongest learned regular attack: average damage per target, including current stats, gear, talents and crit. Excludes ultimates, enemy defenses and temporary battle effects."><small>DMG / ACTION</small><strong>${output.dps}</strong><em>${output.dpsSkill} · per target</em></span><span title="Strongest learned regular heal per recipient, including current stats, gear and talents. Excludes ultimates, overhealing and temporary battle effects."><small>HEAL / ACTION</small><strong>${output.hps}</strong><em>${output.hpsSkill} · per recipient</em></span>${evasionHtml}</div><section class="status-detail-section"><h4>Equipment slots</h4><div class="status-gear-list">${statusEquipmentHtml(id)}</div></section><section class="status-detail-section"><h4>Total equipped gear contribution</h4>${statusGearOverviewHtml(id)}</section><section class="status-detail-section status-talents"><h4>Chosen talents</h4><p>${chosen.length ? chosen.map(entry => `<b>${entry.name}</b>`).join(" / ") : "No talent points spent yet."}</p></section><details class="status-reference status-combat-detail"><summary>Abilities and combat detail</summary>${statusAbilitiesHtml(id)}<section class="status-detail-section"><h4>What these stats add</h4>${statusStatImpactHtml(t, output)}</section><section class="status-detail-section"><h4>Equipped proc chances</h4><div class="status-procs">${procHtml}</div></section></details></article>`;
 }
 
 function toggleTalent(value) {
@@ -16036,7 +16039,9 @@ function runQaChecks() {
     check("agility-crit-scale", [[0, 0], [50, .05], [90, .09], [130, .13], [137, .137]].every(([agi, expected]) => Math.abs(agilityCritBonusFromAgi(agi) - expected) < .0001));
     check("status-output-per-action", profileIds.every(id => {
       const output = estimatedHeroOutput(id);
-      return Math.abs(output.dps - Math.round(output.damageBeforeCrit * (1 + output.crit))) <= 1 && output.agiDamageGain >= 0 && output.agiDamagePercent >= 0;
+      const attacks = battleSkills(id, { id }).filter(sk => sk.anim !== "ultimate" && (sk.power > 0 || sk.coefficient) && skillTargetsEnemies(sk));
+      const expected = Math.round(Math.max(0, ...attacks.map(sk => skillExpectedOutput(id, sk))));
+      return output.dps === expected && output.agiDamageGain >= 0 && output.agiDamagePercent >= 0;
     }));
     check("status-stat-impact", profileIds.every(id => statusStatImpactHtml(totals(id), estimatedHeroOutput(id)).includes("AGI + CRIT")));
     check("status-equipment-breakdown", ["WEAPON", "ARMOUR", "RING", "HELMET"].every(slot => statusEquipmentHtml("Verseborn").includes(slot)));

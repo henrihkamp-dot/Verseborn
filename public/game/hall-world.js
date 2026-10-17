@@ -119,23 +119,40 @@
     [['Marla','Coffee, or something that counts as lunch?'],['Tinus','Let us not rush a difficult decision.']],
     [['Tinus','Any quiet dimensions on the menu?'],['Marla','Soup first. Existential crises after.']]
   ];
-  let barStarted=null,barBubble=null;
+  let barBubble=null;
   function marlaIdleFrame(now){const t=((now%18000)+18000)%18000;if(t<11000)return [4,5,4,5][Math.floor(t/750)%4];if(t<13500)return [9,10,11,10][Math.floor((t-11000)/625)];return 0;}
   function residentIdleFrame(id,now){if(id==='Marla')return marlaIdleFrame(now);const rest=id==='Sparky'?7000:12000,t=((now+actors.findIndex(a=>a.id===id)*731)%(rest+3000)+(rest+3000))%(rest+3000);return t<rest?0:Math.min(15,Math.floor((t-rest)/187.5));}
   function barMoment(elapsed){if(elapsed<12000)return null;const t=elapsed-12000,phase=t%60000,index=phase<4200?0:phase>=5200&&phase<9400?1:-1;return index<0?null:barLines[Math.floor(t/60000)%barLines.length][index];}
-  function barChatter(now){
-    const tinus=window.TinusRecruitment?.resident(),eligible=tinus?.pose==='seated'&&window.TinusRecruitment?.progress().recruited&&!window.TinusRecruitment?.replaying;
-    if(!eligible){barStarted=null;if(barBubble)barBubble.hidden=true;return null;}
-    if(barStarted===null)barStarted=now;
-    const line=mode==='walk'&&!activeRecruitScene&&!(scene&&now-scene.started<scene.duration)?barMoment(now-barStarted):null;
+  const kitchenLines=[
+    [['Torren','That stew is for everyone, little furnace.'],['Sparky','Prrrp… grrr?']],
+    [['Sparky','Hrrrm… BUURP.'],['Torren','A fine compliment. Mind the curtains.']],
+    [['Torren','One bowl. Then we train.'],['Sparky','Rrrr! Chrrp!']],
+    [['Sparky','Grrr… prrrp.'],['Torren','Yes, yes. I saved you the crispy bits.']]
+  ];
+  const ambientClocks=new Map();
+  function ambientMoment(lines,elapsed,delay=12000,cycle=72000){if(elapsed<delay)return null;const t=elapsed-delay,phase=t%cycle,index=phase<4200?0:phase>=5200&&phase<9400?1:-1;return index<0?null:lines[Math.floor(t/cycle)%lines.length][index];}
+  function ambientChat(key,lines,participants,viewCamera,now,cycle=72000){
+    if(!ambientClocks.has(key))ambientClocks.set(key,now);
+    const line=mode==='walk'?ambientMoment(lines,now-ambientClocks.get(key),12000,cycle):null;
     if(!line){if(barBubble)barBubble.hidden=true;return null;}
-    const actor=line[0]==='Tinus'?tinus:actors.find(a=>a.id==='Marla'),x=actor.x-camera.x,y=actor.y-camera.y-actor.size-7;
+    const actor=participants.find(a=>a.id===line[0]);
+    if(!actor){if(barBubble)barBubble.hidden=true;return null;}
+    const x=actor.x-viewCamera.x,y=actor.y-viewCamera.y-(actor.size||40)-7;
     if(x<0||x>LOGICAL_WIDTH||y<10||y>LOGICAL_HEIGHT){if(barBubble)barBubble.hidden=true;return null;}
     if(!barBubble){barBubble=document.createElement('div');barBubble.className='hall-banter';barBubble.innerHTML='<strong></strong><span></span>';document.querySelector('.game').append(barBubble);const observer=new MutationObserver(()=>{if(mode!=='walk')barBubble.hidden=true;});for(const node of [el.menu,el.dialogue,el.battle])if(node)observer.observe(node,{attributes:true,attributeFilter:['class']});}
-    barBubble.querySelector('strong').textContent=line[0];barBubble.querySelector('span').textContent=line[1];barBubble.hidden=false;
+    barBubble.dataset.conversation=key;barBubble.querySelector('strong').textContent=line[0];barBubble.querySelector('span').textContent=line[1];barBubble.hidden=false;
     const rect=canvas.getBoundingClientRect(),gameNode=document.querySelector('.game'),game=gameNode.getBoundingClientRect(),scaleX=game.width/gameNode.offsetWidth,scaleY=game.height/gameNode.offsetHeight;
     barBubble.style.left=Math.max(105,Math.min(gameNode.offsetWidth-105,(rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX))+'px';barBubble.style.top=((rect.top-game.top+y/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
     return line[0];
+  }
+  function hideAmbientChat(){if(barBubble)barBubble.hidden=true;}
+  function barChatter(now){
+    if(mode!=='walk'||activeRecruitScene||(scene&&now-scene.started<scene.duration)){hideAmbientChat();return null;}
+    const kitchenReady=['Torren','Sparky'].every(id=>state.party.includes(id));
+    if(kitchenReady&&Math.hypot(player.x-123,player.y-80)<160)return ambientChat('kitchen',kitchenLines,actors,camera,now);
+    const tinus=window.TinusRecruitment?.resident(),eligible=tinus?.pose==='seated'&&window.TinusRecruitment?.progress().recruited&&!window.TinusRecruitment?.replaying;
+    if(!eligible){ambientClocks.delete('bar');hideAmbientChat();return null;}
+    return ambientChat('bar',barLines,[tinus,actors.find(a=>a.id==='Marla')],camera,now,60000);
   }
   function resetNavigation(position=state.hallPosition){
     keys.clear();target=null;route=[];pendingActor=null;scene=null;last=performance.now();
@@ -455,7 +472,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,kitchenLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
