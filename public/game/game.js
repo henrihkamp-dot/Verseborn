@@ -311,7 +311,7 @@ function ensureAudioContext() {
   return audioContext;
 }
 
-function playSfx(kind) {
+function playSfx(kind, volume = 1) {
   if (musicMuted) return;
   const ac = ensureAudioContext();
   if (!ac) return;
@@ -332,7 +332,7 @@ function playSfx(kind) {
     oscillator.type = type;
     oscillator.frequency.setValueAtTime(start, when);
     oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, end), when + duration);
-    gain.gain.setValueAtTime(.055, when);
+    gain.gain.setValueAtTime(.055 * volume, when);
     gain.gain.exponentialRampToValueAtTime(.001, when + duration);
     oscillator.connect(gain).connect(ac.destination);
     oscillator.start(when);

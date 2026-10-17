@@ -293,6 +293,7 @@
     return Boolean(target);
   }
   function drawActor(actor,row,col){
+    if(window.HallLiveliness?.drawActor(actor,camera))return;
     if(actor.id==='Tinus'&&window.TinusCharacter){window.TinusRecruitment?.drawPortal(actor,camera,performance.now());ctx.save();ctx.globalAlpha=actor.alpha??1;window.TinusCharacter.drawField(actor,camera,performance.now());ctx.restore();return;}
     // Scale Hall art around its existing foot anchor; size still defines interaction bounds.
     const size=actor.size*(actors.find(resident=>resident.id===actor.id)?.renderScale??1);
@@ -487,7 +488,7 @@
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,focus.y-LOGICAL_HEIGHT*.6));
     ctx.drawImage(hallBackground(),-camera.x,-camera.y,W,H);
     window.EmberRift?.drawHallDoor(camera,now);
-    window.HallHub?.drawAreas(camera);
+    window.HallHub?.drawAreas(camera);window.HallLiveliness?.drawLabProps(camera);
     const fx=images.effects,cw=fx.width/4,ch=fx.height/2,frame=Math.floor(now/180)%4;
     ctx.save();
     for(const [i,[x,y,w,h]] of [[77,23,25,21],[564,136,19,19]].entries()){
@@ -497,7 +498,7 @@
       ctx.drawImage(fx,frame*cw,0,cw,ch,x-camera.x-2,y-camera.y-1,w+4,h+2);ctx.restore();
     }
     ctx.globalAlpha=.23;ctx.drawImage(fx,frame*cw,ch,cw,ch,479-camera.x,141-camera.y,12,17);ctx.restore();
-    window.KaelHallVisits?.tick(now);
+    window.KaelHallVisits?.tick(now);window.HallLiveliness?.tick(now);
     const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true},...foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>a.y-b.y);
     const speaking=barChatter(now);
     for(const actor of things){
@@ -524,6 +525,7 @@
       if(!actor.clipY)drawFieldShadow(actor.x-camera.x,actor.y-camera.y,actor.id==='Sparky'?3:5);
       drawActor(actor,row,col);
     }
+    window.HallLiveliness?.drawEffects(camera);
     const near=nearby();if(near&&mode==='walk')drawText(near.id+'  [E]',near.x-camera.x,near.y-camera.y-38,'#fff0b5',6,'center');
     drawText('EMBER HALL',7,11,'#fff0b5',7);
     el.place.textContent='Ember Hall';
