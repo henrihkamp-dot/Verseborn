@@ -18,15 +18,16 @@
   let hoveredUnit=null;
   function showUnitTooltip(u,event){
     if(mode!=='battle')return;
-    hoveredUnit=u;
+    const scroll=hoveredUnit===u?unitTooltip.scrollTop:0;hoveredUnit=u;
     unitTooltip.innerHTML=`<strong>${esc(u.name)}</strong><div class="bc-tooltip-vitals">HP ${Math.max(0,Math.round(u.hp))} / ${u.max} · MP ${Math.max(0,Math.round(u.mp||0))} / ${u.maxmp||0}</div>${(u.statuses||[]).map(s=>{const data=statusDisplayData(u,s);return `<section><b>${esc(data.name)}</b><small>${esc(data.timing)}</small><p>${esc(data.description)}</p></section>`;}).join('')||'<p>No active buffs or debuffs.</p>'}`;
-    unitTooltip.hidden=false;
+    unitTooltip.hidden=false;unitTooltip.scrollTop=scroll;
     const r=game.getBoundingClientRect(),x=event?.clientX??r.left+r.width/2,y=event?.clientY??r.top+r.height/2;
     unitTooltip.style.left=`${Math.max(6,Math.min(r.width-unitTooltip.offsetWidth-6,x-r.left+16))}px`;
     unitTooltip.style.top=`${Math.max(6,Math.min(r.height-unitTooltip.offsetHeight-6,y-r.top+16))}px`;
   }
   function hideUnitTooltip(){hoveredUnit=null;unitTooltip.hidden=true;}
   command.addEventListener('pointerenter',hideUnitTooltip);
+  root.addEventListener('wheel',event=>{if(hoveredUnit&&!unitTooltip.hidden&&unitTooltip.scrollHeight>unitTooltip.clientHeight){unitTooltip.scrollTop+=event.deltaY;event.preventDefault();}},{passive:false});
   history.querySelector('button').onclick=()=>history.close();
   historyButton.onclick=()=>{history.querySelector('header strong').textContent='Battle history';history.querySelector('.bc-history-content').innerHTML=(battle.actionHistory||[]).map(a=>`<div><strong>R${a.round} · ${esc(a.actor)}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small>${esc(e.target)}: ${e.crit?'CRIT ':''}${e.amount} ${esc(e.type||e.kind)} ${esc(e.text)}</small>`).join('')}</div>`).join('')||'<p>No actions yet.</p>';history.showModal();};
   let owner=null,turnOwner=null,ui={level:'category',category:'attack',action:0,target:0,page:0},groups=[],unit=null,selected=null,targetList=[],targetGroup=false,lastLayout='',statusNodes=[];
