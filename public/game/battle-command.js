@@ -208,7 +208,7 @@
   function fitLabels(){
     root.querySelectorAll('.bc-action strong,.bc-category>span,.bc-turn b').forEach(n=>{
       const full=n.textContent;n.title=full;n.parentElement.setAttribute('title',n.parentElement.title||full);
-      const minimum=n.closest('.bc-category')?11:12;
+      const minimum=n.closest('.bc-action')?9:n.closest('.bc-category')?11:12;
       let size=parseFloat(getComputedStyle(n).fontSize);
       while(n.scrollWidth>n.clientWidth+1&&size>minimum){size--;n.style.fontSize=size+'px';}
       const parent=n.closest('.bc-turn');if(parent){parent.tabIndex=0;parent.setAttribute('aria-label',full);}
@@ -402,7 +402,7 @@
     statusNodes.forEach(({u,n},index)=>{
       const sprite=sprites[index],width=n.offsetWidth,height=n.offsetHeight,statusHeight=n.querySelector('.bc-statuses')?.offsetHeight||0;
       const side=statusNodes[index].side;
-      const baseX=side==='party'?sprite.cx+sprite.w/2+8:sprite.cx-sprite.w/2-width-8,baseY=sprite.bottom-height-2,h=height+statusHeight;
+      const baseX=side==='party'?sprite.cx-sprite.w/2-width-7:sprite.cx+sprite.w/2+7,baseY=sprite.bottom-height-2,h=height+statusHeight;
       const obstacles=sprites.map(s=>({x:s.cx-s.w/2,y:s.bottom-s.h,w:s.w,h:s.h}));
       let best=null;
       for(let dx=-320;dx<=320;dx+=4)for(let dy=0;dy<=96;dy+=12){

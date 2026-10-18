@@ -294,3 +294,24 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
  .trial-screen .hub-slot button:disabled{color:#857d89!important;border-color:#49414d!important;opacity:.55}
  .trial-screen-ember .hall-stage.is-selected{border-color:#e4c07b!important;box-shadow:inset 0 0 0 1px #a0804a}
 }
+/* Slimmer side labels and shorter action row, including zoomed desktop windows. */
+@media(min-width:701px){
+ body[data-play-mode="battle"]{--bc-command-height:clamp(162px,20.5vh,222px)}
+ .bc-command-left{grid-template-rows:15px clamp(34px,4.1vh,44px) minmax(48px,1fr) 13px;gap:4px;padding:5px 7px}
+ .bc-command-heading strong{font-size:13px}.bc-command-heading{font-size:10px}
+ .bc-category{max-width:59px;flex-basis:59px;min-height:32px;padding:4px}.bc-category .bc-icon{width:25px;height:25px}
+ .bc-action{padding:5px;gap:5px}.bc-action strong{font-size:clamp(10px,.72vw,13px);line-height:1.15}
+ .bc-card-art{width:24px;height:29px}.bc-card-art .bc-icon{width:21px;height:21px}
+ .bc-action-copy{gap:4px}.bc-action-copy>span{gap:3px;flex-wrap:wrap}.bc-action .bc-badge{font-size:9px;padding:0 3px}.bc-action-copy>span>b{font-size:10px}
+ .command-battle .bc-unit{width:clamp(100px,5.7vw,112px);padding:2px 3px}
+ .bc-vital{height:10px}.bc-vital+.bc-vital{margin-top:1px}.bc-vital b{font-size:9px;line-height:8px;padding:0 2px}.bc-vital b small{font-size:8px}
+ .bc-unit .bc-weak{font-size:9px;margin:0 0 2px}.bc-statuses img{width:11px;height:11px}.bc-statuses small{font-size:7px}.bc-statuses>span{padding:1px}
+ .bc-detail{padding:7px 10px 37px}.bc-detail h3{font-size:clamp(15px,1.1vw,21px)}.bc-detail-art{width:32px;height:35px}
+ .bc-description{font-size:clamp(10px,.65vw,12px);line-height:1.25;margin:4px 0}.bc-costline{font-size:10px;margin:4px 0;padding:3px 0}
+ .bc-act-footer{padding-top:3px;bottom:5px}.command-battle .bc-act{min-height:25px;font-size:14px;padding:3px 10px}
+ .bc-command-foot{font-size:9px}.bc-pager button{height:24px;font-size:18px}
+}
+@media(min-width:701px) and (max-height:650px){
+ .bc-detail h3{font-size:15px}.bc-detail-art{width:26px;height:29px}.bc-detail .bc-badge{font-size:8px}.bc-description{font-size:10px}.bc-costline{font-size:9px;margin:3px 0;padding:2px 0}.bc-effects{display:none}.bc-act-footer>small{font-size:9px}.bc-act small{font-size:9px}.bc-command-foot{font-size:8px}
+}
+@media(min-width:701px){.bc-statuses small{display:none}.bc-statuses img{width:12px;height:12px}}
