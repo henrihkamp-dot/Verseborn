@@ -73,7 +73,9 @@
     [[405,257],[413,253],[421,257],[421,268],[413,272],[405,268]],
     [[20,290],[28,286],[38,290],[38,301],[28,306],[20,302]],
     [[31,283],[43,279],[51,283],[50,293],[39,297],[31,292]],
-    [[45,291],[66,283],[78,288],[77,301],[55,310],[45,305]],
+    // The chest lid/back occupy floor too; the former narrow bottom strip let
+    // feet enter the chest before collision caught its front face.
+    [[43,282],[66,275],[79,281],[80,302],[56,311],[43,306]],
     [[51,279],[104,280],[116,275],[123,280],[120,290],[104,294],[51,288]],
     [[130,270],[145,266],[164,270],[164,285],[151,291],[130,285]],
     [[174,281],[187,276],[199,281],[198,291],[185,295],[174,290]],
@@ -93,7 +95,7 @@
     {id:'right-library-lamp',depth:272,outline:[[404,257],[410,252],[410,233],[414,226],[419,235],[420,252],[422,257],[422,268],[413,272],[404,268]]},
     {id:'mira-lamp',depth:306,outline:[[20,292],[23,283],[23,277],[27,264],[30,264],[32,278],[33,284],[39,290],[39,301],[28,306],[20,302]]},
     {id:'mira-table',depth:297,outline:[[31,281],[36,278],[36,263],[43,260],[48,279],[52,283],[50,294],[39,297],[31,292]]},
-    {id:'mira-chest',depth:310,outline:[[45,289],[66,281],[78,286],[78,302],[55,310],[45,305]]},
+    {id:'mira-chest',depth:311,outline:[[43,282],[66,275],[79,281],[80,302],[56,311],[43,306]]},
     {id:'mira-couch',depth:294,outline:[[51,252],[65,247],[87,249],[105,255],[116,257],[124,268],[123,280],[120,291],[104,294],[51,288]]},
     {id:'mira-cabinet',depth:291,outline:[[130,266],[141,259],[152,260],[153,253],[158,253],[160,266],[165,270],[164,285],[151,291],[130,285]]},
     {id:'mira-entry-pot',depth:295,outline:[[176,280],[178,265],[187,260],[196,267],[199,281],[198,291],[185,295],[174,290]]}
@@ -117,14 +119,23 @@
     {owner:'Seerin',rect:[166,119,15,28]}
   ];
   let roomSignature=null,roomBackground=null;
+  const droneWall=new Image();droneWall.src='assets/hall/living-256/drone-wall.webp';
   function hallBackground(){
-    const signature=closedRooms.map(room=>state.party.includes(room.owner)?'1':'0').join('');
+    const signature=closedRooms.map(room=>state.party.includes(room.owner)?'1':'0').join('')+(droneWall.complete&&droneWall.naturalWidth?'d':'');
     if(roomSignature===signature&&roomBackground)return roomBackground;
     const original=images.hall,vacant=images['hall-uninhabited-v239'];
     if(!original||!vacant)return original;
     const surface=document.createElement('canvas');surface.width=original.width;surface.height=original.height;
     const paint=surface.getContext('2d'),sx=surface.width/W,sy=surface.height/H;
     paint.drawImage(original,0,0);
+    // Remove the painted stationary drone before drawing its flying counterpart.
+    // A feathered clean plate retains the original shelf/candle boundaries.
+    if(droneWall.complete&&droneWall.naturalWidth){
+      const patch=document.createElement('canvas');patch.width=90;patch.height=96;
+      const p=patch.getContext('2d');p.drawImage(droneWall,0,0,90,96);p.globalCompositeOperation='destination-in';
+      for(const ends of [[0,0,5,0],[90,0,85,0],[0,0,0,5],[0,96,0,91]]){const fade=p.createLinearGradient(...ends);fade.addColorStop(0,'transparent');fade.addColorStop(1,'white');p.fillStyle=fade;p.fillRect(0,0,90,96);}
+      paint.drawImage(patch,1080,38);
+    }
     for(const room of closedRooms){
       if(state.party.includes(room.owner))continue;
       let [x,y,w,h]=room.rect;
@@ -293,6 +304,7 @@
     return Boolean(target);
   }
   function drawActor(actor,row,col){
+    if(window.HallKitchen?.drawActor(actor,camera))return;
     if(window.HallLiveliness?.drawActor(actor,camera))return;
     if(actor.id==='Tinus'&&window.TinusCharacter){window.TinusRecruitment?.drawPortal(actor,camera,performance.now());ctx.save();ctx.globalAlpha=actor.alpha??1;window.TinusCharacter.drawField(actor,camera,performance.now());ctx.restore();return;}
     // Scale Hall art around its existing foot anchor; size still defines interaction bounds.
@@ -498,8 +510,9 @@
       ctx.drawImage(images.hearths,i*32,0,32,32,x-camera.x,y-camera.y,w,h);
       ctx.drawImage(fx,frame*cw,0,cw,ch,x-camera.x-2,y-camera.y-1,w+4,h+2);ctx.restore();
     }
+    window.HallKitchen?.drawPot(camera,now);
     ctx.globalAlpha=.23;ctx.drawImage(fx,frame*cw,ch,cw,ch,479-camera.x,141-camera.y,12,17);ctx.restore();
-    window.KaelHallVisits?.tick(now);window.HallLiveliness?.tick(now);
+    window.KaelHallVisits?.tick(now);window.HallLiveliness?.tick(now);window.HallKitchen?.tick(now);
     const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true},...foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>a.y-b.y);
     const speaking=barChatter(now);
     for(const actor of things){

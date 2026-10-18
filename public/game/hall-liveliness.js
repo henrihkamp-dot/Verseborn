@@ -1,7 +1,8 @@
 // Whole-character lab poses; movement follows short eased boot-jet hops.
 (() => {
   const image=new Image();let loaded=false;image.onload=()=>loaded=true;image.src='assets/hall/glimmer-lab-v244.webp';
-  const stops=[{x:464,y:87,wait:9000,row:2},{x:513,y:91,wait:8000,row:3},{x:558,y:91,wait:10500,row:3},{x:600,y:87,wait:7000,row:3},{x:535,y:91,wait:8500,row:2}];
+  const stops=[{x:464,y:87,wait:9000,row:2},{x:484,y:83,wait:8000,row:3,drone:true,lift:22},{x:513,y:91,wait:8000,row:3},{x:558,y:91,wait:10500,row:3},{x:600,y:87,wait:7000,row:3},{x:535,y:91,wait:8500,row:2}];
+  const drone=new Image();drone.src='assets/hall/living-256/drone.webp';
   const ponder=new Image();ponder.src='assets/hall/glimmer-hover-v244.webp';
   const platforms=new Image();platforms.src='assets/hall/glimmer-platforms-v244.webp';
   const props=new Image();props.src='assets/hall/glimmer-repair-props-v244.webp';
@@ -26,8 +27,9 @@
       if(flight){
         flight.elapsed+=dt;const t=Math.min(1,flight.elapsed/flight.duration),ease=t*t*(3-2*t);
         g.x=flight.from.x+(flight.to.x-flight.from.x)*ease;g.y=flight.from.y+(flight.to.y-flight.from.y)*ease;
-        g.labLift=(flight.fromLift||0)*(1-t)+Math.sin(Math.PI*t)*5;g.labFlying=true;g.labPondering=false;g.labEureka=false;g.labHovering=false;g.labDirection=flight.to.x>flight.from.x?1:0;
-        if(t===1){station=flight.next;elapsed=0;flight=null;g.labLift=0;g.labFlying=false;}
+        g.labRepairHover=false;
+        g.labLift=(flight.fromLift||0)*(1-ease)+(flight.to.lift||0)*ease+Math.sin(Math.PI*t)*5;g.labFlying=true;g.labPondering=false;g.labEureka=false;g.labHovering=false;g.labDirection=flight.to.x>flight.from.x?1:0;
+        if(t===1){station=flight.next;elapsed=0;flight=null;g.labLift=stops[station].lift||0;g.labFlying=false;}
       }else if(!chatting){
         elapsed+=dt;g.labFlying=false;
         const thinkingStart=station===0?3000:station===2?4500:Infinity;
@@ -40,10 +42,11 @@
         const order=[3,5,0,4,2,6,1,7],target=(Math.round(angle/(Math.PI/4))+8)%8,turn=(target-5+12)%8-4;
         g.labEurekaRow=order[(5+Math.round(turn*Math.min(1,g.labEurekaTime/450))+16)%8];
         g.labHovering=g.labPondering||g.labEureka;
-        g.labLift=g.labPondering?3*Math.min(1,thinkingTime/500)+Math.sin(clock*.003)*.2:g.labEureka?3:0;
+        g.labRepairHover=!!stops[station].drone;
+        g.labLift=g.labRepairHover?stops[station].lift+Math.sin(clock*.002)*.25:g.labPondering?3*Math.min(1,thinkingTime/500)+Math.sin(clock*.003)*.2:g.labEureka?3:0;
         if(elapsed>=stops[station].wait){const next=(station+1)%stops.length;flight={from:{x:g.x,y:g.y},to:stops[next],next,elapsed:0,duration:1600+Math.abs(stops[next].x-g.x)*12,fromLift:g.labLift||0};}
       }
-      if(chatting&&!flight){g.labPondering=false;g.labHovering=false;g.labEureka=false;g.labLift=Math.max(0,(g.labLift||0)-dt*.006);}
+      if(chatting&&!flight){g.labPondering=false;g.labHovering=false;g.labEureka=false;g.labRepairHover=false;g.labLift=Math.max(0,(g.labLift||0)-dt*.006);}
       g.labActive=true;g.labClock=clock;g.labRow=stops[station].row;
     }else g.labActive=false;
     if(state.party.includes('Seerin')){
@@ -63,12 +66,12 @@
     if(actor.id!=='Glimmer'||!actor.labActive||!loaded)return false;
     const size=actor.size*.65,row=actor.labFlying?actor.labDirection:actor.labRow;
     const source=actor.labHovering?ponder:image,cell=source.naturalWidth/4;
-    const phase=(actor.labClock%(actor.labFlying?800:2800))/(actor.labFlying?200:700);
+    const phase=(actor.labClock%(actor.labFlying?800:actor.labRepairHover?1600:2800))/(actor.labFlying?200:actor.labRepairHover?400:700);
     const frame=actor.labEureka?(actor.labEurekaTime<400?2:3):actor.labPondering?(actor.labClock%3000>2700?1:0):Math.floor(phase)%4;
     ctx.save();ctx.translate(actor.x-camera.x,actor.y-camera.y-(actor.labLift||0));
     if(!actor.labFlying&&!actor.labHovering)ctx.scale(-1,1);
     ctx.drawImage(source,frame*cell,(actor.labHovering?(actor.labEureka?actor.labEurekaRow:actor.labPonderRow):row)*cell,cell,cell,-size/2,-size*.94,size,size);
-    if(actor.labFlying||actor.labHovering){
+    if(actor.labFlying||actor.labHovering||actor.labRepairHover){
       const pulse=.55+.3*Math.sin(actor.labClock*.045)+.15*Math.sin(actor.labClock*.083);
       ctx.globalCompositeOperation='screen';ctx.globalAlpha=.35+pulse*.4;ctx.fillStyle='#a8efff';
       for(const bx of [-size*.1,size*.08]){ctx.beginPath();ctx.moveTo(bx-1,-size*.17);ctx.lineTo(bx+1,-size*.17);ctx.lineTo(bx+.5,-size*.17+2+pulse*2.5);ctx.closePath();ctx.fill();}
@@ -83,6 +86,25 @@
     }
     const cell=props.naturalWidth/3;
     for(const [i,x,y,width] of [[0,503,81,19],[1,548,81,19],[2,590,77,19]])ctx.drawImage(props,i*cell,0,cell,props.naturalHeight,x-camera.x-width/2,y-camera.y-width,width,width);
+    drawDrone(camera);
+  }
+  function dronePosition(){
+    const repairing=station===1&&!flight;
+    return {x:470+Math.sin(clock*.0007)*(repairing?.15:1.5),y:38+Math.sin(clock*.002)*(repairing?.25:1.1),repairing};
+  }
+  function drawDrone(camera){
+    if(!drone.complete||!drone.naturalWidth)return;
+    const d=dronePosition(),width=33,height=width*drone.naturalHeight/drone.naturalWidth;
+    ctx.save();ctx.translate(d.x-camera.x,d.y-camera.y);ctx.rotate(Math.sin(clock*.0016)*(d.repairing?.004:.018));
+    ctx.drawImage(drone,-width/2,-height/2,width,height);
+    // Rotor highlights orbit independently; the brass body never scales/morphs.
+    ctx.globalCompositeOperation='screen';ctx.lineWidth=.65;
+    for(const [x,y,offset] of [[-7,-8.6,0],[7.5,-7.7,2]]){
+      const a=clock*.035+offset;ctx.strokeStyle='#efb8ff';ctx.beginPath();ctx.ellipse(x,y,5.2,1.1,0,a,a+1.9);ctx.stroke();
+      ctx.fillStyle='#edb0ff';ctx.globalAlpha=.7;ctx.beginPath();ctx.ellipse(x+Math.cos(a)*4.5,y+Math.sin(a)*.8,.8,.3,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    }
+    if(d.repairing&&clock%1600<120){ctx.strokeStyle='#ffde82';for(let i=0;i<3;i++){const a=i*2+clock*.01;ctx.beginPath();ctx.moveTo(10,6);ctx.lineTo(10+Math.cos(a)*2,6+Math.sin(a)*2);ctx.stroke();}}
+    ctx.restore();
   }
   function drawEffects(camera){
     const g=window.emberHallWorld?.actors.find(a=>a.id==='Glimmer');
@@ -94,5 +116,5 @@
     ctx.save();ctx.translate(102-camera.x,143-camera.y-age*.006);ctx.rotate(impact.tilt);ctx.globalAlpha=Math.min(1,(950-age)/250);
     ctx.font='italic 900 9px Georgia';ctx.textAlign='center';ctx.lineWidth=2;ctx.strokeStyle='#251728';ctx.fillStyle='#ffdc80';ctx.strokeText(impact.text,0,0);ctx.fillText(impact.text,0,0);ctx.restore();
   }
-  window.HallLiveliness={tick,drawActor,drawEffects,drawLabProps,stops,get ready(){return loaded&&ponder.complete&&ponder.naturalWidth>0&&props.complete&&props.naturalWidth>0;},get flight(){return flight;},get clock(){return clock;},get impact(){return impact;}};
+  window.HallLiveliness={tick,drawActor,drawEffects,drawLabProps,stops,dronePosition,get ready(){return loaded&&drone.complete&&drone.naturalWidth>0&&ponder.complete&&ponder.naturalWidth>0&&props.complete&&props.naturalWidth>0;},get flight(){return flight;},get clock(){return clock;},get impact(){return impact;}};
 })();
