@@ -30,6 +30,7 @@
   root.addEventListener('wheel',event=>{if(hoveredUnit&&!unitTooltip.hidden&&unitTooltip.scrollHeight>unitTooltip.clientHeight){unitTooltip.scrollTop+=event.deltaY;event.preventDefault();}},{passive:false});
   history.querySelector('button').onclick=()=>history.close();
   historyButton.onclick=()=>{history.querySelector('header strong').textContent='Battle history';history.querySelector('.bc-history-content').innerHTML=(battle.actionHistory||[]).map(a=>`<div><strong>R${a.round} · ${esc(a.actor)}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small>${esc(e.target)}: ${e.crit?'CRIT ':''}${e.amount} ${esc(e.type||e.kind)} ${esc(e.text)}</small>`).join('')}</div>`).join('')||'<p>No actions yet.</p>';history.showModal();};
+  let lockedAction=null,lockedItem=null;
   let owner=null,turnOwner=null,ui={level:'category',category:'attack',action:0,target:0,page:0},groups=[],unit=null,selected=null,targetList=[],targetGroup=false,lastLayout='',statusNodes=[];
   let lastActions={};try{lastActions=JSON.parse(localStorage.getItem('verseborn-battle-ui-v1')||'{}');}catch{}
   if(!lastActions||typeof lastActions!=='object'||Array.isArray(lastActions))lastActions={};
@@ -97,7 +98,7 @@
     return model.reason(unit,sk);
   }
   function cost(sk){return sk.anim==='ultimate'?'100 Resonance':sk.command?'0 MP':`${skillMpCost(unit.id,sk,unit)} MP`;}
-  function selectCategory(id,enter=false){ui.category=id;ui.action=0;ui.level=enter?'action':'category';ui.page=0;renderCommands();}
+  function selectCategory(id,enter=false){lockedAction=null;battle.targetMode=false;battle.pendingSkill=null;ui.category=id;ui.action=0;ui.level=enter?'action':'category';ui.page=0;renderCommands();}
   function targetName(sk){return model.scopes[sk.targetScope]||'Self';}
   function durationPreview(sk,status,target){
     const def=STATUS_DEFS[status.type]||{},buff=(sk.buffs||[]).includes(status);
@@ -185,8 +186,7 @@
     root.dataset.level=ui.level;
     heading.innerHTML=`<strong>${esc(unit.name)}</strong><span>${ui.level==='target'?'Choose target':ui.level==='items'?'Carried items':ui.level==='itemTarget'?'Choose fallen ally':'Choose an action'}</span>`;
     renderCategories();actionRow.innerHTML='';
-    if(ui.level==='target'){renderTargetCards();}
-    else if(ui.level==='items'){renderItems();}
+    if(ui.level==='items'){renderItems();}
     else if(ui.level==='itemTarget'){renderItemTargets();}
     else{
       const actions=currentGroup()?.actions||[],size=pageSize();ui.page=Math.floor(ui.action/size);
@@ -195,15 +195,21 @@
         const index=start+j,reason=disabled(sk),b=make('button','bc-action',actionRow);b.type='button';b.dataset.action=String(index);b.dataset.category=sk.category;
         b.setAttribute('aria-disabled',String(Boolean(reason)));b.classList.toggle('is-unavailable',Boolean(reason));b.classList.toggle('is-unaffordable',reason==='Not enough MP');b.classList.toggle('is-selected',ui.action===index);b.classList.toggle('is-focused',ui.level==='action'&&ui.action===index);
         b.innerHTML=`<span class="bc-card-art">${abilityIcon(sk)}</span><span class="bc-action-copy"><strong>${esc(sk.name)}</strong><span><small class="bc-badge">${targetName(sk)}</small><b>${cost(sk)}</b></span>${reason?`<small class="bc-reason">${esc(reason)}</small>`:sk.targetPolicy?'<small class="bc-auto-target">Lowest-HP ally</small>':''}</span>`;
-        b.title=sk.name;b.setAttribute('aria-label',sk.name);
+        b.title=sk.name;b.setAttribute('aria-label',sk.name);b.classList.toggle('is-locked',lockedAction===ui.category+':'+(sk.actionId||sk.name));b.setAttribute('aria-pressed',String(lockedAction===ui.category+':'+(sk.actionId||sk.name)));
         // Only an explicit click or navigation input changes the chosen action.
-        b.onclick=()=>{ui.action=index;ui.level='action';renderCommands();};
+        b.onclick=()=>{
+          if(battle.resolving)return;
+          const key=ui.category+':'+(sk.actionId||sk.name);
+          if(lockedAction===key&&ui.action===index)return activate();
+          lockedAction=key;ui.action=index;ui.level='action';battle.targetMode=false;battle.pendingSkill=null;
+          if(!reason&&!sk.command)chooseTarget();else renderCommands();
+        };
       });
       addPages(actions.length,size);
     }
-    instruction.textContent=ui.level==='category'?'← → Category · Confirm: actions':ui.level==='target'||ui.level==='itemTarget'?'← → Target · Confirm: use · Back: actions':'← → Action · ↑ / Back: categories';
+    instruction.textContent=ui.level==='category'?'← → Category · Confirm: actions':ui.level==='target'?'Choose a target · Click the locked skill again to use':ui.level==='itemTarget'?'Choose ally · Click again to revive':'← → Action · ↑ / Back: categories';
     if(ui.level!=='items'&&ui.level!=='itemTarget')updatePreview();
-    renderAct();
+    renderConfirmHint();
     fitLabels();
   }
   function fitLabels(){
@@ -215,13 +221,9 @@
       const parent=n.closest('.bc-turn');if(parent){parent.tabIndex=0;parent.setAttribute('aria-label',full);}
     });
   }
-  function renderAct(){
-    const footer=make('div','bc-act-footer',detail),hint=make('small','',footer),button=make('button','bc-act',footer);button.type='button';button.innerHTML='Act <small>Enter / A</small>';
-    const sk=skill();button.disabled=Boolean(!sk||disabled(sk));
-    if(ui.level==='items'){const entry=carriedBattleItems()[itemIndex];button.disabled=!entry||!canUseBattleItem(unit,entry[1]);hint.textContent='Use selected item';}
-    else if(ui.level==='itemTarget'){button.disabled=!targetList[ui.target];hint.textContent='Revive selected ally';}
-    else hint.textContent=ui.level==='target'?targetGroup?`${targetList.length} targets`:(targetList[ui.target]?.name||'Choose target'):'Confirm action';
-    button.onclick=()=>{if(ui.level==='category')ui.level='action';activate();};
+  function renderConfirmHint(){
+    const hint=make('div','bc-confirm-hint',detail);
+    hint.textContent=ui.level==='target'?`Target: ${targetGroup?targetName(skill()):targetList[ui.target]?.name||'Choose target'} · Click the selected skill again to use`:ui.level==='items'?'Click an item to select; click it again to use':'Click a skill to lock it; click it again to use';
   }
   function addPages(total,size){
     if(total<=size)return;
@@ -232,7 +234,7 @@
   function chooseTarget(){
     const sk=skill();targetList=model.targets(unit,sk);targetGroup=['all-enemies','all-allies','all-combatants'].includes(sk.targetScope);
     if(!targetList.length)return;
-    if(sk.targetScope==='self'||sk.targetPolicy==='lowest-hp')return execute(targetList[0]);
+    // First selection only locks, including self and automatic-target skills.
     ui.level='target';ui.target=0;battle.targetMode=true;battle.pendingSkill=sk;battleActionIndex=0;renderCommands();
   }
   function renderTargetCards(){
@@ -268,16 +270,16 @@
     items.slice(Math.floor(itemIndex/size)*size,Math.floor(itemIndex/size)*size+size).forEach(([name,info],j)=>{
       const index=Math.floor(itemIndex/size)*size+j,b=make('button','bc-action',actionRow);b.type='button';b.classList.toggle('is-selected',itemIndex===index);b.classList.toggle('is-unavailable',!canUseBattleItem(unit,info));b.setAttribute('aria-disabled',String(!canUseBattleItem(unit,info)));
       b.innerHTML=`${inventoryItemIconHtml(name,'bc-card-art')}<span><strong>${esc(name)} ×${state.inventory[name]}</strong><small>${esc(battleItemState(unit,info))} · ${info.battle==='revive'?'Fallen Ally':'Self'}</small></span>`;
-      b.onclick=()=>{itemIndex=index;renderCommands();};
+      b.onclick=()=>{if(lockedItem===name&&itemIndex===index)return activateItem();lockedItem=name;itemIndex=index;renderCommands();};
     });
     if(items.length>size){const pager=make('div','bc-pager',actionRow);for(const d of[-1,1]){const b=make('button','',pager);b.type='button';b.textContent=d<0?'‹':'›';b.setAttribute('aria-label',d<0?'Previous items':'Next items');b.onclick=()=>{const pages=Math.ceil(items.length/size),page=Math.floor(itemIndex/size);itemIndex=((page+d+pages)%pages)*size;renderCommands();};}}
     const entry=items[itemIndex];detail.innerHTML=entry?`<h3>${esc(entry[0])}</h3><p>${esc(entry[1].desc)}</p><span class="bc-badge">${entry[1].battle==='revive'?'Single Fallen Ally':'Self'}</span><p>Uses 1 item · Ends turn</p>`:'<p>No carried items.</p>';
   }
   function activateItem(){const entry=carriedBattleItems()[itemIndex];if(!entry||!canUseBattleItem(unit,entry[1]))return;if(entry[1].battle==='revive'){pendingItem=entry[0];ui.level='itemTarget';ui.target=0;return renderCommands();}remember({name:'Items',category:'utility'});useBattleItem(unit,entry[0]);}
-  function renderItemTargets(){targetList=battle.party.filter(a=>a.hp<=0);ui.target=Math.min(ui.target,Math.max(0,targetList.length-1));actionRow.style.setProperty('--action-count',targetList.length);targetList.forEach((a,i)=>{const b=make('button','bc-action',actionRow);b.type='button';b.classList.toggle('is-selected',ui.target===i);b.innerHTML=`${icon('heal')}<span><strong>${esc(a.name)}</strong><small>Revive · 50% HP</small></span>`;b.onclick=()=>{ui.target=i;renderCommands();};});detail.innerHTML=`<h3>${esc(pendingItem)}</h3><p>Revive a fallen ally. Uses 1 item and ends the turn.</p>`;highlightTargets();}
+  function renderItemTargets(){targetList=battle.party.filter(a=>a.hp<=0);ui.target=Math.min(ui.target,Math.max(0,targetList.length-1));actionRow.style.setProperty('--action-count',targetList.length);targetList.forEach((a,i)=>{const b=make('button','bc-action',actionRow);b.type='button';b.classList.toggle('is-selected',ui.target===i);b.innerHTML=`${icon('heal')}<span><strong>${esc(a.name)}</strong><small>Revive · 50% HP</small></span>`;b.onclick=()=>{if(ui.target===i&&lockedItem===pendingItem+':'+i)return activateRevive();lockedItem=pendingItem+':'+i;ui.target=i;renderCommands();};});detail.innerHTML=`<h3>${esc(pendingItem)}</h3><p>Revive a fallen ally. Uses 1 item and ends the turn.</p>`;highlightTargets();}
   function activateRevive(){const target=targetList[ui.target];if(target?.hp<=0){remember({name:'Items',category:'utility'});useBattleItem(unit,pendingItem,target);}}
   function cancel(){
-    if(ui.level==='target'){battle.targetMode=false;battle.pendingSkill=null;ui.level='action';}
+    if(ui.level==='target'){lockedAction=null;battle.targetMode=false;battle.pendingSkill=null;ui.level='action';}
     else if(ui.level==='itemTarget')ui.level='items';
     else if(ui.level==='items'){battle.itemMode=false;ui.level='action';ui.action=currentGroup().actions.findIndex(s=>s.command==='items');}
     else ui.level='category';
@@ -318,7 +320,7 @@
     el.battleResonance.parentElement.setAttribute('aria-label',`Party Resonance ${Math.round(state.resonance)} / 100`);
     el.enemyBattleResonance.parentElement.setAttribute('aria-label',`Enemy Resonance ${Math.round(battle.enemyResonance||0)} / 100`);
     const turn=currentTurn(),newTurn=owner!==battle||turnOwner!==turn;
-    if(newTurn){owner=battle;turnOwner=turn;ui={level:'category',category:'attack',action:0,target:0,page:0};}
+    if(newTurn){lockedAction=null;lockedItem=null;owner=battle;turnOwner=turn;ui={level:'category',category:'attack',action:0,target:0,page:0};}
     unit=turn?.side==='party'?battle.party.find(a=>a.id===turn.id):null;
     rebuildStatusCards();
     if(!unit||battle.resolving||battle.phaseTransition){command.classList.add('is-waiting');heading.innerHTML=`<strong>${esc(turn?.name||battle.name)}</strong><span>${esc(battle.lastAttackDamage||log||'')}</span>`;categories.innerHTML='';actionRow.innerHTML='<div class="bc-waiting">'+(battle.phaseTransition?'Next phase':battle.resolving?'Action in progress…':'Enemy turn')+'</div>';detail.innerHTML='<p class="bc-waiting-note">'+esc(battle.lastAttackDamage||log||'')+'</p>';instruction.textContent='';return;}
