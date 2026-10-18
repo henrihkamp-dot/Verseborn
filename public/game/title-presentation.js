@@ -3,7 +3,7 @@
   'use strict';
   const W=1448,H=1086,art=new Image(),clean=new Image(),lute=new Image(),banners=[];
   const bannerReady=fetch('assets/ui/title-263/banners.json').then(r=>r.json()).then(async configs=>{await Promise.all(configs.map(async (c,i)=>{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=`assets/ui/title-263/banner-${i}.webp`;});banners[i]={...c,image};}));});let loaded=false,intent='continue',hits=[];
-  const ready=Promise.all([new Promise((resolve,reject)=>{lute.onload=resolve;lute.onerror=reject;lute.src="assets/ui/title-276/lute.webp";}),bannerReady,new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=()=>reject(Error('Title illustration unavailable'));art.src='assets/ui/title-263/title.webp';}),new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=()=>reject(Error('Title menu plate unavailable'));clean.src='assets/ui/title-259/menu-clean.webp';})]).then(()=>{window.TitleCharacterLife?.prepare(art);loaded=true;});
+  const ready=Promise.all([window.TitleCharacterLife.ready,new Promise((resolve,reject)=>{lute.onload=resolve;lute.onerror=reject;lute.src="assets/ui/title-278/lute.webp";}),bannerReady,new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=()=>reject(Error('Title illustration unavailable'));art.src='assets/ui/title-263/title.webp';}),new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=()=>reject(Error('Title menu plate unavailable'));clean.src='assets/ui/title-259/menu-clean.webp';})]).then(()=>{window.TitleCharacterLife?.prepare(art);loaded=true;});
   ready.catch(error=>console.error(error));
   titleMenuState='press';titleMenuIndex=1;titleSubmenuIndex=0;
   function layout(){const scale=Math.min(canvas.width/W,canvas.height/H);return{x:(canvas.width-W*scale)/2,y:(canvas.height-H*scale)/2,width:W*scale,height:H*scale,scale};}
@@ -156,7 +156,7 @@
   drawTitle=function(now=performance.now()){
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#070615';ctx.fillRect(0,0,canvas.width,canvas.height);
     if(!loaded){ctx.restore();return;}
-    const l=layout();ctx.imageSmoothingEnabled=true;ctx.translate(l.x,l.y);ctx.scale(l.scale,l.scale);ctx.drawImage(art,0,0,W,H);ctx.drawImage(lute,36,562);drawBanners(now);window.TitleCharacterLife?.draw(ctx,now,reduced());atmosphere(now);drawMenu(now);ctx.restore();
+    const l=layout();ctx.imageSmoothingEnabled=true;ctx.translate(l.x,l.y);ctx.scale(l.scale,l.scale);ctx.drawImage(art,0,0,W,H);ctx.drawImage(lute,38,522);drawBanners(now);window.TitleCharacterLife?.draw(ctx,now,reduced());atmosphere(now);drawMenu(now);ctx.restore();
     canvas.setAttribute('aria-label','Verseborn. '+(titleMenuState==='press'?'Press Start.':entries().join(', ')+'. Use arrow keys, Enter and Escape.'));
   };
   titleImageLayout=layout;

@@ -1,41 +1,36 @@
-// Local, feathered deformations keep the original illustration and grounded poses.
+// Original painted cutouts move over local restored underpainting.
 (()=>{
  'use strict';
- const regions=[
-  {id:'verseborn-foot',points:[[298,743],[320,745],[336,765],[365,771],[376,792],[333,792],[311,779]],kind:'tap',amp:2.2,period:6100,phase:0},
-  {id:'mira',points:[[322,555],[395,530],[450,527],[468,544],[450,575],[438,616],[374,650],[309,625]],kind:'wind',amp:1.15,period:4700,phase:1.7},
-  {id:'seerin-hair',points:[[654,511],[699,522],[710,555],[684,602],[646,641],[579,678],[543,671],[550,620],[596,564]],kind:'wind',amp:1.65,period:5300,phase:3.1},
-  {id:'torren-hair',points:[[985,582],[1026,589],[1045,624],[1023,651],[1004,690],[970,734],[936,749],[923,715],[941,661],[965,623]],kind:'wind',amp:1.35,period:5700,phase:4.3},
-  {id:'sparky-jaw',points:[[1284,759],[1296,764],[1307,763],[1320,772],[1315,782],[1302,783],[1290,773]],kind:'jaw',amp:1.7,period:6900,phase:2.2}
- ];
- let source,ready=false,last=-Infinity,frame=0;
- function prepare(art){
-  source=art;
-  for(const r of regions){
-   const xs=r.points.map(p=>p[0]),ys=r.points.map(p=>p[1]);r.x=Math.floor(Math.min(...xs))-6;r.y=Math.floor(Math.min(...ys))-6;r.w=Math.ceil(Math.max(...xs))-r.x+7;r.h=Math.ceil(Math.max(...ys))-r.y+7;
-   r.surface=document.createElement('canvas');r.surface.width=r.w;r.surface.height=r.h;r.paint=r.surface.getContext('2d',{willReadFrequently:true});r.paint.drawImage(art,-r.x,-r.y);r.original=r.paint.getImageData(0,0,r.w,r.h);r.output=r.paint.createImageData(r.w,r.h);
-   const mask=document.createElement('canvas');mask.width=r.w;mask.height=r.h;const m=mask.getContext('2d',{willReadFrequently:true});m.filter='blur(2px)';m.fillStyle='#fff';m.beginPath();r.points.forEach(([x,y],i)=>i?m.lineTo(x-r.x,y-r.y):m.moveTo(x-r.x,y-r.y));m.closePath();m.fill();r.weights=m.getImageData(0,0,r.w,r.h).data;
-  }ready=true;
+ const path='assets/ui/title-278/';let regions=[],art,mouth,frames=0;
+ const image=src=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src;});
+ const ready=Promise.all([fetch(path+'regions.json').then(r=>r.json()).then(async data=>{regions=await Promise.all(data.map(async r=>({...r,cut:await image(path+r.id+'-cut.webp'),under:await image(path+r.id+'-under.webp')})));for(const r of regions){r.surface=document.createElement('canvas');r.surface.width=r.w+28;r.surface.height=r.h+14;r.paint=r.surface.getContext('2d');}}),image(path+'sparky-closed.webp').then(i=>mouth=i)]);
+ function prepare(original){art=original;}
+ function motion(r,now){const t=now/r.period*Math.PI*2+r.phase,cycle=(now+r.phase*900)%r.period/r.period;return r.kind==='tap'?{x:0,y:-r.amp*(cycle<.28?Math.sin(cycle/.28*Math.PI)**2:0)}:{x:r.amp*(Math.sin(t)+.18*Math.sin(t*1.7)),y:0};}
+ function sparkle(ctx,x,y,r,time,phase,color){
+  const pulse=Math.pow((1+Math.sin(time/1350+phase))/2,3),strength=.12+.62*pulse;
+  ctx.save();ctx.globalCompositeOperation='screen';const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${color},${strength})`);g.addColorStop(.35,`rgba(${color},${strength*.65})`);g.addColorStop(1,`rgba(${color},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
+  ctx.globalAlpha=pulse*.8;ctx.strokeStyle='#fff2db';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.stroke();ctx.restore();
  }
- function update(now){
-  if(now===last)return;last=now;frame++;
+ function draw(ctx,now,reduced){
+  if(!art||reduced)return;frames++;
   for(const r of regions){
-   const input=r.original.data,out=r.output.data,w=r.w,h=r.h,t=now/r.period*Math.PI*2+r.phase;
-   // Pause between the small foot taps and mouth movements.
-   const cycle=(now+r.phase*900)%r.period/r.period;
-   const pulse=cycle<.24?Math.sin(cycle/.24*Math.PI)**2:0;
-   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    const k=(y*w+x)*4,weight=r.weights[k+3]/255;let dx=0,dy=0;
-    if(r.kind==='wind'){const root=Math.max(.12,y/h);dx=r.amp*weight*root*(Math.sin(t-y*.016)+.22*Math.sin(t*1.7+y*.04));dy=.28*weight*root*Math.sin(t*.8);}
-    if(r.kind==='tap')dy=-r.amp*weight*pulse*Math.max(0,(x-8)/w);
-    if(r.kind==='jaw')dy=-r.amp*weight*pulse;
-    const sx=Math.max(0,Math.min(w-1.001,x-dx)),sy=Math.max(0,Math.min(h-1.001,y-dy)),ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy,a=(iy*w+ix)*4,b=a+4,c=a+w*4,d=c+4;
-    for(let q=0;q<3;q++)out[k+q]=(input[a+q]*(1-fx)+input[b+q]*fx)*(1-fy)+(input[c+q]*(1-fx)+input[d+q]*fx)*fy;out[k+3]=255;
-   }r.paint.putImageData(r.output,0,0);
+   const m=motion(r,now),p=r.paint;p.clearRect(0,0,r.w+28,r.h+14);
+   // Roots stay attached; only the free ends and the boot toe move.
+   if(r.kind==='tap'){
+    p.save();p.translate(14+5,7+3);p.rotate(m.y/95);p.drawImage(r.cut,-5,-3);p.restore();
+   }else for(let y=0;y<r.h;y++){
+    const free=Math.pow(y/r.h,.85),wave=m.x*free+Math.sin(now/1250+y*.035+r.phase)*free*.6;
+    p.drawImage(r.cut,0,y,r.w,1,14+wave,7+y,r.w,1);
+   }
+   ctx.drawImage(r.under,r.x,r.y);ctx.drawImage(r.surface,r.x-14,r.y-7);
   }
+  // Mira's expression shifts slightly with her hair, without moving her feet.
+  const dx=1.25*Math.sin(now/1700+1.7);ctx.save();ctx.beginPath();ctx.ellipse(450,547,12,17,-.2,0,Math.PI*2);ctx.clip();ctx.drawImage(art,434,528,34,40,434+dx,528,34,40);ctx.restore();
+  // Distinct open and closed painted frames give Sparky an actual mouth cycle.
+  const phase=(now+1200)%6200/6200,close=phase<.18?Math.sin(phase/.18*Math.PI)**2:0;
+  ctx.save();ctx.globalAlpha=close;ctx.drawImage(mouth,1280,750,46,43);ctx.restore();
+  sparkle(ctx,910,514,29,now,0,'194,102,255');sparkle(ctx,1262,783,23,now,2.4,'255,190,65');
  }
- function shimmer(ctx,x,y,r,time,phase,color){
-  const strength=.08+.17*Math.pow((1+Math.sin(time/1700+phase))/2,3);ctx.save();ctx.globalCompositeOperation='screen';const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${color},${strength})`);g.addColorStop(.35,`rgba(${color},${strength*.65})`);g.addColorStop(1,`rgba(${color},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);ctx.restore();
- }
- window.TitleCharacterLife={prepare,draw(ctx,now,reduced){if(!ready||reduced)return;update(Math.floor(now/50)*50);for(const r of regions)ctx.drawImage(r.surface,r.x,r.y);shimmer(ctx,910,514,29,now,0,'194,102,255');shimmer(ctx,1262,783,20,now,2.4,'255,192,69');},get regions(){return regions.map(r=>r.id)},get frames(){return frame}};
+ window.TitleCharacterLife={ready,prepare,draw,get regions(){return [...regions.map(r=>r.id),'mira-head','sparky-jaw']},get frames(){return frames},motionAt:now=>regions.map(r=>({id:r.id,...motion(r,now)}))};
 })();
+
