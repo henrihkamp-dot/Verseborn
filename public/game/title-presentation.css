@@ -1,0 +1,15 @@
+/* Title-only sizing preserves the supplied 4:3 composition on every display. */
+body[data-play-mode="title"] .shell {
+  width:100vw!important;min-height:100dvh;padding:0!important;display:grid;
+  grid-template-columns:1fr;place-items:center;gap:0;
+}
+body[data-play-mode="title"] .game {
+  width:min(100vw,calc(100dvh * 4 / 3))!important;min-height:0!important;
+  max-height:100dvh;transform:none!important;zoom:1!important;margin:0!important;
+  border:0;box-shadow:none;background:#070615;
+}
+body[data-play-mode="title"] canvas {
+  width:100%;height:auto;aspect-ratio:4/3!important;max-height:none!important;
+  image-rendering:auto;cursor:pointer;
+}
+body[data-play-mode="title"] :is(.panel,.hud,.gamepad) {display:none!important;}

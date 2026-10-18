@@ -1,0 +1,7 @@
+# Verseborn title presentation
+
+title.webp is the user's supplied illustration, codex-clipboard-d0b939ba-66ea-4c5f-8b9b-15a84bd5e505.png, converted to WebP. The six accompanying supplied title/menu images served as layout references. Menu text, ornaments, highlights and save details are rendered live; example save names, dates and progress from reference screenshots are not baked into the UI.
+
+menu-clean.webp is a small bottom-centre crop of an edit made with the built-in image_gen tool. Only that prompt-area plate is composited over the original artwork for interactive menus. The original sky, logo, city and heroes remain unchanged. Subtle flicker, glints and occasional falling stars are drawn locally in code.
+
+Image edit prompt: Use case: precise-object-edit. Edit this exact supplied Verseborn title illustration. Remove ONLY the bottom PRESS START wording and the decorative fine gold lines, tiny diamond ornament and purple stars that surround that bottom prompt (the area below the heroes' feet, approximately x350..1110, y925..1048 in the 1448x1086 input). Replace that small bottom prompt area with uninterrupted naturally matching dark blue stone stair/wall texture. Preserve the full composition, exact canvas framing, all people, flowers, lanterns, city, sky, and especially the huge VERSEBORN title and its magical emblem completely unchanged. Do not remove any of the large top logo. No new text or UI. This is the blank background plate behind a live game menu.

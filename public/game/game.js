@@ -180,9 +180,8 @@ let titleMenuState = "main";
 let activeSaveSlot = 1;
 let saveTimer = null;
 
-const titleMenuEntries = ["Ember Hall"];
-// Preserve mode IDs and save keys while Story Mode is temporarily hidden.
-const titleModeIndices = [1];
+const titleMenuEntries = ["Story Mode", "Ember Hall"];
+const titleModeIndices = [0, 1];
 const saveSlotEntries = ["Save Slot 1", "Save Slot 2", "Back"];
 const titleSubmenuEntries = [
   ["New", "Continue", "Back"],
@@ -1353,17 +1352,13 @@ function loadTitleImage() {
     const image = new Image();
     image.onload = () => { titleImage = image; resolve(); };
     image.onerror = resolve;
-    image.src = "assets/maps/runtime/title-screen.png";
+    image.src = "assets/ui/title-259/title.webp";
   });
 }
 
 function loadTitleIdleFrames() {
-  return Promise.all([TITLE_BACKGROUND_FRAME].map(frame => new Promise(resolve => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = `assets/maps/title-idle-${frame}.webp`;
-  }))).then(images => { titleIdleFrames = images; });
+  titleIdleFrames = [];
+  return Promise.resolve();
 }
 
 function loadStageSelectorImage() {
@@ -4104,7 +4099,7 @@ function saveGame(saveKey = activeSaveKey()) {
       returnAt: spawnPoint.returnAt,
       retryAt: spawnPoint.retryAt
     }]))]));
-    localStorage.setItem(saveKey, JSON.stringify({ version: 4, state, heroes, questState, spawnState }));
+    localStorage.setItem(saveKey, JSON.stringify({ version: 4, savedAt: Date.now(), state, heroes, questState, spawnState }));
     return true;
   } catch {
     return false;
@@ -15788,7 +15783,8 @@ window.addEventListener("keydown", e => {
   else if (key === "q") cycleLeader(-1);
   else if (key === "e") cycleLeader(1);
   else if (key === "x" || key === "escape") {
-    if (mode === "battle" && battle?.targetMode) closeTargetSelection();
+    if (mode === "title") handleControl("cancel");
+    else if (mode === "battle" && battle?.targetMode) closeTargetSelection();
     else if (mode === "battle" && battle?.itemMode) closeBattleItems();
     else if (mode === "menu" && menuTab === "gear" && gearPickerOpen) { gearPickerOpen = false; renderMenu(); }
     else if (mode === "menu" || mode === "shop" || mode === "hallMap") toggleMenu();
