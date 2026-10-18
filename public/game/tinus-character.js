@@ -91,20 +91,35 @@
 
   const images = {}, frameCache = new Map();
   let manifest;
+  let supplementalReady=Promise.resolve();
+  async function loadArt(key){
+    for(let attempt=0;attempt<3;attempt++){
+      try{
+        const image=await new Promise((resolve,reject)=>{
+          const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error('Tinus '+key+' artwork could not load.'));
+          image.src=BASE+manifest[key].file+'?art=257&retry='+attempt;
+        });
+        images[key]=image;
+        if(key==='battle')battleAnimationSheets[ID]={...manifest.battle,image};
+        if(key==='mugMelee')battleMeleeSheets[ID]={...manifest.mugMelee,image};
+        if(key==='run')battleChargeSheets[ID]={...manifest.run,image};
+        if(key==='effects')characterVfxSheets[ID]={...manifest.effects,image};
+        return image;
+      }catch(error){if(attempt===2)throw error;await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));}
+    }
+  }
   const ready = (async () => {
-    const response = await fetch(BASE + 'manifest.json?v=tinus-mug-227');
+    let response;
+    for(let attempt=0;attempt<3;attempt++){
+      try{response=await fetch(BASE+'manifest.json?v=tinus-257&retry='+attempt,{cache:'no-cache'});if(!response.ok)throw Error('Tinus manifest unavailable');break;}
+      catch(error){if(attempt===2)throw error;await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));}
+    }
     if (!response.ok) throw new Error('Tinus frame manifest could not load.');
     manifest = await response.json();
-    await Promise.all(['hall', 'battle', 'effects', 'mugMelee', 'run'].map(key => new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => { images[key] = image; resolve(); };
-      image.onerror = () => reject(new Error('Tinus ' + key + ' artwork could not load.'));
-      image.src = BASE + manifest[key].file;
-    })));
-    battleAnimationSheets[ID] = { ...manifest.battle, image: images.battle };
-    battleMeleeSheets[ID] = { ...manifest.mugMelee, image: images.mugMelee };
-    battleChargeSheets[ID] = { ...manifest.run, image: images.run };
-    characterVfxSheets[ID] = { ...manifest.effects, image: images.effects };
+    // Optional attack/effect sheets cannot suppress his Hall and battle body.
+    supplementalReady=Promise.all(['effects','mugMelee','run'].map(loadArt));
+    supplementalReady.catch(error=>console.error(error));
+    await Promise.all(['hall','battle'].map(loadArt));
     return true;
   })();
   // Report asset failure without replacing Tinus by a generic placeholder.
@@ -200,6 +215,6 @@
     updatePanels();
     return true;
   }
-  window.TinusCharacter = { ready, recruit, drawField, seatedPhase, signatureNames: signatures.map(entry => entry[0]) };
+  window.TinusCharacter = { ready, get supplementalReady(){return supplementalReady;}, recruit, drawField, seatedPhase, signatureNames: signatures.map(entry => entry[0]) };
 })();
 

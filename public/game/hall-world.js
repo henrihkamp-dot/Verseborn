@@ -120,14 +120,21 @@
   ];
   let roomSignature=null,roomBackground=null;
   const droneWall=new Image();droneWall.src='assets/hall/living-256/drone-wall.webp';
+  const kitchenTable=new Image();kitchenTable.src='assets/hall/living-257/table.webp';
   function hallBackground(){
-    const signature=closedRooms.map(room=>state.party.includes(room.owner)?'1':'0').join('')+(droneWall.complete&&droneWall.naturalWidth?'d':'');
+    const signature=closedRooms.map(room=>state.party.includes(room.owner)?'1':'0').join('')+(droneWall.complete&&droneWall.naturalWidth?'d':'')+(kitchenTable.complete&&kitchenTable.naturalWidth?'k':'');
     if(roomSignature===signature&&roomBackground)return roomBackground;
     const original=images.hall,vacant=images['hall-uninhabited-v239'];
     if(!original||!vacant)return original;
     const surface=document.createElement('canvas');surface.width=original.width;surface.height=original.height;
     const paint=surface.getContext('2d'),sx=surface.width/W,sy=surface.height/H;
     paint.drawImage(original,0,0);
+    if(state.party.includes('Torren')&&kitchenTable.complete&&kitchenTable.naturalWidth){
+      const patch=document.createElement('canvas');patch.width=110;patch.height=85;
+      const p=patch.getContext('2d');p.drawImage(kitchenTable,0,0,110,85);p.globalCompositeOperation='destination-in';
+      for(const ends of [[0,0,5,0],[110,0,105,0],[0,0,0,5],[0,85,0,80]]){const fade=p.createLinearGradient(...ends);fade.addColorStop(0,'transparent');fade.addColorStop(1,'white');p.fillStyle=fade;p.fillRect(0,0,110,85);}
+      paint.drawImage(patch,220,135);
+    }
     // Remove the painted stationary drone before drawing its flying counterpart.
     // A feathered clean plate retains the original shelf/candle boundaries.
     if(droneWall.complete&&droneWall.naturalWidth){
@@ -209,7 +216,14 @@
     if(!barBubble){barBubble=document.createElement('div');barBubble.className='hall-banter';barBubble.innerHTML='<strong></strong><span></span>';document.querySelector('.game').append(barBubble);ambientBubbles.set(key,barBubble);const observer=new MutationObserver(()=>{if(mode!=='walk')barBubble.hidden=true;});for(const node of [el.menu,el.dialogue,el.battle])if(node)observer.observe(node,{attributes:true,attributeFilter:['class']});}
     barBubble.dataset.conversation=key;barBubble.querySelector('strong').textContent=line[0];barBubble.querySelector('span').textContent=line[1];barBubble.hidden=false;
     const rect=canvas.getBoundingClientRect(),gameNode=document.querySelector('.game'),game=gameNode.getBoundingClientRect(),scaleX=game.width/gameNode.offsetWidth,scaleY=game.height/gameNode.offsetHeight;
-    barBubble.style.left=((rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX)+'px';barBubble.style.top=((rect.top-game.top+y/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
+    // Hearth-side speakers can be visible while their overhead bubble would
+    // fall above the canvas. Put that bubble below them; offscreen chats stay
+    // attached to their world positions rather than being pinned to the screen.
+    const visible=x>=0&&x<=LOGICAL_WIDTH&&actor.y-viewCamera.y>=0&&actor.y-viewCamera.y<=LOGICAL_HEIGHT;
+    const below=visible&&y/LOGICAL_HEIGHT*rect.height<barBubble.offsetHeight*scaleY+8;
+    barBubble.classList.toggle('below',below);
+    const anchorY=below?actor.y-viewCamera.y+4:y;
+    barBubble.style.left=((rect.left-game.left+x/LOGICAL_WIDTH*rect.width)/scaleX)+'px';barBubble.style.top=((rect.top-game.top+anchorY/LOGICAL_HEIGHT*rect.height)/scaleY)+'px';
     return line[0];
   }
   function resetAmbientChat(key){ambientClocks.delete(key);hideAmbientChat(key);}
@@ -218,7 +232,9 @@
     hideAmbientChat('rift-brothers');
     if(mode!=='walk'||activeRecruitScene||(scene&&now-scene.started<scene.duration)){hideAmbientChat();return null;}
     const kitchenReady=['Torren','Sparky'].every(id=>state.party.includes(id));
-    const kitchenSpeaker=kitchenReady?ambientChat('kitchen',kitchenLines,actors,camera,now):null;
+    // Count time actually spent walking in the Hall, so the conversation is
+    // not silently consumed while shopping, in another room or in a cutscene.
+    const kitchenSpeaker=kitchenReady?ambientChat('kitchen',kitchenLines,actors,camera,window.HallKitchen?.clock??now):null;
     if(!kitchenReady)hideAmbientChat('kitchen');
     const tinus=window.TinusRecruitment?.resident(),eligible=tinus?.pose==='seated'&&window.TinusRecruitment?.progress().recruited&&!window.TinusRecruitment?.replaying;
     if(!eligible){ambientClocks.delete('bar');hideAmbientChat('bar');return kitchenSpeaker;}
@@ -252,7 +268,7 @@
     ['Kael',489,329,12,8],['Kael',553,336,10,7]
   ];
   const clutterCollision=(x,y)=>vacantClutter.some(([owner,cx,cy,rx,ry])=>!state.party.includes(owner)&&Math.abs(x-cx)<rx+4&&Math.abs(y-cy)<ry+2);
-  const collision=(x,y,ignoreClutter=false)=>!ignoreClutter&&clutterCollision(x,y)||![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>{const padding=l===381&&t===85?2:7;return x>l-padding&&x<l+w+padding&&y>t-3&&y<t+h+3;})||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
+  const collision=(x,y,ignoreClutter=false)=>!ignoreClutter&&clutterCollision(x,y)||![[0,0],[-5,0],[5,0],[0,-2],[0,2]].every(([dx,dy])=>onFloor(x+dx,y+dy)&&!solidFeet.some(poly=>inPolygon(x+dx,y+dy,poly)))||walls.some(([l,t,w,h])=>{const padding=l===381&&t===85?2:l===100&&t===58?3:7;return x>l-padding&&x<l+w+padding&&y>t-3&&y<t+h+3;})||obstacles.some(o=>((x-o.x)/(o.rx+5))**2+((y-o.y)/(o.ry+2))**2<1)||((x-resonance.x)/63)**2+((y-124)/33)**2<1;
   function clearSegment(ax,ay,bx,by,ignoreClutter=false){
     const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.5);
     for(let i=1;i<=n;i++)if(collision(ax+(bx-ax)*i/n,ay+(by-ay)*i/n,ignoreClutter))return false;

@@ -91,6 +91,8 @@
 
 /* Speech belongs to the world: fixed wrapping, no pinning to viewport edges. */
 .hall-banter{width:210px;max-width:none;box-sizing:border-box;overflow-wrap:normal}
+.hall-banter.below{transform:translate(-50%,0)}
+.hall-banter.below::after{top:-10px;bottom:auto;border-top-color:transparent;border-bottom-color:#241b21}
 @media(max-width:700px){.hall-banter{width:170px;max-width:none}}
 /* Glimmer's parchment catalogue and fixed comparison ledger. */
 .menu[data-menu-view="glimmer-shop"] .glimmer-shop-workspace{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:20px;flex:1;min-height:0;overflow:hidden}

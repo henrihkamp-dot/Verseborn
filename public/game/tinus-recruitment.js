@@ -15,6 +15,14 @@
       if (state.party.includes('Tinus')) { data.recruited = true; data.phase = 'resident'; }
       else if (['arriving', 'travelling', 'resident'].includes(data.phase)) data.phase = 'waiting';
     }
+    // Saves/developer recruitment can add him after this progress object was
+    // first read. Reconcile ownership on every read, not just object creation.
+    if (state.party.includes('Tinus')) {
+      data.recruited = true;
+      if (!['travelling', 'resident'].includes(data.phase)) {
+        data.phase = 'resident'; actor = null; path = []; portalStarted = 0;
+      }
+    }
     return data;
   }
   function eligible() {
