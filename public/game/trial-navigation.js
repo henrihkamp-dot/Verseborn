@@ -78,6 +78,8 @@
     }
     const header=host.querySelector(':scope>header');if(header)header.after(nav);else host.prepend(nav);
     simplifyPreparation(host,current);
+    window.FormationUI?.mount(host,current);
+    window.EncounterOverview?.mount(host,current);
   }
   const close=closeHallOverlay;
   closeHallOverlay=function(...args){const restore=mode==='hallMap'?originMap:null;const result=close(...args);emberBrowser=null;if(restore){state.map=restore;originMap=null;updateMusic();}return result;};

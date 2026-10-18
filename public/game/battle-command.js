@@ -391,7 +391,8 @@
     // Three distinct ground positions, mirrored across the battlefield.
     if(game.getBoundingClientRect().width>700){
       let [x,y]=native(index,count);
-      if(count===3){
+      if(!enemySide){const spot=[[.14,.52],[.24,.89],[.36,.69]][index]||[.24,.89];x=LOGICAL_WIDTH*spot[0];y=BATTLE_ARENA_HEIGHT*spot[1];}
+      else if(count===3){
         const list=enemySide?battle.enemies:battle.party,roles=list.map(u=>combatRoleKey(u,enemySide));
         const frontScore={tank:5,hybrid:3,dps:2,utility:1,healer:0},rearScore={healer:5,utility:4,dps:3,hybrid:2,tank:0};
         const order=[0,1,2],front=order.reduce((a,b)=>(frontScore[roles[b]]||0)>(frontScore[roles[a]]||0)?b:a),remaining=order.filter(i=>i!==front);

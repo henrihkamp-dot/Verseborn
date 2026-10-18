@@ -1104,7 +1104,7 @@
     }
     ctx.restore();
   }
-  window.HallHub = { encounterSupportHtml, bindEncounterSupport, beginSupportedBattle, meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowBreakBonus, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
+  window.HallHub = { get shadowFormation(){return [...shadowParty];}, setShadowFormation(list){shadowParty=[...new Set(list)].filter(id=>recruited(id)).slice(0,3);renderSparring();}, encounterSupportHtml, bindEncounterSupport, beginSupportedBattle, meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowBreakBonus, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
   const duelQa = new URLSearchParams(location.search);
   if (['hallduel','duelselect'].includes(duelQa.get('qa'))) loadDuelArt().then(() => {
     state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = duelQa.get('recruits') ? duelQa.get('recruits').split(',').filter(id => Object.hasOwn(baseJobs,id)) : Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';
