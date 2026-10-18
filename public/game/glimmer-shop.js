@@ -17,11 +17,11 @@
       if(row.classList.contains('is-gear-row')){[...copy.querySelectorAll(':scope > small')].slice(2).forEach(n=>n.remove());const metadata=copy.querySelector('.shop-gear-metadata');if(metadata)metadata.textContent=metadata.textContent.replace(/\s*•\s*STAGE\s+\d+/i,'');}
       else if(copy){const summary=copy.querySelector(':scope > small');if(summary)summary.textContent='Consumable / Supplies';}
     });
-    function key(row){return row.querySelector('strong')?.textContent.trim()||'';}
+    function key(row){return row.dataset.shopItem||row.querySelector('strong')?.textContent.trim()||'';}
     function inspect(row){
       if(row.classList.contains('is-inspected'))return;
       rows.forEach(item=>item.classList.toggle('is-inspected',item===row));
-      selectedKey=key(row);
+      selectedKey=key(row);overview.dataset.rarity=[...row.classList].find(c=>c.startsWith('rarity-'))?.slice(7)||'common';
       const context=gearHoverRegistry[Number(row.dataset.gearHover)];
       const icon=row.querySelector('.shop-icon')?.outerHTML||'';
       const details=context?gearHoverPopupHtml(context).replace(/Hovered item/g,'Selected item').replace(/Hovered/g,'Selected'):fullDetails.get(row)||'';

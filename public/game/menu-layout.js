@@ -10,5 +10,11 @@
  }else if(menuTab==='party'){
   el.menuBody.querySelectorAll('[data-party-slot]').forEach(b=>{const i=Number(b.dataset.partySlot);b.setAttribute('aria-label',FormationUI.labels[i]+': '+(state.activeParty[i]||'Empty'));});
   el.menuBody.querySelectorAll('.party-member.is-active>b').forEach(n=>{const b=n.closest('button');n.textContent=FormationUI.labels[Number(b.dataset.partyFocus)];});
+ }else if(menuTab==='skills'){
+  el.menuBody.querySelectorAll('.talent-choice').forEach(card=>{
+   const details=[card.querySelector('strong')?.textContent,card.querySelector('p')?.textContent,...[...card.querySelectorAll('small')].slice(0,-1).map(n=>n.textContent)].filter(Boolean).join(' — ');
+   card.title=details;card.setAttribute('aria-label',details);card.querySelectorAll('small').forEach(n=>n.remove());
+   const indicator=card.querySelector(':scope>b');if(indicator){indicator.textContent=card.classList.contains('is-active')?String.fromCharCode(10003):'';indicator.setAttribute('aria-hidden','true');}
+  });
  }return result;};
 })();

@@ -257,3 +257,60 @@ html:not(.touch-layout) .menu .menu-tabs button{min-height:34px!important;paddin
 .menu.compact-trials .trial-party-setup>footer>button{border:1px solid #bd965c!important;border-radius:2px!important;background:linear-gradient(135deg,#4d362b,#261e2c)!important;color:#ffe1a5!important;box-shadow:inset 0 1px #e4c48233!important;font-weight:600}
 .menu.compact-trials .trial-party-setup>footer>button:hover:not(:disabled){background:linear-gradient(135deg,#735032,#392638)!important;border-color:#f0ca87!important}
 }
+@media(min-width:701px){
+.menu[data-menu-view="gear"] .equip-desktop-workspace{grid-template-columns:minmax(170px,.62fr) minmax(180px,.52fr) minmax(0,1.86fr)!important;gap:10px}
+.menu[data-menu-view="gear"] .equip-slot-list{gap:6px;padding:8px}
+.menu[data-menu-view="gear"] .equip-slot-list .equip-body-slot{flex:0 0 62px!important;height:62px!important;min-height:62px!important;max-height:62px!important}
+.menu[data-menu-view="gear"] .equip-slot-list .equip-body-slot strong{font-size:11px!important}
+.menu[data-menu-view="gear"] .equip-slot-picker{display:grid!important;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr)!important;grid-template-rows:auto auto minmax(0,1fr)!important;gap:8px!important;min-height:0}
+.menu[data-menu-view="gear"] .equip-slot-picker>.equip-picker-head{grid-column:1/-1;grid-row:1}
+.menu[data-menu-view="gear"] .equip-slot-picker>.gear-browser{grid-column:1/-1;grid-row:2}
+.menu[data-menu-view="gear"] .equip-slot-picker>.selection-list{grid-column:1;grid-row:3;min-width:0;min-height:0;overflow:auto}
+.menu[data-menu-view="gear"] .equip-slot-picker>.equip-picker-detail{grid-column:2;grid-row:3;min-width:0;min-height:0;overflow:auto;border-left:1px solid #655137;padding-left:8px}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-row{grid-template-columns:30px minmax(0,1fr) auto;min-height:54px;padding:5px;gap:6px}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-row-icon{width:30px;height:34px;min-width:30px;padding:1px}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-row strong{font-size:12px!important;line-height:1.2}.menu[data-menu-view="gear"] .equip-slot-picker .selection-row small{font-size:10px!important;line-height:1.25}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-detail{padding:5px!important}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-detail-head{grid-template-columns:32px minmax(0,1fr)!important;gap:6px!important}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-detail-head strong{font-size:15px!important;line-height:1.2}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-detail-icon{width:32px!important;height:36px!important;min-width:32px!important;padding:1px}
+.menu[data-menu-view="gear"] .equip-slot-picker :is(.selection-detail p,.selection-stat-line){font-size:11px!important;line-height:1.35!important}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-stat-line{padding:7px!important}
+.menu[data-menu-view="gear"] .equip-slot-picker :is(summary,.equip-attributes>div){font-size:10px!important}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-detail .comparison-scroll{max-width:100%;overflow:auto}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-detail table{font-size:10px}
+.menu .shop-stock{display:inline;font:500 10px/1.3 'Segoe UI',sans-serif;color:#bca17a;margin-left:6px;white-space:nowrap}
+.menu.compact-trials .formation-support .hub-slot>strong .support-selected-effect{font-size:9px;font-weight:400;line-height:1.3;color:#dbc9a9}
+.menu.compact-trials .formation-support .hub-slot>strong{min-height:22px;height:auto;white-space:normal}
+}
+
+/* Restore the established rarity palette over the shared menu surfaces. */
+.menu .rarity-common,.menu .selection-detail:has(.gear-rarity.rarity-common),.menu .glimmer-shop-overview[data-rarity="common"]{--rarity-accent:#d8d1c4}
+.menu .rarity-uncommon,.menu .selection-detail:has(.gear-rarity.rarity-uncommon),.menu .glimmer-shop-overview[data-rarity="uncommon"]{--rarity-accent:#86d79d}
+.menu .rarity-rare,.menu .selection-detail:has(.gear-rarity.rarity-rare),.menu .glimmer-shop-overview[data-rarity="rare"]{--rarity-accent:#88bdf0}
+.menu .rarity-epic,.menu .selection-detail:has(.gear-rarity.rarity-epic),.menu .glimmer-shop-overview[data-rarity="epic"]{--rarity-accent:#cf9bf2}
+.menu .rarity-legendary,.menu .selection-detail:has(.gear-rarity.rarity-legendary),.menu .glimmer-shop-overview[data-rarity="legendary"]{--rarity-accent:#ffd27d}
+.menu .rarity-mythic,.menu .selection-detail:has(.gear-rarity.rarity-mythic),.menu .glimmer-shop-overview[data-rarity="mythic"]{--rarity-accent:#69dff1}
+.menu .rarity-artifact,.menu .selection-detail:has(.gear-rarity.rarity-artifact),.menu .glimmer-shop-overview[data-rarity="artifact"]{--rarity-accent:#fff3b5}
+.menu .rarity-shadow-artifact,.menu .selection-detail:has(.gear-rarity.rarity-shadow-artifact),.menu .glimmer-shop-overview[data-rarity="shadow-artifact"]{--rarity-accent:#b4c2ef}
+.menu .rarity-rift-artifact,.menu .selection-detail:has(.gear-rarity.rarity-rift-artifact),.menu .glimmer-shop-overview[data-rarity="rift-artifact"]{--rarity-accent:#adfff0}
+.menu .rarity-personal-artifact,.menu .selection-detail:has(.gear-rarity.rarity-personal-artifact),.menu .glimmer-shop-overview[data-rarity="personal-artifact"]{--rarity-accent:#d391ff}
+.menu .rarity-shadow-personal-artifact,.menu .selection-detail:has(.gear-rarity.rarity-shadow-personal-artifact),.menu .glimmer-shop-overview[data-rarity="shadow-personal-artifact"]{--rarity-accent:#c79cff}
+
+.menu :is(.selection-row,.equip-body-slot,.shop-row)[class*="rarity-"]{border-left:3px solid var(--rarity-accent,#d8d1c4)!important;background:linear-gradient(100deg,color-mix(in srgb,var(--rarity-accent,#d8d1c4) 11%,transparent),transparent 60%),#19151f!important;text-shadow:none}
+.menu :is(.selection-row,.equip-body-slot,.shop-row)[class*="rarity-"] strong,.menu .selection-detail[class*="rarity-"]>.selection-detail-head strong{color:var(--rarity-accent,#d8d1c4)!important;text-shadow:none}
+.menu .equip-body-slot[class*="rarity-"] em,.menu .shop-row[class*="rarity-"] .shop-gear-metadata{color:var(--rarity-accent,#d8d1c4)!important}
+.menu :is(.selection-row,.equip-body-slot,.shop-row)[class*="rarity-"].is-selected,.menu .shop-row[class*="rarity-"].is-inspected{outline:1px solid #ebc782;outline-offset:-1px;box-shadow:inset 0 0 0 1px #ebc782!important}
+.menu .glimmer-shop-overview[data-rarity] .gear-compare-head strong{color:var(--rarity-accent,#d8d1c4)!important}
+@media(min-width:701px){.menu[data-menu-view="gear"] .equip-main-actions>[data-equip]{border-color:#b58b4e;background:linear-gradient(135deg,#3c2b2b,#1d1625);color:#f6d7a2}.menu[data-menu-view="gear"] .equip-main-actions>[data-equip$=":__EMPTY__"]{border-color:#ab7771}}
+
+/* Three talents across, with a name and two description lines. */
+.menu[data-menu-view="skills"] .talent-tiers{grid-template-columns:minmax(0,1fr);gap:7px}
+.menu[data-menu-view="skills"] .talent-tier-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.menu[data-menu-view="skills"] .talent-choice{height:68px;min-height:68px;padding:7px 10px;position:relative;align-items:flex-start}
+.menu[data-menu-view="skills"] .talent-choice>span{min-width:0;flex:1}
+.menu[data-menu-view="skills"] .talent-choice strong{display:block;font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:14px}
+.menu[data-menu-view="skills"] .talent-choice p{font-size:11px;line-height:16px;margin:3px 0 0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.menu[data-menu-view="skills"] .talent-choice>b{position:absolute;right:8px;top:7px;font-size:12px}
+.menu[data-menu-view="skills"] .talent-choice:disabled:not(.is-active){filter:grayscale(1);opacity:.44}
+.menu[data-menu-view="skills"] .talent-choice.is-active{opacity:1;filter:none}
