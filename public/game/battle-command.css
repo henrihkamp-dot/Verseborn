@@ -329,3 +329,12 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
  body[data-play-mode="battle"]{--bc-command-height:clamp(162px,19vh,206px)}
  .bc-action{max-height:78px;align-self:start}
 }
+
+/* Equal team rows with portraits and reserved status space. */
+@media(min-width:701px){
+.command-battle .bc-unit{width:clamp(112px,7vw,134px)}
+.bc-unit .bc-face{position:absolute;right:calc(100% + 6px);top:0;width:34px;height:40px;object-fit:cover;object-position:top;border:1px solid #b69251;background:#17111f;box-shadow:0 2px 5px #0009}
+.bc-unit .bc-role:not([hidden]){right:calc(100% + 17px);top:43px;width:15px;height:15px}
+.bc-unit .bc-statuses{justify-content:flex-start;min-height:21px}
+.bc-unit .bc-weak{font-size:9px}
+}

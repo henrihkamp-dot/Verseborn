@@ -325,6 +325,14 @@
     if(unit.hp<=0)return finishTurn('A fallen ally loses their turn.');
     refreshGroups();if(newTurn)restoreChoice();renderCommands();
   };
+  let brokenStatusImage='';
+  function brokenIcon(){
+    if(brokenStatusImage)return brokenStatusImage;
+    const cell=breakIconSheet?.cells[3];if(!cell)return '';
+    const c=document.createElement('canvas');c.width=c.height=20;
+    c.getContext('2d').drawImage(breakIconSheet.image,cell.x,cell.y,cell.w,cell.h,0,0,20,20);
+    return brokenStatusImage=c.toDataURL();
+  }
   function rebuildStatusCards(){
     if(!battle)return;
     if(partyCanSeeWeaknesses())battle.enemies.forEach(rememberWeakness);
@@ -332,10 +340,10 @@
     for(const [side,list]of[['party',battle.party],['enemy',battle.enemies]])list.forEach((u,index)=>{
       if(side==='enemy'&&u.hp<=0)return;
       const n=make('button',`bc-unit ${side} ${u.hp<=0?'is-down':''}`,cards);n.type='button';n.setAttribute('aria-label',`${u.name}: HP ${Math.max(0,u.hp)} / ${u.max}, MP ${u.mp||0} / ${u.maxmp||0}`);
-      const displayStatuses=(u.statuses||[]).filter(s=>s.type!=='broken');
-      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span title="${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
+      const displayStatuses=[...(u.statuses||[])].sort((a,b)=>(b.type==='broken')-(a.type==='broken'));
+      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span title="${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
       if(combatRoleIconSheet){const role=make('span','bc-role',n),index=COMBAT_ROLE_ICON_INDEX[combatRoleKey(u,side==='enemy')]??4;role.setAttribute('aria-hidden','true');role.innerHTML=`<i style="background-image:url('${esc(combatRoleIconSheet.image.src)}');background-position:${index*25}% center"></i>`;}
-      const breakBadge=make('span','bc-break',n);breakBadge.hidden=true;
+      const portraitSrc=portrait({side,id:u.id,index});if(portraitSrc){const face=make('img','bc-face',n);face.src=portraitSrc;face.alt=u.name;}
       n.onclick=()=>{if(ui.level==='target'&&targetList.includes(u)){ui.target=targetList.indexOf(u);renderCommands();}else if(ui.level==='itemTarget'&&targetList.includes(u)){ui.target=targetList.indexOf(u);renderCommands();}else if(u.statuses?.length){history.querySelector('header strong').textContent=u.name+' · Status effects';history.querySelector('.bc-history-content').innerHTML=u.statuses.map(s=>{const d=statusDisplayData(u,s);return `<div><b>${esc(d.name)}</b> · ${esc(d.timing)}<p>${esc(d.description)}</p></div>`;}).join('');history.showModal();}};
       n.addEventListener('pointerenter',event=>showUnitTooltip(u,event));n.addEventListener('pointermove',event=>showUnitTooltip(u,event));n.addEventListener('pointerleave',hideUnitTooltip);
       n.addEventListener('focus',()=>{const r=n.getBoundingClientRect();showUnitTooltip(u,{clientX:r.right,clientY:r.top});});n.addEventListener('blur',hideUnitTooltip);
@@ -393,7 +401,7 @@
       y=Math.min(BATTLE_ARENA_HEIGHT-15,y+5);
       const u=(enemySide?battle?.enemies:battle?.party)?.[index],bounds=u&&spriteBounds.get(u);
       if(!bounds)return [x,y];
-      const gutter=160/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
+      const gutter=200/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
       return [enemySide?Math.min(x,LOGICAL_WIDTH-gutter-bounds.dx-bounds.width/2):Math.max(x,gutter-bounds.dx+bounds.width/2),y];
     }
     const [x]=native(index,count),height=battlefieldHeight(),ys=count===1?[.67]:count===2?[.52,.82]:[.47,.67,.86];
@@ -406,34 +414,19 @@
   enemyBattlePosition=(i,count=battle?.enemies?.length||1)=>position(nativeEnemyPosition,i,count,true);
   function positionCards(){
     if(!battle||mode!=='battle')return;
-    statusNodes.forEach(({u,n})=>updateBreakBadge(u,n));
-    const r=game.getBoundingClientRect(),cr=canvas.getBoundingClientRect(),field=command.getBoundingClientRect().top-r.top;
-    const key=[r.width,r.height,LOGICAL_WIDTH,field,statusNodes.length].join(':');if(key===lastLayout)return;lastLayout=key;
-    const placed=[],overlap=(a,b)=>a.x<b.x+b.w+4&&a.x+a.w>b.x-4&&a.y<b.y+b.h+4&&a.y+a.h>b.y-4;
-    const sprites=statusNodes.map(({u,index,side})=>{
-      const [x,y]=side==='party'?partyBattlePosition(index,battle.party.length):enemyBattlePosition(index,battle.enemies.length);
-      const b=spriteBounds.get(u)||{dx:0,dy:0,width:34,height:54},sx=cr.width/LOGICAL_WIDTH,sy=cr.height/LOGICAL_HEIGHT;
-      return{u,cx:(x+b.dx)*sx,bottom:(y+b.dy)*sy,w:b.width*sx,h:b.height*sy};
-    });
-    statusNodes.forEach(({u,n},index)=>{
-      const sprite=sprites[index],width=n.offsetWidth,height=n.offsetHeight,statusHeight=n.querySelector('.bc-statuses')?.offsetHeight||0;
-      const side=statusNodes[index].side;
-      const badgeHeight=n.querySelector('.bc-break')?.hidden?0:20,roleWidth=n.querySelector('.bc-role')?25:0;
-      const baseX=(side==='party'?sprite.cx-sprite.w/2-width-7:sprite.cx+sprite.w/2+7)-roleWidth,baseY=sprite.bottom-height-2-badgeHeight,h=height+statusHeight+badgeHeight;
-      const obstacles=sprites.map(s=>({x:s.cx-s.w/2,y:s.bottom-s.h,w:s.w,h:s.h}));
-      let best=null;
-      for(let dx=-320;dx<=320;dx+=4)for(let dy=-96;dy<=96;dy+=12){
-        const box={x:Math.max(5,Math.min(r.width-width-roleWidth-5,baseX+dx)),y:Math.max(76,Math.min(field-h-5,baseY+dy)),w:width+roleWidth,h};
-        if(side==='party'?box.x+box.w>sprite.cx-sprite.w/2-3:box.x<sprite.cx+sprite.w/2+3)continue;
-        const collisions=placed.filter(p=>overlap(box,p)).length+obstacles.filter(p=>overlap(box,p)).length;
-        const score=collisions*1000000+(box.x-baseX)**2+2*(box.y-baseY)**2;
-        if(!best||score<best.score)best={...box,score};
-      }
-      if(!best)best={x:Math.max(5,Math.min(r.width-width-roleWidth-5,baseX)),y:Math.min(field-h-5,baseY),w:width+roleWidth,h};
-      n.style.left=`${best.x+roleWidth}px`;n.style.top=`${best.y+badgeHeight}px`;placed.push(best);
-      const role=n.querySelector('.bc-role');if(role)role.hidden=false;
-    });
+    const r=game.getBoundingClientRect(),field=command.getBoundingClientRect().top-r.top;
+    const key=[r.width,r.height,field,statusNodes.length].join(':');if(key===lastLayout)return;lastLayout=key;
+    for(const side of ['party','enemy']){
+      const group=statusNodes.filter(s=>s.side===side);
+      const rowHeight=Math.max(76,...group.map(({n})=>n.offsetHeight+(n.querySelector('.bc-statuses')?.offsetHeight||0)+22));
+      const top=Math.max(100,(field-group.length*rowHeight)/2+25);
+      group.forEach(({n},i)=>{
+        n.style.left=`${side==='party'?53:r.width-n.offsetWidth-12}px`;
+        n.style.top=`${Math.min(field-rowHeight-6,top+i*rowHeight)}px`;
+      });
+    }
   }
+
   function previewUnits(){
     if(mode!=='battle'||!unit||battle.resolving||!selected||selected.command)return [];
     const list=model.targets(unit,selected);
@@ -443,20 +436,6 @@
   }
   function highlightTargets(){const targets=ui.level==='itemTarget'?[targetList[ui.target]]:previewUnits();statusNodes.forEach(({u,n})=>{n.classList.toggle('is-target',targets.includes(u));n.classList.toggle('is-valid-target',ui.level==='target'&&targetList.includes(u));n.classList.toggle('is-active',unit===u&&!battle.resolving);});}
   // Replace old canvas HUD only; existing sprites, telegraphs, attacks and effects remain native.
-  const breakPictures=new Map(),breakFlashes=new WeakMap();
-  function updateBreakBadge(u,n){
-    const badge=n.querySelector('.bc-break');if(!badge)return;
-    const broken=Boolean(statusOf(u,'broken'))||(breakFlashes.get(u)||0)>performance.now(),threshold=u.breakThreshold||BREAK_THRESHOLD,value=Math.max(0,u.stagger||0);
-    const visible=u.hp>0&&(broken||value>0),key=visible?`${broken}:${Math.ceil(value*3/threshold)}:${threshold}`:'';
-    if(badge.dataset.state===key)return;badge.dataset.state=key;badge.hidden=!visible;lastLayout='';
-    if(!visible)return;
-    const index=broken?3:Math.max(0,Math.min(2,Math.ceil(value*3/threshold)-1)),cell=breakIconSheet?.cells[index];
-    if(cell&&!breakPictures.has(index)){const image=document.createElement('canvas');image.width=image.height=20;const context=image.getContext('2d');context.imageSmoothingEnabled=false;context.drawImage(breakIconSheet.image,cell.x,cell.y,cell.w,cell.h,0,0,20,20);breakPictures.set(index,image.toDataURL());}
-    badge.innerHTML=`${breakPictures.has(index)?`<img src="${breakPictures.get(index)}" alt="">`:''}<b>${broken?'BROKEN':`${Math.round(value)}/${threshold}`}</b>`;
-    badge.setAttribute('aria-label',broken?'Broken':`Break ${Math.round(value)} of ${threshold}`);
-  }
-  const nativeFloater=addBattleFloater;
-  addBattleFloater=function(target,amount,options={}){const count=battleFloaters.length;nativeFloater(target,amount,options);if(mode==='battle'&&options.kind==='broken'){battleFloaters.splice(count);breakFlashes.set(target,performance.now()+1200);statusNodes.filter(s=>s.u===target).forEach(s=>updateBreakBadge(target,s.n));}};
   drawBattleVitals=()=>{};drawBattleTurnRail=()=>{};drawBattleRoleRosters=()=>{};drawEnemyBreakIcon=()=>{};drawBossIndicatorStrip=()=>{};
   const nativeBackdrop=drawBattleBackground,nativeMarker=drawBattleGroundMarker;
   let drawingScene=false;
@@ -501,6 +480,7 @@
   new ResizeObserver(()=>{lastLayout='';if(mode==='battle'&&unit&&!battle.resolving){renderCommands();positionCards();}}).observe(game);
   window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,render:()=>renderBattle(''),previewUnits,positionCards};
 })();
+
 
 
 

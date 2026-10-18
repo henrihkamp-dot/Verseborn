@@ -12,7 +12,7 @@
       const image=images['vision'+i],c=document.createElement('canvas');c.width=image.width;c.height=image.height;const p=c.getContext('2d');p.drawImage(image,0,0);
       // Feather the panel edges into airborne mist without an oval picture frame.
       p.globalCompositeOperation='destination-in';
-      for(const horizontal of [true,false]){const extent=horizontal?c.width:c.height,fade=p.createLinearGradient(0,0,horizontal?extent:0,horizontal?0:extent);fade.addColorStop(0,'#fff0');fade.addColorStop(.15,'#fff');fade.addColorStop(.85,'#fff');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(0,0,c.width,c.height);}
+      for(const horizontal of [true,false]){const extent=horizontal?c.width:c.height,fade=p.createLinearGradient(0,0,horizontal?extent:0,horizontal?0:extent);fade.addColorStop(0,'#fff0');fade.addColorStop(.28,'#fff');fade.addColorStop(.72,'#fff');fade.addColorStop(1,'#fff0');p.fillStyle=fade;p.fillRect(0,0,c.width,c.height);}
       masks.push(c);
     }
     loaded=true;maybeStart();
@@ -91,12 +91,18 @@
   function actor(id,x,y,size,now,alert=false){const image=emberHallWorld.images[id];if(!image)return;const cols=id==='Verseborn'?4:8,rows=id==='Verseborn'?4:5,col=alert&&id!=='Verseborn'?Math.floor(now/260)%3:0,row=id==='Verseborn'?0:alert?3:0;g.drawImage(image,col*image.width/cols,row*image.height/rows,image.width/cols,image.height/rows,x-size/2,y-size*.94,size,size);}
   function brother(key,x,y,now,alarm){const s=EmberRift.npcSheets[key];if(!s)return;const i=alarm?8+Math.floor(now/200)%4:0,cell=s.cells[i],a=s.frameAnchors[i],size=key==='guide'?43:39,scale=size/s.referenceHeight;g.drawImage(s.image,...cell,x-a[0]*scale,y-a[1]*scale,cell[2]*scale,cell[3]*scale);}
   function vision(index,x,y,w,h,alpha,now){
-    if(index<0)return;g.save();g.globalAlpha=alpha;g.globalCompositeOperation='source-over';g.translate(x,y+Math.sin(now/2300+index)*1.3);g.drawImage(masks[index],-w/2,-h/2,w,h);g.restore();
+    if(index<0)return;g.save();g.globalAlpha=alpha;g.globalCompositeOperation='source-over';g.translate(x,y+Math.sin(now/2300+index)*1.3);const image=masks[index],slices=100;
+    for(let i=0;i<slices;i++){
+      const u=(i+.5)/slices*2-1,angle=u*1.02;
+      const left=Math.sin((i/slices*2-1)*1.02)/Math.sin(1.02)*w/2,right=Math.sin(((i+1)/slices*2-1)*1.02)/Math.sin(1.02)*w/2;
+      const bend=(1-Math.cos(angle))*h*.38,ripple=Math.sin(now/1800+u*5+index)*(.7+Math.abs(u)*1.4),height=h*(1-.14*u*u);
+      g.drawImage(image,i*image.width/slices,0,image.width/slices,image.height,left,-height/2+bend+ripple,right-left+.25,height);
+    }g.restore();
     for(let j=0;j<9;j++){const t=(now/9000+j/9)%1;particle(g,x-w*.45+t*w*.9,y+Math.sin(t*7+index)*h*.45,2+j%3,'#d3b2ff',alpha*.23);}
   }
   function paint(now){
     const phase=scene.phase,t=scene.clock,phaseT=(t-scene.phaseAt)/1000,quake=quakeLevel();g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,640,356);g.fillStyle='#100d17';g.fillRect(0,0,640,356);g.save();g.translate(Math.sin(t*.041)*quake*1.7,Math.sin(t*.057)*quake*1.1);g.drawImage(images.room,0,0,640,356);
-    if(phase==='memory'){g.fillStyle='#21132938';g.fillRect(0,0,640,356);const v=scene.vision,fade=Math.min(1,(t-scene.visionAt)/1100);if(scene.previousVision>=0)vision(scene.previousVision,218,112,170,72,.22*(1-fade*.65),now);vision(v,328,104,324,130,.94*fade,now);if(v>=2)vision(0,440,160,145,61,.18*fade,now);}
+    if(phase==='memory'){g.fillStyle='#21132938';g.fillRect(0,0,640,356);const v=scene.vision,fade=Math.min(1,(t-scene.visionAt)/1100);if(scene.previousVision>=0)vision(scene.previousVision,218,112,170,72,.22*(1-fade*.65),now);vision(v,328,123,414,155,.90*fade,now);if(v>=2)vision(0,440,160,145,61,.18*fade,now);}
     const portal=images.portal,cw=portal.width/4;g.globalAlpha=.65;g.drawImage(portal,Math.floor(t/220)%4*cw,0,cw,portal.height,281,87,78,111);g.globalAlpha=1;
     const pose=phase==='tremor'?0:phase==='stir'?1:['warning','arrival','essence'].includes(phase)?2:3;
     const lift=phase==='stir'?Math.min(3,phaseT*1.4):['warning','arrival','essence'].includes(phase)?3:0;
