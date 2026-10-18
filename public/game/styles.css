@@ -7492,3 +7492,15 @@ body.frameless-hall .panel { display: none; }
 
 .rarity-shadow-personal-artifact { color: #c79cff !important; border-color: #8561c5; background: #20132f; text-shadow: 0 0 6px #a567dc88; }
 .selection-row.rarity-personal-artifact strong, .selection-row.rarity-shadow-personal-artifact strong, .selection-detail-head:has(.rarity-personal-artifact) strong, .selection-detail-head:has(.rarity-shadow-personal-artifact) strong { color: #d391ff; }
+
+/* Opening action stays above its compact dialogue and portrait. */
+@media(min-width:701px){
+.hall-opening-active .dialogue{bottom:10px;min-height:0;padding:9px 13px;left:12px;right:12px}
+.hall-opening-active .dialogue-copy{min-height:58px;padding-left:80px}
+.hall-opening-active .dialogue p{font-size:clamp(13px,1.15vw,20px);line-height:1.35;margin:7px 0 18px}
+.hall-opening-active .dialogue #speaker{font-size:clamp(14px,1.2vw,22px)}
+.hall-opening-active .dialogue-portraits{bottom:8px;left:10px;right:auto;z-index:1}
+.hall-opening-active .dialogue-portrait{width:64px;transform:none}
+.hall-opening-active .dialogue-portrait figcaption{display:none}
+.hall-opening-active .dialogue-portrait img{image-rendering:auto}
+}

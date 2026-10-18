@@ -79,8 +79,10 @@
   }
   function paint(now){
     if(!scene)return;const beat=story.beats[scene.index],age=scene.clock-scene.beatAt;
-    const shot=beat.shot,view=shot==='bar'?{x:419,y:100,w:209}:shot==='build'||shot==='snap'?{x:235,y:0,w:370}:{x:235,y:0,w:390},scale=LOGICAL_WIDTH/view.w;
-    ctx.save();ctx.fillStyle='#171018';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.scale(scale,scale);ctx.translate(-view.x,-view.y);
+    const shot=beat.shot,bar=shot==='bar',safeHeight=LOGICAL_HEIGHT*.74;
+    const viewWidth=Math.max(bar?209:390,(bar?116:216)*LOGICAL_WIDTH/safeHeight);
+    const view={x:Math.max(0,Math.min(640-viewWidth,(bar?523:430)-viewWidth/2)),y:bar?90:-2,w:viewWidth},scale=LOGICAL_WIDTH/view.w;
+    ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='#171018';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.scale(scale,scale);ctx.translate(-view.x,-view.y);
     const background=emberHallWorld.images['hall-uninhabited-v239']||emberHallWorld.hallBackground();ctx.drawImage(background,0,0,640,356);ctx.drawImage(art.door,299,0,38,47);
     if(scene.stage){ctx.fillStyle=`rgba(15,16,35,${scene.stage*.018})`;ctx.fillRect(0,0,640,356);}
     drawClutter(scene.stage,now);
