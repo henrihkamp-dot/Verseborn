@@ -10067,6 +10067,7 @@ function renderHallBattleMap() {
   el.menuBody.querySelector("[data-open-shadows]")?.addEventListener("click", () => window.HallHub?.openService("Seerin"));
   el.menuBody.querySelector("[data-close-hall]")?.addEventListener("click", closeHallOverlay);
   el.menuBody.querySelectorAll("[data-hall-stage]").forEach(button => button.addEventListener("click", () => startHallBattleStage(Number(button.dataset.hallStage))));
+  window.TrialNavigation?.mount('ember');
 }
 
 function closeHallOverlay() {
@@ -16625,3 +16626,4 @@ updateCodex();
 updatePanels();
 if (new URLSearchParams(location.search).has("qa")) setTimeout(runQaChecks, 0);
 draw();
+

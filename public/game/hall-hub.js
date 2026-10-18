@@ -453,6 +453,7 @@
     el.menuBody.querySelectorAll('[data-select]').forEach(button => button.onclick = () => showChoices(button.dataset.select));
     el.menuBody.querySelectorAll('[data-clear]').forEach(button => button.onclick = () => { select(button.dataset.clear, null); renderPreparation(); });
     el.menuBody.querySelector('[data-begin]').onclick = beginStage;
+    window.TrialNavigation?.mount('ember');
   }
   const oldStartStage = startHallBattleStage;
   startHallBattleStage = openPreparation;
@@ -1004,7 +1005,7 @@
     loadDuelArt();
     shadowParty = shadowParty.filter(id => recruited(id)).slice(0, 3);
     if (!shadowParty.length) shadowParty = state.activeParty.filter(id => recruited(id)).slice(0, 3);
-    selectedShadow = opponent && recruited(opponent) ? opponent : null;
+    selectedShadow = opponent && recruited(opponent) ? opponent : Object.keys(shadowTrials).find(id=>recruited(id)) || null;
     const defeated = progress().shadowDefeated;
     const cards = Object.entries(shadowTrials).map(([id, trial], index) => {
       const unlocked = recruited(id), won = defeated.includes(id);
@@ -1018,6 +1019,7 @@
     el.menuBody.querySelectorAll('[data-shadow]').forEach(button => button.onclick = () => { renderSparring(button.dataset.shadow); el.menuBody.querySelector('.shadow-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     el.menuBody.querySelectorAll('[data-shadow-party]').forEach(button => button.onclick = () => { const id = button.dataset.shadowParty; if (shadowParty.includes(id)) shadowParty = shadowParty.filter(member => member !== id); else if (shadowParty.length < 3 && recruited(id)) shadowParty.push(id); renderSparring(); });
     bindEncounterSupport(()=>renderSparring());
+    window.TrialNavigation?.mount('shadow');
     const start = el.menuBody.querySelector('[data-shadow-start]'); if (start) start.onclick = () => startSparring([...shadowParty], selectedShadow);
   }
   function startSparring(fighters, opponent) {
@@ -1112,3 +1114,5 @@
     if (duelQa.get('qa') === 'hallduel') startSparring(duelQa.get('fighter') || 'Verseborn', duelQa.get('opponent') || 'Seerin');
   });
 })();
+
+

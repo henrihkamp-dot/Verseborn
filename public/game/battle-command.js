@@ -14,6 +14,19 @@
   const foot=make('div','bc-command-foot',left),instruction=make('span','bc-instruction',foot);
   const historyButton=make('button','bc-history-button',foot);historyButton.type='button';historyButton.textContent='Battle history';
   const history=make('dialog','bc-history',document.body);history.innerHTML='<header><strong>Battle history</strong><button type="button" aria-label="Close history">×</button></header><div class="bc-history-content"></div>';
+  const unitTooltip=make('aside','bc-unit-tooltip',root);unitTooltip.hidden=true;unitTooltip.setAttribute('role','tooltip');
+  let hoveredUnit=null;
+  function showUnitTooltip(u,event){
+    if(mode!=='battle')return;
+    hoveredUnit=u;
+    unitTooltip.innerHTML=`<strong>${esc(u.name)}</strong><div class="bc-tooltip-vitals">HP ${Math.max(0,Math.round(u.hp))} / ${u.max} · MP ${Math.max(0,Math.round(u.mp||0))} / ${u.maxmp||0}</div>${(u.statuses||[]).map(s=>{const data=statusDisplayData(u,s);return `<section><b>${esc(data.name)}</b><small>${esc(data.timing)}</small><p>${esc(data.description)}</p></section>`;}).join('')||'<p>No active buffs or debuffs.</p>'}`;
+    unitTooltip.hidden=false;
+    const r=game.getBoundingClientRect(),x=event?.clientX??r.left+r.width/2,y=event?.clientY??r.top+r.height/2;
+    unitTooltip.style.left=`${Math.max(6,Math.min(r.width-unitTooltip.offsetWidth-6,x-r.left+16))}px`;
+    unitTooltip.style.top=`${Math.max(6,Math.min(r.height-unitTooltip.offsetHeight-6,y-r.top+16))}px`;
+  }
+  function hideUnitTooltip(){hoveredUnit=null;unitTooltip.hidden=true;}
+  command.addEventListener('pointerenter',hideUnitTooltip);
   history.querySelector('button').onclick=()=>history.close();
   historyButton.onclick=()=>{history.querySelector('header strong').textContent='Battle history';history.querySelector('.bc-history-content').innerHTML=(battle.actionHistory||[]).map(a=>`<div><strong>R${a.round} · ${esc(a.actor)}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small>${esc(e.target)}: ${e.crit?'CRIT ':''}${e.amount} ${esc(e.type||e.kind)} ${esc(e.text)}</small>`).join('')}</div>`).join('')||'<p>No actions yet.</p>';history.showModal();};
   let owner=null,turnOwner=null,ui={level:'category',category:'attack',action:0,target:0,page:0},groups=[],unit=null,selected=null,targetList=[],targetGroup=false,lastLayout='',statusNodes=[];
@@ -54,7 +67,7 @@
   }
   const currentGroup=()=>groups.find(c=>c.id===ui.category)||groups[0];
   const skill=()=>currentGroup()?.actions[ui.action]||currentGroup()?.actions[0];
-  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<900?2:game.getBoundingClientRect().width<1500?3:4;
+  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<701?2:4;
   function extras(){
     return [{name:'Defend',category:'defend',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit and gain 6 Resonance.`},
       ...(carriedBattleItems().length?[{name:'Items',category:'utility',targetScope:'self',command:'items',cost:0,desc:'Use a carried battle item. Consumes the current action.'}]:[])];
@@ -65,6 +78,13 @@
       let group=groups.find(c=>c.id===action.category);
       if(!group){group={...model.categories.find(c=>c.id===action.category),actions:[]};groups.push(group);}
       group.actions.push(action);
+    }
+    const support=groups.filter(g=>g.id==='utility'||g.id==='buffDebuff');
+    if(support.length){
+      const actions=[...new Map(support.flatMap(g=>g.actions).map(a=>[a.actionId||a.name,a])).values()];
+      groups=groups.filter(g=>g.id!=='utility'&&g.id!=='buffDebuff');
+      groups.push({...model.categories.find(c=>c.id==='buffDebuff'),label:'(De)Buff',kind:'(De)Buff',actions});
+      if(ui.category==='utility')ui.category='buffDebuff';
     }
     groups.sort((a,b)=>model.categories.findIndex(c=>c.id===a.id)-model.categories.findIndex(c=>c.id===b.id));
     if(!groups.some(c=>c.id===ui.category)){ui.category=groups[0]?.id;ui.action=0;}
@@ -156,6 +176,7 @@
       b.innerHTML=`${icon(c.id,c.color)}<span>${c.label}</span>`;
       b.onclick=()=>selectCategory(c.id,true);
       b.title=c.label;
+      b.setAttribute('aria-label',c.label);
     });
   }
   function renderCommands(){
@@ -314,6 +335,8 @@
       n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${(u.statuses||[]).slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span title="${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${u.statuses?.length>4?`<b>+${u.statuses.length-4}</b>`:''}</span>`;
       if(combatRoleIconSheet){const role=make('span','bc-role',n),index=COMBAT_ROLE_ICON_INDEX[combatRoleKey(u,side==='enemy')]??4;role.setAttribute('aria-hidden','true');role.innerHTML=`<i style="background-image:url('${esc(combatRoleIconSheet.image.src)}');background-position:${index*25}% center"></i>`;}
       n.onclick=()=>{if(ui.level==='target'&&targetList.includes(u)){ui.target=targetList.indexOf(u);renderCommands();}else if(ui.level==='itemTarget'&&targetList.includes(u)){ui.target=targetList.indexOf(u);renderCommands();}else if(u.statuses?.length){history.querySelector('header strong').textContent=u.name+' · Status effects';history.querySelector('.bc-history-content').innerHTML=u.statuses.map(s=>{const d=statusDisplayData(u,s);return `<div><b>${esc(d.name)}</b> · ${esc(d.timing)}<p>${esc(d.description)}</p></div>`;}).join('');history.showModal();}};
+      n.addEventListener('pointerenter',event=>showUnitTooltip(u,event));n.addEventListener('pointermove',event=>showUnitTooltip(u,event));n.addEventListener('pointerleave',hideUnitTooltip);
+      n.addEventListener('focus',()=>{const r=n.getBoundingClientRect();showUnitTooltip(u,{clientX:r.right,clientY:r.top});});n.addEventListener('blur',hideUnitTooltip);
       statusNodes.push({u,index,side,n});
     });
     lastLayout='';positionCards();highlightTargets();
@@ -378,7 +401,8 @@
     });
     statusNodes.forEach(({u,n},index)=>{
       const sprite=sprites[index],width=n.offsetWidth,height=n.offsetHeight,statusHeight=n.querySelector('.bc-statuses')?.offsetHeight||0;
-      const baseX=sprite.cx-width/2,baseY=sprite.bottom+5,h=height+statusHeight;
+      const side=statusNodes[index].side;
+      const baseX=side==='party'?sprite.cx+sprite.w/2+8:sprite.cx-sprite.w/2-width-8,baseY=sprite.bottom-height-2,h=height+statusHeight;
       const obstacles=sprites.map(s=>({x:s.cx-s.w/2,y:s.bottom-s.h,w:s.w,h:s.h}));
       let best=null;
       for(let dx=-320;dx<=320;dx+=4)for(let dy=0;dy<=96;dy+=12){
@@ -425,6 +449,12 @@
   const nativeScene=drawBattleScene;
   drawBattleScene=function(){drawingScene=true;try{nativeScene();}finally{drawingScene=false;}positionCards();};
   selectedBattleEnemy=()=>ui.level==='target'&&selected?.targetScope.includes('enemy')?targetList[ui.target]||null:null;
+  canvas.addEventListener('pointermove',event=>{
+    if(mode!=='battle'||!battle)return hideUnitTooltip();const p=canvasLogicalPoint(event);
+    const hit=[...statusNodes].reverse().find(({u,index,side})=>{const b=spriteBounds.get(u);if(!b||u.hp<=0)return false;const [x,y]=side==='party'?partyBattlePosition(index,battle.party.length):enemyBattlePosition(index,battle.enemies.length);return p.x>=x+b.dx-b.width/2&&p.x<=x+b.dx+b.width/2&&p.y>=y+b.dy-b.height&&p.y<=y+b.dy;});
+    if(hit)showUnitTooltip(hit.u,event);else hideUnitTooltip();
+  });canvas.addEventListener('pointerleave',hideUnitTooltip);
+  new MutationObserver(()=>{if(document.body.dataset.playMode!=='battle')hideUnitTooltip();}).observe(document.body,{attributes:true,attributeFilter:['data-play-mode']});
   const oldControl=handleControl;
   handleControl=function(c){if(mode==='battle'&&battle&&!battle.phaseTransition&&['left','right','up','down','confirm','cancel'].includes(c))return control(c);return oldControl(c);};
   closeTargetSelection=()=>cancel();closeBattleItems=()=>cancel();

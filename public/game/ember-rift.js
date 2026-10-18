@@ -111,6 +111,7 @@
     el.menuBody.querySelectorAll('[data-rift-member]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.riftMember;if(state.activeParty.includes(id)){if(state.activeParty.length>1)state.activeParty=state.activeParty.filter(n=>n!==id);}else if(state.activeParty.length<3)state.activeParty.push(id);else showHudNotice('Choose up to three party members.');renderSelection();}));
     window.HallHub?.bindEncounterSupport(renderSelection);
     el.menuBody.querySelector('[data-rift-start]')?.addEventListener('click',()=>startEncounter(selected));
+    window.TrialNavigation?.mount('rift');
   }
   function riftArtifactAffixes(gear,seed=null){const original=Math.random;if(seed)Math.random=hallSeededRandom('rift-affixes:'+seed);try{const pool=gearAffixPool(gear),chosen=[];const groups=[e=>e.type==='statPct'||e.type==='hpPct',e=>['physicalDamage','magicDamage','critChance','afflictedDamage'].includes(e.type),e=>['statusResistance','allStatusResistance','poisonReduction','statusDurationReduction','statusOnHit'].includes(e.type),e=>['buffDuration','echoing','openingTurnProgress','leeching','siphoning','statusChance','statusDuration'].includes(e.type)];const pick=test=>{const options=pool.filter(e=>!chosen.some(c=>c.key===e.key)&&test(e));if(options.length){const entry=options[Math.floor(Math.random()*options.length)],rolled={...entry,value:randomAffixValue(entry)};rolled.text=formatAffix(rolled);chosen.push(rolled);}};groups.forEach(pick);while(chosen.length<Math.min(5,pool.length))pick(()=>true);return chosen;}finally{Math.random=original;}}
   function makeEnemy(key,id,phase=0,index=0){
@@ -328,6 +329,7 @@
   closeHallOverlay=function(){const ours=['rift-path','rift-forge','rift-merchant'].includes(el.menu.dataset.menuView);oldClose();if(ours)saveGame(hallSaveKey());};
   window.EmberRift={brotherBanter,riftDialogue,residentDialogue,dragon,drawSleepingDragon,drawNpc,riftArtifactAffixes,learnedSkillHtml,ready,openMerchant,learnSecretSkill,buySecretGear,exchangeMaterial,secretSkills,secretGear,curios,npcSheets,merchant,guide,roomDepthOrder,clearSegment,get route(){return target?.path||[];},getNavigationTarget(){return target;},progress,available,roster,encounters,rewards,makeEnemy,startEncounter,awardRewards,openSelection,forge,temper,enterRoom,leaveRoom,returnToRoom,nearbyHallDoor,triggerHall,drawHallDoor,collision,navigate,player,portal,anvil,exit,interrupt,sheets,effects,get assetsReady(){return assetsReady;},get assetFailure(){return assetFailure;},get camera(){return camera;},hallDoorHit:(x,y)=>Math.abs(x-315)<22&&y>=0&&y<50?door:null,tickHallDoor:hallPlayer=>{if(progress().unlocked&&progress().doorSeen&&Math.abs(hallPlayer.x-315)<14&&hallPlayer.y<48&&mode==='walk')enterRoom();}};
 })();
+
 
 
 

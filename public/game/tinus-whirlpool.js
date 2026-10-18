@@ -109,6 +109,7 @@
     el.menuBody.querySelectorAll('[data-whirlpool-member]').forEach(b=>b.onclick=()=>{const id=b.dataset.whirlpoolMember;if(state.activeParty.includes(id)){if(state.activeParty.length>1)state.activeParty=state.activeParty.filter(n=>n!==id);}else if(state.activeParty.length<3)state.activeParty.push(id);else showHudNotice('Choose up to three party members.');render();});
     HallHub.bindEncounterSupport(render);
     el.menuBody.querySelector('[data-whirlpool-start]').onclick=()=>start(selected);
+    window.TrialNavigation?.mount('whirlpool');
   }
   const oldInteract=TinusRecruitment.interact;
   function tinusMenu() {
@@ -267,3 +268,4 @@
   };
   window.TinusWhirlpool={ready,encounters,rings,curios,progress,available,open,start,finish,makeEnemy,interrupt,get assetsReady(){return assetsReady;},get assetFailure(){return assetFailure;}};
 })();
+
