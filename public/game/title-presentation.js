@@ -100,16 +100,42 @@
       text(entry.toUpperCase(),760,y,53,5,disabled?'#918598':active?'#ffe1a0':'#e4dccb');
     });
   }
+  // Move only the painted fire inside the glass. The lantern's metal frame,
+  // roof and surrounding flowers stay fixed to the original illustration.
+  function lanternFire(now){
+    for(const points of [[[111,799],[147,800],[147,868],[112,863]],[[161,803],[176,798],[176,872],[161,878]]]){
+      ctx.save();ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();
+      for(let y=797;y<880;y+=2){
+        const height=Math.max(0,Math.min(1,(870-y)/65));
+        const sway=height*(1.55*Math.sin(now/210+y*.095)+.7*Math.sin(now/113+y*.16));
+        ctx.drawImage(art,106,y,76,2,106+sway,y,76,2);
+      }
+      ctx.globalCompositeOperation='soft-light';
+      ctx.fillStyle=`rgba(255,176,55,${.13+.09*Math.sin(now/170)+.045*Math.sin(now/73)})`;
+      ctx.fillRect(108,798,72,82);ctx.restore();
+    }
+  }
   function atmosphere(now){
     if(reduced())return;
+    lanternFire(now);
     ctx.save();ctx.globalCompositeOperation='screen';
-    for(const [i,[x,y,r]] of [[145,830,27],[1395,390,13],[1319,569,11],[1274,761,13],[1236,600,11],[254,298,8]].entries()){
-      const a=.09+.045*Math.sin(now/420+i*1.7)+.025*Math.sin(now/163+i),g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(255,215,128,${a})`);g.addColorStop(1,'#ffc26200');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
+    for(const [i,[x,y,r]] of [[133,837,43],[169,838,21],[1395,390,18],[1319,569,16],[1274,761,18],[1236,600,16],[254,298,12],[222,339,9],[285,388,9],[370,455,9],[497,489,8],[622,486,8],[1092,486,9],[1344,206,10]].entries()){
+      const a=.15+.095*Math.sin(now/(270+i*19)+i*1.7)+.045*Math.sin(now/107+i),g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(255,211,113,${a})`);g.addColorStop(.36,`rgba(255,164,60,${a*.6})`);g.addColorStop(1,'#ffc26200');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
     }
-    for(const [i,[x,y]] of [[560,26],[1130,40],[883,96],[725,50],[891,235],[715,126],[394,47]].entries()){
-      const a=Math.pow((Math.sin(now/1400+i*1.9)+1)/2,3);ctx.globalAlpha=.04+a*.24;ctx.strokeStyle='#f7e8ff';ctx.lineWidth=.8;const r=2+a*3;ctx.beginPath();ctx.moveTo(x-r,y);ctx.lineTo(x+r,y);ctx.moveTo(x,y-r*1.5);ctx.lineTo(x,y+r*1.5);ctx.stroke();
+    for(const [i,[x,y]] of [[560,26],[1130,40],[883,96],[725,50],[891,235],[715,126],[394,47],[981,18],[628,67],[482,31],[1203,90]].entries()){
+      const a=Math.pow((Math.sin(now/(770+i*57)+i*1.9)+1)/2,4);ctx.globalAlpha=.08+a*.78;
+      const r=1.5+a*5;ctx.shadowColor='#d5bcff';ctx.shadowBlur=5+a*7;ctx.strokeStyle='#f7e8ff';ctx.lineWidth=1.1;
+      ctx.beginPath();ctx.moveTo(x-r,y);ctx.lineTo(x+r,y);ctx.moveTo(x,y-r*1.5);ctx.lineTo(x,y+r*1.5);ctx.stroke();
+      ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(x,y,.65+a*.8,0,Math.PI*2);ctx.fill();
     }
-    const elapsed=now%9000;if(elapsed<1300){const t=elapsed/1300,right=Math.floor(now/9000)%2===0,x=(right?1110:260)+(right?-150:150)*t,y=28+92*t;ctx.globalAlpha=Math.sin(t*Math.PI)*.58;const g=ctx.createLinearGradient(x-(right?-34:34),y-20,x,y);g.addColorStop(0,'#d7c8ff00');g.addColorStop(1,'#f7eaff');ctx.strokeStyle=g;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x-(right?-34:34),y-20);ctx.lineTo(x,y);ctx.stroke();}
+    ctx.shadowBlur=0;
+    // One quiet meteor at a time, with a visible head and a tapering tail.
+    const elapsed=(now+750)%5700;
+    if(elapsed<1700){const t=elapsed/1700,right=Math.floor((now+750)/5700)%2===0,x=(right?1130:285)+(right?-170:170)*t,y=20+92*t,dx=right?-58:58;
+      ctx.globalAlpha=Math.pow(Math.sin(t*Math.PI),.7)*.9;
+      const g=ctx.createLinearGradient(x-dx,y-31,x,y);g.addColorStop(0,'#d7c8ff00');g.addColorStop(.75,'#c9adff');g.addColorStop(1,'#ffffff');ctx.strokeStyle=g;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(x-dx,y-31);ctx.lineTo(x,y);ctx.stroke();ctx.shadowColor='#bca0ff';ctx.shadowBlur=9;ctx.fillStyle='#fff8ff';ctx.beginPath();ctx.arc(x,y,1.8,0,Math.PI*2);ctx.fill();
+    }
     ctx.restore();
   }
   drawTitle=function(now=performance.now()){
