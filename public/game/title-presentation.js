@@ -105,13 +105,13 @@
     banners.forEach((b,i)=>{
       if(reduced()){ctx.drawImage(b.image,b.x,b.y,b.w,b.h);return;}
       // Warp at native resolution first, then draw once: no fractional strip seams.
-      if(!b.surface){b.surface=document.createElement('canvas');b.surface.width=b.w+12;b.surface.height=b.h;}
-      const paint=b.surface.getContext('2d');paint.clearRect(0,0,b.w+12,b.h);
+      if(!b.surface){b.surface=document.createElement('canvas');b.surface.width=b.w+32;b.surface.height=b.h;}
+      const paint=b.surface.getContext('2d');paint.clearRect(0,0,b.w+32,b.h);
       for(let y=0;y<b.h;y+=2){
-        const t=y/b.h,dx=b.amp*t*t*(.7*Math.sin(now/1650+i*.65-t*2.1)+.3*Math.sin(now/2300+i-t*4));
-        paint.drawImage(b.image,0,y,b.w,Math.min(2,b.h-y),6+dx,y,b.w,Math.min(2,b.h-y));
+        const t=y/b.h,dx=b.amp*3.4*Math.pow(t,1.15)*(.8*Math.sin(now/1050+i*.65-t*1.2)+.2*Math.sin(now/1700+i-t*3));
+        paint.drawImage(b.image,0,y,b.w,Math.min(2,b.h-y),16+dx,y,b.w,Math.min(2,b.h-y));
       }
-      ctx.drawImage(b.surface,b.x-6,b.y);
+      ctx.drawImage(b.surface,b.x-16,b.y);
 
     });
   }
