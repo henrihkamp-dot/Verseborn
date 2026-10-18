@@ -315,3 +315,17 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
  .bc-detail h3{font-size:15px}.bc-detail-art{width:26px;height:29px}.bc-detail .bc-badge{font-size:8px}.bc-description{font-size:10px}.bc-costline{font-size:9px;margin:3px 0;padding:2px 0}.bc-effects{display:none}.bc-act-footer>small{font-size:9px}.bc-act small{font-size:9px}.bc-command-foot{font-size:8px}
 }
 @media(min-width:701px){.bc-statuses small{display:none}.bc-statuses img{width:12px;height:12px}}
+@media(min-width:701px){
+ .command-battle .bc-unit{width:clamp(88px,4.7vw,94px);padding:2px 3px}
+ .bc-role:not([hidden]){display:block!important;position:absolute;right:calc(100% + 6px);top:calc(50% - 8px);width:17px;height:17px;border:1px solid #c3a064;background:#100f18;transform:rotate(45deg)}
+ .bc-role i{width:15px;height:15px;transform:rotate(-45deg);background-size:500% 100%}
+ .bc-break{position:absolute;bottom:calc(100% + 3px);left:0;display:flex;align-items:center;gap:3px;height:17px;color:#ffca76;font:8px/1 'Segoe UI',sans-serif;white-space:nowrap;background:#100d17df;padding:1px 4px;border:1px solid #957349}
+ .bc-break[hidden]{display:none!important}.bc-break img{width:15px;height:15px;object-fit:contain;image-rendering:pixelated}.bc-break b{font-size:8px;letter-spacing:.25px}
+}
+@media(min-width:701px){
+ .command-battle .bc-unit{width:clamp(104px,6vw,118px)}
+ .bc-vital{height:12px}.bc-vital b{font-size:10px;line-height:10px}.bc-vital b small{font-size:9px}
+ .bc-categories{justify-content:space-between;gap:10px}
+ body[data-play-mode="battle"]{--bc-command-height:clamp(162px,19vh,206px)}
+ .bc-action{max-height:78px;align-self:start}
+}

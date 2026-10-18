@@ -8473,7 +8473,7 @@ function drawBattleScene() {
   const target = selectedBattleEnemy();
   let advancingAttacker = null;
 
-  battle.party.forEach((unit, index) => {
+  battle.party.map((unit,index)=>({unit,index})).sort((a,b)=>partyBattlePosition(a.index,battle.party.length)[1]-partyBattlePosition(b.index,battle.party.length)[1]).forEach(({unit,index}) => {
     const [anchorX, baseline] = partyBattlePosition(index, battle.party.length);
     const down = unit.hp <= 0 || unit.down;
     if (down) markBattleUnitDown(unit);
@@ -8511,9 +8511,7 @@ function drawBattleScene() {
   });
 
   battle.enemies.map((enemyUnit, index) => ({ enemyUnit, index }))
-    .sort((a, b) => advancingAttacker
-      ? enemyBattlePosition(a.index, battle.enemies.length)[1] - enemyBattlePosition(b.index, battle.enemies.length)[1]
-      : Number(Boolean(a.enemyUnit.endgameBoss)) - Number(Boolean(b.enemyUnit.endgameBoss)))
+    .sort((a, b) => enemyBattlePosition(a.index, battle.enemies.length)[1] - enemyBattlePosition(b.index, battle.enemies.length)[1])
     .forEach(({ enemyUnit, index }) => {
     const animatedDeath = Boolean(enemyAnimationSheetFor(enemyUnit));
     if (enemyUnit.hp <= 0 && !enemyUnit.defeatUntil) {
