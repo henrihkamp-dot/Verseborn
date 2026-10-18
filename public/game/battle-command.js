@@ -68,7 +68,7 @@
   }
   const currentGroup=()=>groups.find(c=>c.id===ui.category)||groups[0];
   const skill=()=>currentGroup()?.actions[ui.action]||currentGroup()?.actions[0];
-  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<701?2:4;
+  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<701?2:6;
   function extras(){
     return [{name:'Defend',category:'defend',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit and gain 6 Resonance.`},
       ...(carriedBattleItems().length?[{name:'Items',category:'utility',targetScope:'self',command:'items',cost:0,desc:'Use a carried battle item. Consumes the current action.'}]:[])];
