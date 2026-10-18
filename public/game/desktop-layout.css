@@ -1,0 +1,83 @@
+/* Desktop ledger: compact type, deliberate columns, internal scrolling. */
+@media(min-width:701px){
+html:not(.touch-layout) body[data-play-mode] .menu:not(.hidden){position:absolute!important;inset:12px!important;width:auto!important;max-height:none!important;transform:none!important;box-sizing:border-box;border-width:12px;padding:3px;font-size:12px;line-height:1.35}
+html:not(.touch-layout) .menu .menu-body{padding:12px!important;font-size:12px!important;min-height:0;overflow-x:hidden}
+html:not(.touch-layout) .menu .menu-tabs{min-height:0!important;padding:4px 35px 7px 4px!important;gap:4px!important}
+html:not(.touch-layout) .menu .menu-tabs button{min-height:34px!important;padding:5px 8px!important;font-size:12px!important;gap:5px}
+.menu .menu-tabs button::before{width:20px;height:22px}
+.menu :is(h2,.shop-head>div>strong){font-size:22px!important;line-height:1.2}
+.menu h3{font-size:16px!important}.menu h4{font-size:14px!important}
+.menu :is(p,li,dd,dt){font-size:12px;line-height:1.4}
+.menu :is(button,input,select,summary){font-size:12px}
+.menu :is(.status-roster,.skill-roster,.equip-roster,.shop-character-selector){gap:5px!important;padding:5px 1px 8px!important}
+.menu :is(.status-hero,.skill-hero,.shop-character-selector>button,.equip-roster .gear-hero){grid-template-columns:38px minmax(0,1fr)!important;min-width:104px!important;flex:1 0 104px!important;min-height:52px!important;padding:4px 6px!important;gap:4px 7px!important;max-width:none}
+.menu :is(.status-hero,.skill-hero,.shop-character-selector>button,.equip-roster .gear-hero)>img{width:38px!important;height:42px!important}
+.menu :is(.status-hero,.skill-hero,.equip-roster .gear-hero) strong{font-size:12px!important}
+.menu :is(.status-hero,.skill-hero,.equip-roster .gear-hero) small{font-size:10px!important}
+.menu :is(.status-card,.skill-tree-panel,.status-detail-section){padding:12px}
+.menu .status-core-stats>span,.menu .status-output>span{padding:8px}.menu .status-core-stats strong{font-size:20px}
+.menu .status-biography{padding:10px 12px}.menu .status-biography p{font-size:12px}
+.menu .talent-node{padding:12px}.menu .talent-node strong{font-size:15px}.menu .talent-node p{font-size:12px}
+.menu .selection-row{min-height:54px;padding:7px}.menu .selection-row strong{font-size:13px}.menu .selection-row small{font-size:11px}.menu .selection-detail p{font-size:12px}
+.menu .reference-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.menu .reference-topic{padding:10px}.menu .reference-topic>summary{font-size:15px}
+/* Merchants: two compact catalogues instead of oversized full-width rows. */
+.menu .shop-head{min-height:86px!important;padding:10px 14px!important;gap:16px!important}
+.menu .shopkeeper-portrait{width:66px!important;height:76px!important}.menu .shop-head p{font-size:12px!important;margin-top:5px}.menu .shop-wallet{font-size:13px!important;padding:8px!important}
+.menu .shop-mode-tabs{margin:8px 0 10px;gap:6px}.menu .shop-mode-tabs button{min-height:31px;padding:5px 12px;font-size:12px;flex:0 1 130px}
+.menu .shop-list,.menu:not([data-menu-view="glimmer-shop"]) .shop-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.menu .shop-row,.menu:not([data-menu-view="glimmer-shop"]) .shop-row{grid-template-columns:38px minmax(0,1fr) auto auto;grid-template-rows:1fr;min-height:68px;padding:9px!important;gap:7px 9px}
+.menu .shop-row .shop-icon,.menu:not([data-menu-view="glimmer-shop"]) .shop-row .shop-icon{width:36px!important;height:36px!important;min-width:36px;grid-column:1;grid-row:1}
+.menu .shop-row>div{grid-column:2;grid-row:1;overflow-wrap:anywhere}.menu .shop-row strong{font-size:14px!important;line-height:1.2}.menu .shop-row small,.menu .shop-row .shop-gear-metadata{font-size:10px!important;line-height:1.3!important;margin-top:3px}
+.menu .shop-row>span,.menu:not([data-menu-view="glimmer-shop"]) .shop-row>span{grid-column:3;grid-row:1;font-size:12px;min-width:42px;justify-self:end}
+.menu .shop-row>button,.menu:not([data-menu-view="glimmer-shop"]) .shop-row>button{grid-column:4;grid-row:1;min-width:76px;min-height:31px;padding:5px 10px;font-size:11px}
+.menu .shop-offer-section>h3{margin:8px 0;padding:5px 0}.menu .shop-note{font-size:11px}
+/* Equipment: portrait and slots on the left; readable details on the right. */
+.menu[data-menu-view="gear"] .equip-screen{padding:8px;min-height:0}
+.menu[data-menu-view="gear"] .equip-workspace{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:10px;padding-top:8px}
+.menu[data-menu-view="gear"] .equip-body{min-height:0}.menu[data-menu-view="gear"] .equip-header{padding-bottom:7px}
+.menu[data-menu-view="gear"] .equip-identity h2{font-size:22px!important}.menu[data-menu-view="gear"] .equip-identity p{font-size:11px}
+.menu[data-menu-view="gear"] .equip-body-slot>button[data-gear-slot]{min-height:50px;padding:5px;gap:6px}
+.menu[data-menu-view="gear"] .equip-body-slot .equip-slot-icon{width:38px;height:38px;min-width:38px;flex-basis:38px}
+.menu[data-menu-view="gear"] .equip-body-slot strong{font-size:11px!important;line-height:1.25}.menu[data-menu-view="gear"] .equip-body-slot small{font-size:9px!important;margin-bottom:3px}
+.menu[data-menu-view="gear"] .selection-detail-head strong{font-size:17px!important}.menu[data-menu-view="gear"] .selection-detail-icon{width:48px!important;height:48px!important;min-width:48px!important}
+.menu[data-menu-view="gear"] .selection-detail-head{grid-template-columns:48px minmax(0,1fr)!important;gap:8px!important}
+.menu[data-menu-view="gear"] .equip-main-actions button{padding:7px;font-size:13px}.menu[data-menu-view="gear"] .equip-slot-picker .selection-row{min-height:50px;padding:4px 6px;grid-template-columns:38px minmax(0,1fr) auto}
+.menu[data-menu-view="gear"] .equip-slot-picker .selection-row-icon{width:38px;height:38px;min-width:38px}
+/* Tooltips keep their full content in a compact, scrollable panel. */
+.bc-unit-tooltip{width:260px;max-width:calc(100% - 20px);max-height:44%;padding:8px 10px;font:11px/1.3 'Segoe UI',sans-serif;box-sizing:border-box}
+.bc-unit-tooltip>strong{font-size:15px}.bc-tooltip-vitals{padding:4px 0;font-size:10px}.bc-unit-tooltip section{padding-top:4px;margin-top:4px}.bc-unit-tooltip section small{font-size:10px}.bc-unit-tooltip p{margin:2px 0}
+.battle-status-tooltip{width:300px;max-height:48vh;padding:9px 11px;font:11px/1.35 'Segoe UI',sans-serif}.battle-status-tooltip b{font-size:11px}
+.gear-hover-tooltip{width:min(440px,calc(100vw - 24px))!important;padding:14px 18px!important;font-size:11px!important;line-height:1.3}
+.gear-hover-tooltip :is(p,li){font-size:11px!important}.gear-hover-tooltip :is(h2,h3){font-size:16px!important}
+/* Six effects and a count; role badge centred under its portrait. */
+.bc-unit .bc-statuses{gap:2px;justify-content:flex-start;white-space:nowrap}
+.bc-statuses>span{gap:0;padding:1px;position:relative}.bc-statuses img{width:12px;height:12px}.bc-statuses small{font-size:7px}.bc-statuses>b{font-size:9px}
+.bc-unit .bc-role:not([hidden]){width:22px;height:22px;right:calc(100% + 12px);top:46px;box-sizing:border-box;border:1px solid #e2bb70;box-shadow:0 1px 5px #000;background:#17101f;display:grid!important;place-items:center}
+.bc-unit .bc-role i{width:18px;height:18px}
+}
+@media(min-width:701px) and (max-width:1100px){.menu .shop-list,.menu:not([data-menu-view="glimmer-shop"]) .shop-list{grid-template-columns:minmax(0,1fr)}.menu .reference-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:701px){
+.menu[data-menu-view="glimmer-shop"] .glimmer-shop-workspace{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,1fr);gap:12px;flex:1;min-height:0;overflow:hidden}
+.menu[data-menu-view="glimmer-shop"] .shop-scroll-region{min-height:0;overflow:auto!important;padding-right:5px}
+.menu[data-menu-view="glimmer-shop"] .shop-list{grid-template-columns:minmax(0,1fr)!important}
+.menu[data-menu-view="glimmer-shop"] .shop-row{grid-template-columns:36px minmax(0,1fr) auto auto!important;min-height:65px!important;padding:8px!important;gap:8px!important}
+.menu[data-menu-view="glimmer-shop"] .shop-row .shop-icon{width:34px!important;height:34px!important;min-width:34px!important}
+.menu[data-menu-view="glimmer-shop"] .shop-row strong{font-size:14px!important}.menu[data-menu-view="glimmer-shop"] .shop-row small{font-size:10px!important}
+.menu[data-menu-view="glimmer-shop"] .shop-character-selector>button{flex:1 1 0!important;min-width:0!important;grid-template-columns:32px minmax(0,1fr)!important;min-height:46px!important}
+.menu[data-menu-view="glimmer-shop"] .shop-character-selector>button>img{width:32px!important;height:36px!important}.menu[data-menu-view="glimmer-shop"] .shop-character-selector b{font-size:11px!important}
+.menu[data-menu-view="glimmer-shop"] .glimmer-shop-overview{padding:12px!important;min-height:0;max-height:none;overflow:auto;font-size:11px;line-height:1.35}
+.menu[data-menu-view="glimmer-shop"] .glimmer-shop-overview h3{font-size:17px!important}.menu[data-menu-view="glimmer-shop"] .gear-compare-head strong{font-size:17px}
+.menu[data-menu-view="glimmer-shop"] .glimmer-shop-overview :is(th,td){padding:5px 4px;font-size:11px}
+.menu[data-menu-view="glimmer-shop"] .glimmer-shop-overview :is(.gear-unique-comparison,.gear-impact-summary,.gear-affix-details,.gear-affix-changes){padding:8px 0;gap:5px}
+.menu[data-menu-view="glimmer-shop"] .glimmer-overview-icon .shop-icon{width:38px!important;height:38px!important}
+.menu[data-menu-view="glimmer-shop"] .shop-head>div>strong{font-size:22px!important}
+}
+@media(min-width:701px){
+.menu:not([data-menu-view="glimmer-shop"]) .shopkeeper-portrait{width:66px!important;height:76px!important}
+.menu .shop-mode-tabs button{font-size:12px!important;min-height:31px!important;padding:5px 12px!important}
+.menu:not([data-menu-view="glimmer-shop"]) .shop-wallet{font-size:13px!important;padding:8px!important}
+}
+@media(min-width:701px){
+.bc-statuses>span{width:14px;height:15px;box-sizing:border-box;flex:0 0 14px;justify-content:center}
+.bc-statuses>span small{position:absolute;right:-1px;bottom:-3px;line-height:8px;background:#17101fdd;padding:0 1px}
+}
