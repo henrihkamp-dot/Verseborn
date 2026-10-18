@@ -180,8 +180,8 @@ let titleMenuState = "main";
 let activeSaveSlot = 1;
 let saveTimer = null;
 
-const titleMenuEntries = ["Story Mode", "Ember Hall"];
-const titleModeIndices = [0, 1];
+const titleMenuEntries = ["Ember Hall"];
+const titleModeIndices = [1];
 const saveSlotEntries = ["Save Slot 1", "Save Slot 2", "Back"];
 const titleSubmenuEntries = [
   ["New", "Continue", "Back"],

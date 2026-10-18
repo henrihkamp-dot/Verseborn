@@ -4,7 +4,7 @@
   const W=1448,H=1086,art=new Image(),clean=new Image();let loaded=false,intent='continue',hits=[];
   const ready=Promise.all([new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=()=>reject(Error('Title illustration unavailable'));art.src='assets/ui/title-259/title.webp';}),new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=()=>reject(Error('Title menu plate unavailable'));clean.src='assets/ui/title-259/menu-clean.webp';})]).then(()=>{loaded=true;});
   ready.catch(error=>console.error(error));
-  titleMenuState='press';titleMenuIndex=0;titleSubmenuIndex=0;
+  titleMenuState='press';titleMenuIndex=1;titleSubmenuIndex=0;
   function layout(){const scale=Math.min(canvas.width/W,canvas.height/H);return{x:(canvas.width-W*scale)/2,y:(canvas.height-H*scale)/2,width:W*scale,height:H*scale,scale};}
   const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   function diamond(x,y,r=12,selected=false){
@@ -58,7 +58,7 @@
     cleanedBackground();
     if(canvas.getBoundingClientRect().width<700){drawCompactMenu();return;}
     if(titleMenuState==='main'){
-      panel(843,1045);row('Story Mode',0,900,858,942);row('Ember Hall',1,982,943,1031);line(1020);diamond(725,1020,7);
+      panel(890,1045);row('Ember Hall',0,962,913,1010);line(1020);diamond(725,1020,7);
     }else if(actionMenu()){
       panel(796,1035,475,976);line(820,500,955);diamond(725,820,7);
       const anySave=[1,2].some(slot=>saveSlotSummary(titleMenuIndex,slot).exists);
@@ -93,7 +93,7 @@
       }
       hits.push({index:2,x:185,y:926,w:1080,h:160});if(current===2)diamond(540,1005,24,true);text('BACK',740,1005,48,6,current===2?'#ffe1a0':'#e5dccf');line(1054,260,1190);return;
     }
-    const main=titleMenuState==='main',ys=main?[835,1000]:[724,880,1030];panel(main?730:615,1086,170,1280);
+    const main=titleMenuState==='main',ys=main?[945]:[724,880,1030];panel(main?730:615,1086,170,1280);
     entries().forEach((entry,i)=>{
       const y=ys[i],active=current===i,disabled=!main&&i===1&&![1,2].some(slot=>saveSlotSummary(titleMenuIndex,slot).exists);
       hits.push({index:i,x:170,y:y-75,w:1110,h:150});if(active){line(y-55,250,1200,true);line(y+55,250,1200,true);diamond(277,y,34,true);}
@@ -146,7 +146,7 @@
   };
   titleImageLayout=layout;
   titleMenuEntriesForState=()=>titleMenuState==='press'?['Press Start']:entries();
-  moveTitleSelection=function(direction){if(titleMenuState==='press')return;if(titleMenuState==='main'){const i=titleModeIndices.indexOf(titleMenuIndex);titleMenuIndex=titleModeIndices[(i+direction+2)%2];}else titleSubmenuIndex=(titleSubmenuIndex+direction+3)%3;};
+  moveTitleSelection=function(direction){if(titleMenuState==='press')return;if(titleMenuState==='main'){const i=titleModeIndices.indexOf(titleMenuIndex);titleMenuIndex=titleModeIndices[(i+direction+titleModeIndices.length)%titleModeIndices.length];}else titleSubmenuIndex=(titleSubmenuIndex+direction+3)%3;};
   openTitleSubmenu=function(){
     if(titleMenuState==='press'){titleMenuState='main';playSfx('menu');return;}
     titleMenuState=titleMenuIndex===0?'storyActions':'hallActions';titleSubmenuIndex=[1,2].some(slot=>saveSlotSummary(titleMenuIndex,slot).exists)?1:0;playSfx('menu');
