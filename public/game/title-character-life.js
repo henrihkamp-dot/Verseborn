@@ -26,6 +26,8 @@
   }
   // The shield is a rigid foreground object in front of the flowing hair.
   ctx.save();ctx.beginPath();[[632,611],[656,637],[682,622],[669,692],[635,744],[592,775],[547,785],[546,746],[562,696],[587,654]].forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();ctx.drawImage(art,0,0);ctx.restore();
+  // Mira's armour, straps and cape remain rigid beneath the separate hair.
+  ctx.save();ctx.beginPath();[[446,546],[481,546],[481,701],[345,701],[345,652],[359,645],[369,637],[378,631],[385,621],[396,615],[407,609],[425,604],[430,591],[436,577],[446,562]].forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();ctx.drawImage(art,0,0);ctx.restore();
   // Mira's expression shifts slightly with her hair, without moving her feet.
   const dx=1.25*Math.sin(now/1700+1.7);ctx.save();ctx.beginPath();ctx.ellipse(450,547,12,17,-.2,0,Math.PI*2);ctx.clip();ctx.drawImage(art,434,528,34,40,434+dx,528,34,40);ctx.restore();
   // Distinct open and closed painted frames give Sparky an actual mouth cycle.
