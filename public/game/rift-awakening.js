@@ -96,7 +96,7 @@
       const u=(i+.5)/slices*2-1,angle=u*1.02;
       const left=Math.sin((i/slices*2-1)*1.02)/Math.sin(1.02)*w/2,right=Math.sin(((i+1)/slices*2-1)*1.02)/Math.sin(1.02)*w/2;
       const bend=(1-Math.cos(angle))*h*.38,ripple=Math.sin(now/1800+u*5+index)*(.7+Math.abs(u)*1.4),height=h*(1-.14*u*u);
-      g.drawImage(image,i*image.width/slices,0,image.width/slices,image.height,left,-height/2+bend+ripple,right-left+.25,height);
+      g.drawImage(image,i*image.width/slices,0,image.width/slices,image.height,left,-height/2+bend+ripple,right-left,height);
     }g.restore();
     for(let j=0;j<9;j++){const t=(now/9000+j/9)%1;particle(g,x-w*.45+t*w*.9,y+Math.sin(t*7+index)*h*.45,2+j%3,'#d3b2ff',alpha*.23);}
   }
@@ -146,4 +146,5 @@
   function converse(){if(scene||!EmberRift.progress().awakeningSeen)return false;const topics=()=>{showTalk([['Stone Sleeper',{html:'What would you remember?<div class="rift-lore-topics">'+[...Object.keys(lore),'Rest'].map((name,i)=>'<button type="button" data-dragon-topic="'+i+'">'+name+'</button>').join('')+'</div>'}]],{portraits:[]});el.line.querySelectorAll('[data-dragon-topic]').forEach(button=>button.onclick=event=>{event.stopPropagation();const key=Object.keys(lore)[Number(button.dataset.dragonTopic)];if(key)showTalk(lore[key],{portraits:[],after:topics});else{talkAfter=null;finishTalk();}});};topics();return true;}
   window.RiftAwakening={ready,start,maybeStart,next,finish,drawDragon,converse,get active(){return Boolean(scene);},get phase(){return scene?.phase||null;},get script(){return story;},get beat(){return scene?.index??-1;},previewBeat(index){if(scene&&Number.isInteger(index)&&index>=0&&index<story.beats.length){setBeat(index);scene.clock+=2000;paint(performance.now());return true;}return false;}};
 })();
+
 
