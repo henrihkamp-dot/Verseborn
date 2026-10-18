@@ -2354,19 +2354,21 @@ function migratePlatinumGear() {
 }
 
 function ownedGearRefs(slot = null, heroId = null) {
-  return state.ownedGear.flatMap(name => {
+  const refs = new Set(state.ownedGear.flatMap(name => {
     const separateRefs = echoGearInstanceRefs(name);
-    const refs = separateRefs.length ? separateRefs : [name];
-    return refs.filter(ref => {
-      const gear = gearByName(ref);
-      return gear && (!slot || gear.slot === slot) && (!heroId || canEquip(heroId, gear));
-    });
+    return separateRefs.length ? separateRefs : [name];
+  }));
+  // Equipped pieces belong to the party, including older saves whose bag omitted them.
+  for (const id of state.party) for (const ref of Object.values(baseJobs[id]?.gear || {})) if (ref) refs.add(ref);
+  return [...refs].filter(ref => {
+    const gear = gearByName(ref);
+    return gear && (!slot || gear.slot === slot) && (!heroId || canEquip(heroId, gear));
   });
 }
 
 function ownsGearRef(ref) {
   const instance = gearInstance(ref);
-  return instance ? state.ownedGear.includes(instance.name) : state.ownedGear.includes(ref);
+  return (instance ? state.ownedGear.includes(instance.name) : state.ownedGear.includes(ref)) || equippedGearUsers(ref).length > 0;
 }
 
 function gearVisualRole(gear) {
@@ -5088,7 +5090,7 @@ function gearCopyCount(name) {
   const baseName = gearBaseName(name);
   const separateCopies = echoGearInstanceRefs(baseName).length;
   if (separateCopies) return separateCopies;
-  return state.gearCopies[baseName] || (state.ownedGear.includes(baseName) ? 1 : 0);
+  return state.gearCopies[baseName] || (state.ownedGear.includes(baseName) ? 1 : equippedGearUsers(name).length);
 }
 
 function canEquip(id, gear) {
@@ -5587,7 +5589,10 @@ function developerPercent(side, stat) {
   return Math.max(-100, Math.min(100, Math.round(Number(state.developerTuning?.[side]?.[stat]) || 0)));
 }
 
+const ENEMY_BALANCE = { hp: 2, damage: 2 };
+function enemyBalanceValue(stat, value) { return value * (ENEMY_BALANCE[stat] || 1); }
 function developerScale(side, stat, value, minimum = 0) {
+  if (side === "enemy") value = enemyBalanceValue(stat, value);
   const percent = developerPercent(side, stat);
   return percent === 0 ? value : Math.max(minimum, Math.round(value * (1 + percent / 100)));
 }
@@ -6133,6 +6138,18 @@ function activateTransformation(unit, form) {
 
 function skillHitsAll(id, sk) {
   return Boolean(sk.allEnemies || talentValue(id, "aoeSkill", sk.name));
+}
+
+function frontlineTargetOrder(list, side = "enemy") {
+  const roster = side === "enemy" ? battle.enemies : battle.party;
+  const position = side === "enemy" ? enemyBattlePosition : partyBattlePosition;
+  return list.slice().sort((a, b) => {
+    const ax = position(roster.indexOf(a), roster.length)[0], bx = position(roster.indexOf(b), roster.length)[0];
+    return side === "enemy" ? ax - bx : bx - ax;
+  });
+}
+function meleeAreaSkill(unit, sk) {
+  return skillTargetsEnemies(sk) && skillHitsAll(unit.id, sk) && (partyMeleeSkill(unit, sk) || skillScaling(sk) === "str");
 }
 
 function skillTargetsEnemies(sk) {
@@ -10472,7 +10489,8 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   updateSkillPointNotice();
   battleFloaters = [];
   const preparedWard = Boolean(state.fieldWard);
-  const startingResonance = state.resonance;
+  const startingResonance = 0;
+  state.resonance = 0;
   state.fieldWard = false;
   const scriptedBoss = ["dawnWon", "endgameHuntWon", "ngStonewakeWon", "ngOrphanTrialWon"].includes(winFlag);
   const preparedEnemies = enemies.map((unit, index) => {
@@ -11382,6 +11400,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0])
       : u;
   target = endgamePlayerTarget(u, sk, target);
+  if (meleeAreaSkill(u, sk)) target = frontlineTargetOrder(liveAtStart)[0] || target;
   const previousSkill = u.lastInspectionSkill;
   u.lastInspectionSkill = selectedSkill.name;
   const timing = skillVisualTiming(u, sk);
@@ -11518,7 +11537,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     } else if (target) {
       const live = battle.enemies.filter(e => e.hp > 0);
       const t = totals(u.id);
-      const hitTargets = skillHitsAll(u.id, sk) ? live : [target];
+      const hitTargets = skillHitsAll(u.id, sk) ? (meleeAreaSkill(u, sk) ? frontlineTargetOrder(live) : live) : [target];
       let totalDamageDealt = 0;
       let directDamageDealt = 0;
       let vampiricRestored = 0;
@@ -12016,7 +12035,7 @@ function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member
 
 function enemyTargetsForAction(unit, action, target) {
   return enemyActionHitsAll(unit, action)
-    ? battle.party.filter(member => member.hp > 0)
+    ? (action.kind === "melee" || action.scaling === "str" ? frontlineTargetOrder(battle.party.filter(member => member.hp > 0), "party") : battle.party.filter(member => member.hp > 0))
     : [target].filter(member => member?.hp > 0);
 }
 
@@ -13069,6 +13088,7 @@ function resolveEnemyTurn(turn, prev) {
     const interceptor = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
     if (interceptor) target = interceptor;
   }
+  if (enemyActionHitsAll(e, action) && (action.kind === "melee" || action.scaling === "str")) target = frontlineTargetOrder(liveParty, "party")[0] || target;
   const timingKey = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
   const timing = battleActionTiming(timingKey);
   const mpCost = enemyActionMpCost(e, action);
@@ -13099,6 +13119,7 @@ function resolveEnemyTurn(turn, prev) {
         let damage = enemyDamageRoll(e, pressure, target).damage;
         if (tryEvadeAttack(target)) damage = 0;
         else if (target.guarding) { damage = Math.ceil(damage * (1 - defendReduction(target) / 100)); target.guarding = false; }
+        damage = developerScale("enemy", "damage", damage);
         target.hp = Math.max(0, target.hp - damage);
         window.HallHub?.shadowDefended(target, pressureGuarded, pressureOriginalTarget !== target, false, damage);
         markBattleUnitDown(target);
@@ -14633,7 +14654,7 @@ function renderMenu() {
       const copies = gearCopyCount(ref);
       const location = holders.length ? `Equipped: ${holders.join(", ")}` : gearInstance(ref) ? "Separate copy" : `Owned x${copies}`;
       const rowIconIndex = { weapon: 0, armour: 1, ring: 2, ring2: 2, necklace: 3, helmet: 4 }[gear.slot];
-      return `<button type="button" class="selection-row rarity-${gearRarity(ref).toLowerCase().replace(/\s+/g, "-")} ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}" ${gearHoverAttribute({ heroId: id, ref })}>${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon", ref)}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small><small>${location}</small></span><b>${equipped ? "ON" : ""}</b></button>`;
+      return `<button type="button" class="selection-row rarity-${gearRarity(ref).toLowerCase().replace(/\s+/g, "-")} ${selectedGearRef === ref ? "is-selected" : ""} ${equipped ? "is-equipped" : ""}" data-gear-preview="${index}" ${gearHoverAttribute({ heroId: id, ref })}>${gearIconHtml(gear, id, rowIconIndex, "selection-row-icon", ref)}<span><strong>${gearDisplayName(ref)}</strong><small>${gearRarity(ref)} &bull; ${gearSlotLabel(gear.slot)} &bull; ${statLine(gear.stats)}</small><small>${location}</small></span><b>${equipped ? "ON" : holders.length ? "WORN" : ""}</b></button>`;
     }).join("") || `<p class="selection-list-empty">No gear matches these filters.</p>`}${gearBrowser.slot === "all" ? "" : `<button type="button" class="selection-row ${selectedGearRef === "__EMPTY__" ? "is-selected" : ""}" data-gear-empty>${pixelIconHtml("gear-empty", choiceIndex, "selection-row-icon")}<span><strong>Unequip slot</strong><small>No equipment bonus</small></span></button>`}`;
     const selectedGear = selectedGearRef === "__EMPTY__" ? null : gearByName(selectedGearRef);
     const selectedSlot = selectedGear?.slot || selectedGearSlot;

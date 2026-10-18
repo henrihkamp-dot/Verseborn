@@ -133,7 +133,7 @@
   prepareEnemyForBattle=function(source,...args) {
     const unit=oldPrepare(source,...args); if(!source.whirlpoolKey)return unit;
     const e=encounters[source.whirlpoolId-1];
-    Object.assign(unit,{hp:e.hp,max:e.hp,atk:e.power,stats:{str:e.power,mag:e.power,agi:e.agi,stam:180+e.id*6},mp:200,maxmp:200,crit:.06,baseEvasion:.025,xp:0,breakThreshold:BREAK_THRESHOLD*1.5,combatPotency:{damage:1,healing:1,ultimate:1},whirlpoolState:{pending:false,recovery:0}});
+    Object.assign(unit,{hp:enemyBalanceValue('hp',e.hp),max:enemyBalanceValue('hp',e.hp),atk:e.power,stats:{str:e.power,mag:e.power,agi:e.agi,stam:180+e.id*6},mp:200,maxmp:200,crit:.06,baseEvasion:.025,xp:0,breakThreshold:BREAK_THRESHOLD*1.5,combatPotency:{damage:1,healing:1,ultimate:1},whirlpoolState:{pending:false,recovery:0}});
     return unit;
   };
   function start(id) {

@@ -1044,7 +1044,7 @@
     const prepared = oldPrepareEnemy(source, ...args);
     if (!source.sparringId) return prepared;
     const total = shadowStats(source.sparringId);
-    return { ...prepared, hp: total.max, max: total.max, maxmp: total.mp, mp: total.mp, atk: total.str, stats: { ...total }, baseEvasion: FLAMEGUARD_BASE_EVASION[source.sparringId] || .05, resistanceTier: 'normal', crit: .12, xp: 0, sparringId: source.sparringId };
+    return { ...prepared, hp: enemyBalanceValue("hp", total.max), max: enemyBalanceValue("hp", total.max), maxmp: total.mp, mp: total.mp, atk: total.str, stats: { ...total }, baseEvasion: FLAMEGUARD_BASE_EVASION[source.sparringId] || .05, resistanceTier: 'normal', crit: .12, xp: 0, sparringId: source.sparringId };
   };
   chooseEnemyAction = unit => {
     if (!unit.sparringId) return oldEnemyAction(unit);
