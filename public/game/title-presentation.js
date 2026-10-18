@@ -1,8 +1,9 @@
 // User-supplied title illustration, with live gold/violet menus and original save keys.
 (() => {
   'use strict';
-  const W=1448,H=1086,art=new Image(),clean=new Image();let loaded=false,intent='continue',hits=[];
-  const ready=Promise.all([new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=()=>reject(Error('Title illustration unavailable'));art.src='assets/ui/title-259/title.webp';}),new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=()=>reject(Error('Title menu plate unavailable'));clean.src='assets/ui/title-259/menu-clean.webp';})]).then(()=>{loaded=true;});
+  const W=1448,H=1086,art=new Image(),clean=new Image(),banners=[];
+  const bannerReady=fetch('assets/ui/title-263/banners.json').then(r=>r.json()).then(async configs=>{await Promise.all(configs.map(async (c,i)=>{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=`assets/ui/title-263/banner-${i}.webp`;});banners[i]={...c,image};}));});let loaded=false,intent='continue',hits=[];
+  const ready=Promise.all([bannerReady,new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=()=>reject(Error('Title illustration unavailable'));art.src='assets/ui/title-263/title.webp';}),new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=()=>reject(Error('Title menu plate unavailable'));clean.src='assets/ui/title-259/menu-clean.webp';})]).then(()=>{loaded=true;});
   ready.catch(error=>console.error(error));
   titleMenuState='press';titleMenuIndex=1;titleSubmenuIndex=0;
   function layout(){const scale=Math.min(canvas.width/W,canvas.height/H);return{x:(canvas.width-W*scale)/2,y:(canvas.height-H*scale)/2,width:W*scale,height:H*scale,scale};}
@@ -100,6 +101,20 @@
       text(entry.toUpperCase(),760,y,53,5,disabled?'#918598':active?'#ffe1a0':'#e4dccb');
     });
   }
+  function drawBanners(now){
+    banners.forEach((b,i)=>{
+      if(reduced()){ctx.drawImage(b.image,b.x,b.y,b.w,b.h);return;}
+      // Warp at native resolution first, then draw once: no fractional strip seams.
+      if(!b.surface){b.surface=document.createElement('canvas');b.surface.width=b.w+12;b.surface.height=b.h;}
+      const paint=b.surface.getContext('2d');paint.clearRect(0,0,b.w+12,b.h);
+      for(let y=0;y<b.h;y+=2){
+        const t=y/b.h,dx=b.amp*t*t*(.7*Math.sin(now/1650+i*.65-t*2.1)+.3*Math.sin(now/2300+i-t*4));
+        paint.drawImage(b.image,0,y,b.w,Math.min(2,b.h-y),6+dx,y,b.w,Math.min(2,b.h-y));
+      }
+      ctx.drawImage(b.surface,b.x-6,b.y);
+
+    });
+  }
   // Move only the painted fire inside the glass. The lantern's metal frame,
   // roof and surrounding flowers stay fixed to the original illustration.
   function lanternFire(now){
@@ -141,7 +156,7 @@
   drawTitle=function(now=performance.now()){
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#070615';ctx.fillRect(0,0,canvas.width,canvas.height);
     if(!loaded){ctx.restore();return;}
-    const l=layout();ctx.imageSmoothingEnabled=true;ctx.translate(l.x,l.y);ctx.scale(l.scale,l.scale);ctx.drawImage(art,0,0,W,H);atmosphere(now);drawMenu(now);ctx.restore();
+    const l=layout();ctx.imageSmoothingEnabled=true;ctx.translate(l.x,l.y);ctx.scale(l.scale,l.scale);ctx.drawImage(art,0,0,W,H);drawBanners(now);atmosphere(now);drawMenu(now);ctx.restore();
     canvas.setAttribute('aria-label','Verseborn. '+(titleMenuState==='press'?'Press Start.':entries().join(', ')+'. Use arrow keys, Enter and Escape.'));
   };
   titleImageLayout=layout;
