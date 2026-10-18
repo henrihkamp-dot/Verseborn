@@ -22,6 +22,35 @@
     el.menuBody.scrollTop=0;
     return true;
   }
+  function simplifyPreparation(host,current){
+    if(current==='ember')host.querySelectorAll('[data-hall-stage]').forEach(card=>{
+      const info=hallBattleInfo(Number(card.dataset.hallStage));if(!info||card.querySelector('img'))return;
+      const main=[info.enemies,...info.waves].flat().map(key=>HALL_ENEMY_LIBRARY[key]).filter(Boolean).sort((a,b)=>b.hp-a.hp)[0];
+      if(main){const img=document.createElement('img');img.src=enemyPortraitDataUrl(main.sprite||main.name);img.alt=main.name;card.prepend(img);}
+    });
+    host.querySelectorAll('.is-cleared').forEach(card=>{if(card.querySelector('.trial-clear-badge'))return;const badge=document.createElement('b');badge.className='trial-clear-badge';badge.textContent='✓ Cleared';card.appendChild(badge);});
+    const panel=host.querySelector('.trial-ember-detail,.rift-preparation,.whirlpool-detail,.shadow-detail');if(!panel||panel.querySelector('.trial-overview'))return;
+    const party=panel.querySelector('.hub-party,.rift-party,.whirlpool-party,.shadow-party');if(!party)return;
+    const start=party.matches('.hub-party')?party:party.previousElementSibling;
+    const setup=document.createElement('section');setup.className='trial-party-setup';setup.setAttribute('aria-label','Party and battle support');
+    let node=start;while(node){const next=node.nextElementSibling;setup.appendChild(node);node=next;}
+    const overview=document.createElement('section');overview.className='trial-overview';overview.setAttribute('aria-label','Enemy overview');
+    const title=document.createElement('h3');title.textContent='Encounter';overview.appendChild(title);
+    if(current==='ember'){
+      const info=hallBattleInfo(emberSelection);if(info){const card=host.querySelector('[data-hall-stage="'+emberSelection+'"]'),face=card?.querySelector('img');if(face)overview.appendChild(face.cloneNode(true));const heading=document.createElement('h3');heading.textContent=info.name;overview.appendChild(heading);
+      const list=document.createElement('ol');[info.enemies,...info.waves].forEach((wave,i)=>{const row=document.createElement('li');row.textContent=(info.waves.length?'Wave '+(i+1)+': ':'')+wave.map(k=>HALL_ENEMY_LIBRARY[k]?.name||k).join(' + ');list.appendChild(row);});overview.appendChild(list);}
+    }else{
+      const preview=panel.querySelector('.rift-preview,.whirlpool-preview,.shadow-preview'),face=preview?.querySelector('img'),heading=preview?.querySelector('h3');
+      if(face)overview.appendChild(face.cloneNode(true));if(heading)overview.appendChild(heading.cloneNode(true));
+      const waves=preview?.querySelector('ul');if(waves){const list=waves.cloneNode(true);list.querySelectorAll('small').forEach(n=>n.remove());overview.appendChild(list);}else{const enemy=document.createElement('p');enemy.textContent=(face?.alt||heading?.textContent||'One enemy').replace(' enemy preview','')+' · 1 wave';overview.appendChild(enemy);}
+    }
+    if(current==='ember'){
+      party.replaceChildren();const heading=document.createElement('h3');heading.textContent='Choose your party · '+state.activeParty.length+'/3';party.appendChild(heading);
+      const grid=document.createElement('div');grid.className='rift-party';party.appendChild(grid);
+      state.party.forEach(id=>{const button=document.createElement('button');button.type='button';button.className='rift-member';button.dataset.emberMember=id;const selected=state.activeParty.includes(id);button.classList.toggle('is-selected',selected);button.setAttribute('aria-pressed',String(selected));const image=document.createElement('img');image.src=menuPortraitSource(id);image.alt='';const label=document.createElement('strong');label.textContent=id;const level=document.createElement('small');level.textContent='Lv '+progressFor(id).level;button.append(image,label,level);button.onclick=()=>{if(selected){if(state.activeParty.length<=1)return;state.activeParty=state.activeParty.filter(n=>n!==id);}else{if(state.activeParty.length>=3)return;state.activeParty.push(id);}queueSave();HallHub.openPreparation(emberSelection);};grid.appendChild(button);});
+    }
+    panel.replaceChildren(overview,setup);panel.classList.add('trial-split-detail');
+  }
   function mount(current){
     let host=el.menuBody.querySelector('.hall-map,.hub-screen');if(!host)return;
     if(current==='ember'&&host.querySelector('.hub-stage-info')&&emberBrowser){
@@ -48,6 +77,7 @@
       button.onclick=()=>switchTo(id);nav.appendChild(button);
     }
     const header=host.querySelector(':scope>header');if(header)header.after(nav);else host.prepend(nav);
+    simplifyPreparation(host,current);
   }
   const close=closeHallOverlay;
   closeHallOverlay=function(...args){const restore=mode==='hallMap'?originMap:null;const result=close(...args);emberBrowser=null;if(restore){state.map=restore;originMap=null;updateMusic();}return result;};

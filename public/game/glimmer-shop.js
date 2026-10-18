@@ -4,14 +4,19 @@
   let selectedKey='';
   renderVendor=function(){
     oldRender();
-    if(activeVendor!=='workshop')return;
+    el.menu.dataset.menuView='glimmer-shop';
     if(gearHoverTooltip)gearHoverTooltip.hidden=true;
     const list=el.menuBody.querySelector('.shop-scroll-region');
     if(!list)return;
     const workspace=document.createElement('div');workspace.className='glimmer-shop-workspace';
     list.before(workspace);workspace.append(list);
     const overview=document.createElement('aside');overview.className='glimmer-shop-overview';overview.setAttribute('aria-label','Item overview');workspace.append(overview);
-    const rows=[...list.querySelectorAll('.shop-row')];
+    const rows=[...list.querySelectorAll('.shop-row')],fullDetails=new WeakMap();
+    rows.forEach(row=>{
+      const copy=row.querySelector(':scope > div');fullDetails.set(row,copy?.innerHTML||'');
+      if(row.classList.contains('is-gear-row')){[...copy.querySelectorAll(':scope > small')].slice(2).forEach(n=>n.remove());const metadata=copy.querySelector('.shop-gear-metadata');if(metadata)metadata.textContent=metadata.textContent.replace(/\s*•\s*STAGE\s+\d+/i,'');}
+      else if(copy){const summary=copy.querySelector(':scope > small');if(summary)summary.textContent='Consumable / Supplies';}
+    });
     function key(row){return row.querySelector('strong')?.textContent.trim()||'';}
     function inspect(row){
       if(row.classList.contains('is-inspected'))return;
@@ -19,8 +24,8 @@
       selectedKey=key(row);
       const context=gearHoverRegistry[Number(row.dataset.gearHover)];
       const icon=row.querySelector('.shop-icon')?.outerHTML||'';
-      const details=context?gearHoverPopupHtml(context).replace(/Hovered item/g,'Selected item').replace(/Hovered/g,'Selected'):row.querySelector(':scope > div')?.innerHTML||'';
-      overview.innerHTML=`<header><small>GLIMMER’S WORKBENCH</small><h3>Item overview</h3></header><div class="glimmer-overview-icon">${icon}</div>${details}`;
+      const details=context?gearHoverPopupHtml(context).replace(/Hovered item/g,'Selected item').replace(/Hovered/g,'Selected'):fullDetails.get(row)||'';
+      overview.innerHTML=`<header><small>ITEM DETAILS</small><h3>Item overview</h3></header><div class="glimmer-overview-icon">${icon}</div>${details}`;
       overview.scrollTop=0;
     }
     rows.forEach(row=>{
