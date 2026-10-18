@@ -206,6 +206,9 @@
     return index<lines[conversation].length&&phase%5200<4200?lines[conversation][index]:null;
   }
   function ambientChat(key,lines,participants,viewCamera,now,cycle=72000,delay=12000){
+    const room=key==='rift-brothers'?'emberRiftVault':'emberHallBattles';
+    for(const [id,bubble] of ambientBubbles)if((id==='rift-brothers'?'emberRiftVault':'emberHallBattles')!==state.map)bubble.hidden=true;
+    if(state.map!==room||state.gameMode!=='hallBattles'){hideAmbientChat(key);return null;}
     let barBubble=ambientBubbles.get(key);
     if(!ambientClocks.has(key))ambientClocks.set(key,now);
     const line=mode==='walk'?ambientMoment(lines,now-ambientClocks.get(key),delay,cycle):null;
@@ -512,6 +515,9 @@
     if(!inHall()||activeRecruitScene){last=performance.now();oldDraw();return;}
     const now=performance.now();update(now);window.TinusRecruitment?.tick(now);
     window.EmberRift?.tickHallDoor(player);
+    // Door activation can change maps during this draw. Do not let the rest
+    // of the Hall pass recreate its conversations in the newly entered room.
+    if(!inHall()){hideAmbientChat();return;}
     const focus=window.TinusRecruitment?.focus()||player;
     camera.x=Math.max(0,Math.min(W-LOGICAL_WIDTH,focus.x-LOGICAL_WIDTH/2));
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,focus.y-LOGICAL_HEIGHT*.6));

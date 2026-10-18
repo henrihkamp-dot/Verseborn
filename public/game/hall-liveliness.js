@@ -80,12 +80,13 @@
   }
   function drawLabProps(camera){
     if(!state.party.includes('Glimmer')||!props.complete||!props.naturalWidth)return;
+    window.HallLabMachinery?.draw(camera,clock);
     if(platforms.complete&&platforms.naturalWidth){
       const platformCell=platforms.naturalWidth/3;
       for(const [i,x,y] of [[0,464,87],[0,513,91],[1,558,91],[2,600,87]])ctx.drawImage(platforms,i*platformCell,0,platformCell,platforms.naturalHeight,x-camera.x-12,y-camera.y-7,24,14);
     }
     const cell=props.naturalWidth/3;
-    for(const [i,x,y,width] of [[0,503,81,19],[1,548,81,19],[2,590,77,19]])ctx.drawImage(props,i*cell,0,cell,props.naturalHeight,x-camera.x-width/2,y-camera.y-width,width,width);
+    for(const [i,x,y,width] of [[0,503,81,19],[1,548,81,19],[2,590,77,19]])if(!window.HallLabMachinery?.drawProp(i,x,y,width,camera,clock))ctx.drawImage(props,i*cell,0,cell,props.naturalHeight,x-camera.x-width/2,y-camera.y-width,width,width);
     drawDrone(camera);
   }
   function dronePosition(){
