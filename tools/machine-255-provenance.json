@@ -1,0 +1,10 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "A transparent sprite sheet of TWELVE distinct animation frames of a small lively orange furnace flame, in 4 columns by 3 rows, reading left to right top to bottom. Flame art ONLY, no furnace/machine/metal/door/border/background/text. Match the warm orange-yellow illustrated pixel-fantasy RPG style of the furnace in the reference machine. Each cell contains a compact upright tongue of orange fire with bright golden interior and a few dark red embers at the bottom. Identical camera, scale and low central root anchor in all12 cells; generous20percent clear margins. Fluid sequential motion: flame curls left in1-3, narrows and flicks upward4-6, curls right7-9, settles back toward first pose10-12, seamless loop. Small secondary tongues split and merge, occasional tiny glowing ember but no huge sparks or smoke. Silhouette truly changes frame to frame, not just brightness. Clear crisp edges, no gaussian blur, no morphing of any object. All isolated with alpha transparency. These are fire tongues to be clipped INSIDE an existing furnace window, not a full-screen spell.",
+  "generatedSource": "exec-797f78ff-c9f7-4887-a613-c5b6b297315f.png",
+  "asset": "public/game/assets/ui/machine-255/furnace-fire.webp",
+  "runtime": "public/game/resonance-machine.js",
+  "frames": 12,
+  "frameMs": 160,
+  "notes": "Generated furnace flames are combined with the original artwork using localized sprite animation. Housing and feet remain identical; gear wheels rotate around fixed hubs, liquid textures scroll, core contents swirl, original note sprites drift, textured smoke rises and expands. Glimmer uses existing v244 flight/hover/repair poses and illustrated repair assemblies; no new character design."
+}

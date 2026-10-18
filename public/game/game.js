@@ -6852,6 +6852,7 @@ function drawNpc(id, px, py, dir, anim, frame) {
   if (id === "Stage") {
     const baseline = py + 32;
     if (stageSelectorImage) {
+      if(window.ResonanceMachine?.ready){ResonanceMachine.draw(ctx,stageSelectorImage,px+8,baseline,43,43);return;}
       const sourceWidth = stageSelectorImage.width / STAGE_SELECTOR_FRAMES;
       const sourceFrame = 0;
       const width = 43;
