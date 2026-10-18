@@ -8,7 +8,8 @@ ctx.imageSmoothingEnabled = false;
 
 function syncCanvasResolution() {
   const rect = canvas.getBoundingClientRect();
-  LOGICAL_WIDTH = rect.width && rect.height ? Math.max(FIELD_WORLD_WIDTH, Math.min(320, Math.round(LOGICAL_HEIGHT * rect.width / rect.height))) : FIELD_WORLD_WIDTH;
+  const commandLayout = window.BattleCommandUI && document.body?.dataset.playMode === 'battle';
+  LOGICAL_WIDTH = rect.width && rect.height ? Math.max(commandLayout ? 104 : FIELD_WORLD_WIDTH, Math.min(commandLayout ? 560 : 320, Math.round(LOGICAL_HEIGHT * rect.width / rect.height))) : FIELD_WORLD_WIDTH;
   const measuredScale = rect.width ? Math.ceil(rect.width / LOGICAL_WIDTH) : 3;
   const nextScale = Math.max(1, Math.min(5, measuredScale));
   const width = LOGICAL_WIDTH * nextScale;
@@ -15767,6 +15768,7 @@ function editableKeyboardTarget(event) {
 window.addEventListener('focusin', event => { if (editableKeyboardTarget(event)) heldDirection = null; }, true);
 window.addEventListener("keydown", e => {
   if (editableKeyboardTarget(e)) return;
+  if (mode === 'battle' && window.BattleCommandUI && !battle?.phaseTransition) return;
   if (e.target?.closest?.(".equip-screen") && ["tab", "enter", " "].includes(e.key.toLowerCase())) return;
   if (e.target?.closest?.(".forge-reroll, .gear-favorite, .gear-comparison")) return;
   const key = e.key.toLowerCase();
