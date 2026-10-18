@@ -3,6 +3,7 @@
   'use strict';
   const categories = [
     {id:'attack',label:'Attack',kind:'Weapon action',color:'#f4c878'},
+    {id:'defend',label:'Defend',kind:'Guard',color:'#e8bf6c'},
     {id:'spell',label:'Spell',kind:'DPS Spell',color:'#c18aff'},
     {id:'heal',label:'Heal',kind:'Healing',color:'#7ae1bb'},
     {id:'buffDebuff',label:'Buff / Debuff',kind:'Buff / Debuff',color:'#e8bf6c'},

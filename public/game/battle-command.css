@@ -135,3 +135,68 @@ body[data-play-mode="battle"] #bossMechanicHud .whirlpool-battle-heading{display
 
 .bc-category[data-category="buffDebuff"]>span{font-size:clamp(12px,1.15vw,17px)}
 body[data-play-mode="battle"] #bossMechanicHud .boss-mechanic-panel p{color:#e0d4e5!important}
+/* Desktop correction: canonical 16:9 stage, compact tabs, no reserved footer. */
+@media(min-width:701px){
+ body[data-play-mode="battle"]{--bc-command-height:clamp(222px,30vh,324px);--bc-strip:0px}
+ body[data-play-mode="battle"] .shell{height:100dvh!important;min-height:0!important;overflow:hidden}
+ body[data-play-mode="battle"] .game{width:100vw!important;height:100dvh!important;aspect-ratio:16/9!important;margin:0!important}
+ .command-battle .bc-command{bottom:0;grid-template-columns:minmax(0,7fr) minmax(320px,3fr);gap:10px;left:8px;right:8px}
+ .bc-command-left{grid-template-rows:20px clamp(54px,7.05vh,76px) minmax(84px,1fr) 18px;gap:7px;padding:8px 10px 5px}
+ .bc-categories{justify-content:flex-start;gap:6px}
+ .bc-category{flex:1 1 0;max-width:180px;padding:4px 3px;gap:2px;box-shadow:none}
+ .bc-category .bc-icon{width:clamp(26px,3.1vh,34px);height:clamp(26px,3.1vh,34px)}
+ .bc-category>span,.bc-category[data-category="buffDebuff"]>span{font-size:clamp(11px,1.05vw,18px);max-width:100%;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+ .bc-category.is-selected{border-color:#a98bbd;background:linear-gradient(#242033,#12111d);box-shadow:inset 0 0 10px #926ac422}
+ .bc-category.is-selected:before{filter:brightness(1.06)}
+ .bc-action.is-selected{border-color:#ffe6a0;box-shadow:inset 0 0 0 1px #b99b5d,0 0 9px #e3b86155;background:linear-gradient(115deg,#34223d,#12131f)}
+ .bc-action{padding:9px 10px;gap:10px}
+ .bc-action strong{font-size:clamp(14px,1.12vw,21px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;overflow-wrap:normal;line-height:1.25}
+ .bc-action-copy{gap:4px;overflow:hidden}
+ .bc-action-copy>span{display:flex;align-items:flex-start;flex-direction:column;gap:3px}
+ .bc-action .bc-badge{max-width:100%;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:11px}
+ .bc-action-copy>span>b{font-size:12px}
+ .bc-card-art{width:clamp(36px,3vw,54px);height:clamp(42px,3.3vw,60px)}
+ .bc-auto-target{display:none!important}
+ .bc-detail{padding:10px 14px 48px}
+ .bc-detail h3{font-size:clamp(18px,1.4vw,26px);margin-bottom:5px}
+ .bc-detail-art{width:48px;height:52px}
+ .bc-description{font-size:clamp(12px,.8vw,15px);line-height:1.4;margin:7px 0}
+ .bc-costline{margin:7px 0;padding:4px 0;font-size:12px}
+ .bc-effects,.bc-effects small{font-size:11px;line-height:1.3}
+ .bc-effects{padding-top:5px;gap:5px}
+ .bc-act-footer{bottom:7px;left:14px;right:14px;padding-top:5px;gap:8px}
+ .command-battle .bc-act{min-height:30px;min-width:112px;font-size:16px;padding:4px 14px}
+ .bc-act small{display:inline;font:10px 'Segoe UI',sans-serif;margin-left:8px;color:#dbcae8}
+ .command-battle .bc-timeline{height:clamp(46px,5.5vh,60px);top:8px;gap:6px}
+ .bc-turn{padding:3px 14px 3px 12px;gap:6px}
+ .bc-turn img{width:clamp(32px,4.1vh,44px);height:clamp(32px,4.1vh,44px)}
+ .bc-turn b{font-size:clamp(14px,1.3vw,23px);max-width:100%;min-width:0}
+ body[data-play-mode="battle"] .hud{top:calc(clamp(46px,5.5vh,60px) + 12px)!important;height:18px!important}
+ .command-battle .bc-unit{width:clamp(154px,11vw,210px)}
+ .bc-statuses{justify-content:center;flex-wrap:nowrap;max-width:100%}
+ .bc-statuses>span{min-width:0}
+ body[data-play-mode="battle"] .gamepad,body[data-play-mode="battle"] .battle-footer{display:none!important}
+}
+@media(min-width:701px) and (max-height:850px){
+ .bc-command-left{padding:5px 7px 4px;gap:5px;grid-template-rows:17px 54px minmax(76px,1fr) 15px}
+ .bc-action{padding:6px;gap:6px}.bc-action-copy{gap:2px}.bc-card-art{width:34px;height:40px}
+ .bc-detail{padding:7px 10px 43px}.bc-detail-art{width:37px;height:40px}.bc-detail h3{font-size:18px}
+ .bc-description{font-size:12px;line-height:1.3;margin:5px 0}.bc-effects,.bc-effects small{font-size:10px}.bc-effects small{display:none}
+ .bc-costline{font-size:11px;margin:5px 0}.bc-act-footer{bottom:5px}.command-battle .bc-act{min-height:27px;font-size:14px}
+ .bc-command-foot{font-size:9px}.bc-action .bc-badge{font-size:10px}.bc-action-copy>span>b{font-size:11px}
+}
+@media(min-width:701px){
+ .command-battle .bc-unit{width:clamp(150px,9.5vw,184px)}
+ .bc-action{max-width:400px;width:100%;height:100%}
+}
+/* One desktop viewport for title, exploration, dialogue, shops and battles. */
+@media(min-width:701px){
+ html,body{height:100%;overflow:hidden}
+ body[data-play-mode] .shell{width:100vw!important;height:100dvh!important;min-height:0!important;max-width:none!important;padding:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;overflow:hidden}
+ body[data-play-mode] .game{width:min(100vw,calc(100dvh * 16 / 9))!important;height:min(100dvh,calc(100vw * 9 / 16))!important;min-height:0!important;max-height:none!important;max-width:none!important;aspect-ratio:16/9!important;zoom:1!important;transform:none!important;margin:0!important;border:0!important;box-shadow:none!important}
+ body[data-play-mode]:not([data-play-mode="battle"]) #screen{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-height:none!important;aspect-ratio:16/9!important}
+ body[data-play-mode] .shell>.panel,body[data-play-mode] .shell>.gamepad{display:none!important}
+ body[data-play-mode] #screen:focus{box-shadow:none}
+ body[data-play-mode] .menu{max-height:calc(100% - 16px)!important}
+}
+@media(min-width:701px){.command-battle .bc-unit{width:clamp(142px,8vw,160px)}}

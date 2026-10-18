@@ -33,6 +33,7 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const paths={
     attack:'M7 4l13 15-3 3L4 8l-1-5 4 1zM25 4L12 19l3 3L28 8l1-5-4 1zM5 20l7 7M27 20l-7 7',
+    defend:'M16 3l11 4v9c0 7-6 11-11 14C11 27 5 23 5 16V7l11-4zM16 8v16M10 13h12',
     spell:'M16 2c4 7-2 8 2 12 2-1 3-4 3-6 7 7 7 12 2 17-5 5-14 3-16-3-3-7 4-9 4-14 3 4-1 8 3 9 3-3-1-8 2-15zM16 21v7M12 24h8',
     heal:'M16 3l4 9 9 4-9 4-4 9-4-9-9-4 9-4 4-9zM16 11v10M11 16h10',
     buffDebuff:'M16 3c4 3 8 4 11 4v10c0 7-7 11-11 13C12 28 5 24 5 17V7c3 0 7-1 11-4zM16 8v16',
@@ -53,15 +54,19 @@
   }
   const currentGroup=()=>groups.find(c=>c.id===ui.category)||groups[0];
   const skill=()=>currentGroup()?.actions[ui.action]||currentGroup()?.actions[0];
-  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<900?2:3;
+  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<900?2:game.getBoundingClientRect().width<1500?3:4;
   function extras(){
-    return [{name:'Defend / Skip',category:'utility',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit and gain 6 Resonance.`},
+    return [{name:'Defend',category:'defend',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit and gain 6 Resonance.`},
       ...(carriedBattleItems().length?[{name:'Items',category:'utility',targetScope:'self',command:'items',cost:0,desc:'Use a carried battle item. Consumes the current action.'}]:[])];
   }
   function refreshGroups(){
-    groups=model.groups(unit);let utility=groups.find(c=>c.id==='utility');
-    if(!utility){utility={...model.categories.find(c=>c.id==='utility'),actions:[]};groups.push(utility);groups.sort((a,b)=>model.categories.findIndex(c=>c.id===a.id)-model.categories.findIndex(c=>c.id===b.id));}
-    utility.actions.push(...extras());
+    groups=model.groups(unit);
+    for(const action of extras()){
+      let group=groups.find(c=>c.id===action.category);
+      if(!group){group={...model.categories.find(c=>c.id===action.category),actions:[]};groups.push(group);}
+      group.actions.push(action);
+    }
+    groups.sort((a,b)=>model.categories.findIndex(c=>c.id===a.id)-model.categories.findIndex(c=>c.id===b.id));
     if(!groups.some(c=>c.id===ui.category)){ui.category=groups[0]?.id;ui.action=0;}
     ui.action=Math.min(ui.action,Math.max(0,currentGroup().actions.length-1));
   }
@@ -73,14 +78,32 @@
   function cost(sk){return sk.anim==='ultimate'?'100 Resonance':sk.command?'0 MP':`${skillMpCost(unit.id,sk,unit)} MP`;}
   function selectCategory(id,enter=false){ui.category=id;ui.action=0;ui.level=enter?'action':'category';ui.page=0;renderCommands();}
   function targetName(sk){return model.scopes[sk.targetScope]||'Self';}
+  function durationPreview(sk,status,target){
+    const def=STATUS_DEFS[status.type]||{},buff=(sk.buffs||[]).includes(status);
+    let requested=status.duration;
+    if(buff)requested=(requested||def.duration||3)+typedTalentValue(unit.id,'buffDuration')+effectValue(unit.id,'buffDuration')+(typedTalentValue(unit.id,'supportPotency')?1:0);
+    else if(status===sk.status&&sk.name==='Scramble Signal')requested=(requested||def.duration||1)+typedTalentValue(unit.id,'scrambleDuration');
+    if(status.type==='poison'&&!requested)requested=({weak:3,normal:4,strong:5})[status.potency||'normal'];
+    let duration=statusDurationFor(unit,status.type,requested);
+    if(def.negative&&target&&(target.id||target.sparringId)){
+      // Duration resistance can consume a first-hit guard: preview on a copy only.
+      const copy={...target,statusGuards:{...target.statusGuards}};
+      let reduction=window.StatusSystem?StatusSystem.durationReduction(copy,status.type,duration):effectValue(target.id,'statusDurationReduction');
+      const blessing=battle.party.includes(target)?window.HallHub?.supportForBattle()?.blessing:null;
+      if(duration>1&&blessing?.firstStatusDuration&&!target.statusGuards?.kaelDuration)reduction=Math.min(2,reduction+blessing.firstStatusDuration);
+      duration=Math.max(1,duration-reduction);
+    }
+    const bossControl=target&&!target.id&&(target.endgameBoss||target.resistanceTier==='boss'&&!(battle?.hallStage>=51&&battle.hallStage<=60))&&['stun','sleep'].includes(status.type);
+    return bossControl?1:Math.max(1,Math.round(duration));
+  }
   function detailHtml(sk,target=null){
     if(!sk)return '<p>Choose an action category.</p>';
     const reason=disabled(sk),group=model.categories.find(c=>c.id===sk.category);
     const preview=description(sk,target);
     const statuses=[...(sk.status?[sk.status]:[]),...(sk.extraStatuses||[]),...(sk.buffs||[])];
     return `<header><span class="bc-detail-art">${abilityIcon(sk)}</span><div><h3>${esc(sk.name)}</h3><span class="bc-badge">${group.kind}</span> <span class="bc-badge">${targetName(sk)}</span></div></header><div class="bc-costline"><span>${cost(sk)}</span><span>${sk.command?'Tactical':`${esc(sk.element)} · ${skillScalingLabel(unit.id,sk)}`}</span>${sk.targetPolicy?'<span>Lowest HP</span>':''}</div><p class="bc-description">${esc(preview)}</p>${reason?`<p class="bc-unavailable">${esc(reason)}</p>`:''}${statuses.length?`<div class="bc-effects">${statuses.map(s=>{
-      const def=STATUS_DEFS[s.type]||{},duration=s.duration??def.duration??3,value=s.value??def.value;
-      const recipient=target||unit,previewStatus={...s,remaining:duration,value};
+      const def=STATUS_DEFS[s.type]||{},recipient=def.negative?target||unit:(sk.targetScope==='self'?unit:target||unit),duration=durationPreview(sk,s,recipient),value=s.value??def.value;
+      const previewStatus={...s,remaining:duration,value};
       const previewUnit={...recipient,statuses:[...ensureStatuses(recipient).filter(a=>a.type!==s.type),previewStatus]};
       const desc=statusDisplayData(previewUnit,previewStatus).description;
       return `<span><b>${esc(def.label||s.type)}</b> ${Number.isFinite(value)&&value<1?`${Math.round(value*100)}% · `:''}${duration} actions${s.chance!=null?` · ${Math.round(s.chance*100)}% base chance`:''}${statuses.length===1?`<small>${esc(desc)}</small>`:''}</span>`;
@@ -89,6 +112,22 @@
   function description(sk,target){
     if(sk.command)return sk.desc;
     let copy=sk.desc||'';
+    const statuses=[...(sk.status?[sk.status]:[]),...(sk.extraStatuses||[]),...(sk.buffs||[])];
+    if(statuses.length){
+      const words=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+      const mappings=statuses.map(s=>({base:s.duration||STATUS_DEFS[s.type]?.duration||3,effective:durationPreview(sk,s,target||unit)}));
+      let ambiguous=false;
+      copy=copy.replace(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(actions?|turns?)\b/gi,(text,n,label)=>{
+        const base=Number.isFinite(Number(n))?Number(n):words.indexOf(n.toLowerCase()),matches=mappings.filter(m=>m.base===base),values=[...new Set(matches.map(m=>m.effective))];
+        if(values.length===1)return `${values[0]} ${label.replace(/s$/,'')}${values[0]===1?'':'s'}`;
+        if(values.length>1)ambiguous=true;
+        return text;
+      });
+      if(!/\b\d+\s+(?:actions?|turns?)\b/i.test(copy)||ambiguous){
+        if(ambiguous)copy=copy.replace(/\s+for\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:actions?|turns?)/gi,'');
+        copy+=' '+statuses.map(s=>`${STATUS_DEFS[s.type]?.label||s.type}: ${durationPreview(sk,s,target||unit)} actions.`).join(' ');
+      }
+    }
     const native=skillPreview(unit,sk,target),range=native.match(/\b\d+-\d+ damage/);
     if(range&&!sk.statusOnly&&!sk.dispel){
       // Target, cost and scaling already have their own badges. Keep the native
@@ -116,7 +155,7 @@
       b.classList.toggle('is-selected',ui.category===c.id);b.classList.toggle('is-focused',ui.level==='category'&&ui.category===c.id);b.setAttribute('aria-pressed',String(ui.category===c.id));
       b.innerHTML=`${icon(c.id,c.color)}<span>${c.label}</span>`;
       b.onclick=()=>selectCategory(c.id,true);
-      b.onpointerenter=()=>{if(ui.level==='category'&&ui.category!==c.id)selectCategory(c.id);};
+      b.title=c.label;
     });
   }
   function renderCommands(){
@@ -134,7 +173,8 @@
         const index=start+j,reason=disabled(sk),b=make('button','bc-action',actionRow);b.type='button';b.dataset.action=String(index);b.dataset.category=sk.category;
         b.setAttribute('aria-disabled',String(Boolean(reason)));b.classList.toggle('is-unavailable',Boolean(reason));b.classList.toggle('is-unaffordable',reason==='Not enough MP');b.classList.toggle('is-selected',ui.action===index);b.classList.toggle('is-focused',ui.level==='action'&&ui.action===index);
         b.innerHTML=`<span class="bc-card-art">${abilityIcon(sk)}</span><span class="bc-action-copy"><strong>${esc(sk.name)}</strong><span><small class="bc-badge">${targetName(sk)}</small><b>${cost(sk)}</b></span>${reason?`<small class="bc-reason">${esc(reason)}</small>`:sk.targetPolicy?'<small class="bc-auto-target">Lowest-HP ally</small>':''}</span>`;
-        b.onpointerenter=()=>{if(ui.action!==index||ui.level!=='action'){ui.action=index;ui.level='action';renderCommands();}};
+        b.title=sk.name;b.setAttribute('aria-label',sk.name);
+        // Only an explicit click or navigation input changes the chosen action.
         b.onclick=()=>{ui.action=index;ui.level='action';renderCommands();};
       });
       addPages(actions.length,size);
@@ -142,9 +182,19 @@
     instruction.textContent=ui.level==='category'?'← → Category · Confirm: actions':ui.level==='target'||ui.level==='itemTarget'?'← → Target · Confirm: use · Back: actions':'← → Action · ↑ / Back: categories';
     if(ui.level!=='items'&&ui.level!=='itemTarget')updatePreview();
     renderAct();
+    fitLabels();
+  }
+  function fitLabels(){
+    root.querySelectorAll('.bc-action strong,.bc-category>span,.bc-turn b').forEach(n=>{
+      const full=n.textContent;n.title=full;n.parentElement.setAttribute('title',n.parentElement.title||full);
+      const minimum=n.closest('.bc-category')?11:12;
+      let size=parseFloat(getComputedStyle(n).fontSize);
+      while(n.scrollWidth>n.clientWidth+1&&size>minimum){size--;n.style.fontSize=size+'px';}
+      const parent=n.closest('.bc-turn');if(parent){parent.tabIndex=0;parent.setAttribute('aria-label',full);}
+    });
   }
   function renderAct(){
-    const footer=make('div','bc-act-footer',detail),hint=make('small','',footer),button=make('button','bc-act',footer);button.type='button';button.textContent='Act';
+    const footer=make('div','bc-act-footer',detail),hint=make('small','',footer),button=make('button','bc-act',footer);button.type='button';button.innerHTML='Act <small>Enter / A</small>';
     const sk=skill();button.disabled=Boolean(!sk||disabled(sk));
     if(ui.level==='items'){const entry=carriedBattleItems()[itemIndex];button.disabled=!entry||!canUseBattleItem(unit,entry[1]);hint.textContent='Use selected item';}
     else if(ui.level==='itemTarget'){button.disabled=!targetList[ui.target];hint.textContent='Revive selected ally';}
@@ -170,7 +220,6 @@
     list.slice(start,start+size).forEach((target,j)=>{
       const index=start+j,b=make('button','bc-action bc-target-action',actionRow);b.type='button';b.classList.toggle('is-selected',targetGroup||ui.target===index);
       b.innerHTML=`${icon(sk.category)}<span><strong>${esc(target.name)}</strong><small>${target.group?`${targetList.length} affected · Confirm ${esc(sk.name)}`:`HP ${Math.max(0,target.hp)} / ${target.max}`}</small></span>`;
-      b.onpointerenter=()=>{if(ui.target!==index){ui.target=index;battleActionIndex=index;renderCommands();}};
       b.onclick=()=>{ui.target=index;renderCommands();};
     });
   }
@@ -197,7 +246,7 @@
     items.slice(Math.floor(itemIndex/size)*size,Math.floor(itemIndex/size)*size+size).forEach(([name,info],j)=>{
       const index=Math.floor(itemIndex/size)*size+j,b=make('button','bc-action',actionRow);b.type='button';b.classList.toggle('is-selected',itemIndex===index);b.classList.toggle('is-unavailable',!canUseBattleItem(unit,info));b.setAttribute('aria-disabled',String(!canUseBattleItem(unit,info)));
       b.innerHTML=`${inventoryItemIconHtml(name,'bc-card-art')}<span><strong>${esc(name)} ×${state.inventory[name]}</strong><small>${esc(battleItemState(unit,info))} · ${info.battle==='revive'?'Fallen Ally':'Self'}</small></span>`;
-      b.onpointerenter=()=>{if(itemIndex!==index){itemIndex=index;renderCommands();}};b.onclick=()=>{itemIndex=index;renderCommands();};
+      b.onclick=()=>{itemIndex=index;renderCommands();};
     });
     if(items.length>size){const pager=make('div','bc-pager',actionRow);for(const d of[-1,1]){const b=make('button','',pager);b.type='button';b.textContent=d<0?'‹':'›';b.onclick=()=>{itemIndex=(itemIndex+d*size+items.length)%items.length;renderCommands();};}}
     const entry=items[itemIndex];detail.innerHTML=entry?`<h3>${esc(entry[0])}</h3><p>${esc(entry[1].desc)}</p><span class="bc-badge">${entry[1].battle==='revive'?'Single Fallen Ally':'Self'}</span><p>Uses 1 item · Ends turn</p>`:'<p>No carried items.</p>';
@@ -271,9 +320,37 @@
   }
   function battlefieldHeight(){const rect=game.getBoundingClientRect(),commands=command.getBoundingClientRect();return Math.max(105,(commands.top-rect.top)/canvas.getBoundingClientRect().height*LOGICAL_HEIGHT);}
   function visualScale(){return Math.min(1,Math.max(.48,LOGICAL_WIDTH/245),battlefieldHeight()/165);}
+  const spriteBounds=new WeakMap(),alphaBounds=new WeakMap();
+  function visibleImageBounds(image,args){
+    const source=args.length===8?args.slice(0,4):[0,0,image.width,image.height],key=source.join(':');
+    let cached=alphaBounds.get(image);if(!cached){cached=new Map();alphaBounds.set(image,cached);}if(cached.has(key))return cached.get(key);
+    let result={x:0,y:0,w:1,h:1};
+    try{
+      const sample=document.createElement('canvas');sample.width=128;sample.height=128;const c=sample.getContext('2d',{willReadFrequently:true});c.drawImage(image,...source,0,0,128,128);
+      const pixels=c.getImageData(0,0,128,128).data;let left=128,top=128,right=0,bottom=0;
+      for(let y=0;y<128;y++)for(let x=0;x<128;x++)if(pixels[(y*128+x)*4+3]>24){left=Math.min(left,x);right=Math.max(right,x+1);top=Math.min(top,y);bottom=Math.max(bottom,y+1);}
+      if(right>left&&bottom>top)result={x:left/128,y:top/128,w:(right-left)/128,h:(bottom-top)/128};
+    }catch{}cached.set(key,result);return result;
+  }
+  function captureSprite(u,x,y,draw){
+    if(mode!=='battle')return draw();
+    const key=canvas.width+':'+canvas.height,previous=spriteBounds.get(u);
+    if(previous?.key===key)return draw();
+    const original=ctx.drawImage;let bounds=null;
+    ctx.drawImage=function(image,...args){
+      let [dx,dy,dw,dh]=args.length===8?args.slice(4):args.length===4?args:[args[0],args[1],image.width,image.height];
+      const visible=visibleImageBounds(image,args);dx+=dw*visible.x;dy+=dh*visible.y;dw*=visible.w;dh*=visible.h;
+      if([dx,dy,dw,dh].every(Number.isFinite)){
+        const m=ctx.getTransform(),p=m.transformPoint({x:dx,y:dy}),q=m.transformPoint({x:dx+dw,y:dy+dh}),b={left:Math.min(p.x,q.x)/canvas.width*LOGICAL_WIDTH,top:Math.min(p.y,q.y)/canvas.height*LOGICAL_HEIGHT,right:Math.max(p.x,q.x)/canvas.width*LOGICAL_WIDTH,bottom:Math.max(p.y,q.y)/canvas.height*LOGICAL_HEIGHT};
+        if(!bounds||(b.right-b.left)*(b.bottom-b.top)>(bounds.right-bounds.left)*(bounds.bottom-bounds.top))bounds=b;
+      }
+      return original.call(this,image,...args);
+    };
+    try{return draw();}finally{ctx.drawImage=original;if(bounds){spriteBounds.set(u,{key,dx:(bounds.left+bounds.right)/2-x,dy:bounds.bottom-y,width:bounds.right-bounds.left,height:bounds.bottom-bounds.top});lastLayout='';}}
+  }
   const nativePartySprite=drawBattlePartySprite,nativeEnemySprite=drawEnemy;
-  drawBattlePartySprite=function(u,x,y,...rest){const s=mode==='battle'?visualScale():1;ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.translate(-x,-y);const result=nativePartySprite(u,x,y,...rest);ctx.restore();return result;};
-  drawEnemy=function(u,x,y,...rest){if(mode!=='battle')return nativeEnemySprite(u,x,y,...rest);const s=visualScale(),ax=x+8,ay=y+31;ctx.save();ctx.translate(ax,ay);ctx.scale(s,s);ctx.translate(-ax,-ay);nativeEnemySprite(u,x,y,...rest);ctx.restore();};
+  drawBattlePartySprite=function(u,x,y,...rest){const s=mode==='battle'?visualScale():1;ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.translate(-x,-y);const result=captureSprite(u,x,y,()=>nativePartySprite(u,x,y,...rest));ctx.restore();return result;};
+  drawEnemy=function(u,x,y,...rest){if(mode!=='battle')return nativeEnemySprite(u,x,y,...rest);const s=visualScale(),ax=x+8,ay=y+31;ctx.save();ctx.translate(ax,ay);ctx.scale(s,s);ctx.translate(-ax,-ay);captureSprite(u,ax,ay,()=>nativeEnemySprite(u,x,y,...rest));ctx.restore();};
   const nativePartyPosition=partyBattlePosition,nativeEnemyPosition=enemyBattlePosition;
   function position(native,index,count,enemySide){
     if(mode!=='battle')return native(index,count);
@@ -293,18 +370,25 @@
     if(!battle||mode!=='battle')return;
     const r=game.getBoundingClientRect(),cr=canvas.getBoundingClientRect(),field=command.getBoundingClientRect().top-r.top;
     const key=[r.width,r.height,LOGICAL_WIDTH,field,statusNodes.length].join(':');if(key===lastLayout)return;lastLayout=key;
-    const placed=[];
-    statusNodes.forEach(({u,index,side,n})=>{
+    const placed=[],overlap=(a,b)=>a.x<b.x+b.w+4&&a.x+a.w>b.x-4&&a.y<b.y+b.h+4&&a.y+a.h>b.y-4;
+    const sprites=statusNodes.map(({u,index,side})=>{
       const [x,y]=side==='party'?partyBattlePosition(index,battle.party.length):enemyBattlePosition(index,battle.enemies.length);
-      const width=n.offsetWidth,height=n.offsetHeight;let px=x/LOGICAL_WIDTH*cr.width-width/2,py=y/LOGICAL_HEIGHT*cr.height+5;
-      if(side==='party'&&index===0&&battle.party.length===3){
-        const front=battle.party[2],gap=partyBattlePosition(2,3)[1]-y,frontHeight=(battleSpriteHeights[battleVisualId(front)]||54)*BATTLE_COMPOSITION_SCALE;
-        if(gap-frontHeight<(height+12)/cr.height*LOGICAL_HEIGHT)px=4;
+      const b=spriteBounds.get(u)||{dx:0,dy:0,width:34,height:54},sx=cr.width/LOGICAL_WIDTH,sy=cr.height/LOGICAL_HEIGHT;
+      return{u,cx:(x+b.dx)*sx,bottom:(y+b.dy)*sy,w:b.width*sx,h:b.height*sy};
+    });
+    statusNodes.forEach(({u,n},index)=>{
+      const sprite=sprites[index],width=n.offsetWidth,height=n.offsetHeight,statusHeight=n.querySelector('.bc-statuses')?.offsetHeight||0;
+      const baseX=sprite.cx-width/2,baseY=sprite.bottom+5,h=height+statusHeight;
+      const obstacles=sprites.map(s=>({x:s.cx-s.w/2,y:s.bottom-s.h,w:s.w,h:s.h}));
+      let best=null;
+      for(let dx=-320;dx<=320;dx+=4)for(let dy=0;dy<=96;dy+=12){
+        const box={x:Math.max(5,Math.min(r.width-width-5,baseX+dx)),y:Math.max(96,Math.min(field-h-5,baseY+dy)),w:width,h};
+        const collisions=placed.filter(p=>overlap(box,p)).length+obstacles.filter(p=>overlap(box,p)).length;
+        const score=collisions*1000000+(box.x-baseX)**2+2*(box.y-baseY)**2;
+        if(!best||score<best.score)best={...box,score};
       }
-      px=Math.max(4,Math.min(r.width-width-4,px));py=Math.min(field-height-7,py);
-      for(const p of placed)if(px<p.x+p.w+4&&px+width>p.x-4&&py<p.y+p.h+4&&py+height>p.y-4)py=p.y-height-5;
-      n.style.left=`${px}px`;n.style.top=`${Math.max(55,py)}px`;placed.push({x:px,y:py,w:width,h:height});
-      const role=n.querySelector('.bc-role');if(role)role.hidden=px<36;
+      n.style.left=`${best.x}px`;n.style.top=`${best.y}px`;placed.push(best);
+      const role=n.querySelector('.bc-role');if(role)role.hidden=best.x<36||Math.abs(best.x-baseX)>24;
     });
   }
   function previewUnits(){
@@ -317,7 +401,9 @@
   function highlightTargets(){const targets=ui.level==='itemTarget'?[targetList[ui.target]]:previewUnits();statusNodes.forEach(({u,n})=>{n.classList.toggle('is-target',targets.includes(u));n.classList.toggle('is-valid-target',ui.level==='target'&&targetList.includes(u));n.classList.toggle('is-active',unit===u&&!battle.resolving);});}
   // Replace old canvas HUD only; existing sprites, telegraphs, attacks and effects remain native.
   drawBattleVitals=()=>{};drawBattleTurnRail=()=>{};drawBattleRoleRosters=()=>{};
-  const nativeBackdrop=drawBattleBackground;
+  const nativeBackdrop=drawBattleBackground,nativeMarker=drawBattleGroundMarker;
+  let drawingScene=false;
+  drawBattleGroundMarker=function(...args){if(!drawingScene)return nativeMarker(...args);};
   drawBattleBackground=function(image,arena){
     if(mode!=='battle')return nativeBackdrop(image,arena);
     const ratio=LOGICAL_WIDTH/BATTLE_ARENA_HEIGHT;
@@ -328,9 +414,16 @@
     const sy=Math.max(0,Math.min(image.height-sh,(image.height-sh)/2+sh*.08));
     ctx.drawImage(image,sx,sy,sw,sh,0,0,LOGICAL_WIDTH,BATTLE_ARENA_HEIGHT);
     drawRect(0,BATTLE_ARENA_HEIGHT,LOGICAL_WIDTH,LOGICAL_HEIGHT-BATTLE_ARENA_HEIGHT,'#0b0c15');
+    // Paint every selector on the ground before any combatant silhouette.
+    const turn=currentTurn(),targets=previewUnits();
+    for(const [side,list]of [['party',battle.party],['enemy',battle.enemies]])list.forEach((u,i)=>{
+      const [x,y]=side==='party'?partyBattlePosition(i,list.length):enemyBattlePosition(i,list.length);
+      if(u.hp>0&&turn?.side===side&&(side==='party'?turn.id===u.id:turn.index===i))nativeMarker(x,y,'turn');
+      if(targets.includes(u))nativeMarker(x,y,'target');
+    });
   };
   const nativeScene=drawBattleScene;
-  drawBattleScene=function(){nativeScene();previewUnits().forEach(u=>{const pi=battle.party.indexOf(u),ei=battle.enemies.indexOf(u);const [x,y]=pi>=0?partyBattlePosition(pi,battle.party.length):enemyBattlePosition(ei,battle.enemies.length);drawBattleGroundMarker(x,y,'target');});positionCards();};
+  drawBattleScene=function(){drawingScene=true;try{nativeScene();}finally{drawingScene=false;}positionCards();};
   selectedBattleEnemy=()=>ui.level==='target'&&selected?.targetScope.includes('enemy')?targetList[ui.target]||null:null;
   const oldControl=handleControl;
   handleControl=function(c){if(mode==='battle'&&battle&&!battle.phaseTransition&&['left','right','up','down','confirm','cancel'].includes(c))return control(c);return oldControl(c);};
@@ -343,5 +436,8 @@
   let pads=[],lastPad=0;
   function gamepad(now){if(mode==='battle'&&!history.open){const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);if(pad){const values=[pad.buttons[14]?.pressed||pad.axes[0]<-.55,pad.buttons[15]?.pressed||pad.axes[0]>.55,pad.buttons[12]?.pressed||pad.axes[1]<-.55,pad.buttons[13]?.pressed||pad.axes[1]>.55,pad.buttons[0]?.pressed,pad.buttons[1]?.pressed];values.forEach((v,i)=>{if(v&&(!pads[i]||i<4&&now-lastPad>240)){handleControl(['left','right','up','down','confirm','cancel'][i]);lastPad=now;}});pads=values;}}requestAnimationFrame(gamepad);}requestAnimationFrame(gamepad);
   new ResizeObserver(()=>{lastLayout='';if(mode==='battle'&&unit&&!battle.resolving){renderCommands();positionCards();}}).observe(game);
-  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},control,render:()=>renderBattle(''),previewUnits,positionCards};
+  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,render:()=>renderBattle(''),previewUnits,positionCards};
 })();
+
+
+

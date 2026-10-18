@@ -9,7 +9,7 @@ ctx.imageSmoothingEnabled = false;
 function syncCanvasResolution() {
   const rect = canvas.getBoundingClientRect();
   const commandLayout = window.BattleCommandUI && document.body?.dataset.playMode === 'battle';
-  LOGICAL_WIDTH = rect.width && rect.height ? Math.max(commandLayout ? 104 : FIELD_WORLD_WIDTH, Math.min(commandLayout ? 560 : 320, Math.round(LOGICAL_HEIGHT * rect.width / rect.height))) : FIELD_WORLD_WIDTH;
+  LOGICAL_WIDTH = rect.width && rect.height ? Math.max(commandLayout ? 104 : FIELD_WORLD_WIDTH, Math.min(560, Math.round(LOGICAL_HEIGHT * rect.width / rect.height))) : FIELD_WORLD_WIDTH;
   const measuredScale = rect.width ? Math.ceil(rect.width / LOGICAL_WIDTH) : 3;
   const nextScale = Math.max(1, Math.min(5, measuredScale));
   const width = LOGICAL_WIDTH * nextScale;
