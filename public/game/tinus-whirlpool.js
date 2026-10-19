@@ -55,14 +55,14 @@
 
   // These are dimensional counterparts. Combat adaptations are not new comic canon.
   const encounters = [
-    {key:'benji',name:'Benji',title:'The Geometry of Welcome',element:'Sigil',weak:'Sound',hp:16500,power:150,agi:88,role:'healer',size:67,arena:1,spell:'Golden Mandala',strike:'A World in Balance',status:'magicVulnerability',hint:'Benji shelters behind a removable barrier. Dispel it, then use Sound and Break. Silence or fresh Break interrupts the announced mandala.'},
-    {key:'demonlord',name:'DemonLord',title:'The Uncrowned Inferno',element:'Shadow',weak:'Holy Fire',hp:18000,power:160,agi:92,role:'bruiser',size:75,arena:5,spell:'Crimson Rupture',strike:'Crown of the Abyss',status:'bleed',hint:'His blade applies Bleed. Cleanse and keep Guard ready. His ultimate is magical: Silence or fresh Break cancels the charged crown.'},
-    {key:'klaas-de-klemmer',name:'Dr. Klaas de Klemmer',title:'The Perfectly Incorrect Form',element:'Tech',weak:'Earth',hp:19000,power:165,agi:95,role:'controller',size:62,arena:6,spell:'Compliance Notice',strike:'The Golden Cage',status:'disrupted',hint:'Disrupted weakens damage. Cleanse before committing an ultimate. Break or Silence the announced cage; the cancelled ritual leaves him vulnerable.'},
-    {key:'revisor-9',name:'Revisor9',title:'The Last Redaction',element:'Shadow',weak:'Holy Fire',hp:20500,power:170,agi:99,role:'controller',size:67,arena:8,spell:'Ink of Erasure',strike:'The Unwritten Verdict',status:'silence',hint:'Ink can Silence your caster. Carry cleansing support and a physical attacker. Fresh Break remains an answer when your own spells are sealed.'},
+    {key:'benji',name:'Benji',title:'The Geometry of Welcome',element:'Sigil',weak:'Sound',hp:16500,power:150,agi:88,role:'healer',size:67,arena:1,spell:'Golden Mandala',strike:'A World in Balance',status:'magicVulnerability',hint:'Benji shelters behind a removable barrier. Dispel it, then use Sound and Break. Silence or valid Stun interrupts the announced mandala.'},
+    {key:'demonlord',name:'DemonLord',title:'The Uncrowned Inferno',element:'Shadow',weak:'Holy Fire',hp:18000,power:160,agi:92,role:'bruiser',size:75,arena:5,spell:'Crimson Rupture',strike:'Crown of the Abyss',status:'bleed',hint:'His blade applies Bleed. Cleanse and keep Guard ready. His ultimate is magical: Silence or valid Stun cancels the charged crown.'},
+    {key:'klaas-de-klemmer',name:'Dr. Klaas de Klemmer',title:'The Perfectly Incorrect Form',element:'Tech',weak:'Earth',hp:19000,power:165,agi:95,role:'controller',size:62,arena:6,spell:'Compliance Notice',strike:'The Golden Cage',status:'disrupted',hint:'Disrupted weakens damage. Cleanse before committing an ultimate. Silence or Stun the announced cage; the cancelled ritual leaves him vulnerable.'},
+    {key:'revisor-9',name:'Revisor9',title:'The Last Redaction',element:'Shadow',weak:'Holy Fire',hp:20500,power:170,agi:99,role:'controller',size:67,arena:8,spell:'Ink of Erasure',strike:'The Unwritten Verdict',status:'silence',hint:'Ink can Silence your caster. Carry cleansing support and a physical attacker. Physical attacks remain useful while your spells are sealed; use valid Stun to interrupt the ritual.'},
     {key:'bill',name:'B.I.L.L.',title:'A Heart Outside the Ledger',element:'Tech',weak:'Sound',hp:22000,power:175,agi:90,role:'tank',size:62,arena:6,spell:'Induction Spark',strike:'Open Circuit Cascade',status:'magicVulnerability',hint:'The ledger builds a barrier every fourth action. Dispel it and exploit Sound. Interrupt the circuit cascade, then attack during its two-action recovery.'},
-    {key:'felinus',name:'Felinus von Pendrak',title:'The Book That Breathes',element:'Ancient Fire',weak:'Tech',hp:23500,power:180,agi:102,role:'caster',size:80,arena:7,spell:'Codex Ember',strike:'The Burning Index',status:'burn',hint:'The codex spreads Burn. Heal and cleanse between firestorms. Its page-turn announces the ultimate one own action in advance: Silence or Break it.'},
+    {key:'felinus',name:'Felinus von Pendrak',title:'The Book That Breathes',element:'Ancient Fire',weak:'Tech',hp:23500,power:180,agi:102,role:'caster',size:80,arena:7,spell:'Codex Ember',strike:'The Burning Index',status:'burn',hint:'The codex spreads Burn. Heal and cleanse between firestorms. Its page-turn announces the ultimate one own action in advance: Silence or valid Stun interrupts it.'},
     {key:'liza-flux',name:'Liza Flux',title:'An Unfinished Tomorrow',element:'Tech',weak:'Earth',hp:25000,power:185,agi:112,role:'caster',size:65,arena:3,spell:'Timeline Needle',strike:'All the Roads Not Taken',status:'agilityDown',hint:'Timeline needles slow the party. Cleanse to recover initiative. Guard the converging timelines or interrupt them, then exploit her exposed recovery.'},
-    {key:'satyr',name:'De Schrijnende Satyr',title:'The Choir Beyond the Door',element:'Sound',weak:'Sigil',hp:27000,power:190,agi:105,role:'bruiser',size:73,arena:10,spell:'Bronze Dissonance',strike:'The Impossible Chorus',status:'disrupted',hint:'The final echo combines Disrupted with group pressure. Keep healing in reserve. Break or Silence the announced chorus; victory closes this loop of destinies.'}
+    {key:'satyr',name:'De Schrijnende Satyr',title:'The Choir Beyond the Door',element:'Sound',weak:'Sigil',hp:27000,power:190,agi:105,role:'bruiser',size:73,arena:10,spell:'Bronze Dissonance',strike:'The Impossible Chorus',status:'disrupted',hint:'The final echo combines Disrupted with group pressure. Keep healing in reserve. Silence or valid Stun interrupts the announced chorus; victory closes this loop of destinies.'}
   ].map((entry, i) => ({...entry, id:i + 1, reward:rings[i]}));
   const curioSpecs = [
     ['Wayfarer’s Measure','weapon',{str:30,mag:26,agi:21},'weaknessDamage',.16,'+16% weakness damage'],
@@ -156,26 +156,25 @@
     unit.whirlpoolState.pending=false;unit.whirlpoolState.recovery=2;
     applyStatus(unit,'physicalVulnerability',unit,{force:true,value:.2,duration:2});
     applyStatus(unit,'magicVulnerability',unit,{force:true,value:.2,duration:2});
-    window.FinisherFlow?.cancel(unit,reason==='fresh Break'?'broken':reason);
+    window.FinisherFlow?.cancel(unit,reason);
     battle.whirlpoolNotice=`${encounters[unit.whirlpoolId-1].strike} CANCELLED — ${reason}. Incoming damage +20%; two recovery actions.`;
     return true;
   }
-  const oldApply=applyStatus, oldBreak=addBreakProgress;
+  const oldApply=applyStatus;
   applyStatus=function(unit,type,source,options){const result=oldApply(unit,type,source,options);if(unit?.whirlpoolKey&&result.applied&&['silence','sleep','stun'].includes(type))interrupt(unit,type);return result;};
-  addBreakProgress=function(source,unit,amount){const result=oldBreak(source,unit,amount);if(unit?.whirlpoolKey&&result.breaks)interrupt(unit,'fresh Break');return result;};
   const oldChoose=chooseEnemyAction;
   chooseEnemyAction=function(unit) {
     if(!unit.whirlpoolKey)return oldChoose(unit);
     const e=encounters[unit.whirlpoolId-1],data=unit.whirlpoolState;
     const base={kind:'magic',name:e.spell,element:e.element,coefficient:1.55,mpCost:0,status:{type:e.status,chance:.6,duration:2,...(['magicVulnerability','disrupted','agilityDown'].includes(e.status)?{value:.15}:{})}};
     if(data.pending){
-      if(['broken','silence','sleep','stun'].some(s=>statusOf(unit,s))){interrupt(unit,'control');return {...base,kind:'melee',element:'Physical',name:'Interrupted Strike',status:null,coefficient:.55};}
+      if(['silence','sleep','stun'].some(s=>statusOf(unit,s))){interrupt(unit,'control');return {...base,kind:'melee',element:'Physical',name:'Interrupted Strike',status:null,coefficient:.55};}
       return FinisherFlow.execute(unit,{...base,kind:'ultimate',name:e.strike,coefficient:1.9+e.id*.04,allTargets:true,mpCost:0});
     }
     if(data.recovery>0){data.recovery--;return {...base,name:'Recovering Strike',coefficient:.55,status:null};}
     if(statusOf(unit,'silence'))return {...base,kind:'melee',name:'Measured Strike',element:'Physical',coefficient:1.25,status:null};
     const actions=unit.actionsTaken||0;
-    if(actions%4===2){data.pending=true;FinisherFlow.begin(unit,{name:e.strike,scope:'all-allies',controls:['broken','silence','stun','sleep'],cancel:reason=>interrupt(unit,reason),clear:()=>{data.pending=false;},after:()=>{data.recovery=2;battle.whirlpoolNotice=e.strike+' resolved. Two recovery actions follow.';},afterText:e.strike+' resolved. Two recovery actions follow.',recoveryText:'incoming damage +20%; two recovery actions follow'});battle.whirlpoolNotice=`${e.name} begins preparing ${e.strike}. Target: ALL ALLIES. Silence or fresh Break cancels it; Guard and barriers soften it.`;return {kind:'buff',name:'Preparing '+e.strike,target:unit,buffs:[],mpCost:0};}
+    if(actions%4===2){data.pending=true;FinisherFlow.begin(unit,{name:e.strike,scope:'all-allies',controls:['silence','stun','sleep'],cancel:reason=>interrupt(unit,reason),clear:()=>{data.pending=false;},after:()=>{data.recovery=2;battle.whirlpoolNotice=e.strike+' resolved. Two recovery actions follow.';},afterText:e.strike+' resolved. Two recovery actions follow.',recoveryText:'incoming damage +20%; two recovery actions follow'});battle.whirlpoolNotice=`${e.name} begins preparing ${e.strike}. Target: ALL ALLIES. Silence or valid Stun cancels it; Guard and barriers soften it.`;return {kind:'buff',name:'Preparing '+e.strike,target:unit,buffs:[],mpCost:0};}
     if(['benji','bill'].includes(e.key)&&actions%4===0)return {kind:'buff',name:e.key==='bill'?'Ledger Shelter':'Geometric Shelter',target:unit,buffs:[{type:'barrier',value:.18,duration:2}],mpCost:0};
     if(e.role==='bruiser'&&actions%3===0)return {...base,kind:'melee',name:e.key==='demonlord'?'Uncrowned Greatblade':'Bronze Knuckle',element:'Physical'};
     return actions%3===1?{...base,allTargets:true,coefficient:.85}:base;

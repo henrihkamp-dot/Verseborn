@@ -5708,6 +5708,9 @@ function applyStatus(target, type, source, options = {}) {
     appliedRound: battle?.round || 0,
     appliedTurn: combatantKey(source)
   };
+  // Enemy Broken must offer a follow-up opportunity, even if that enemy acts next.
+  // The applying action itself is not the follow-up; enemy turns are never denied.
+  if(type==='broken'&&!target.id)data.brokenFollowupAfter=(battle?.partyActionSerial||0)+(currentTurn()?.side==='party'?1:0);
   if (type === "evasion") data.incomingCharges = Math.max(1, Math.round(Number(options.incomingCharges) || duration));
   if (existing) {
     if (["poison", "burn", "bleed"].includes(type)) {
@@ -5833,7 +5836,7 @@ function outgoingDamageMultiplier(unit, kind, target = null, element = null) {
 function incomingDamageMultiplier(unit) {
   let multiplier = Math.max(.2, 1 - statusValue(unit, "defenseUp") - statusValue(unit, "barrier"));
   const commander = battle?.enemies?.find(enemy => enemy.hp > 0 && enemy !== unit && enemy.protectedAlly?.target === unit && enemy.protectedAlly.remaining > 0);
-  if (commander && !(battle?.hallStage >= 51 && ["broken", "stun", "sleep"].some(type => statusOf(commander, type)))) multiplier *= .85;
+  if (commander && !(battle?.hallStage >= 51 && ["stun", "sleep"].some(type => statusOf(commander, type)))) multiplier *= .85;
   if (unit?.form === "mech") multiplier *= 1 - TRANSFORMATION_CONFIG.mech.defense - typedTalentValue(unit.id, "mechDefense") - typedTalentValue(unit.id, "fortressCapstone");
   if (statusOf(unit, "combatDrone")) multiplier *= 1 - typedTalentValue(unit.id, "gadgetDefense");
   multiplier *= 1 - statusValue(unit, "mechGuard");
@@ -5975,6 +5978,7 @@ function processTurnEnd(unit) {
   }
   if (unit.prrrpWindow > 0) unit.prrrpWindow--;
   ensureStatuses(unit).forEach(status => {
+    if(status.type==='broken'&&!unit.id&&Number.isFinite(status.brokenFollowupAfter)&&(battle?.partyActionSerial||0)<=status.brokenFollowupAfter)return;
     if (status.type === "evasion" && Number.isFinite(status.incomingCharges)) return;
     if (status.appliedRound === battle?.round && status.appliedTurn === combatantKey(unit)) return;
     // Telegraphs last until the promised enemy action, not the target's faster turns.
@@ -8201,7 +8205,7 @@ function statusDisplayData(unit, status) {
     disrupted: `Outgoing damage reduced by ${percent}.`, defenseDown: `Subtracts ${percent} from active Defense Up; not a flat damage bonus.`,
     magicDefenseDown: `Subtracts ${percent} from active Defense Up against magic.`, sleep: 'Skips actions; direct damage wakes the target.',
     stun: 'Skips an action.', silence: 'Prevents magic / Ultimate use for affected enemies; they use melee instead.',
-    shadowExposed: 'Shadow attacks trigger weakness; Voidthorn Mark gains its extra payoff.', broken: 'Recently Broken. Enables Broken interactions; does not itself skip an action.',
+    shadowExposed: 'Shadow attacks trigger weakness; Voidthorn Mark gains its extra payoff.', broken: 'Recently Broken. Enables offensive skill and talent payoffs; does not interrupt prepared actions or skip an action.',
     resonanceLocked: 'Prevents enemy Resonance gains.', overheated: 'Cannot receive another granted extra action. This is not a speed buff.'
   };
   const potency = Number.isFinite(status.value ?? def.value);
@@ -8372,7 +8376,7 @@ function combatReferenceHtml() {
     ['ECHO', 'Supports resonance-related builds and talents. Resonance powers ultimates; it is separate from MP.'],
     ['MP & recovery', 'Skills spend MP. Normal attacks restore 6% maximum MP (Torren: 15%), rounded to whole MP. Siphoning refunds paid MP after damaging skills, capped at 30%; ultimates do not refund MP.'],
     ['Damage & weaknesses', 'The skill names its scaling stat and element. Gear, talents, buffs, critical hits, weakness and vulnerability modify the result. Multi-hit numbers belong to one action.'],
-    ['Break & Guard', 'Break builds toward BROKEN and a damage opening. It does not interrupt Stage 51–60 main-boss mechanics. Personal Guard protects the next hit; defense buffs reduce incoming damage.'],
+    ['Break & Guard', 'Break builds toward BROKEN. Broken enables offensive skill and talent payoffs; it does not interrupt prepared actions. Personal Guard protects the next hit; defense buffs reduce incoming damage.'],
     ['Actions & control', 'Durations count actions, not necessarily full rounds. Silence restricts magic; Sleep and Stun skip turns. Stage 51–60 main bosses reject Sleep and Stun.'],
     ['Gear status procs', 'Matching gear sources combine into one roll per status per target, including multi-hit and area attacks. Basic, weapon, spell, critical and Break triggers remain distinct. Native skill effects have their own attempts.'],
     ['Status defense', 'Application resistance changes whether a status lands. Duration reduction shortens a landed status, with a one-action minimum. Severity reduction weakens only the named DoT or scalable debuff. Combined gear application resistance is capped at 60%; broad gear protection at 30%.'],
@@ -10650,6 +10654,7 @@ function completeBattleAction(log) {
   hideBattlePreview();
   const turn = currentTurn();
   const unit = turn?.side === "party" ? battle.party.find(member => member.id === turn.id) : battle.enemies[turn?.index];
+  const partyOpportunity=turn?.side==='party'&&unit?.hp>0&&!statusOf(unit,'stun')&&!statusOf(unit,'sleep');
   const faded = unit ? processTurnEnd(unit) : [];
   if (faded.length) log = `${log} ${faded.join(" ")}`;
   const recorded = battle.actionHistory?.at(-1);
@@ -10661,6 +10666,7 @@ function completeBattleAction(log) {
   }
   if (recorded && faded.length) recorded.message += ` ${faded.join(" ")}`;
   battle.meterActionRecorded = false;
+  if(partyOpportunity)battle.partyActionSerial=(battle.partyActionSerial||0)+1;
   return log;
 }
 
@@ -12311,7 +12317,7 @@ function endgameFormationPressure(unit, recovery = false) {
 const ENDGAME_STAGE_RHYTHMS = {
   53: [
     { leader: 'auditor', title: 'Violation Assessment', kind: 'magic', support: 'cleanse', status: 'disrupted', hint: 'Break the Auditor before assessment; remove the Custodian to stop restoration.' },
-    { leader: 'scribe', title: 'Administrative Sentence', kind: 'magic', support: 'guard', status: 'silence', hint: 'Reginald protects the speaker. Break him or interrupt Thaddeus before sentencing.' }
+    { leader: 'scribe', title: 'Administrative Sentence', kind: 'magic', support: 'guard', status: 'silence', hint: 'Reginald protects the speaker. Stun the escort or Silence Thaddeus before sentencing.' }
   ],
   54: [
     { leader: 'ashWyrm', title: 'Astral Crossfire', kind: 'magic', support: 'break', status: 'marked', hint: 'Cleanse the mark or interrupt the Wyrm. The Pillar builds Break on the marked target.' },
@@ -12331,7 +12337,7 @@ const ENDGAME_STAGE_RHYTHMS = {
   ],
   58: [
     { leader: 'chain', title: 'Iron Double Impact', kind: 'melee', support: 'break', status: 'marked', hint: 'Break Brokk before the chained impact. The Pillar builds Break; Guard remains useful.' },
-    { leader: 'grumm', title: 'Oathbound Assault', kind: 'melee', support: 'guard', status: 'marked', hint: 'Break Grumm to cancel the assault or remove the escorts protecting him.' }
+    { leader: 'grumm', title: 'Oathbound Assault', kind: 'melee', support: 'guard', status: 'marked', hint: 'Stun Grumm to cancel the assault or remove the escorts protecting him.' }
   ],
   59: [
     { leader: 'jory', title: 'Opening Chorus', kind: 'magic', support: 'pressure', status: 'marked', hint: 'Tja strengthens the chorus. Silence Jory or eliminate the accompaniment.' },
@@ -12345,7 +12351,7 @@ const ENDGAME_STAGE_RHYTHMS = {
 
 function stageUnitControlled(unit) {
   if (unit.endgameBoss) return endgameBossControlled(unit);
-  return ['stun', 'sleep', 'broken'].some(type => statusOf(unit, type)) || Boolean(statusOf(unit, 'silence') && (unit.encounterMechanic?.stagePending?.kind || stageFormationRhythm()?.kind) !== 'melee');
+  return ['stun', 'sleep'].some(type => statusOf(unit, type)) || Boolean(statusOf(unit, 'silence') && (unit.encounterMechanic?.stagePending?.kind || stageFormationRhythm()?.kind) !== 'melee');
 }
 
 function interruptStageCombination(unit, reason = null) {
@@ -12356,7 +12362,7 @@ function interruptStageCombination(unit, reason = null) {
   clearEndgameStatus('rootBind', unit);
   endgameStatus(unit, 'physicalVulnerability', unit, { duration: 2, value: .2 });
   endgameStatus(unit, 'magicVulnerability', unit, { duration: 2, value: .2 });
-  window.FinisherFlow?.cancel(unit,reason||['broken','stun','sleep','silence'].find(type=>statusOf(unit,type))||'interrupted');
+  window.FinisherFlow?.cancel(unit,reason||['stun','sleep','silence'].find(type=>statusOf(unit,type))||'interrupted');
 }
 
 function stageFormationRhythm() {
@@ -12581,7 +12587,7 @@ function receptionEnemyAction(unit) {
     return { kind: "buff", name: "Seal the Courtesy - Silence me before impact", element: "Arcane", mpCost: 0, target: leader, buffs: [{ type: "defenseUp", duration: 1, value: .15 }] };
   }
   if (unit.name === "Sir Reginald" && data.receptionPending) {
-    return { kind: "buff", name: "Escort the Speaker - Break me to remove protection", element: "Earth", mpCost: 0, target: leader, protectAlly: true, buffs: [{ type: "defenseUp", duration: 1, value: .15 }] };
+    return { kind: "buff", name: "Escort the Speaker - Stun me to remove protection", element: "Earth", mpCost: 0, target: leader, protectAlly: true, buffs: [{ type: "defenseUp", duration: 1, value: .15 }] };
   }
   if (unit.name === "Archive Custodian") {
     const wounded = live.filter(ally => ally.hp < ally.max * .8).sort((a,b) => a.hp/a.max - b.hp/b.max)[0];
@@ -12600,7 +12606,7 @@ function initializeEndgameFormation() {
     const rhythm = stageFormationRhythm();
     if (rhythm) receptionAnnounce(rhythm.title, rhythm.hint);
   }
-  if (battle?.hallStage === 52) receptionAnnounce("Sanctuary Under Pressure", "Wounded healers prepare Renewal before healing. Silence interrupts boss Renewal; Silence or Break interrupts other healers. Justin enables cleanse and the Seal Bearer amplifies healing.");
+  if (battle?.hallStage === 52) receptionAnnounce("Sanctuary Under Pressure", "Wounded healers prepare Renewal before healing. Silence interrupts boss Renewal; Silence or Stun interrupts other healers. Justin enables cleanse and the Seal Bearer amplifies healing.");
   if (battle?.hallStage === 51) {
     const leader = battle.enemies.find(unit => ["Concierge Veyr", "High Administrator Thaddeus", "Dawn Gate Sentinel"].includes(unit.name));
     if (leader) receptionAnnounce(`${leader.name} prepares the reception`, "Watch the announced attack. Break its attacker or Silence its support to weaken the combination.");
@@ -12691,7 +12697,7 @@ function endgameResolveEnemyEffect(unit, action, target) {
       const all=unit.endgameBoss==='root';
       data.stagePending = { target:all?null:target, title: rhythm.title, kind: rhythm.kind,scope:all?'all-allies':'single' };
       if (rhythm.status && target&&!all) endgameStatus(target, rhythm.status, unit, { duration: 4, value: .15 });
-      FinisherFlow.begin(unit,{name:rhythm.title,scope:all?'all-allies':'single',target:all?null:target,mark:all?null:rhythm.status,controls:unit.endgameBoss?['stun','sleep',...(unit.endgameBoss!=='oath'?['silence']:[])]:['broken','stun','sleep',...(rhythm.kind!=='melee'?['silence']:[])],cancel:reason=>{if(data.stagePending)interruptStageCombination(unit,reason);},clear:()=>{data.stagePending=null;if(rhythm.status)clearEndgameStatus(rhythm.status,unit);},after:()=>{data.stageRecovery=true;if(unit.endgameBoss==='root'){data.window=3;endgameStatus(unit,'memoryCore',unit,{duration:3});}},afterText:unit.endgameBoss==='root'?'Root Eruption resolved. Memory Core exposed: incoming damage +60%.':`${rhythm.title} resolved. Recovery follows.`,recoveryText:'physical and magic damage received +20% for 2 actions; recovery follows'});
+      FinisherFlow.begin(unit,{name:rhythm.title,scope:all?'all-allies':'single',target:all?null:target,mark:all?null:rhythm.status,controls:unit.endgameBoss?['stun','sleep',...(unit.endgameBoss!=='oath'?['silence']:[])]:['stun','sleep',...(rhythm.kind!=='melee'?['silence']:[])],cancel:reason=>{if(data.stagePending)interruptStageCombination(unit,reason);},clear:()=>{data.stagePending=null;if(rhythm.status)clearEndgameStatus(rhythm.status,unit);},after:()=>{data.stageRecovery=true;if(unit.endgameBoss==='root'){data.window=3;endgameStatus(unit,'memoryCore',unit,{duration:3});}},afterText:unit.endgameBoss==='root'?'Root Eruption resolved. Memory Core exposed: incoming damage +60%.':`${rhythm.title} resolved. Recovery follows.`,recoveryText:'physical and magic damage received +20% for 2 actions; recovery follows'});
       return ` ${unit.name} begins preparing ${rhythm.title}. Target: ${all?'ALL ALLIES':target?.name}.`;
     }
     case "sanctuaryPrepare": {
@@ -12701,14 +12707,14 @@ function endgameResolveEnemyEffect(unit, action, target) {
         endgameStatus(ally, "barrier", unit, { value: .2, duration: 2 });
         endgameStatus(ally, "statusWard", unit, { value: .2, duration: 2 });
       });
-      receptionAnnounce("Renewal Preparing", `${unit.name} heals ${unit.endgameBoss ? 'the living formation' : 'the most wounded ally'} on its next action. ${unit.endgameBoss ? 'Silence' : 'Silence or Break'} cancels Renewal and collapses its wards. Dispel barriers to maintain pressure.`);
-      return ` Renewal arrives next action. ${unit.endgameBoss ? 'Silence' : 'Silence or Break'} the healer; supports empower healing and cleanse.`;
+      receptionAnnounce("Renewal Preparing", `${unit.name} heals ${unit.endgameBoss ? 'the living formation' : 'the most wounded ally'} on its next action. ${unit.endgameBoss ? 'Silence' : 'Silence or Stun'} cancels Renewal and collapses its wards. Dispel barriers to maintain pressure.`);
+      return ` Renewal arrives next action. ${unit.endgameBoss ? 'Silence' : 'Silence or Stun'} the healer; supports empower healing and cleanse.`;
     }
     case "receptionPrepare": {
       data.receptionPending = true;
       const heroes = party;
       data.receptionTarget = heroes[(unit.actionsTaken || 0) % heroes.length];
-      receptionAnnounce(action.name, `${data.receptionTarget?.name || 'A party member'} is targeted on ${unit.name}'s next action. ${unit.endgameBoss ? 'Silence the attacker' : 'Break the attacker'}, Silence the Seal Bearer, defeat supports, or prepare Guard.`);
+      receptionAnnounce(action.name, `${data.receptionTarget?.name || 'A party member'} is targeted on ${unit.name}'s next action. ${unit.endgameBoss ? 'Silence the attacker' : 'Stun the attacker'}, Silence the Seal Bearer, defeat supports, or prepare Guard.`);
       return ` ${data.receptionTarget?.name || 'The party'} is targeted next action. Interrupt the attacker or weaken its support.`;
     }
     case "guest": {

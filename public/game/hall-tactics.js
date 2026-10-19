@@ -45,7 +45,7 @@
     if(turn?.enemyTempo){a=oldChoose(u);return stamp({...a,noCrit:true,hallEcho:true,payoff:null,extraStatuses:[],status:null,breakPower:0,noTempo:true});}
     if(d.pending){
       const p=d.pending;
-      const control=['broken','stun','sleep',...(!physical(p.action)?['silence']:[])].find(type=>statusOf(u,type));
+      const control=['stun','sleep',...(!physical(p.action)?['silence']:[])].find(type=>statusOf(u,type));
       if(!requirements(u,p)||control)cancel(u,control||(p.target?.hp<=0?'target':'cleanse'));
       else if(p.targets.some(t=>t.hp>0&&(t.hallResponseCount||0)<=(p.responses[t.id]||0)))return stamp({kind:'utility',name:'Holding '+p.action.name+' — awaiting response',element:p.action.element,mpCost:0,noTempo:true});
       else {
@@ -101,10 +101,10 @@
     const all=enemyActionHitsAll(u,plan.action),targets=all?battle.party.filter(t=>t.hp>0):[target];
     d.pending={...plan,target:all?null:target,scope:all?'all-allies':'single',mark,targets,responses:Object.fromEntries(targets.map(t=>[t.id,t.hallResponseCount||0]))};
     if(!all){applyStatus(target,mark,u,{force:true,duration:2});statusOf(target,mark).finisherName=plan.action.name;}
-    FinisherFlow.begin(u,{name:plan.action.name,scope:all?'all-allies':'single',target:all?null:target,mark:all?null:mark,controls:['broken','stun','sleep',...(!physical(plan.action)?['silence']:[])],recoveryText:'its next action is recovery; incoming damage +15% during Recovery Opening',cancel:reason=>cancel(u,reason),clear:()=>{removeMark(u,d.pending);d.pending=null;if(battle.hallUltimateOwner===u)delete battle.hallUltimateOwner;},after:()=>{d.cooldown=3;d.recovery=1;d.recoveryFrom=plan.action.name;d.interrupted=false;},afterText:`${plan.action.name} resolved. Recovery follows on its next action.`});
+    FinisherFlow.begin(u,{name:plan.action.name,scope:all?'all-allies':'single',target:all?null:target,mark:all?null:mark,controls:['stun','sleep',...(!physical(plan.action)?['silence']:[])],recoveryText:'its next action is recovery; incoming damage +15% during Recovery Opening',cancel:reason=>cancel(u,reason),clear:()=>{removeMark(u,d.pending);d.pending=null;if(battle.hallUltimateOwner===u)delete battle.hallUltimateOwner;},after:()=>{d.cooldown=3;d.recovery=1;d.recoveryFrom=plan.action.name;d.interrupted=false;},afterText:`${plan.action.name} resolved. Recovery follows on its next action.`});
     if(plan.ultimate)battle.hallUltimateOwner=u;
     if(plan.action.prepareBuffs?.length)enemyApplyBuffs(u,[u],plan.action.prepareBuffs);
-    const counter=all?(physical(plan.action)?'Guard or Break/Stun the attacker.':'Guard or Silence/Break/Stun the caster.'):(physical(plan.action)?'Guard, cleanse the target mark, or Break/Stun the attacker.':'Guard, cleanse the target mark, or Silence/Break/Stun the caster.');
+    const counter=all?(physical(plan.action)?'Guard or Stun the attacker.':'Guard or Silence/Stun the caster.'):(physical(plan.action)?'Guard, cleanse the target mark, or Stun the attacker.':'Guard, cleanse the target mark, or Silence/Stun the caster.');
     receptionAnnounce(plan.action.name+' — NEXT ACTION',`${u.name} → ${all?'ALL ALLIES':target.name}. Each threatened hero gets a response action first. ${counter}`);
     return ` ${u.name} begins preparing ${plan.action.name}. Target: ${all?'ALL ALLIES':target.name}.`;
   };
@@ -112,7 +112,7 @@
   processTurnStart=function(u){const result=oldStart(u);if(active()){
     u.hallSkipped=!!result.skip;
     const p=memory(u).pending;
-    if(p&&(result.skip||statusOf(u,'broken')||!physical(p.action)&&statusOf(u,'silence')))cancel(u,['broken','stun','sleep','silence'].find(type=>statusOf(u,type))||'attacker interrupted');
+    if(p&&(result.skip||!physical(p.action)&&statusOf(u,'silence')))cancel(u,['stun','sleep','silence'].find(type=>statusOf(u,type))||'attacker interrupted');
   }return result;};
   const oldEnd=processTurnEnd;
   processTurnEnd=function(u){
@@ -122,7 +122,7 @@
     held.forEach((s,i)=>{if(!u.statuses.includes(s))u.statuses.push(s);s.remaining=before[i];});return result;
   };
   const oldApply=applyStatus;
-  applyStatus=function(u,type,source,options){const result=oldApply(u,type,source,options);if(active()&&result.applied&&memory(u).pending&&(['broken','stun','sleep'].includes(type)||type==='silence'&&!physical(memory(u).pending.action)))cancel(u,type);return result;};
+  applyStatus=function(u,type,source,options){const result=oldApply(u,type,source,options);if(active()&&result.applied&&memory(u).pending&&(['stun','sleep'].includes(type)||type==='silence'&&!physical(memory(u).pending.action)))cancel(u,type);return result;};
   const oldComplete=completeBattleAction;
   completeBattleAction=function(log){const scoped=active(),turn=currentTurn(),u=turn?.side==='party'?battle.party.find(p=>p.id===turn.id):battle?.enemies?.[turn?.index];
     const chosen=u?.hallTactics?.chosen;let result=oldComplete(log);
@@ -155,7 +155,7 @@
   updateBossMechanicDisplay=function(){if(!active())return oldHud();const hud=document.getElementById('bossMechanicHud');if(!hud)return;
     const warnings=battle.enemies.filter(e=>e.hp>0&&memory(e).pending);
     hud.classList.toggle('hidden',!warnings.length);document.querySelector('.game')?.classList.toggle('has-early-mechanics',!!warnings.length);document.querySelector('.game')?.classList.toggle('has-endgame-mechanics',!!warnings.length);
-    const html=warnings.map(e=>{const p=memory(e).pending,waiting=p.targets.filter(t=>t.hp>0&&(t.hallResponseCount||0)<=(p.responses[t.id]||0));return `<div class="boss-mechanic-panel is-warning"><strong>${esc(e.name)} → ${esc(p.scope==='all-allies'?'ALL ALLIES':p.target.name)} · ${esc(p.action.name)}</strong><p>${waiting.length?'NEXT ACTION · Waiting for '+waiting.map(t=>esc(t.name)).join(', ')+' to respond':'NEXT ENEMY ACTION · READY'} · Guard / ${p.scope==='single'?'cleanse the target mark / ':''}${physical(p.action)?'Break or Stun':'Silence, Break or Stun'}. ${esc(traitText(e))}</p></div>`;}).join('');
+    const html=warnings.map(e=>{const p=memory(e).pending,waiting=p.targets.filter(t=>t.hp>0&&(t.hallResponseCount||0)<=(p.responses[t.id]||0));return `<div class="boss-mechanic-panel is-warning"><strong>${esc(e.name)} → ${esc(p.scope==='all-allies'?'ALL ALLIES':p.target.name)} · ${esc(p.action.name)}</strong><p>${waiting.length?'NEXT ACTION · Waiting for '+waiting.map(t=>esc(t.name)).join(', ')+' to respond':'NEXT ENEMY ACTION · READY'} · Guard / ${p.scope==='single'?'cleanse the target mark / ':''}${physical(p.action)?'Stun':'Silence or Stun'}. ${esc(traitText(e))}</p></div>`;}).join('');
     if(hud.innerHTML!==html)hud.innerHTML=html;
   };
   const oldLexicon=hallLexiconHtml;

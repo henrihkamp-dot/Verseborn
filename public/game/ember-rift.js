@@ -24,13 +24,13 @@
     sella: {name:'Sella / Hearthbound Echo',hp:11500,str:75,mag:215,agi:90,stam:185,weak:'Sound',family:'hearth',role:'healer',cameo:true}
   };
   const encounters = [
-    {id:1,name:'Beyond the Last Ember',difficulty:'Endgame I',preview:'pursuer',waves:[['pursuer','stalker'],['brute','stalker']],mechanic:'hunt',strike:'Coordinated Ambush',hint:'The leader marks a target before the ambush. Cleanse the mark, Break the leader, or Guard. Bleed makes sustained healing important.'},
+    {id:1,name:'Beyond the Last Ember',difficulty:'Endgame I',preview:'pursuer',waves:[['pursuer','stalker'],['brute','stalker']],mechanic:'hunt',strike:'Coordinated Ambush',hint:'The leader marks a target before the ambush. Cleanse the mark, Stun the leader, or Guard. Bleed makes sustained healing important.'},
     {id:2,name:'The Mycelial Choir',difficulty:'Endgame II',preview:'mushroom',waves:[['mushroom','fae','elf'],['mushroom','fae']],mechanic:'spores',strike:'Spore Bloom',hint:'Sporecap Keepers prepare a group Poison bloom. Silence interrupts it. Remove healers and cleanse Poison before it compounds.'},
-    {id:3,name:'Thornmoon Vanguard',difficulty:'Endgame III',preview:'bear',waves:[['rabbit','elf','fae'],['bear','elf']],mechanic:'armor',strike:'Rampart Shatter',hint:'The leader has a removable armour blessing. Fresh Break opens a vulnerable recovery window; Sound and Tech weaknesses reward a mixed party.'},
+    {id:3,name:'Thornmoon Vanguard',difficulty:'Endgame III',preview:'bear',waves:[['rabbit','elf','fae'],['bear','elf']],mechanic:'armor',strike:'Rampart Shatter',hint:'The leader has a removable armour blessing. Dispel the armour blessing; Broken enables skill and talent damage payoffs. Sound and Tech weaknesses reward a mixed party.'},
     {id:4,name:'The Ragmask Road',difficulty:'Endgame IV',preview:'raccoon',waves:[['raccoon','squirrel','pursuer'],['rabbit','raccoon','squirrel']],mechanic:'crossfire',strike:'Marked Crossfire',hint:'Cleanse the announced mark or prepare Guard. Ranged attackers pressure MP and the bandit adds Bleed; protect your healer.'},
     {id:5,name:'The Obedience Knot',difficulty:'Endgame V / Elite',preview:'warden',waves:[['hunter','brute'],['warden','hunter','stalker']],mechanic:'knot',strike:'Bound Judgment',hint:'Living escorts reinforce the Warden. Defeat them, dispel its armour and build Break. Silence does not stop the physical Judgment.'},
     {id:6,name:'The Overdue Engine',difficulty:'Endgame VI / Boss',preview:'engine',waves:[['collector','collector','pursuer'],['engine','collector']],mechanic:'debt',strike:'Debt Collection',hint:'MP-spending actions build cleansable Debt. The Engine collects it with a delayed strike. Silence the charge, cleanse Debt and exploit its exposed machinery.'},
-    {id:7,name:'Ash Quarter Reborn',difficulty:'Endgame VII / Boss',preview:'dragon',waves:[['hunter','brute'],['dragon'],['dragon','stalker']],mechanic:'breath',strike:'Vortex Breath',hint:'The dragon announces group breath. Break or Silence cancels it; Guard and barriers soften it. Its weakness changes in the final phase.'},
+    {id:7,name:'Ash Quarter Reborn',difficulty:'Endgame VII / Boss',preview:'dragon',waves:[['hunter','brute'],['dragon'],['dragon','stalker']],mechanic:'breath',strike:'Vortex Breath',hint:'The dragon announces group breath. Silence or valid Stun cancels it; Guard and barriers soften it. Its weakness changes in the final phase.'},
     {id:8,name:'The Broken Contract',difficulty:'Endgame VIII / Boss',preview:'velourne',waves:[['collector','hunter'],['velourne','collector'],['velourne']],mechanic:'contract',strike:'Contract Collapse',hint:'Velourne steals a valuable blessing and binds a marked target. Cleanse the mark, dispel stolen buffs and interrupt the magical collapse.'},
     {id:9,name:'Hearthbound Visitors',difficulty:'Endgame IX / Easter Egg',preview:'benji',waves:[['pippa','mina','sella'],['benji','pippa']],mechanic:'hearth',strike:'The Hearth Holds',hint:'Four noncanonical Hearthbound Hero echoes test your party. Benji and Sella sustain their team; Silence, dispels and focused damage counter their prepared shelter.'},
     {id:10,name:'Heart of the Vortex',difficulty:'Endgame X / Finale',preview:'dragon',waves:[['warden','hunter'],['engine','collector'],['velourne','hunter'],['dragon']],mechanic:'finale',strike:'Rift Cataclysm',hint:'Four phases combine escort shields, Debt, stolen blessings and vortex breath. Keep MP, healing and cleansing available. Fresh Break creates the best damage windows.'}
@@ -137,14 +137,13 @@
     const data=unit.riftState;if(!data?.pending)return false;const pending=data.pending;data.pending=null;data.recovery=2;
     if(pending.target)pending.target.statuses=ensureStatuses(pending.target).filter(s=>s.type!=='riftMark');
     applyStatus(unit,'physicalVulnerability',unit,{force:true,value:.25,duration:2});applyStatus(unit,'magicVulnerability',unit,{force:true,value:.25,duration:2});
-    window.FinisherFlow?.cancel(unit,reason==='fresh Break'?'broken':reason==='mark cleansed'?'cleanse':reason);
+    window.FinisherFlow?.cancel(unit,reason==='mark cleansed'?'cleanse':reason);
     announce('Recovery window',`${infoName(unit)} CANCELLED — ${reason}. Incoming damage +25% for two own actions.`);return true;
   }
   function infoName(unit){return unit.finisherState?.name||unit.lastFinisher?.name||encounters[battle.riftEncounter-1]?.strike||'Rift strike';}
   const oldApply=applyStatus;
   applyStatus=function(unit,type,source,options){const result=oldApply(unit,type,source,options);if(result.applied&&unit?.riftKey&&unit.riftState?.pending&&(['stun','sleep'].includes(type)||type==='silence'&&unit.riftState.pending.kind==='magic'))interrupt(unit,type);return result;};
-  const oldBreak=addBreakProgress;
-  addBreakProgress=function(source,unit,amount){const result=oldBreak(source,unit,amount);if(unit?.riftKey&&result.breaks){interrupt(unit,'fresh Break');unit.riftState.recovery=2;unit.statuses=ensureStatuses(unit).filter(s=>s.type!=='defenseUp');}return result;};
+  // Break is offensive setup; it neither dispels armour nor cancels a Rift charge.
   const oldIncoming=incomingDamageMultiplier;
   incomingDamageMultiplier=function(unit){let value=oldIncoming(unit);if(unit?.riftKey==='warden'&&!statusOf(unit,'broken')&&!unit.riftState.recovery){const escorts=battle?.enemies?.filter(e=>e!==unit&&e.hp>0).length||0;value*=Math.max(.5,1-escorts*.2);}return value;};
   const oldPlayerSkill=useSkill;
@@ -155,9 +154,9 @@
     const live=battle.party.filter(u=>u.hp>0),chosen=live.find(u=>u.holdTheLine)||live.slice().sort((a,b)=>b.hp-a.hp)[0];
     data.pending={kind:physical?'melee':'magic',target:marked?chosen:null,marked,heal:info.mechanic==='hearth'};
     if(marked)applyStatus(chosen,'riftMark',unit,{force:true,duration:3});
-    FinisherFlow.begin(unit,{name:info.mechanic==='hearth'?'The Hearth Holds':unit.riftKey==='dragon'?'Vortex Breath':info.strike,scope:info.mechanic==='hearth'?'all-enemies':marked?'single':'all-allies',target:marked?chosen:null,mark:marked?'riftMark':null,controls:['broken','stun','sleep',...(!physical?['silence']:[])],cancel:reason=>interrupt(unit,reason),clear:()=>{if(data.pending?.target)data.pending.target.statuses=ensureStatuses(data.pending.target).filter(s=>s.type!=='riftMark');data.pending=null;},after:()=>{data.recovery=2;},afterText:'The finisher resolved; two recovery actions follow.',recoveryText:'incoming damage +25%; two recovery actions follow'});
+    FinisherFlow.begin(unit,{name:info.mechanic==='hearth'?'The Hearth Holds':unit.riftKey==='dragon'?'Vortex Breath':info.strike,scope:info.mechanic==='hearth'?'all-enemies':marked?'single':'all-allies',target:marked?chosen:null,mark:marked?'riftMark':null,controls:['stun','sleep',...(!physical?['silence']:[])],cancel:reason=>interrupt(unit,reason),clear:()=>{if(data.pending?.target)data.pending.target.statuses=ensureStatuses(data.pending.target).filter(s=>s.type!=='riftMark');data.pending=null;},after:()=>{data.recovery=2;},afterText:'The finisher resolved; two recovery actions follow.',recoveryText:'incoming damage +25%; two recovery actions follow'});
     const count=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;
-    const instruction=marked?'Cleanse the mark, Break the caster or Guard the marked target.':physical?'Fresh Break, Stun or Sleep interrupts; Silence does not stop a physical attack.':'Silence, Stun, Sleep or fresh Break interrupts. Guard or barriers soften the impact.';
+    const instruction=marked?'Cleanse the mark, Stun the attacker or Guard the marked target.':physical?'Stun or Sleep interrupts; Silence does not stop a physical attack.':'Silence, Stun or Sleep interrupts. Guard or barriers soften the impact.';
     announce(`${unit.name} prepares ${info.strike}`,`${data.pending.heal?'A large enemy healing/barrier ritual is coming. ':marked?'Marked: '+chosen.name+'. ':'Group impact on its next own action. '}${instruction}${count?' Living escorts strengthen the impact.':''}`);
     return {kind:'buff',name:'Preparing '+info.strike,target:unit,targetSide:'self',buffs:[],mpCost:0};
   }
@@ -167,7 +166,7 @@
     const data=unit.riftState,info=encounters[battle.riftEncounter-1],p=roster[unit.riftKey],leader=battle.enemies.find(enemy=>enemy.hp>0&&enemy.riftLeader)||battle.enemies.find(enemy=>enemy.hp>0),leads=unit===leader;
     if(data.pending){
       const pending=data.pending;
-      if(statusOf(unit,'broken')||statusOf(unit,'stun')||statusOf(unit,'sleep')||pending.kind==='magic'&&statusOf(unit,'silence')){interrupt(unit,'control');return basic(unit);}
+      if(statusOf(unit,'stun')||statusOf(unit,'sleep')||pending.kind==='magic'&&statusOf(unit,'silence')){interrupt(unit,'control');return basic(unit);}
       if(pending.marked&&(!pending.target||pending.target.hp<=0||!statusOf(pending.target,'riftMark'))){interrupt(unit,'mark cleansed');return basic(unit);}
       if(pending.heal)return FinisherFlow.execute(unit,{kind:'magic',name:'The Hearth Holds',element:'Sound',healing:true,allAllies:true,healCoefficient:4.2,buffs:[{type:'barrier',value:.25,duration:2}],mpCost:24});
       const helpers=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;

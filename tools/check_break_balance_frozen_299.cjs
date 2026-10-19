@@ -1,0 +1,7 @@
+const fs=require('fs'),cp=require('child_process'),assert=require('assert/strict');
+const current=fs.readFileSync('public/game/game.js','utf8').replace(/\r\n/g,'\n'),before=cp.execFileSync('git',['show','HEAD:public/game/game.js'],{encoding:'utf8'}).replace(/\r\n/g,'\n');
+function block(text,name){const start=text.indexOf('function '+name+'(');assert.ok(start>=0,name);const next=text.indexOf('\nfunction ',start+1);return text.slice(start,next<0?undefined:next);}
+for(const name of ['enemyDamageRoll','defendReduction','useDefend','totals','healingAmount','developerScale','enemyBalanceValue','enemyActionMpCost','addBreakProgress','brokenPhysicalDamageMultiplier','useSkill','chooseEnemyTarget','weightedFormationTarget','rank0Protector','endgameBossBroken'])assert.equal(block(current,name),block(before,name),name+' unexpectedly changed');
+for(const pattern of [/const ENEMY_DIRECT_DAMAGE_MULTIPLIER = [^;]+;/,/const FORMATION_SLOT_EFFECTS=\[[\s\S]*?\n\];/,/broken: \{ label: "BROKEN"[^\n]+/])assert.equal(current.match(pattern)[0],before.match(pattern)[0]);
+for(const file of ['enemy-tempo.js','status-system.js','battle-command.js','formation-ui.js'])assert.equal(fs.readFileSync('public/game/'+file,'utf8').replace(/\r\n/g,'\n'),cp.execFileSync('git',['show','HEAD:public/game/'+file],{encoding:'utf8'}).replace(/\r\n/g,'\n'),file+' unexpectedly changed');
+console.log('PASS unchanged Break buildup/bonus, skill damage/AoE, Broken talent payoff, explicit boss hooks, 1.45 damage, Guard/recovery, 70/20/10 targeting, intercept, Echo, status procs and UI placement');
