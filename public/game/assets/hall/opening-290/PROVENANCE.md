@@ -1,0 +1,1 @@
+Built-in image-generation edit of the prior seated atlas, 2026-10-19. Stools removed, character-only transparent poses retained for independent animation above a fixed stool.
