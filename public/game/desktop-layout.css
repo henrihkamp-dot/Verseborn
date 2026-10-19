@@ -314,3 +314,5 @@ html:not(.touch-layout) .menu .menu-tabs button{min-height:34px!important;paddin
 .menu[data-menu-view="skills"] .talent-choice>b{position:absolute;right:8px;top:7px;font-size:12px}
 .menu[data-menu-view="skills"] .talent-choice:disabled:not(.is-active){filter:grayscale(1);opacity:.44}
 .menu[data-menu-view="skills"] .talent-choice.is-active{opacity:1;filter:none}
+
+.formation-slot-bonuses{grid-column:1/-1;display:flex;flex-direction:column;gap:3px;margin-top:8px;color:#ddc9a2;text-align:left}.formation-slot-bonuses small{display:block;font:12px/1.3 "Segoe UI",sans-serif!important;white-space:normal}

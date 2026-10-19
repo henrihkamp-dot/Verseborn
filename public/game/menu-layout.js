@@ -10,6 +10,7 @@
  }else if(menuTab==='party'){
   el.menuBody.querySelectorAll('[data-party-slot]').forEach(b=>{const i=Number(b.dataset.partySlot);b.setAttribute('aria-label',FormationUI.labels[i]+': '+(state.activeParty[i]||'Empty'));});
   el.menuBody.querySelectorAll('.party-member.is-active>b').forEach(n=>{const b=n.closest('button');n.textContent=FormationUI.labels[Number(b.dataset.partyFocus)];});
+  el.menuBody.querySelectorAll('[data-party-slot]').forEach(button=>{const index=Number(button.dataset.partySlot),bonus=document.createElement('div');bonus.className='formation-slot-bonuses';FORMATION_SLOT_EFFECTS[index].lines.forEach(line=>{const text=document.createElement('small');text.textContent=line;bonus.append(text);});button.append(bonus);});
  }else if(menuTab==='skills'){
   el.menuBody.querySelectorAll('.talent-choice').forEach(card=>{
    const details=[card.querySelector('strong')?.textContent,card.querySelector('p')?.textContent,...[...card.querySelectorAll('small')].slice(0,-1).map(n=>n.textContent)].filter(Boolean).join(' — ');

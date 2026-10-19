@@ -5792,6 +5792,21 @@ function breakSleepFromDamage(target) {
   return "SLEEP BROKEN!";
 }
 
+const FORMATION_SLOT_EFFECTS=[
+ {damage:1.15,incoming:1.15,healing:1.15,received:1.15,echo:1.1,weight:1,lines:['Damage dealt / taken +15%','Healing done / received +15%','ECHO +10% throughout battle']},
+ {damage:1.1,incoming:1,healing:1.1,received:1,echo:1,weight:1,lines:['Damage dealt +10%','Healing done +10%','Damage taken unchanged']},
+ {damage:.85,incoming:.85,healing:1,received:1,echo:1,weight:2,lines:['Damage dealt / taken −15%','Twice the normal enemy targeting weight']}
+];
+function formationSlotEffect(unit,stat){
+ if(mode!=='battle'||!battle||!unit)return 1;
+ const index=typeof unit==='string'?battle.party.findIndex(u=>u.id===unit):battle.party.indexOf(unit);
+ return FORMATION_SLOT_EFFECTS[index]?.[stat]??1;
+}
+function weightedFormationTarget(candidates){
+ const total=candidates.reduce((sum,u)=>sum+formationSlotEffect(u,'weight'),0);let roll=Math.random()*total;
+ for(const u of candidates){roll-=formationSlotEffect(u,'weight');if(roll<0)return u;}
+ return candidates.at(-1)||null;
+}
 function outgoingDamageMultiplier(unit, kind, target = null, element = null) {
   let multiplier = 1 + statusValue(unit, "damageUp");
   if (kind === "melee") multiplier *= 1 + statusValue(unit, "strengthUp");
@@ -5810,7 +5825,7 @@ function outgoingDamageMultiplier(unit, kind, target = null, element = null) {
   }
   multiplier *= Math.max(.5, 1 - statusValue(unit, "disrupted"));
   multiplier *= 1 - statusValue(unit, "mentalPressure");
-  return multiplier;
+  return multiplier * formationSlotEffect(unit,"damage");
 }
 
 function incomingDamageMultiplier(unit) {
@@ -5820,7 +5835,7 @@ function incomingDamageMultiplier(unit) {
   if (unit?.form === "mech") multiplier *= 1 - TRANSFORMATION_CONFIG.mech.defense - typedTalentValue(unit.id, "mechDefense") - typedTalentValue(unit.id, "fortressCapstone");
   if (statusOf(unit, "combatDrone")) multiplier *= 1 - typedTalentValue(unit.id, "gadgetDefense");
   multiplier *= 1 - statusValue(unit, "mechGuard");
-  return Math.max(.15, multiplier);
+  return Math.max(.15, multiplier) * formationSlotEffect(unit,"incoming");
 }
 
 function effectiveAgility(unit, base) {
@@ -5931,6 +5946,7 @@ function processTurnStart(unit) {
     if (unit.id || window.StatusSystem && unit.sparringId) amount = Math.max(1, Math.round(amount * (1 - (window.StatusSystem ? StatusSystem.dotReduction(unit, type) : affixValue(unit.id, "poisonReduction")))));
     amount = developerScale(dot.source?.id ? "party" : "enemy", "damage", amount);
     amount = developerScale(dot.source?.id ? "party" : "enemy", type, amount);
+    amount=Math.max(1,Math.round(amount * formationSlotEffect(dot.source?.id,"damage") * formationSlotEffect(unit,"incoming")));
     unit.hp = Math.max(0, unit.hp - amount);
     addBattleFloater(unit, amount, { damageType: STATUS_DEFS[type].label, crit: critical });
     notes.push(`${critical ? "CRIT " : ""}${STATUS_DEFS[type].label} -${amount} HP`);
@@ -6058,7 +6074,7 @@ function healingAmount(id, sk, unit = null) {
   const prrrp = sk.name === "Prrrp" ? typedTalentValue(id, "prrrpHealing") : 0;
   const interceptBoost = sk.name === "Prrrp" && unit?.prrrpWindow > 0 ? 1 + typedTalentValue(id, "interceptPrrrp") : 1;
   return Math.round((Math.abs(sk.power) + totals(id).mag * (sk.healScaling ?? .3))
-    * (1 + talentValue(id, "healBoost") + sacred + patch + prrrp) * (1 + statusValue(unit, "magicUp")) * ultimate * interceptBoost);
+    * (1 + talentValue(id, "healBoost") + sacred + patch + prrrp) * (1 + statusValue(unit, "magicUp")) * ultimate * interceptBoost * formationSlotEffect(unit || id,"healing"));
 }
 
 function knownWeakness(unit) {
@@ -6248,6 +6264,7 @@ function totals(id) {
   ["str", "agi", "mag", "stam", "echo"].forEach(stat => {
     out[stat] = Math.round(out[stat] * (1 + affixValue(id, "statPct", stat)));
   });
+  out.echo=Math.round(out.echo * formationSlotEffect(id,"echo"));
   const constitution = typedTalentValue(id, "sacredConstitution");
   if (constitution) out.mag += Math.round(out.stam * .25);
   const max = 30 + out.stam * (1 + constitution) * (4 + typedTalentValue(id, "stamHpBonus"));
@@ -6345,7 +6362,7 @@ function skillMpCost(id, sk, unit = null) {
 }
 
 function healingReceived(unit, amount) {
-  return developerScale(unit.id ? "party" : "enemy", "healing", Math.max(0, Math.round(amount * (1 - statusValue(unit, "scorched")))));
+  return developerScale(unit.id ? "party" : "enemy", "healing", Math.max(0, Math.round(amount * formationSlotEffect(unit,"received") * (1 - statusValue(unit, "scorched")))));
 }
 
 function scaledMpOnHitRecovery(unit, flat) {
@@ -12033,7 +12050,7 @@ function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member
     if (unaffected.length) valid = unaffected;
   }
   if (action.woundedPriority) return valid.slice().sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
-  return valid[Math.floor(Math.random() * valid.length)];
+  return weightedFormationTarget(valid);
 }
 
 function enemyTargetsForAction(unit, action, target) {
