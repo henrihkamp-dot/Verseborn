@@ -18,22 +18,23 @@
   function traitText(u){const role=identity(u);return role==='hunter'?'+10% damage per different debuff on the target (maximum +30%); Echo excluded.':role==='executioner'?'Announced finishers deal +25% against Broken or physically vulnerable targets; regular attacks do not gain this bonus.':role==='ritual'?'Announced rituals gain +20% with Magic Up or Damage Up. Dispel removes the bonus; Silence interrupts.':'Alternates protection, healing or cleansing with an attack; cannot repeatedly spend every action on support.';}
   for(let i=0;i<12;i++){
     const type='hallThreat'+i;
-    STATUS_DEFS[type]={label:'TARGETED FINISHER',short:'WARN',negative:true,duration:2,color:'#ffcb70'};
+    STATUS_DEFS[type]={label:'Finisher Target',short:'TARGET',negative:true,duration:2,color:'#ffcb70'};
     statusIconAliases[type]='marked';CLEANSE_PRIORITY[type]=98;
   }
   function removeMark(u,p){if(p?.target)p.target.statuses=ensureStatuses(p.target).filter(s=>s.type!==p.mark);}
   function cancel(u,reason){const d=memory(u),p=d.pending;if(!p)return;
     removeMark(u,p);d.pending=null;d.recovery=1;d.cooldown=2;
     if(battle.hallUltimateOwner===u)delete battle.hallUltimateOwner;
-    receptionAnnounce('Finisher interrupted',`${u.name}: ${reason}. Its next action is a recovery opening.`);
+    d.recoveryFrom=p.action.name;d.interrupted=true;
+    window.FinisherFlow?.cancel(u,reason);
   }
-  function requirements(u,p){return p.target?.hp>0&&statusOf(p.target,p.mark);}
+  function requirements(u,p){return p.scope==='all-allies'?battle.party.some(t=>t.hp>0):p.target?.hp>0&&statusOf(p.target,p.mark);}
   function conditions(u,t){const role=identity(u);return role==='hunter'?negative(t).length>=2:role==='executioner'?statusOf(t,'broken')||statusOf(t,'physicalVulnerability'):role==='ritual'?statusOf(u,'magicUp')||statusOf(u,'damageUp'):false;}
   function basic(u){const magic=!statusOf(u,'silence')&&u.stats.mag>u.stats.str*1.2;let a={...enemyActionForKind(u,magic?'magic':'melee')};
     if(!enemyCanAfford(u,a))a={...enemyActionForKind(u,'melee')};
     return {...a,coefficient:Math.min(.95,a.coefficient||.9),payoff:null,payoffMultiplier:1,critBonus:0};
   }
-  function prepare(u,a,t,ultimate){return {kind:'utility',name:a.name+' — preparing',element:a.element,mpCost:0,endgameEffect:'hallFinisherPrepare',hallPlan:{action:{...a,target:t},target:t,ultimate},noTempo:true};}
+  function prepare(u,a,t,ultimate){return {kind:'utility',name:a.name+' — preparing',element:a.element,mpCost:0,endgameEffect:'hallFinisherPrepare',hallPlan:{action:{...a,target:a.allTargets?null:t},target:a.allTargets?null:t,ultimate},noTempo:true};}
   const oldRhythm=stageRhythmAction;
   stageRhythmAction=function(u){return active()?null:oldRhythm(u);};
   const oldChoose=chooseEnemyAction;
@@ -44,20 +45,22 @@
     if(turn?.enemyTempo){a=oldChoose(u);return stamp({...a,noCrit:true,hallEcho:true,payoff:null,extraStatuses:[],status:null,breakPower:0,noTempo:true});}
     if(d.pending){
       const p=d.pending;
-      if(!requirements(u,p)||statusOf(u,'broken')||statusOf(u,'stun')||statusOf(u,'sleep')||(!physical(p.action)&&statusOf(u,'silence')))cancel(u,'mark cleansed, target lost or attacker interrupted');
+      const control=['broken','stun','sleep',...(!physical(p.action)?['silence']:[])].find(type=>statusOf(u,type));
+      if(!requirements(u,p)||control)cancel(u,control||(p.target?.hp<=0?'target':'cleanse'));
       else if(p.targets.some(t=>t.hp>0&&(t.hallResponseCount||0)<=(p.responses[t.id]||0)))return stamp({kind:'utility',name:'Holding '+p.action.name+' — awaiting response',element:p.action.element,mpCost:0,noTempo:true});
       else {
-        removeMark(u,p);d.pending=null;d.cooldown=3;d.recovery=1;
-        if(battle.hallUltimateOwner===u)delete battle.hallUltimateOwner;
-        a={...p.action,target:p.target,hallFinisher:true,noTempo:true,noCrit:true,payoff:null,payoffMultiplier:1,critBonus:0};
+        a={...p.action,...(p.scope==='single'?{target:p.target}:{}),hallFinisher:true,noTempo:true,noCrit:true,payoff:null,payoffMultiplier:1,critBonus:0};
         // Conditions are checked again at impact: cleanse/dispel can remove the bonus.
-        return stamp(a);
+        return stamp(FinisherFlow.execute(u,a));
       }
     }
     if(d.recovery){d.recovery=0;applyStatus(u,'physicalVulnerability',u,{force:true,value:.15,duration:1});applyStatus(u,'magicVulnerability',u,{force:true,value:.15,duration:1});
-      return stamp({kind:'utility',name:'Recovery opening — damage received +15%',element:'Physical',mpCost:0,noTempo:true});}
+      const name=d.recoveryFrom||'the finisher';for(const type of ['physicalVulnerability','magicVulnerability']){const status=statusOf(u,type);if(status){status.recoveryOpening=true;status.finisherName=name;}}return stamp({kind:'utility',name:'Recovery Opening',recoveryFrom:name,recoveryInterrupted:d.interrupted,element:'Physical',mpCost:0,noTempo:true});}
     if(battle.hallUltimateOwner?.hp<=0||!battle.enemies.includes(battle.hallUltimateOwner))delete battle.hallUltimateOwner;
     a={...oldChoose(u)};
+    // The dragon's native gathering action is already its preparation turn.
+    // Fold that buff into this one windup instead of announcing a second windup.
+    if(enemyAbilityProfile(u)?.telegraphUltimate&&u.ultimateTelegraphed&&a.kind==='buff')a={...enemyActionForKind(u,'ultimate'),prepareBuffs:a.buffs};
     // Keep a full team meter reserved for the already announced Ultimate.
     if(a.kind==='ultimate'&&battle.hallUltimateOwner&&battle.hallUltimateOwner!==u)a=basic(u);
     if(statusOf(u,'silence')&&!physical(a))a={...enemyActionForKind(u,'melee')};
@@ -85,7 +88,7 @@
     const heavy=enemyActionDealsDamage(a)&&((a.coefficient||0)>=1.2||a.payoff&&candidates.some(t=>enemyPayoffMatches(a,t)));
     const pendingCount=battle.enemies.filter(e=>e.hp>0&&memory(e).pending).length;
     if((isUlt||combo||heavy)&&t&&pendingCount<(battle.hallStage<=10?1:2)){
-      let finisher=isUlt||heavy?a:{...basic(u),name:labels[identity(u)]+' Finisher',coefficient:1.2,breakPower:physical(a)?2:1};
+      let finisher=isUlt||heavy?a:{...basic(u),name:basic(u).name,coefficient:1.2,breakPower:physical(a)?2:1};
       if(!isUlt&&!heavy)finisher.target=combo;
       if(battle.round===1){a=basic(u);}else return stamp(prepare(u,finisher,finisher.target||t,isUlt));
     }else if(isUlt||heavy)a=basic(u);
@@ -95,19 +98,21 @@
   endgameResolveEnemyEffect=function(u,a,t){
     if(!active()||a.endgameEffect!=='hallFinisherPrepare')return oldEffect(u,a,t);
     const plan=a.hallPlan,d=memory(u),target=plan.target,index=battle.enemies.indexOf(u),mark='hallThreat'+index;
-    const targets=plan.action.allTargets?battle.party.filter(t=>t.hp>0):[target];
-    d.pending={...plan,mark,targets,responses:Object.fromEntries(targets.map(t=>[t.id,t.hallResponseCount||0]))};
-    applyStatus(target,mark,u,{force:true,duration:2});
+    const all=enemyActionHitsAll(u,plan.action),targets=all?battle.party.filter(t=>t.hp>0):[target];
+    d.pending={...plan,target:all?null:target,scope:all?'all-allies':'single',mark,targets,responses:Object.fromEntries(targets.map(t=>[t.id,t.hallResponseCount||0]))};
+    if(!all){applyStatus(target,mark,u,{force:true,duration:2});statusOf(target,mark).finisherName=plan.action.name;}
+    FinisherFlow.begin(u,{name:plan.action.name,scope:all?'all-allies':'single',target:all?null:target,mark:all?null:mark,controls:['broken','stun','sleep',...(!physical(plan.action)?['silence']:[])],recoveryText:'its next action is recovery; incoming damage +15% during Recovery Opening',cancel:reason=>cancel(u,reason),clear:()=>{removeMark(u,d.pending);d.pending=null;if(battle.hallUltimateOwner===u)delete battle.hallUltimateOwner;},after:()=>{d.cooldown=3;d.recovery=1;d.recoveryFrom=plan.action.name;d.interrupted=false;},afterText:`${plan.action.name} resolved. Recovery follows on its next action.`});
     if(plan.ultimate)battle.hallUltimateOwner=u;
-    const counter=physical(plan.action)?'Guard, cleanse the target mark, or Break/Stun the attacker.':'Guard, cleanse the target mark, or Silence/Break/Stun the caster.';
-    receptionAnnounce(plan.action.name+' — NEXT ACTION',`${u.name} → ${plan.action.allTargets?'whole party':target.name}. Each threatened hero gets a response action first. ${counter}`);
-    return ` WARNING: ${plan.action.name} targets ${plan.action.allTargets?'the whole party':target.name} next action, after a response opportunity. ${counter}`;
+    if(plan.action.prepareBuffs?.length)enemyApplyBuffs(u,[u],plan.action.prepareBuffs);
+    const counter=all?(physical(plan.action)?'Guard or Break/Stun the attacker.':'Guard or Silence/Break/Stun the caster.'):(physical(plan.action)?'Guard, cleanse the target mark, or Break/Stun the attacker.':'Guard, cleanse the target mark, or Silence/Break/Stun the caster.');
+    receptionAnnounce(plan.action.name+' — NEXT ACTION',`${u.name} → ${all?'ALL ALLIES':target.name}. Each threatened hero gets a response action first. ${counter}`);
+    return ` ${u.name} begins preparing ${plan.action.name}. Target: ${all?'ALL ALLIES':target.name}.`;
   };
   const oldStart=processTurnStart;
   processTurnStart=function(u){const result=oldStart(u);if(active()){
     u.hallSkipped=!!result.skip;
     const p=memory(u).pending;
-    if(p&&(result.skip||statusOf(u,'broken')||!physical(p.action)&&statusOf(u,'silence')))cancel(u,'attacker controlled');
+    if(p&&(result.skip||statusOf(u,'broken')||!physical(p.action)&&statusOf(u,'silence')))cancel(u,['broken','stun','sleep','silence'].find(type=>statusOf(u,type))||'attacker interrupted');
   }return result;};
   const oldEnd=processTurnEnd;
   processTurnEnd=function(u){
@@ -145,12 +150,12 @@
   const oldTip=statusTooltipHtml;
   statusTooltipHtml=function(u){let html=oldTip(u);if(active()&&battle.enemies.includes(u))html+=`<section><b>${labels[identity(u)]}</b><p>${esc(traitText(u))}</p>${identity(u)==='hunter'?battle.party.filter(t=>t.hp>0).map(t=>`<small>${esc(t.name)}: +${Math.min(3,negative(t).length)*10}% (${negative(t).length} different debuffs)</small>`).join(''):''}</section>`;return html;};
   const oldDisplay=statusDisplayData;
-  statusDisplayData=function(u,s){const data=oldDisplay(u,s);if(s.type.startsWith('hallThreat'))return {...data,compact:'!',timing:'Until the announced attack, or cleansed',description:'A finisher is being prepared. You get an action before it resolves. Guard, cleanse this mark, or interrupt the attacker.'};if(active()&&s.type==='physicalVulnerability')data.description=`Takes ${Math.round(statusValue(u,s.type)*100)}% more physical damage. Cleanse removes this vulnerability.`;if(active()&&s.type==='magicVulnerability')data.description=`Takes ${Math.round(statusValue(u,s.type)*100)}% more magical damage. Cleanse removes this vulnerability.`;return data;};
+  statusDisplayData=function(u,s){const data=oldDisplay(u,s);if(s.recoveryOpening)return {...data,name:'Recovery Opening',description:"Recovery after "+s.finisherName+": damage received +15%."};if(s.type.startsWith('hallThreat'))return {...data,name:(s.finisherName||'Finisher')+' Target',compact:'!',timing:'Until the announced attack, or cleansed',description:`${s.finisherName||'The announced attack'} targets ${u.name}. Guard, cleanse this mark, or interrupt the attacker.`};if(active()&&s.type==='physicalVulnerability')data.description=`Takes ${Math.round(statusValue(u,s.type)*100)}% more physical damage. Cleanse removes this vulnerability.`;if(active()&&s.type==='magicVulnerability')data.description=`Takes ${Math.round(statusValue(u,s.type)*100)}% more magical damage. Cleanse removes this vulnerability.`;return data;};
   const oldHud=updateBossMechanicDisplay;
   updateBossMechanicDisplay=function(){if(!active())return oldHud();const hud=document.getElementById('bossMechanicHud');if(!hud)return;
     const warnings=battle.enemies.filter(e=>e.hp>0&&memory(e).pending);
     hud.classList.toggle('hidden',!warnings.length);document.querySelector('.game')?.classList.toggle('has-early-mechanics',!!warnings.length);document.querySelector('.game')?.classList.toggle('has-endgame-mechanics',!!warnings.length);
-    const html=warnings.map(e=>{const p=memory(e).pending,waiting=p.targets.filter(t=>t.hp>0&&(t.hallResponseCount||0)<=(p.responses[t.id]||0));return `<div class="boss-mechanic-panel is-warning"><strong>${esc(e.name)} → ${esc(p.action.allTargets?'Whole party':p.target.name)} · ${esc(p.action.name)}</strong><p>${waiting.length?'NEXT ACTION · Waiting for '+waiting.map(t=>esc(t.name)).join(', ')+' to respond':'NEXT ENEMY ACTION · READY'} · Guard / cleanse TARGETED FINISHER / ${physical(p.action)?'Break or Stun':'Silence, Break or Stun'}. ${esc(traitText(e))}</p></div>`;}).join('');
+    const html=warnings.map(e=>{const p=memory(e).pending,waiting=p.targets.filter(t=>t.hp>0&&(t.hallResponseCount||0)<=(p.responses[t.id]||0));return `<div class="boss-mechanic-panel is-warning"><strong>${esc(e.name)} → ${esc(p.scope==='all-allies'?'ALL ALLIES':p.target.name)} · ${esc(p.action.name)}</strong><p>${waiting.length?'NEXT ACTION · Waiting for '+waiting.map(t=>esc(t.name)).join(', ')+' to respond':'NEXT ENEMY ACTION · READY'} · Guard / ${p.scope==='single'?'cleanse the target mark / ':''}${physical(p.action)?'Break or Stun':'Silence, Break or Stun'}. ${esc(traitText(e))}</p></div>`;}).join('');
     if(hud.innerHTML!==html)hud.innerHTML=html;
   };
   const oldLexicon=hallLexiconHtml;

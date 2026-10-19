@@ -5795,9 +5795,9 @@ function breakSleepFromDamage(target) {
 }
 
 const FORMATION_SLOT_EFFECTS=[
- {damage:1.15,incoming:1.15,healing:1.15,received:1.15,echo:1.1,weight:1,lines:['Damage dealt / taken +15%','Healing done / received +15%','ECHO +10% throughout battle']},
- {damage:1.1,incoming:1,healing:1.1,received:1,echo:1,weight:1,lines:['Damage dealt +10%','Healing done +10%','Damage taken unchanged']},
- {damage:.85,incoming:.85,healing:1,received:1,echo:1,weight:2,lines:['Damage dealt / taken −15%','Twice the normal enemy targeting weight']}
+ {damage:1.15,incoming:1.15,healing:1.15,received:1.15,echo:1.1,weight:1,lines:['Damage dealt / taken +15%','Healing done / received +15%','ECHO +10% throughout battle','Direct enemy targeting: 10%']},
+ {damage:1.1,incoming:1,healing:1.1,received:1,echo:1,weight:2,lines:['Damage dealt +10%','Healing done +10%','Damage taken unchanged','Direct enemy targeting: 20%']},
+ {damage:.85,incoming:.85,healing:1,received:1,echo:1,weight:7,lines:['Damage dealt / taken −15%','Direct enemy targeting: 70%']}
 ];
 function formationSlotEffect(unit,stat){
  if(mode!=='battle'||!battle||!unit)return 1;
@@ -12029,6 +12029,7 @@ function chooseEnemyTarget(unit, action, candidates = battle.party.filter(member
   let valid = candidates.filter(member => member.hp > 0);
   if (!valid.length) return null;
   if (enemyActionHitsAll(unit, action)) return valid[Math.floor(Math.random() * valid.length)];
+  if (enemyActionDealsDamage(action) && valid.every(member => battle.party.includes(member))) return weightedFormationTarget(valid);
   const awake = valid.filter(member => !statusOf(member, "sleep"));
   if (awake.length) valid = awake;
   const profile = enemyAbilityProfile(unit);
@@ -12347,7 +12348,7 @@ function stageUnitControlled(unit) {
   return ['stun', 'sleep', 'broken'].some(type => statusOf(unit, type)) || Boolean(statusOf(unit, 'silence') && (unit.encounterMechanic?.stagePending?.kind || stageFormationRhythm()?.kind) !== 'melee');
 }
 
-function interruptStageCombination(unit) {
+function interruptStageCombination(unit, reason = null) {
   const data = endgameMechanicState(unit);
   data.stagePending = null;
   data.stageRecovery = true;
@@ -12355,7 +12356,7 @@ function interruptStageCombination(unit) {
   clearEndgameStatus('rootBind', unit);
   endgameStatus(unit, 'physicalVulnerability', unit, { duration: 2, value: .2 });
   endgameStatus(unit, 'magicVulnerability', unit, { duration: 2, value: .2 });
-  receptionAnnounce('Combination Interrupted', `${unit.name}'s announced attack is cancelled. Physical and magic damage against it increase by 20% for 2 actions.`);
+  window.FinisherFlow?.cancel(unit,reason||['broken','stun','sleep','silence'].find(type=>statusOf(unit,type))||'interrupted');
 }
 
 function stageFormationRhythm() {
@@ -12427,13 +12428,11 @@ function stageRhythmAction(unit) {
   }
   if (data.stagePending) {
     const pending = data.stagePending;
-    data.stagePending = null;
-    data.stageRecovery = true;
     const target = pending.target;
     const escaped = !target || target.hp <= 0 || !ensureStatuses(target).some(status => status.type === rhythm.status && status.source?.name === unit.name);
     clearEndgameStatus(rhythm.status, unit);
     if (escaped) {
-      receptionAnnounce('Target Escaped', `${rhythm.title} loses its target. ${unit.name} must recover.`);
+      FinisherFlow.cancel(unit,target?.hp<=0?'target':'cleanse');
       return enemyActionForKind(unit, 'melee');
     }
     const supports = live.filter(ally => ally !== unit && !stageUnitControlled(ally)).length;
@@ -12441,7 +12440,7 @@ function stageRhythmAction(unit) {
     const charged = (battle.enemyResonance || 0) >= 100;
     const base = enemyActionForKind(unit, rhythm.kind, target);
     const coefficient = rhythm.early ? 1.05 + supports * .15 : 1.25 + supports * .2;
-    return { ...base, kind: charged ? 'ultimate' : base.kind, scaling: base.scaling || (rhythm.kind === 'melee' ? 'str' : 'mag'), name: rhythm.title, target, allTargets: false, isUltimate: charged, mpCost: charged ? 0 : base.mpCost, coefficient: charged ? Math.max(coefficient, enemyActionForKind(unit, 'ultimate', target).coefficient || 1.55) : coefficient, breakPower: rhythm.kind === 'melee' ? 3 : 1 };
+    return FinisherFlow.execute(unit,{ ...base, kind: charged ? 'ultimate' : base.kind, scaling: base.scaling || (rhythm.kind === 'melee' ? 'str' : 'mag'), name: rhythm.title, target, allTargets: false, isUltimate: charged, mpCost: charged ? 0 : base.mpCost, coefficient: charged ? Math.max(coefficient, enemyActionForKind(unit, 'ultimate', target).coefficient || 1.55) : coefficient, breakPower: rhythm.kind === 'melee' ? 3 : 1 });
   }
   if ((battle.enemyResonance || 0) >= 100 && !unit.endgameBoss) return null;
   if (rhythm.early && (unit.actionsTaken || 0) % rhythm.interval !== 1) return null;
@@ -12458,18 +12457,11 @@ function stageBossRhythmAction(unit) {
   if (data.stageRecovery) { data.stageRecovery = false; return endgameFormationPressure(unit, true); }
   if (data.stagePending) {
     const pending = data.stagePending;
-    data.stagePending = null;
-    data.stageRecovery = true;
-    const target = pending.target?.hp > 0 ? pending.target : battle.party.find(hero => hero.hp > 0);
+    const target = pending.scope==='all-allies'?battle.party.find(hero=>hero.hp>0):pending.target;
     const supports = battle.enemies.filter(ally => ally !== unit && ally.hp > 0 && !stageUnitControlled(ally)).length;
-    if (unit.endgameBoss === 'root') {
-      data.window = 3;
-      endgameStatus(unit, 'memoryCore', unit, { duration: 3 });
-      receptionAnnounce('Memory Core Exposed', 'Root Eruption resolves, exposing the Core: +60% incoming damage. Burst now; cleanse Root Bind to restore initiative.');
-    } else receptionAnnounce(pending.title, `${supports} active supports strengthen the impact. ${unit.name} recovers after this attack.`);
     const veilBonus = unit.endgameBoss === 'veil' && statusOf(target, 'beguilingVeil') ? .5 : 0;
-    return { ...enemyActionForKind(unit, pending.kind, target), name: pending.title, target, coefficient: 1.2 + supports * .2 + veilBonus, allTargets: unit.endgameBoss === 'root', breakPower: unit.endgameBoss === 'oath' ? 3 : 1,
-      ...(unit.endgameBoss === 'root' ? { status: { type: 'rootBind', chance: .7, duration: 2 } } : {}) };
+    return FinisherFlow.execute(unit,{ ...enemyActionForKind(unit, pending.kind, target), name: pending.title, target, coefficient: 1.2 + supports * .2 + veilBonus, allTargets: unit.endgameBoss === 'root', breakPower: unit.endgameBoss === 'oath' ? 3 : 1,
+      ...(unit.endgameBoss === 'root' ? { status: { type: 'rootBind', chance: .7, duration: 2 } } : {}) });
   }
   const turn = unit.actionsTaken || 0;
   let rhythm = null;
@@ -12696,10 +12688,11 @@ function endgameResolveEnemyEffect(unit, action, target) {
       const rhythm = action.rhythm;
       const preferred = unit.endgameBoss === 'veil' ? party.find(hero => statusOf(hero, 'beguilingVeil')) || party[0] : party[(unit.actionsTaken || 0) % party.length];
       const target = rhythm.kind === 'melee' ? party.find(hero => hero.holdTheLine) || preferred : preferred;
-      data.stagePending = { target, title: rhythm.title, kind: rhythm.kind };
-      if (rhythm.status && target) endgameStatus(target, rhythm.status, unit, { duration: 4, value: .15 });
-      receptionAnnounce(`${rhythm.title} Preparing`, `${target?.name || 'The party'} is targeted on ${unit.name}'s next action. ${rhythm.hint}`);
-      return ` ${target?.name || 'The party'} is targeted next action. ${rhythm.hint}`;
+      const all=unit.endgameBoss==='root';
+      data.stagePending = { target:all?null:target, title: rhythm.title, kind: rhythm.kind,scope:all?'all-allies':'single' };
+      if (rhythm.status && target&&!all) endgameStatus(target, rhythm.status, unit, { duration: 4, value: .15 });
+      FinisherFlow.begin(unit,{name:rhythm.title,scope:all?'all-allies':'single',target:all?null:target,mark:all?null:rhythm.status,controls:unit.endgameBoss?['stun','sleep',...(unit.endgameBoss!=='oath'?['silence']:[])]:['broken','stun','sleep',...(rhythm.kind!=='melee'?['silence']:[])],cancel:reason=>{if(data.stagePending)interruptStageCombination(unit,reason);},clear:()=>{data.stagePending=null;if(rhythm.status)clearEndgameStatus(rhythm.status,unit);},after:()=>{data.stageRecovery=true;if(unit.endgameBoss==='root'){data.window=3;endgameStatus(unit,'memoryCore',unit,{duration:3});}},afterText:unit.endgameBoss==='root'?'Root Eruption resolved. Memory Core exposed: incoming damage +60%.':`${rhythm.title} resolved. Recovery follows.`,recoveryText:'physical and magic damage received +20% for 2 actions; recovery follows'});
+      return ` ${unit.name} begins preparing ${rhythm.title}. Target: ${all?'ALL ALLIES':target?.name}.`;
     }
     case "sanctuaryPrepare": {
       data.sanctuaryPending = true;
@@ -13105,8 +13098,8 @@ function resolveEnemyTurn(turn, prev) {
     target = chooseEnemyTarget(e, action, liveParty);
   }
   const taunter = liveParty.find(ally => ally.holdTheLine);
-  if (taunter && enemyActionDealsDamage(action) && !enemyActionHitsAll(e, action)) target = taunter;
-  if (!taunter && enemyActionDealsDamage(action) && liveParty.includes(target) && target.hp / target.max < .35) {
+  if (!action.lockedFinisherTarget && taunter && enemyActionDealsDamage(action) && !enemyActionHitsAll(e, action)) target = taunter;
+  if (!action.lockedFinisherTarget && !taunter && enemyActionDealsDamage(action) && liveParty.includes(target) && target.hp / target.max < .35) {
     const interceptor = liveParty.find(ally => ally !== target && !statusOf(ally, "sleep") && typedTalentValue(ally.id, "intercept") && Math.random() < typedTalentValue(ally.id, "intercept"));
     if (interceptor) target = interceptor;
   }
@@ -13125,12 +13118,13 @@ function resolveEnemyTurn(turn, prev) {
   effect = makeEnemyBattleEffect(e, target, action);
   playSfx(action.kind === "melee" ? (e.npcBoss ? "boss" : "melee") : "magic");
   renderBattle(`${e.name} prepares ${action.name}${action.kind === "ultimate" ? " - ULTIMATE" : ""}...`);
-
+  const resolvingBattle=battle;
   setTimeout(() => {
-    if (!battle || mode !== "battle" || e.hp <= 0) return;
+    if (battle!==resolvingBattle || mode !== "battle" || e.hp <= 0) return;
     battle.attackDamage = [];
     window.StatusSystem?.begin(e, action);
-    let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${e.name} uses ${action.name}.`;
+    const preparationName=action.hallPlan?.action.name||action.rhythm?.title||(/^Preparing /.test(action.name)?e.finisherState?.name:null);
+    let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${action.recoveryFrom ? `${e.name} is recovering from ${action.recoveryInterrupted ? 'the interrupted ' : ''}${action.recoveryFrom}. Recovery Opening: damage received +15%.` : preparationName?`${e.name} begins preparing ${preparationName}.`:`${e.name} uses ${action.name}.`}`;
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
       if (!["stagePrepare", "hallFinisherPrepare", "sanctuaryPrepare", "receptionPrepare", "charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
@@ -13299,6 +13293,7 @@ function resolveEnemyTurn(turn, prev) {
       e.deathTick = tick;
       e.defeatUntil = tick + (enemyAnimationSheetFor(e) ? 30 : 12);
     }
+    if(action.finisherToken){action.finisherToken.impactResolved=true;window.FinisherFlow?.finish(e);}
     updatePanels();
     if (window.StatusSystem) actionLog += StatusSystem.finish();
     finishAttackDamageSummary(actionLog);
@@ -13308,7 +13303,7 @@ function resolveEnemyTurn(turn, prev) {
       return setTimeout(() => winBattle(actionLog), 620);
     }
     setTimeout(() => {
-      if (!battle || mode !== "battle") return;
+      if (battle!==resolvingBattle || mode !== "battle") return;
       e.anim = "idle";
       e.animTick = 0;
       finishTurn(actionLog);

@@ -156,7 +156,8 @@
     unit.whirlpoolState.pending=false;unit.whirlpoolState.recovery=2;
     applyStatus(unit,'physicalVulnerability',unit,{force:true,value:.2,duration:2});
     applyStatus(unit,'magicVulnerability',unit,{force:true,value:.2,duration:2});
-    battle.whirlpoolNotice=`${unit.name}: ${reason}. Ritual cancelled; vulnerability and two recovery actions.`;
+    window.FinisherFlow?.cancel(unit,reason==='fresh Break'?'broken':reason);
+    battle.whirlpoolNotice=`${encounters[unit.whirlpoolId-1].strike} CANCELLED — ${reason}. Incoming damage +20%; two recovery actions.`;
     return true;
   }
   const oldApply=applyStatus, oldBreak=addBreakProgress;
@@ -169,13 +170,12 @@
     const base={kind:'magic',name:e.spell,element:e.element,coefficient:1.55,mpCost:0,status:{type:e.status,chance:.6,duration:2,...(['magicVulnerability','disrupted','agilityDown'].includes(e.status)?{value:.15}:{})}};
     if(data.pending){
       if(['broken','silence','sleep','stun'].some(s=>statusOf(unit,s))){interrupt(unit,'control');return {...base,kind:'melee',element:'Physical',name:'Interrupted Strike',status:null,coefficient:.55};}
-      data.pending=false;data.recovery=2;battle.whirlpoolNotice=e.strike+' resolves. Recover, then exploit the opening.';
-      return {...base,kind:'ultimate',name:e.strike,coefficient:1.9+e.id*.04,allTargets:true,mpCost:0};
+      return FinisherFlow.execute(unit,{...base,kind:'ultimate',name:e.strike,coefficient:1.9+e.id*.04,allTargets:true,mpCost:0});
     }
     if(data.recovery>0){data.recovery--;return {...base,name:'Recovering Strike',coefficient:.55,status:null};}
     if(statusOf(unit,'silence'))return {...base,kind:'melee',name:'Measured Strike',element:'Physical',coefficient:1.25,status:null};
     const actions=unit.actionsTaken||0;
-    if(actions%4===2){data.pending=true;battle.whirlpoolNotice=`${e.name} prepares ${e.strike}. On its next own action: group impact. Silence or fresh Break cancels it; Guard and barriers soften it.`;return {kind:'buff',name:'Preparing '+e.strike,target:unit,buffs:[],mpCost:0};}
+    if(actions%4===2){data.pending=true;FinisherFlow.begin(unit,{name:e.strike,scope:'all-allies',controls:['broken','silence','stun','sleep'],cancel:reason=>interrupt(unit,reason),clear:()=>{data.pending=false;},after:()=>{data.recovery=2;battle.whirlpoolNotice=e.strike+' resolved. Two recovery actions follow.';},afterText:e.strike+' resolved. Two recovery actions follow.',recoveryText:'incoming damage +20%; two recovery actions follow'});battle.whirlpoolNotice=`${e.name} begins preparing ${e.strike}. Target: ALL ALLIES. Silence or fresh Break cancels it; Guard and barriers soften it.`;return {kind:'buff',name:'Preparing '+e.strike,target:unit,buffs:[],mpCost:0};}
     if(['benji','bill'].includes(e.key)&&actions%4===0)return {kind:'buff',name:e.key==='bill'?'Ledger Shelter':'Geometric Shelter',target:unit,buffs:[{type:'barrier',value:.18,duration:2}],mpCost:0};
     if(e.role==='bruiser'&&actions%3===0)return {...base,kind:'melee',name:e.key==='demonlord'?'Uncrowned Greatblade':'Bronze Knuckle',element:'Physical'};
     return actions%3===1?{...base,allTargets:true,coefficient:.85}:base;

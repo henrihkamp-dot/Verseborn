@@ -137,8 +137,10 @@
     const data=unit.riftState;if(!data?.pending)return false;const pending=data.pending;data.pending=null;data.recovery=2;
     if(pending.target)pending.target.statuses=ensureStatuses(pending.target).filter(s=>s.type!=='riftMark');
     applyStatus(unit,'physicalVulnerability',unit,{force:true,value:.25,duration:2});applyStatus(unit,'magicVulnerability',unit,{force:true,value:.25,duration:2});
-    announce('Recovery window',`${unit.name}: ${reason}. The prepared attack is cancelled; incoming damage is increased for two own actions.`);return true;
+    window.FinisherFlow?.cancel(unit,reason==='fresh Break'?'broken':reason==='mark cleansed'?'cleanse':reason);
+    announce('Recovery window',`${infoName(unit)} CANCELLED — ${reason}. Incoming damage +25% for two own actions.`);return true;
   }
+  function infoName(unit){return unit.finisherState?.name||unit.lastFinisher?.name||encounters[battle.riftEncounter-1]?.strike||'Rift strike';}
   const oldApply=applyStatus;
   applyStatus=function(unit,type,source,options){const result=oldApply(unit,type,source,options);if(result.applied&&unit?.riftKey&&unit.riftState?.pending&&(['stun','sleep'].includes(type)||type==='silence'&&unit.riftState.pending.kind==='magic'))interrupt(unit,type);return result;};
   const oldBreak=addBreakProgress;
@@ -153,6 +155,7 @@
     const live=battle.party.filter(u=>u.hp>0),chosen=live.find(u=>u.holdTheLine)||live.slice().sort((a,b)=>b.hp-a.hp)[0];
     data.pending={kind:physical?'melee':'magic',target:marked?chosen:null,marked,heal:info.mechanic==='hearth'};
     if(marked)applyStatus(chosen,'riftMark',unit,{force:true,duration:3});
+    FinisherFlow.begin(unit,{name:info.mechanic==='hearth'?'The Hearth Holds':unit.riftKey==='dragon'?'Vortex Breath':info.strike,scope:info.mechanic==='hearth'?'all-enemies':marked?'single':'all-allies',target:marked?chosen:null,mark:marked?'riftMark':null,controls:['broken','stun','sleep',...(!physical?['silence']:[])],cancel:reason=>interrupt(unit,reason),clear:()=>{if(data.pending?.target)data.pending.target.statuses=ensureStatuses(data.pending.target).filter(s=>s.type!=='riftMark');data.pending=null;},after:()=>{data.recovery=2;},afterText:'The finisher resolved; two recovery actions follow.',recoveryText:'incoming damage +25%; two recovery actions follow'});
     const count=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;
     const instruction=marked?'Cleanse the mark, Break the caster or Guard the marked target.':physical?'Fresh Break, Stun or Sleep interrupts; Silence does not stop a physical attack.':'Silence, Stun, Sleep or fresh Break interrupts. Guard or barriers soften the impact.';
     announce(`${unit.name} prepares ${info.strike}`,`${data.pending.heal?'A large enemy healing/barrier ritual is coming. ':marked?'Marked: '+chosen.name+'. ':'Group impact on its next own action. '}${instruction}${count?' Living escorts strengthen the impact.':''}`);
@@ -166,11 +169,10 @@
       const pending=data.pending;
       if(statusOf(unit,'broken')||statusOf(unit,'stun')||statusOf(unit,'sleep')||pending.kind==='magic'&&statusOf(unit,'silence')){interrupt(unit,'control');return basic(unit);}
       if(pending.marked&&(!pending.target||pending.target.hp<=0||!statusOf(pending.target,'riftMark'))){interrupt(unit,'mark cleansed');return basic(unit);}
-      data.pending=null;data.recovery=2;
-      if(pending.heal)return {kind:'magic',name:'The Hearth Holds',element:'Sound',healing:true,allAllies:true,healCoefficient:4.2,buffs:[{type:'barrier',value:.25,duration:2}],mpCost:24};
+      if(pending.heal)return FinisherFlow.execute(unit,{kind:'magic',name:'The Hearth Holds',element:'Sound',healing:true,allAllies:true,healCoefficient:4.2,buffs:[{type:'barrier',value:.25,duration:2}],mpCost:24});
       const helpers=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;
       const action={kind:'ultimate',name:unit.riftKey==='dragon'?'Vortex Breath':info.strike,element:pending.kind==='melee'?'Physical':enemyAbilityProfile(unit).element,scaling:pending.kind==='melee'?'str':'mag',coefficient:1.45+helpers*.14,allTargets:!pending.marked,target:pending.target,mpCost:0,riftCollection:unit.riftKey==='engine',status:info.mechanic==='spores'?{type:'poison',chance:.9,duration:3}:unit.riftKey==='dragon'?{type:'scorched',chance:.65,duration:2}:['hunt','crossfire'].includes(info.mechanic)?{type:'bleed',chance:.65,duration:3}:{type:'disrupted',chance:.6,duration:2}};
-      if(pending.target)pending.target.statuses=ensureStatuses(pending.target).filter(s=>s.type!=='riftMark');announce('Impact / recovery',`${action.name} resolves. The leader then recovers; use healing and exploit weaknesses.`);return action;
+      return FinisherFlow.execute(unit,action);
     }
     if(data.recovery>0){data.recovery--;return {...basic(unit),name:'Recovering Strike',coefficient:.36};}
     const actions=unit.actionsTaken||0;
