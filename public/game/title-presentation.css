@@ -13,3 +13,7 @@ body[data-play-mode="title"] canvas {
   image-rendering:auto;cursor:pointer;
 }
 body[data-play-mode="title"] :is(.panel,.hud,.gamepad) {display:none!important;}
+
+body[data-play-mode="title"] .game{width:min(100vw,calc(100dvh * 16 / 9))!important;height:min(100dvh,calc(100vw * 9 / 16))!important;aspect-ratio:16/9!important}body[data-play-mode="title"] canvas{width:100%!important;height:100%!important;aspect-ratio:16/9!important}
+
+body[data-play-mode="title"] #skillPointNotice{display:none!important}

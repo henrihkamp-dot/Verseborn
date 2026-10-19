@@ -188,7 +188,7 @@
   const oldControl=handleControl,oldCycleLeader=cycleLeader;
   handleControl=function(control){if(inHall()&&mode==='walk'&&!activeRecruitScene&&['up','down','left','right'].includes(control))return;oldControl(control);};
   cycleLeader=function(direction){if(inHall()&&mode==='walk')return;oldCycleLeader(direction);};
-  const residents=()=>{const tinus=window.TinusRecruitment?.resident();return [...actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id)),...(tinus?[tinus]:[])];};
+  const residents=()=>{const tinus=window.TinusRecruitment?.resident();return [...actors.filter(actor=>actor.id==='Marla'||state.party.includes(actor.id)),...(tinus?[tinus]:[]),...(window.HallBarSeating?[HallBarSeating.stool]:[])];};
   const barLines=[[["Tinus", "The portal owes me a refill."], ["Marla", "Put it on your tab."], ["Tinus", "Does the tab follow me across dimensions?"], ["Marla", "Try me. I have a very long ladle."]], [["Marla", "Coffee, or something that counts as lunch?"], ["Tinus", "Coffee has beans. Practically a vegetable."], ["Marla", "Then this soup is a three-course banquet."], ["Tinus", "Fine. But leave room for the vegetables in my mug."]], [["Tinus", "I found a dimension where nobody needed saving."], ["Marla", "Sounds restful. Why leave?"], ["Tinus", "Terrible coffee. Some sacrifices are too great."], ["Marla", "Well, save this bowl before it gets cold."]], [["Tinus", "You feed everyone who wanders in through a portal?"], ["Marla", "A warm meal first. Questions can wait until they stop shivering."], ["Tinus", "Dangerous policy. They might decide to stay."], ["Marla", "You are still on that stool, are you not?"]], [["Tinus", "Does Verseborn ever stop singing?"], ["Marla", "When Mira turns a corner. Then he follows like a lost puppy."], ["Tinus", "So she gets a soundtrack and a shadow?"], ["Marla", "And somehow I am still the one fetching him water."]]];
   const ambientBubbles=new Map();
   function marlaIdleFrame(now){const t=((now%18000)+18000)%18000;if(t<11000)return [4,5,4,5][Math.floor(t/750)%4];if(t<13500)return [9,10,11,10][Math.floor((t-11000)/625)];return 0;}
@@ -369,6 +369,7 @@
   }
   function trigger(actor){
     keys.clear();target=null;route=[];pendingActor=null;
+    if(actor.barStool){window.HallBarSeating?.sit();return;}
     if(actor.id==='Tinus'&&window.TinusRecruitment?.interact())return;
     if(window.EmberRift?.triggerHall(actor))return;
     if(actor.id==='Resonance Machine'){openHallBattleMap();return;}
@@ -465,6 +466,7 @@
   };
   function update(now){
     const dt=Math.min(.05,(now-last)/1000);last=now;
+    if(window.HallBarSeating?.active){keys.clear();player.walking=false;return;}
     if(mode!=='walk'||activeRecruitScene||window.TinusRecruitment?.replaying){keys.clear();player.walking=false;return;}
     // Recover positions saved inside an old obstacle before attempting a new route.
     if(collision(player.x,player.y)){
@@ -521,7 +523,7 @@
     const focus=window.TinusRecruitment?.focus()||player;
     camera.x=Math.max(0,Math.min(W-LOGICAL_WIDTH,focus.x-LOGICAL_WIDTH/2));
     camera.y=Math.max(0,Math.min(H-LOGICAL_HEIGHT,focus.y-LOGICAL_HEIGHT*.6));
-    ctx.drawImage(hallBackground(),-camera.x,-camera.y,W,H);
+    ctx.drawImage(hallBackground(),-camera.x,-camera.y,W,H);window.HallBarSeating?.environment(camera);
     window.EmberRift?.drawHallDoor(camera,now);
     window.HallHub?.drawAreas(camera);window.HallLiveliness?.drawLabProps(camera);
     const fx=images.effects,cw=fx.width/4,ch=fx.height/2,frame=Math.floor(now/180)%4;
@@ -538,6 +540,8 @@
     const things=[...residents(),{...resonance,machine:true},{id:'Verseborn',x:player.x,y:player.y,size:36,player:true},...foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>a.y-b.y);
     const speaking=barChatter(now);
     for(const actor of things){
+      if(actor.barStool)continue;
+      if(actor.player&&window.HallBarSeating?.active)continue;
       if(actor.prop){drawForegroundProp(actor.prop);continue;}
       if(actor.machine){
         const image=stageSelectorImage;
@@ -561,7 +565,7 @@
       if(!actor.clipY)drawFieldShadow(actor.x-camera.x,actor.y-camera.y,actor.id==='Sparky'?3:5);
       drawActor(actor,row,col);
     }
-    window.HallLiveliness?.drawEffects(camera);
+    window.HallLiveliness?.drawEffects(camera);window.HallBarSeating?.drawPlayer(camera,now);
     const near=nearby();if(near&&mode==='walk')drawText(near.id+'  [E]',near.x-camera.x,near.y-camera.y-38,'#fff0b5',6,'center');
     drawText('EMBER HALL',7,11,'#fff0b5',7);
     el.place.textContent='Ember Hall';
@@ -578,6 +582,7 @@
   document.addEventListener('keyup',e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key),true);
   window.addEventListener('blur',()=>keys.clear());
   canvas.addEventListener('pointerdown',event=>{
+    if(window.HallBarSeating?.active){HallBarSeating.stand();event.preventDefault();event.stopImmediatePropagation();return;}
     if(window.TinusRecruitment?.replaying){event.preventDefault();event.stopImmediatePropagation();return;}
     if(!inHall()||mode!=='walk'||activeRecruitScene)return;
     event.preventDefault();event.stopImmediatePropagation();suppressClick=true;

@@ -1,0 +1,1 @@
+Built-in image generation widescreen scenery extension, 2026-10-19. Original title illustration used as reference. Runtime overlays original center and existing animations; generated image supplies outer scenery.

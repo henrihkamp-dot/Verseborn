@@ -1,0 +1,1 @@
+Generated with built-in image generation, 2026-10-19. References: native Verseborn walk sheet and local bar/stool crop. Standalone stool plus aligned lowering/seated/talking atlas; local clean plate removes original painted stool. Alpha preserved.
