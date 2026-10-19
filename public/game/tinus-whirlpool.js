@@ -89,7 +89,8 @@
   let assetFailure = null, assetsReady = false, selected = 1, snapshot = null;
   const load = file => new Promise((resolve,reject) => {const image=new Image(); image.onload=()=>resolve(image); image.onerror=()=>reject(Error('Whirlpool asset unavailable: '+file)); image.src=BASE+file;});
   const ready = fetch(BASE+'manifest.json?v=212').then(response=>{if(!response.ok)throw Error('Whirlpool manifest unavailable');return response.json();}).then(async data=>{
-    await Promise.all(data.characters.map(async config=>{const [image,fx]=await Promise.all([load(config.sheet),load(config.effects.sheet)]); sheets[config.id]={...config,image,fx}; images[config.id]=BASE+config.id+'-portrait.webp';}));
+    const response=await fetch(BASE+'idle-registration-296.json');if(!response.ok)throw Error('Whirlpool idle registration unavailable');const registration=await response.json();
+    await Promise.all(data.characters.map(async config=>{const [image,fx]=await Promise.all([load(config.sheet),load(config.effects.sheet)]); sheets[config.id]={...config,image,fx,idleOffsets:registration[config.id]}; images[config.id]=BASE+config.id+'-portrait.webp';}));
     assetsReady = true;
     if (el.menu.dataset.menuView === 'tinus-whirlpool' && mode === 'hallMap') render();
   }).catch(error=>{assetFailure=error.message; console.error(error);});
@@ -226,8 +227,10 @@
     if(animation==='idle'){const timing=[500,280,280,320,280,280,280,340];let elapsed=performance.now()%2560;while(phase<7&&elapsed>=timing[phase])elapsed-=timing[phase++];}
     else phase=Math.min(3,Math.floor((animation==='defeat'?Math.max(0,tick-(unit.deathTick??tick)):unit.animTick||0)/7));
     const frame=sheet.frames[indices[phase]],scale=e.size/sheet.referenceHeight;
+    // Align the planted lower body without suppressing any of the eight drawn poses.
+    const idle=animation==='idle',anchor=idle?sheet.frames[0].anchor:frame.anchor,[dx,dy]=idle?(sheet.idleOffsets?.[indices[phase]]||[0,0]):[0,0];
     const gx=Math.max(384*scale*.5+2,Math.min(LOGICAL_WIDTH-384*scale*.5-2,px+8));
-    ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(sheet.image,...frame.cell,gx-frame.anchor[0]*scale,py+31-frame.anchor[1]*scale,384*scale,384*scale);ctx.restore();
+    ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(sheet.image,...frame.cell,gx-(anchor[0]-dx)*scale,py+31-(anchor[1]-dy)*scale,384*scale,384*scale);ctx.restore();
     if(unit.anim==='attack'&&unit.lastAnimDrawTick!==tick){unit.animTick=(unit.animTick||0)+1;unit.lastAnimDrawTick=tick;}return true;
   };
   const oldPortrait=enemyPortraitDataUrl;

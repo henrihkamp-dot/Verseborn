@@ -582,7 +582,7 @@
   document.addEventListener('keyup',e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key),true);
   window.addEventListener('blur',()=>keys.clear());
   canvas.addEventListener('pointerdown',event=>{
-    if(window.HallBarSeating?.active){if(mode==='walk'){const r=canvas.getBoundingClientRect(),x=(event.clientX-r.left)/r.width*LOGICAL_WIDTH+camera.x,y=(event.clientY-r.top)/r.height*LOGICAL_HEIGHT+camera.y;if(Math.abs(x-529)<22&&y>122&&y<164)HallBarSeating.talk();else HallBarSeating.stand();}event.preventDefault();event.stopImmediatePropagation();return;}
+    if(window.HallBarSeating?.active){if(mode==='walk'){const r=canvas.getBoundingClientRect(),x=(event.clientX-r.left)/r.width*LOGICAL_WIDTH+camera.x,y=(event.clientY-r.top)/r.height*LOGICAL_HEIGHT+camera.y;if(Math.abs(x-529)<22&&y>122&&y<164)HallBarSeating.openShop();else HallBarSeating.stand();}event.preventDefault();event.stopImmediatePropagation();return;}
     if(window.TinusRecruitment?.replaying){event.preventDefault();event.stopImmediatePropagation();return;}
     if(!inHall()||mode!=='walk'||activeRecruitScene)return;
     event.preventDefault();event.stopImmediatePropagation();suppressClick=true;
