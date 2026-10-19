@@ -4,7 +4,7 @@
   const ID='ember-hall-welcome',BASE='assets/hall/opening-254/',art={};
   let story,manifest,scene=null,opening=false,settingLine=false,raf;
   const load=(name,url)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{art[name]=image;resolve();};image.onerror=()=>reject(Error('Opening asset missing: '+url));image.src=url;});
-  const ready=Promise.all([fetch('hall-opening-story.json?v=254').then(r=>{if(!r.ok)throw Error('Opening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>r.json()).then(data=>manifest=data),load('construction',BASE+'construction.webp'),load('tools',BASE+'tools.webp'),load('seated',BASE+'glimmer-seated.webp'),load('verseSeat','assets/hall/opening-290/verseborn-seat-only.webp'),load('barStool','assets/hall/opening-288/bar-stool.webp'),load('stoolClean','assets/hall/opening-288/stool-clean-plate.webp'),load('assemblies','assets/hall/glimmer-repair-props-v244.webp'),load('lab','assets/hall/glimmer-lab-v244.webp'),load('hover','assets/hall/glimmer-hover-v244.webp'),load('door','assets/rift/hall-closed-door-crop.webp'),...['Verseborn','Marla','Glimmer'].map(id=>load('portrait-'+id,portraitSources[id]))]);
+  const ready=Promise.all([fetch('hall-opening-story.json?v=254').then(r=>{if(!r.ok)throw Error('Opening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>r.json()).then(data=>manifest=data),load('construction',BASE+'construction.webp'),load('tools',BASE+'tools.webp'),load('seated',BASE+'glimmer-seated.webp'),load('verseSeat','assets/hall/opening-291/verseborn-mount.webp'),load('assemblies','assets/hall/glimmer-repair-props-v244.webp'),load('lab','assets/hall/glimmer-lab-v244.webp'),load('hover','assets/hall/glimmer-hover-v244.webp'),load('door','assets/rift/hall-closed-door-crop.webp'),...['Verseborn','Marla','Glimmer'].map(id=>load('portrait-'+id,portraitSources[id]))]);
   ready.catch(error=>console.error(error));
   function drawMachine(context,image,x,baseline,width,height,now=performance.now()){
     if(window.ResonanceMachine?.ready)return ResonanceMachine.draw(context,image,x,baseline,width,height,now);
@@ -70,11 +70,11 @@
   }
   function versebornPose(){
     const seated=scene.verseSitAt!==null,age=seated?scene.clock-scene.verseSitAt:0,ease=t=>t*t*(3-2*t);
-    if(scene.verseRiseAt!==null){const rise=scene.clock-scene.verseRiseAt;if(rise<1000)return{x:501,y:197,frame:1,seatProgress:1-rise/1000,pose:'standing-up'};const t=Math.min(1,(rise-1000)/1100),e=ease(t);return{x:501-50*e,y:197-7*e,walking:t<1,pose:t<1?'returning':'standing',row:3};}
+    if(scene.verseRiseAt!==null){const rise=scene.clock-scene.verseRiseAt;if(rise<1000)return{x:501,y:197,frame:1,seatProgress:1-rise/1000,pose:'standing-up'};const walk=BarSeatMotion.route([[488,197],[488,196],[451,196],[451,190]],rise-1000,2200);return{...walk,pose:walk.walking?'returning':'standing'};}
     if(!seated)return{x:451,y:190,pose:'standing'};
-    if(age<1100){const t=ease(Math.min(1,age/1100));return{x:451+50*t,y:190+7*t,walking:true,row:7,pose:'walking-to-stool'};}
-    if(age<2100)return{x:501,y:197,frame:1,seatProgress:(age-1100)/1000,pose:'sitting-down'};
-    const talking=story.beats[scene.index].speaker==='Verseborn',frame=talking&&Math.floor((age-2100)/330)%5===0?3:2;
+    if(age<2200)return{...BarSeatMotion.route([[451,190],[451,196],[488,196],[488,197]],age,2200),pose:'walking-to-stool'};
+    if(age<3200)return{x:501,y:197,frame:1,seatProgress:(age-2200)/1000,pose:'sitting-down'};
+    const talking=story.beats[scene.index].speaker==='Verseborn',frame=talking&&Math.floor((age-3200)/330)%5===0?3:2;
     return{x:501,y:183,frame,pose:'seated'};
   }
   function drawVerseborn(now,singing){
@@ -98,12 +98,12 @@
     const viewWidth=Math.max(bar?209:390,(bar?116:216)*LOGICAL_WIDTH/safeHeight);
     const view={x:Math.max(0,Math.min(640-viewWidth,(bar?523:430)-viewWidth/2)),y:bar?90:-2,w:viewWidth},scale=LOGICAL_WIDTH/view.w;
     ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='#171018';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.scale(scale,scale);ctx.translate(-view.x,-view.y);
-    const background=emberHallWorld.images['hall-uninhabited-v239']||emberHallWorld.hallBackground();ctx.drawImage(background,0,0,640,356);ctx.drawImage(art.door,299,0,38,47);ctx.drawImage(art.stoolClean,475,140,65,75);const stoolPose=versebornPose();ctx.drawImage(art.barStool,477,148,48,48);
+    const background=emberHallWorld.images['hall-uninhabited-v239']||emberHallWorld.hallBackground();ctx.drawImage(background,0,0,640,356);ctx.drawImage(art.door,299,0,38,47);
     if(scene.stage){ctx.fillStyle=`rgba(15,16,35,${scene.stage*.018})`;ctx.fillRect(0,0,640,356);}
     drawClutter(scene.stage,now);
     if(scene.stage>0&&scene.stage<5){const cell=manifest.cell;ctx.drawImage(art.construction,(scene.stage-1)*cell,0,cell,cell,315-64,139-128,128,128);}else if(scene.stage===5)drawMachine(ctx,stageSelectorImage,315,139,92,86,now);
     const speaking=beat.speaker==='Marla',marlaFrame=emberHallWorld.marlaIdleFrame(now);ctx.save();ctx.beginPath();ctx.rect(0,0,640,155);ctx.clip();emberHallWorld.drawActor({id:'Marla',x:529,y:160,size:38},4,speaking?12:marlaFrame,{x:0,y:0});ctx.restore();
-    drawVerseborn(now,beat.sing||shot==='listen');
+    drawVerseborn(now,beat.sing||shot==='listen');BarSeatMotion.foreground({x:0,y:0});
     const g=glimmerPosition(now);ctx.save();ctx.globalAlpha=g.alpha??1;drawGlimmer(g.x,g.y,g.pose,now,g.direction);ctx.restore();
     if(shot==='snap'){
       ctx.fillStyle=age<120?'#cfe9ffba':`rgba(4,4,15,${age<1050?.82:Math.max(0,.82-(age-1050)/650)})`;ctx.fillRect(view.x,view.y,view.w,LOGICAL_HEIGHT/scale);
@@ -130,11 +130,21 @@
   handleControl=function(control){if(scene){if(control==='confirm')next();else if(control==='cancel')finish();else if(['music','fullscreen'].includes(control))oldControl(control);return;}return oldControl(control);};
   document.addEventListener('keydown',event=>{if(!scene||event.ctrlKey||event.altKey||event.metaKey||!['Escape','Enter',' ','ArrowRight','e','z','Z'].includes(event.key))return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;if(event.key==='Escape'||event.target?.closest?.('#dialogueSkip')&&['Enter',' '].includes(event.key))finish();else if(['Enter',' ','e','z','Z','ArrowRight'].includes(event.key))next();},true);
   const style=document.createElement('style');style.textContent='.game.hall-opening-active .hud{display:none}';document.head.append(style);
-  window.BarSeatMotion={draw(image,camera,progress,frame,standing){
-    const t=Math.max(0,Math.min(1,progress)),p=t*t*(3-2*t),blend=Math.min(1,p/.32),settle=Math.max(0,Math.min(1,(p-.62)/.38));
-    if(blend<1){ctx.save();ctx.globalAlpha*=1-blend;standing();ctx.restore();}
-    function part(index,alpha){if(alpha<=0)return;ctx.save();ctx.globalAlpha*=alpha;ctx.drawImage(image,index*128,0,128,128,480-camera.x,150-camera.y+9*(1-p),42,44);ctx.restore();}
-    if(t<1){part(1,blend*(1-settle));part(2,blend*settle);}else part(frame,1);
+  window.BarSeatMotion={foreground(camera){
+    const shapes=[[[476,190],[487,190],[487,193],[560,193],[560,192],[565,192],[565,193],[598,193],[598,192],[602,192],[602,195],[622,205],[622,220],[598,207],[487,207],[487,208],[476,208]],[[443,191],[446,188],[451,189],[452,186],[457,188],[459,185],[463,188],[465,186],[467,190],[471,188],[474,192],[471,197],[474,200],[469,202],[466,206],[448,206],[443,201]]];
+    ctx.save();ctx.beginPath();for(const shape of shapes){shape.forEach(([x,y],i)=>i?ctx.lineTo(x-camera.x,y-camera.y):ctx.moveTo(x-camera.x,y-camera.y));ctx.closePath();}ctx.clip();const original=emberHallWorld.images['hall-uninhabited-v239']||emberHallWorld.hallBackground();ctx.drawImage(original,-camera.x,-camera.y,640,356);ctx.restore();
+  },route(points,elapsed,duration){
+    const lengths=points.slice(1).map((p,i)=>Math.hypot(p[0]-points[i][0],p[1]-points[i][1])),total=lengths.reduce((a,b)=>a+b,0);let distance=Math.min(1,Math.max(0,elapsed/duration))*total;
+    for(let i=0;i<lengths.length;i++){if(distance<=lengths[i]||i===lengths.length-1){const a=points[i],b=points[i+1],t=Math.min(1,distance/lengths[i]),dx=b[0]-a[0],dy=b[1]-a[1];return{x:a[0]+dx*t,y:a[1]+dy*t,row:Math.abs(dx)>Math.abs(dy)?dx>0?2:3:dy>0?0:1,walking:elapsed<duration};}distance-=lengths[i];}
+  },front(camera){
+    // Redraw only the native stool's near rim, legs and rungs over tucked legs.
+    const shapes=[[[30,31],[33,36],[44,39],[56,38],[64,32],[64,38],[57,42],[35,42],[30,37]],[[34,41],[40,42],[35,63],[33,67],[29,66]],[[56,42],[61,41],[66,65],[62,67]],[[45,42],[51,42],[50,72],[45,72]],[[35,57],[45,60],[46,57],[36,54]],[[50,60],[61,56],[61,53],[50,56]]];
+    ctx.save();ctx.beginPath();for(const shape of shapes){shape.forEach(([x,y],i)=>{const px=(1158+x)/1536*640-camera.x,py=(390+y)/853*356-camera.y;if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);});ctx.closePath();}ctx.clip();const original=emberHallWorld.images['hall-uninhabited-v239']||emberHallWorld.hallBackground();ctx.drawImage(original,-camera.x,-camera.y,640,356);ctx.restore();
+  },draw(image,camera,progress,frame){
+    const t=Math.max(0,Math.min(1,progress)),index=t<1?Math.min(3,Math.floor(t*4)):frame===3?5:4;
+    const xs=[488,493,498,501,501,501],ys=[158,155,152,150,149,149];
+    ctx.drawImage(image,index*128,0,128,128,xs[index]-24-camera.x,ys[index]-camera.y,48,44);
+    if(index>=2)this.front(camera);
   }};
   window.HallOpening={ready,start,next,finish,drawMachine,workStops,get verseborn(){return scene?versebornPose():null;},get glimmer(){return scene?glimmerPosition(performance.now()):null;},get active(){return Boolean(scene);},get beat(){return scene?.index??-1;},get script(){return story;},get stage(){return scene?.stage??-1;},previewBeat(index){if(!scene||!Number.isInteger(index)||!story.beats[index])return false;scene.stage=story.beats[index].stage;if(scene.stage>0){scene.departAt=0;scene.verseSitAt=0;}setBeat(index);scene.clock+=1500;paint(performance.now());return true;}};
 })();

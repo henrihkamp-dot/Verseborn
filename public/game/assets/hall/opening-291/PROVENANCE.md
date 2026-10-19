@@ -1,0 +1,1 @@
+Six discrete character-only mounting/seated poses generated with built-in image generation using the native walk sheet and original stool crop as references. The stool is not regenerated: runtime retains the exact original background pixels. 2026-10-19.
