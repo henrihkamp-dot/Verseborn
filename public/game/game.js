@@ -5590,6 +5590,8 @@ function developerPercent(side, stat) {
 }
 
 const ENEMY_BALANCE = { hp: 1, damage: 1 };
+// Direct actions only. DoT, fixed scripts, healing and resource effects bypass this.
+const ENEMY_DIRECT_DAMAGE_MULTIPLIER = 1.45;
 function enemyBalanceValue(stat, value) { return value * (ENEMY_BALANCE[stat] || 1); }
 function developerScale(side, stat, value, minimum = 0) {
   if (side === "enemy") value = enemyBalanceValue(stat, value);
@@ -13023,7 +13025,7 @@ function enemyDamageRoll(unit, action, target) {
   if (statusOf(target, "violationStamp") && statusOf(target, "defenseDown")) damage *= 1 + statusValue(target, "defenseDown");
   const critical = enemyActionCrit(unit, action, target);
   if (critical) damage *= (state.gameMode === "hallBattles" && unit.levelHint > 20 ? 1.5 : 2) + (unit.affixes?.critDamage || 0);
-  damage = Math.max(1, Math.round(damage * incomingDamageMultiplier(target)));
+  damage = Math.max(1, Math.round(damage * ENEMY_DIRECT_DAMAGE_MULTIPLIER * incomingDamageMultiplier(target)));
   return { damage, critical };
 }
 
