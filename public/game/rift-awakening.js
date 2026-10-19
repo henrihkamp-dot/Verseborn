@@ -125,7 +125,7 @@
     if(['calm','memory','restored'].includes(phase))for(let j=0;j<22;j++){const a=(now/15000+j/22)%1;particle(g,70+(j*97)%520,310-a*225,2.5,'#e3c781',Math.sin(a*Math.PI)*.24);}
     g.restore();if(rumble)rumble.gain.gain.setTargetAtTime(musicMuted||document.hidden?0:quake*.13,rumble.ac.currentTime,.15);
   }
-  function frame(now){if(!scene)return;const dt=document.hidden?0:Math.min(100,Math.max(0,now-scene.last));scene.last=now;scene.clock+=dt;paint(now);const beat=story.beats[scene.index],elapsed=scene.clock-scene.beatAt;nextButton.disabled=elapsed<(beat.minMs||0);if(beat.auto&&elapsed>=beat.minMs)next();if(scene)raf=requestAnimationFrame(frame);}
+  function frame(now){if(!scene)return;const dt=document.hidden?0:Math.min(100,Math.max(0,now-scene.last));scene.last=now;scene.clock+=dt;paint(now);const beat=story.beats[scene.index],elapsed=scene.clock-scene.beatAt;nextButton.disabled=elapsed<(beat.minMs||0);if(((beat.auto&&!beat.text)||window.CutsceneAutoplay?.enabled)&&elapsed>=(window.CutsceneAutoplay?.delay(beat.text,beat.minMs)||beat.minMs||3200))next();if(scene)raf=requestAnimationFrame(frame);}
   const oldDraw=drawTileMap,oldNext=nextTalk,oldSkip=skipTalk;
   drawTileMap=function(...args){if(!scene)return oldDraw(...args);ctx.fillStyle='#100d17';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);const scale=Math.min(LOGICAL_WIDTH/640,LOGICAL_HEIGHT/356);ctx.drawImage(film,0,0,640*scale,356*scale);};
   nextTalk=function(...args){return scene&&!settingTalk?next():oldNext(...args);};

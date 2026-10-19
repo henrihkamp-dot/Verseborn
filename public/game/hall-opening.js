@@ -75,7 +75,6 @@
     }
     // Real illustrated assemblies and winding coils sit where Glimmer stops.
     if(stage<5&&art.assemblies)for(const [i,x,y,size]of [[0,390,177,38],[1,275,163,26],[2,357,161,31],[0,416,207,21]]){const cell=art.assemblies.width/3;ctx.drawImage(art.assemblies,i*cell,0,cell,art.assemblies.height,x-size/2,y-size*.82,size,size);}
-    if(stage<5)for(let j=0;j<Math.min(6,stage+1);j++){const x=[280,390,248,424,340,470][j],y=[174,192,231,137,264,208][j];ctx.fillStyle='#d9bc8555';ctx.beginPath();ctx.moveTo(x-8,y-4);ctx.lineTo(x+8,y-3);ctx.lineTo(x+6,y+5);ctx.lineTo(x-9,y+3);ctx.closePath();ctx.fill();ctx.strokeStyle='#606b86';ctx.lineWidth=.45;ctx.stroke();}
   }
   function paint(now){
     if(!scene)return;const beat=story.beats[scene.index],age=scene.clock-scene.beatAt;
@@ -103,7 +102,7 @@
     ctx.restore();
     if(beat.time){ctx.save();ctx.font='bold 8px Georgia';const fontSize=Math.min(8,8*(LOGICAL_WIDTH-30)/ctx.measureText(beat.time).width);ctx.font=`bold ${fontSize}px Georgia`;ctx.textAlign='center';ctx.fillStyle='#17101be8';ctx.fillRect(7,7,LOGICAL_WIDTH-14,22);ctx.strokeStyle='#c9a464';ctx.strokeRect(7,7,LOGICAL_WIDTH-14,22);ctx.fillStyle='#ffe5a9';ctx.fillText(beat.time,LOGICAL_WIDTH/2,21);ctx.restore();}
   }
-  function frame(now){if(!scene)return;scene.clock+=document.hidden?0:Math.min(80,Math.max(0,now-scene.last));scene.last=now;const beat=story.beats[scene.index];if(beat.auto&&scene.clock-scene.beatAt>=beat.minMs)next(true);if(scene)raf=requestAnimationFrame(frame);}
+  function frame(now){if(!scene)return;scene.clock+=document.hidden?0:Math.min(80,Math.max(0,now-scene.last));scene.last=now;const beat=story.beats[scene.index];if(((beat.auto&&!beat.text)||window.CutsceneAutoplay?.enabled)&&scene.clock-scene.beatAt>=(window.CutsceneAutoplay?.delay(beat.text,beat.minMs)||beat.minMs||3200))next(true);if(scene)raf=requestAnimationFrame(frame);}
   const oldDraw=drawTileMap,oldNext=nextTalk,oldSkip=skipTalk,oldSave=saveGame,oldTrack=trackForScene,oldPlay=playRecruitScene,oldControl=handleControl,oldStarting=hallStartingWelcomeScenes;
   drawTileMap=function(...args){return scene?paint(performance.now()):oldDraw(...args);};
   nextTalk=function(...args){return scene&&!settingLine?next():oldNext(...args);};
