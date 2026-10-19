@@ -10808,8 +10808,8 @@ function renderBattle(log) {
   const defendBtn = document.createElement("button");
   defendBtn.type = "button";
   defendBtn.textContent = "Defend / Skip";
-  defendBtn.title = "Use the block animation, gain 6 Resonance and reduce the next hit against this hero.";
-  setBattlePreview(defendBtn, "Defend / Skip", `Block ${defendReduction(u)}% of the next hit | +6 Resonance | 0 MP.`);
+  defendBtn.title = "Restore 15% max HP and MP, gain 15 Resonance and reduce the next hit against this hero.";
+  setBattlePreview(defendBtn, "Defend / Skip", `Block ${defendReduction(u)}% of the next hit | Restore 15% max HP / MP | +15 Resonance | 0 MP.`);
   defendBtn.onclick = () => useDefend(u);
   el.actions.appendChild(defendBtn);
   const itemBtn = document.createElement("button");
@@ -10986,12 +10986,15 @@ function useDefend(u) {
   battle.resolving = true;
   u.anim = "block";
   u.guarding = true;
-  state.resonance = Math.min(100, state.resonance + 6);
+  const hpBefore=u.hp,mpBefore=u.mp;
+  u.hp=Math.min(u.max,u.hp+Math.round(u.max*.15));
+  u.mp=Math.min(u.maxmp,u.mp+Math.round(u.maxmp*.15));
+  state.resonance = Math.min(100, state.resonance + 15);
   effect = makeBattleEffect(u, { anim: "block", name: "Defend", element: baseJobs[u.id].element }, u);
   playSfx("block");
   setTimeout(() => u.anim = "idle", timing.totalMs - 100);
   updatePanels();
-  const log = `${u.name} defends, reducing the next direct hit by ${defendReduction(u)}% and gaining 6 Resonance.`;
+  const log = `${u.name} defends, reducing the next direct hit by ${defendReduction(u)}% and restoring ${u.hp-hpBefore} HP, ${u.mp-mpBefore} MP and 15 Resonance.`;
   renderBattle(log);
   setTimeout(() => {
     if (battle && mode === "battle") finishTurn(log);

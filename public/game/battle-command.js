@@ -76,7 +76,7 @@
   const skill=()=>currentGroup()?.actions[ui.action]||currentGroup()?.actions[0];
   const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<701?2:6;
   function extras(){
-    return [{name:'Defend',category:'defend',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit and gain 6 Resonance.`}];
+    return [{name:'Defend',category:'defend',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit. Restore 15% of maximum HP and MP and gain 15 Resonance.`}];
   }
   function refreshGroups(){
     groups=model.groups(unit);
