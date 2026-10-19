@@ -490,7 +490,13 @@
   closeTargetSelection=()=>cancel();closeBattleItems=()=>cancel();
   confirmBattleAction=()=>activate();moveBattleAction=d=>control(d<0?'left':'right');
   // Stop legacy canvas list hitboxes and duplicate Enter handling on native buttons.
-  canvas.addEventListener('click',e=>{if(mode!=='battle'||battle?.phaseTransition)return;const p=canvasLogicalPoint(e);if(p.y>=168){e.stopImmediatePropagation();return;}if(ui.level==='target'){let best=null,dist=Infinity;targetList.forEach(u=>{const i=battle.party.indexOf(u),[x,y]=i>=0?partyBattlePosition(i,battle.party.length):enemyBattlePosition(battle.enemies.indexOf(u),battle.enemies.length),d=Math.hypot(p.x-x,p.y-(y-20));if(d<dist&&d<30){best=u;dist=d;}});if(best){selectTarget(best);renderCommands();}e.stopImmediatePropagation();}},true);
+  function battlefieldTarget(event){
+    const p=canvasLogicalPoint(event);
+    const hit=[...targetList].reverse().find(u=>{const b=spriteBounds.get(u);if(!b)return false;const i=battle.party.indexOf(u),[x,y]=i>=0?partyBattlePosition(i,battle.party.length):enemyBattlePosition(battle.enemies.indexOf(u),battle.enemies.length);return p.x>=x+b.dx-b.width/2&&p.x<=x+b.dx+b.width/2&&p.y>=y+b.dy-b.height&&p.y<=y+b.dy;});
+    return hit||null;
+  }
+  canvas.addEventListener('click',e=>{if(mode!=='battle'||battle?.phaseTransition)return;e.stopImmediatePropagation();if(battle.resolving||ui.level!=='target')return;const target=battlefieldTarget(e);if(target){selectTarget(target);renderCommands();}},true);
+  canvas.addEventListener('dblclick',e=>{if(mode!=='battle'||!battle||battle.phaseTransition)return;e.preventDefault();e.stopImmediatePropagation();if(battle.resolving||ui.level!=='target'||!lockedAction)return;const target=battlefieldTarget(e);if(target){selectTarget(target);activate();}},true);
   window.addEventListener('keydown',e=>{if(mode!=='battle'||!battle||battle.phaseTransition)return;const key=e.key.toLowerCase(),map={arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowup:'up',w:'up',arrowdown:'down',s:'down',enter:'confirm',' ':'confirm',z:'confirm',escape:'cancel',x:'cancel'};if(!map[key])return;if(e.target.closest?.('input,textarea,select'))return;e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)handleControl(map[key]);},true);
   // Gamepad shares the same state transitions as keys and on-screen controls.
   let pads=[],lastPad=0;
