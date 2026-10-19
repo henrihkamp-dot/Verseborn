@@ -362,3 +362,27 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
 
 /* All leads the evenly spaced category row; Items has its own direct tab. */
 @media(min-width:701px){.bc-categories{display:flex;justify-content:space-between;gap:8px}.bc-category{flex:0 1 59px}.bc-origin-category{font:8px/1.15 'Segoe UI',sans-serif!important;white-space:nowrap}.bc-action-copy>span:has(.bc-origin-category){justify-content:flex-start;gap:4px}.bc-origin-category~b{margin-left:auto}}
+
+/* Compact vital panels follow their combatant's feet. */
+@media(min-width:701px){
+ .command-battle .bc-unit{width:clamp(126px,8vw,154px);padding:3px 4px}
+ .bc-unit .bc-role:not([hidden]){right:calc(100% + 7px);top:calc(50% - 10px);width:21px;height:21px}
+ .bc-unit .bc-role i{width:19px;height:19px}
+ .bc-unit .bc-statuses{justify-content:center;gap:3px;min-height:20px;padding-top:4px}
+ .bc-statuses>span.is-buff{border:1px solid #62d694;box-shadow:0 0 3px #42b97866}
+ .bc-statuses>span.is-debuff{border:1px solid #f16c76;box-shadow:0 0 3px #d63d5066}
+ .bc-statuses img{width:15px;height:15px}
+ .bc-vital{height:13px}.bc-vital b{font-size:10px;line-height:11px}
+}
+@media(min-width:701px){
+ .command-battle .bc-unit .bc-role:not([hidden]){top:calc(50% - 11px);right:calc(100% + 7px)}
+ .command-battle .bc-unit .bc-statuses{justify-content:center;gap:3px}
+ .command-battle .bc-statuses>span{width:18px;height:18px;flex-basis:18px}
+ .command-battle .bc-statuses img{width:15px;height:15px}
+}
+@media(min-width:701px){
+ .command-battle .bc-unit .bc-statuses{gap:4px;min-height:27px}
+ .command-battle .bc-statuses>span{width:25px;height:25px;flex:0 0 25px;padding:2px}
+ .command-battle .bc-statuses img{width:21px;height:21px}
+ .command-battle .bc-statuses>b{font:bold 11px/25px 'Segoe UI',sans-serif;min-width:20px;color:#eee1ca}
+}

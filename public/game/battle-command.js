@@ -358,9 +358,8 @@
       if(side==='enemy'&&u.hp<=0)return;
       const n=make('button',`bc-unit ${side} ${u.hp<=0?'is-down':''}`,cards);n.type='button';n.setAttribute('aria-label',`${u.name}: HP ${Math.max(0,u.hp)} / ${u.max}, MP ${u.mp||0} / ${u.maxmp||0}`);
       const displayStatuses=[...(u.statuses||[])].sort((a,b)=>(b.type==='broken')-(a.type==='broken'));
-      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,6).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span title="${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>6?`<b>+${displayStatuses.length-6}</b>`:''}</span>`;
+      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span class="${STATUS_DEFS[s.type]?.negative?'is-debuff':'is-buff'}" title="${STATUS_DEFS[s.type]?.negative?'Debuff':'Buff'} · ${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
       if(combatRoleIconSheet){const role=make('span','bc-role',n),index=COMBAT_ROLE_ICON_INDEX[combatRoleKey(u,side==='enemy')]??4;role.setAttribute('aria-hidden','true');role.innerHTML=`<i style="background-image:url('${esc(combatRoleIconSheet.image.src)}');background-position:${index*25}% center"></i>`;}
-      const portraitSrc=portrait({side,id:u.id,index});if(portraitSrc){const face=make('img','bc-face',n);face.src=portraitSrc;face.alt=u.name;}
       n.onclick=()=>{if(ui.level==='target'&&targetList.includes(u)){selectTarget(u);renderCommands();}else if(ui.level==='itemTarget'&&targetList.includes(u)){selectTarget(u);renderCommands();}else if(u.statuses?.length){history.querySelector('header strong').textContent=u.name+' · Status effects';history.querySelector('.bc-history-content').innerHTML=u.statuses.map(s=>{const d=statusDisplayData(u,s);return `<div><b>${esc(d.name)}</b> · ${esc(d.timing)}<p>${esc(d.description)}</p></div>`;}).join('');history.showModal();}};
       n.addEventListener('pointerenter',event=>showUnitTooltip(u,event));n.addEventListener('pointermove',event=>showUnitTooltip(u,event));n.addEventListener('pointerleave',hideUnitTooltip);
       n.addEventListener('focus',()=>{const r=n.getBoundingClientRect();showUnitTooltip(u,{clientX:r.right,clientY:r.top});});n.addEventListener('blur',hideUnitTooltip);
@@ -407,19 +406,19 @@
     // Three distinct ground positions, mirrored across the battlefield.
     if(game.getBoundingClientRect().width>700){
       let [x,y]=native(index,count);
-      if(!enemySide){const spot=[[.14,.52],[.24,.89],[.36,.69]][index]||[.24,.89];x=LOGICAL_WIDTH*spot[0];y=BATTLE_ARENA_HEIGHT*spot[1];}
+      if(!enemySide){const spot=[[.105,.58],[.24,.78],[.405,.68]][index]||[.24,.78];x=LOGICAL_WIDTH*spot[0];y=BATTLE_ARENA_HEIGHT*spot[1];}
       else if(count===3){
         const list=enemySide?battle.enemies:battle.party,roles=list.map(u=>combatRoleKey(u,enemySide));
         const frontScore={tank:5,hybrid:3,dps:2,utility:1,healer:0},rearScore={healer:5,utility:4,dps:3,hybrid:2,tank:0};
         const order=[0,1,2],front=order.reduce((a,b)=>(frontScore[roles[b]]||0)>(frontScore[roles[a]]||0)?b:a),remaining=order.filter(i=>i!==front);
         const rear=remaining.reduce((a,b)=>(rearScore[roles[b]]||0)>(rearScore[roles[a]]||0)?b:a);
-        const spot=index===front?[.36,.69]:index===rear?[.14,.52]:[.24,.89];
+        const spot=index===front?[.405,.68]:index===rear?[.105,.58]:[.24,.78];
         x=LOGICAL_WIDTH*(enemySide?1-spot[0]:spot[0]);y=BATTLE_ARENA_HEIGHT*spot[1];
       }
       y=Math.min(BATTLE_ARENA_HEIGHT-15,y+5);
       const u=(enemySide?battle?.enemies:battle?.party)?.[index],bounds=u&&spriteBounds.get(u);
       if(!bounds)return [x,y];
-      const gutter=200/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
+      const gutter=30/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
       return [enemySide?Math.min(x,LOGICAL_WIDTH-gutter-bounds.dx-bounds.width/2):Math.max(x,gutter-bounds.dx+bounds.width/2),y];
     }
     const [x]=native(index,count),height=battlefieldHeight(),ys=count===1?[.67]:count===2?[.52,.82]:[.47,.67,.86];
@@ -434,14 +433,14 @@
     if(!battle||mode!=='battle')return;
     const r=game.getBoundingClientRect(),field=command.getBoundingClientRect().top-r.top;
     const key=[r.width,r.height,field,statusNodes.length].join(':');if(key===lastLayout)return;lastLayout=key;
-    for(const side of ['party','enemy']){
-      const group=statusNodes.filter(s=>s.side===side);
-      const rowHeight=Math.max(76,...group.map(({n})=>n.offsetHeight+(n.querySelector('.bc-statuses')?.offsetHeight||0)+22));
-      const top=Math.max(100,(field-group.length*rowHeight)/2+25);
-      group.forEach(({n},i)=>{
-        n.style.left=`${side==='party'?53:r.width-n.offsetWidth-12}px`;
-        n.style.top=`${Math.min(field-rowHeight-6,top+i*rowHeight)}px`;
-      });
+    const canvasRect=canvas.getBoundingClientRect();
+    for(const {u,index,side,n} of statusNodes){
+      const [x,y]=side==='party'?partyBattlePosition(index,battle.party.length):enemyBattlePosition(index,battle.enemies.length),b=spriteBounds.get(u);
+      const center=(x+(b?.dx||0))/LOGICAL_WIDTH*canvasRect.width+canvasRect.left-r.left;
+      const feet=(y+(b?.dy||0))/LOGICAL_HEIGHT*canvasRect.height+canvasRect.top-r.top;
+      const statusHeight=n.querySelector('.bc-statuses')?.offsetHeight||0;
+      n.style.left=`${Math.max(28,Math.min(r.width-n.offsetWidth-10,center-n.offsetWidth/2))}px`;
+      n.style.top=`${Math.min(field-n.offsetHeight-statusHeight-12,feet+10)}px`;
     }
   }
 

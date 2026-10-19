@@ -5589,7 +5589,7 @@ function developerPercent(side, stat) {
   return Math.max(-100, Math.min(100, Math.round(Number(state.developerTuning?.[side]?.[stat]) || 0)));
 }
 
-const ENEMY_BALANCE = { hp: 2, damage: 2 };
+const ENEMY_BALANCE = { hp: 1, damage: 1 };
 function enemyBalanceValue(stat, value) { return value * (ENEMY_BALANCE[stat] || 1); }
 function developerScale(side, stat, value, minimum = 0) {
   if (side === "enemy") value = enemyBalanceValue(stat, value);
