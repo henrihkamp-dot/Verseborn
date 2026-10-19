@@ -1,0 +1,1 @@
+Generated with the built-in image generation tool from the existing Verseborn walk reference, 2026-10-19. Four frames: standing, lowering, seated idle, seated talking. Transparent alpha preserved; resized and packed into 128px cells.

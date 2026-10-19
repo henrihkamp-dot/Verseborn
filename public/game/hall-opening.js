@@ -4,7 +4,7 @@
   const ID='ember-hall-welcome',BASE='assets/hall/opening-254/',art={};
   let story,manifest,scene=null,opening=false,settingLine=false,raf;
   const load=(name,url)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{art[name]=image;resolve();};image.onerror=()=>reject(Error('Opening asset missing: '+url));image.src=url;});
-  const ready=Promise.all([fetch('hall-opening-story.json?v=254').then(r=>{if(!r.ok)throw Error('Opening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>r.json()).then(data=>manifest=data),load('construction',BASE+'construction.webp'),load('tools',BASE+'tools.webp'),load('seated',BASE+'glimmer-seated.webp'),load('assemblies','assets/hall/glimmer-repair-props-v244.webp'),load('lab','assets/hall/glimmer-lab-v244.webp'),load('hover','assets/hall/glimmer-hover-v244.webp'),load('door','assets/rift/hall-closed-door-crop.webp'),...['Verseborn','Marla','Glimmer'].map(id=>load('portrait-'+id,portraitSources[id]))]);
+  const ready=Promise.all([fetch('hall-opening-story.json?v=254').then(r=>{if(!r.ok)throw Error('Opening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>r.json()).then(data=>manifest=data),load('construction',BASE+'construction.webp'),load('tools',BASE+'tools.webp'),load('seated',BASE+'glimmer-seated.webp'),load('verseSeat','assets/hall/opening-287/verseborn-seat.webp'),load('assemblies','assets/hall/glimmer-repair-props-v244.webp'),load('lab','assets/hall/glimmer-lab-v244.webp'),load('hover','assets/hall/glimmer-hover-v244.webp'),load('door','assets/rift/hall-closed-door-crop.webp'),...['Verseborn','Marla','Glimmer'].map(id=>load('portrait-'+id,portraitSources[id]))]);
   ready.catch(error=>console.error(error));
   function drawMachine(context,image,x,baseline,width,height,now=performance.now()){
     if(window.ResonanceMachine?.ready)return ResonanceMachine.draw(context,image,x,baseline,width,height,now);
@@ -26,7 +26,8 @@
     if(!scene)return;if(index>=story.beats.length)return finish();
     scene.index=index;scene.beatAt=scene.clock;scene.soundKey=-1;const beat=story.beats[index];
     if(beat.stage>scene.stage){scene.stage=beat.stage;scene.buildAt=scene.clock;}
-    if(beat.departBar)scene.departAt=scene.clock;
+    if(beat.departBar){scene.departAt=scene.clock;scene.verseSitAt=scene.clock;}
+    if(beat.stage===5&&beat.shot==='wide'&&scene.verseSitAt!==null&&scene.verseRiseAt===null)scene.verseRiseAt=scene.clock;
     if(beat.shot==='snap'){sound('block',.65);sound('hit',.55);}
     if(beat.shot==='listen')sound('magic',.4);
     settingLine=true;try{if(beat.text)showTalk([[beat.speaker,beat.text]],{portraits:[beat.speaker],skippable:true});else{mode='hallOpening';el.dialogue.classList.add('hidden');}}finally{settingLine=false;}
@@ -39,7 +40,7 @@
     try{
       await ready;await new Promise((resolve,reject)=>{const until=performance.now()+15000;const poll=()=>emberHallWorld.ready&&window.HallLiveliness?.ready?resolve():performance.now()>until?reject(Error('Hall actors not ready')):setTimeout(poll,50);poll();});
       clearTimeout(saveTimer);emberHallWorld.clearNavigation();emberHallWorld.hideAmbientChat();activePoint=null;
-      scene={replay,after,original,index:0,stage:0,clock:0,last:performance.now(),beatAt:0,buildAt:0,soundKey:-1,departAt:null};document.querySelector('.game').classList.add('hall-opening-active');setBeat(0);updateMusic();raf=requestAnimationFrame(frame);return true;
+      scene={replay,after,original,index:0,stage:0,clock:0,last:performance.now(),beatAt:0,buildAt:0,soundKey:-1,departAt:null,verseSitAt:null,verseRiseAt:null};document.querySelector('.game').classList.add('hall-opening-active');setBeat(0);updateMusic();raf=requestAnimationFrame(frame);return true;
     }catch(error){console.error(error);mode=original.mode;el.menu.classList.toggle('hidden',original.menuHidden);showHudNotice('The opening could not load. It remains available in Memories.');if(after)after();return false;}finally{opening=false;}
   }
   function next(force=false){if(!scene)return false;const beat=story.beats[scene.index];if(!force&&scene.clock-scene.beatAt<(beat.minMs||450))return false;setBeat(scene.index+1);return true;}
@@ -67,6 +68,21 @@
     const time=Math.max(0,scene.clock-(scene.departAt||0)),duration=6500,turn=Math.floor(time/duration),leg=turn%workStops.length,phase=time%duration,to=workStops[leg],from=turn===0?{x:491,y:181}:workStops[(leg+workStops.length-1)%workStops.length],flying=phase<1250,t=Math.min(1,phase/1250),ease=t*t*(3-2*t),pondering=phase>=1250&&phase<2300,eureka=phase>=2300&&phase<2700;
     return{x:from.x+(to.x-from.x)*ease,y:from.y+(to.y-from.y)*ease-(flying?Math.sin(t*Math.PI)*10:7+Math.sin(time/600)*.5),pose:flying?'fly':pondering?'ponder':eureka?'eureka':to.pose,direction:flying?(to.x>from.x?1:0):(to.x<315?1:0),working:!flying&&!pondering&&!eureka};
   }
+  function versebornPose(){
+    const seated=scene.verseSitAt!==null,age=seated?scene.clock-scene.verseSitAt:0,ease=t=>t*t*(3-2*t);
+    if(scene.verseRiseAt!==null){const rise=scene.clock-scene.verseRiseAt;if(rise<600)return{x:501,y:183,frame:rise<300?1:0,pose:'standing-up'};const t=Math.min(1,(rise-600)/1100),e=ease(t);return{x:501-50*e,y:183+7*e,walking:t<1,pose:t<1?'returning':'standing',row:3};}
+    if(!seated)return{x:451,y:190,pose:'standing'};
+    if(age<1100){const t=ease(Math.min(1,age/1100));return{x:451+50*t,y:190-7*t,walking:true,row:7,pose:'walking-to-stool'};}
+    if(age<1800)return{x:501,y:183,frame:age<1350?0:1,pose:'sitting-down'};
+    const talking=story.beats[scene.index].speaker==='Verseborn',frame=talking&&Math.floor((age-1800)/330)%5===0?3:2;
+    return{x:501,y:183,frame,pose:'seated'};
+  }
+  function drawVerseborn(now,singing){
+    const v=versebornPose(),size=36;
+    if(v.frame!==undefined){const breath=v.pose==='seated'?Math.sin(scene.clock/1400)*.12:0;ctx.drawImage(art.verseSeat,v.frame*128,0,128,128,v.x-size/2,v.y-size*.94+breath,size,size);return;}
+    const frame=v.walking?Math.floor(scene.clock/135)%8:8;
+    emberHallWorld.drawActor({id:'Verseborn',x:v.x,y:v.y,size,poseFrame:frame},singing?8:v.row??2,singing?Math.floor(now/180)%16:0,{x:0,y:0});
+  }
   function drawClutter(stage,now){
     if(!stage)return;const count=stage===5?7:stage*13,workSpots=[[280,174],[365,165],[246,224],[420,211],[340,264],[470,201],[510,88],[140,181],[104,312],[470,326],[325,86],[105,81]];
     for(let j=0;j<count;j++){
@@ -87,7 +103,7 @@
     drawClutter(scene.stage,now);
     if(scene.stage>0&&scene.stage<5){const cell=manifest.cell;ctx.drawImage(art.construction,(scene.stage-1)*cell,0,cell,cell,315-64,139-128,128,128);}else if(scene.stage===5)drawMachine(ctx,stageSelectorImage,315,139,92,86,now);
     const speaking=beat.speaker==='Marla',marlaFrame=emberHallWorld.marlaIdleFrame(now);ctx.save();ctx.beginPath();ctx.rect(0,0,640,155);ctx.clip();emberHallWorld.drawActor({id:'Marla',x:529,y:160,size:38},4,speaking?12:marlaFrame,{x:0,y:0});ctx.restore();
-    const singing=beat.sing||shot==='listen',verse={id:'Verseborn',x:451,y:190,size:36,poseFrame:8};emberHallWorld.drawActor(verse,singing?8:2,singing?Math.floor(now/180)%16:0,{x:0,y:0});
+    drawVerseborn(now,beat.sing||shot==='listen');
     const g=glimmerPosition(now);ctx.save();ctx.globalAlpha=g.alpha??1;drawGlimmer(g.x,g.y,g.pose,now,g.direction);ctx.restore();
     if(shot==='snap'){
       ctx.fillStyle=age<120?'#cfe9ffba':`rgba(4,4,15,${age<1050?.82:Math.max(0,.82-(age-1050)/650)})`;ctx.fillRect(view.x,view.y,view.w,LOGICAL_HEIGHT/scale);
@@ -114,5 +130,5 @@
   handleControl=function(control){if(scene){if(control==='confirm')next();else if(control==='cancel')finish();else if(['music','fullscreen'].includes(control))oldControl(control);return;}return oldControl(control);};
   document.addEventListener('keydown',event=>{if(!scene||event.ctrlKey||event.altKey||event.metaKey||!['Escape','Enter',' ','ArrowRight','e','z','Z'].includes(event.key))return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;if(event.key==='Escape'||event.target?.closest?.('#dialogueSkip')&&['Enter',' '].includes(event.key))finish();else if(['Enter',' ','e','z','Z','ArrowRight'].includes(event.key))next();},true);
   const style=document.createElement('style');style.textContent='.game.hall-opening-active .hud{display:none}';document.head.append(style);
-  window.HallOpening={ready,start,next,finish,drawMachine,workStops,get glimmer(){return scene?glimmerPosition(performance.now()):null;},get active(){return Boolean(scene);},get beat(){return scene?.index??-1;},get script(){return story;},get stage(){return scene?.stage??-1;},previewBeat(index){if(!scene||!Number.isInteger(index)||!story.beats[index])return false;scene.stage=story.beats[index].stage;if(scene.stage>0)scene.departAt=0;setBeat(index);scene.clock+=1500;paint(performance.now());return true;}};
+  window.HallOpening={ready,start,next,finish,drawMachine,workStops,get verseborn(){return scene?versebornPose():null;},get glimmer(){return scene?glimmerPosition(performance.now()):null;},get active(){return Boolean(scene);},get beat(){return scene?.index??-1;},get script(){return story;},get stage(){return scene?.stage??-1;},previewBeat(index){if(!scene||!Number.isInteger(index)||!story.beats[index])return false;scene.stage=story.beats[index].stage;if(scene.stage>0){scene.departAt=0;scene.verseSitAt=0;}setBeat(index);scene.clock+=1500;paint(performance.now());return true;}};
 })();
