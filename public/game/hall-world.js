@@ -6,7 +6,7 @@
     {id:'Torren',x:81,y:77,size:30,action:'Cooking',line:'A warm meal first. Heroics later.'},
     {id:'Sparky',x:165,y:82,size:30,action:'Resting',line:'Prrrp!'},
     {id:'Glimmer',x:464,y:87,size:36,renderScale:.65,approach:{x:448,y:86},action:'Drone maintenance',line:'Careful with that coil. It bites.'},
-    {id:'Seerin',x:88,y:180,size:42,action:'Shield practice',line:'Feet steady. Eyes on your opponent.'},
+    {id:'Seerin',x:88,y:180,size:39,action:'Shield practice',line:'Feet steady. Eyes on your opponent.'},
     {id:'Marla',x:529,y:160,size:38,clipY:155,approach:{x:446,y:181},action:'Serving soup',line:'Welcome back. There is always something warm waiting.'},
     {id:'Mira',x:102,y:297,size:36,action:'Dagger practice',line:'My corner. No unwelcome surprises.'},
     {id:'Kael',x:464,y:316,size:40,approach:{x:452,y:332},action:'Reading',line:'Some answers need a little quiet.'}

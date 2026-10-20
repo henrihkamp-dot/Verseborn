@@ -13,7 +13,7 @@
   const scripts=fetch('welcome-story.json?v=309').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
   scripts.catch(console.error);
   function assets(){return assetsPromise??=Promise.all([scripts,HallSpriteRefresh.ready,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-intimidated'?'refresh-309/':id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
-  const HALL_SIZES={Verseborn:36,Mira:36,Torren:32,Seerin:42,Kael:40,Sparky:30,Marli:38,Glimmer:36,Revus:40,Nyx:30,Rava:30,Jory:30};
+  const HALL_SIZES={Verseborn:36,Mira:36,Torren:32,Seerin:39,Kael:40,Sparky:30,Marli:38,Glimmer:36,Revus:40,Nyx:30,Rava:30,Jory:30};
   const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:164,y:84,w:240},Glimmer:{x:485,y:77,w:230}};
   const EXTRA={}; // Core family/recruitment casts remain; optional drop-ins are omitted.
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
