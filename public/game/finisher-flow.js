@@ -3,7 +3,7 @@
  'use strict';
  const live=()=>battle?.enemies||[];
  let transitionDepth=0;
- const reasonText={broken:'BREAK',stun:'STUNNED',sleep:'ASLEEP',silence:'SILENCED',dispel:'REQUIRED BUFF DISPELLED',cleanse:'TARGET MARK CLEANSED',target:'TARGET NO LONGER AVAILABLE'};
+ const reasonText={resonance:'RESONANCE DRAINED',broken:'BREAK',stun:'STUNNED',sleep:'ASLEEP',silence:'SILENCED',dispel:'REQUIRED BUFF DISPELLED',cleanse:'TARGET MARK CLEANSED',target:'TARGET NO LONGER AVAILABLE'};
  function notify(text){if(!battle)return;(battle.finisherFeedback??=[]).push(text);receptionAnnounce('Finisher',text);}
  function begin(unit,config){
   if(unit.finisherState&&['preparing','executing'].includes(unit.finisherState.state))return unit.finisherState;
@@ -14,7 +14,7 @@
  function clear(unit){const p=unit.finisherState;if(p){p.clear?.();unit.finisherState=null;}unit.lastFinisher=null;if(unit.hp<=0){if(unit.hallTactics)unit.hallTactics.recovery=0;if(unit.riftState)unit.riftState.recovery=0;if(unit.whirlpoolState)unit.whirlpoolState.recovery=0;if(unit.encounterMechanic){unit.encounterMechanic.stageRecovery=false;unit.encounterMechanic.sanctuaryRecovery=false;unit.encounterMechanic.receptionPending=false;unit.encounterMechanic.receptionWindow=0;unit.encounterMechanic.charging=false;unit.encounterMechanic.pending=null;}delete unit.ultimateTelegraphed;}}
  function execute(unit,action){const p=unit.finisherState;if(!p||p.state==='cancelled')return action;if(p.state==='executing')return p.executionAction;p.state='executing';return p.executionAction={...action,finisherToken:p,noTempo:true,...(p.scope==='single'?{target:p.target,lockedFinisherTarget:true}:{} )};}
  function finish(unit){const p=unit.finisherState;if(p?.state!=='executing')return;p.state='executed';p.clear?.();p.after?.();unit.lastFinisher=p;unit.finisherState=null;if(p.afterText)notify(`${unit.name}: ${p.afterText}`);}
- function sweep(){if(transitionDepth)return;for(const u of live()){const p=u.finisherState;if(!p)continue;if(u.hp<=0){clear(u);continue;}if(p.state!=='preparing')continue;if(p.scope==='single'&&(!p.target||p.target.hp<=0)){cancel(u,'target');continue;}const control=p.controls?.find(type=>statusOf(u,type));if(control){cancel(u,control);continue;}if(p.mark&&!statusOf(p.target,p.mark)){cancel(u,'cleanse');continue;}if(p.requiredBuff&&!statusOf(u,p.requiredBuff))cancel(u,'dispel');}}
+ function sweep(){if(transitionDepth)return;for(const u of live()){const p=u.finisherState;if(!p)continue;if(u.hp<=0){clear(u);continue;}if(p.state!=='preparing')continue;if(p.requiredResonance&&(battle.enemyResonance||0)<p.requiredResonance){cancel(u,'resonance');continue;}if(p.scope==='single'&&(!p.target||p.target.hp<=0)){cancel(u,'target');continue;}const control=p.controls?.find(type=>statusOf(u,type));if(control){cancel(u,control);continue;}if(p.mark&&!statusOf(p.target,p.mark)){cancel(u,'cleanse');continue;}if(p.requiredBuff&&!statusOf(u,p.requiredBuff))cancel(u,'dispel');}}
  const oldApply=applyStatus,oldCleanse=removeCleanseStatus,oldDispel=dispelStatus,oldDown=markBattleUnitDown;
  applyStatus=function(...args){const result=oldApply(...args);sweep();return result;};
  removeCleanseStatus=function(...args){const result=oldCleanse(...args);sweep();return result;};

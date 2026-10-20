@@ -878,7 +878,23 @@
       },
       {
         "speaker": "Verseborn",
-        "text": "I know his name. I meant—"
+        "text": "I know his name. I meant—",
+        "panel": "sparky-intimidated",
+        "comicRequires": [
+          "Torren",
+          "Glimmer",
+          "Kael"
+        ]
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I know his name. I meant—",
+        "comicUnlessAll": [
+          "Torren",
+          "Glimmer",
+          "Kael"
+        ],
+        "panel": "sparky-nervous"
       },
       {
         "speaker": "Mira",

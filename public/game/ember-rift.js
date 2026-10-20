@@ -154,9 +154,9 @@
     const live=battle.party.filter(u=>u.hp>0),chosen=live.find(u=>u.holdTheLine)||live.slice().sort((a,b)=>b.hp-a.hp)[0];
     data.pending={kind:physical?'melee':'magic',target:marked?chosen:null,marked,heal:info.mechanic==='hearth'};
     if(marked)applyStatus(chosen,'riftMark',unit,{force:true,duration:3});
-    FinisherFlow.begin(unit,{name:info.mechanic==='hearth'?'The Hearth Holds':unit.riftKey==='dragon'?'Vortex Breath':info.strike,scope:info.mechanic==='hearth'?'all-enemies':marked?'single':'all-allies',target:marked?chosen:null,mark:marked?'riftMark':null,controls:['stun','sleep',...(!physical?['silence']:[])],cancel:reason=>interrupt(unit,reason),clear:()=>{if(data.pending?.target)data.pending.target.statuses=ensureStatuses(data.pending.target).filter(s=>s.type!=='riftMark');data.pending=null;},after:()=>{data.recovery=2;},afterText:'The finisher resolved; two recovery actions follow.',recoveryText:'incoming damage +25%; two recovery actions follow'});
+    FinisherFlow.begin(unit,{requiredResonance:100,name:info.mechanic==='hearth'?'The Hearth Holds':unit.riftKey==='dragon'?'Vortex Breath':info.strike,scope:info.mechanic==='hearth'?'all-enemies':marked?'single':'all-allies',target:marked?chosen:null,mark:marked?'riftMark':null,controls:['stun','sleep',...(!physical?['silence']:[])],cancel:reason=>interrupt(unit,reason),clear:()=>{if(data.pending?.target)data.pending.target.statuses=ensureStatuses(data.pending.target).filter(s=>s.type!=='riftMark');data.pending=null;},after:()=>{data.recovery=2;},afterText:'The finisher resolved; two recovery actions follow.',recoveryText:'incoming damage +25%; two recovery actions follow'});
     const count=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;
-    const instruction=marked?'Cleanse the mark, Stun the attacker or Guard the marked target.':physical?'Stun or Sleep interrupts; Silence does not stop a physical attack.':'Silence, Stun or Sleep interrupts. Guard or barriers soften the impact.';
+    const instruction='Drain enemy Resonance to cancel. '+(marked?'Cleanse the mark, Stun the attacker or Guard the marked target.':physical?'Stun or Sleep interrupts; Silence does not stop a physical attack.':'Silence, Stun or Sleep interrupts. Guard or barriers soften the impact.');
     announce(`${unit.name} prepares ${info.strike}`,`${data.pending.heal?'A large enemy healing/barrier ritual is coming. ':marked?'Marked: '+chosen.name+'. ':'Group impact on its next own action. '}${instruction}${count?' Living escorts strengthen the impact.':''}`);
     return {kind:'buff',name:'Preparing '+info.strike,target:unit,targetSide:'self',buffs:[],mpCost:0};
   }
@@ -165,6 +165,7 @@
     if(!unit.riftKey||!battle?.riftEncounter)return oldChoose(unit);
     const data=unit.riftState,info=encounters[battle.riftEncounter-1],p=roster[unit.riftKey],leader=battle.enemies.find(enemy=>enemy.hp>0&&enemy.riftLeader)||battle.enemies.find(enemy=>enemy.hp>0),leads=unit===leader;
     if(data.pending){
+      if((battle.enemyResonance||0)<100){interrupt(unit,'resonance');return basic(unit);}
       const pending=data.pending;
       if(statusOf(unit,'stun')||statusOf(unit,'sleep')||pending.kind==='magic'&&statusOf(unit,'silence')){interrupt(unit,'control');return basic(unit);}
       if(pending.marked&&(!pending.target||pending.target.hp<=0||!statusOf(pending.target,'riftMark'))){interrupt(unit,'mark cleansed');return basic(unit);}
@@ -181,7 +182,6 @@
     if(unit.riftKey==='velourne'&&actions%4===0){const holder=battle.party.find(h=>h.hp>0&&enemyDispelStatus(h));if(holder){const stolen={...enemyDispelStatus(holder)};enemyDispelOne(holder);applyStatus(unit,stolen.type,unit,{force:true,value:stolen.value,duration:2});announce('Stolen blessing',`Velourne steals ${STATUS_DEFS[stolen.type]?.label||stolen.type}. Dispel it or interrupt his next ritual.`);return {kind:'buff',name:'Borrowed Nobility',target:unit,buffs:[],mpCost:0};}}
     const wounded=battle.enemies.filter(e=>e.hp>0&&e.hp/e.max<.65).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
     if(['fae','sella','benji','mushroom'].includes(unit.riftKey)&&wounded&&actions%3!==2&&unit.mp>=16)return {kind:'magic',name:unit.riftKey==='benji'?'Feed First':unit.riftKey==='sella'?'Water and Warmth':unit.riftKey==='fae'?'Thornlight Renewal':'Mycelial Mending',element:'Earth',healing:true,target:wounded,healCoefficient:2.1,mpCost:16};
-    if(leads&&actions%3===1)return prepare(unit,info);
     if(!unit.riftLeader&&actions%3===2)return {...basic(unit),name:p.family==='nature'?'Thicket Pressure':p.family==='mechanical'?'Chain Sweep':p.cameo?'Hearthbound Teamwork':'Ash Formation',allTargets:true,coefficient:.35,mpCost:8};
     const action=basic(unit);return (unit.mp||0)>=(action.mpCost||0)?action:{...action,kind:'melee',element:'Physical',mpCost:0,coefficient:.55};
   };

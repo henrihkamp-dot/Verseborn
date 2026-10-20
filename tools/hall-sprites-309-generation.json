@@ -1,0 +1,86 @@
+{
+  "provider": "Built-in image_gen",
+  "jobs": [
+    {
+      "id": "seerin",
+      "prompt": "Identity authority FIRST reference, second only compact overworld silhouette. Create a transparent 4 columns x4 rows animation sprite atlas, SIXTEEN equal square cells. Same chibi Ember Hall overworld Seerin in every cell, three-quarter front facing slightly RIGHT. Faithfully warm medium BROWN skin, amber eyes, dark curved tiefling horns, long AUBURN CURLY hair, ivory plate armor with restrained gold trim and red flame emblem, burgundy cloth panels, brown belts, ivory shield with red flame, sword. NOT pale skin, NOT red straight hair, NOT bikini, NOT big red cape or red/gold battle armour. Sharp clean readable pixels/ink, solid opaque interiors and clean alpha edges, no blur haze glow shadow matte. Entire body+horns+shield in every cell. Four rows as coherent gentle loops: row1 calm breathing listening (feet planted, shoulders natural subtle rise), row2 conversational mouth+small shield-side hand gesture (feet planted), row3 slow controlled training stance and sword lift, row4 return sword down with warm smile. Fixed scale, head size, feet baseline, same costume across all16 poses. Modest genuine complete redrawn pose changes, no cut-part rig artifacts. Grid must be 4x4, no text.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/04_Seerin_Vahl_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/seerin-action-v8.webp"
+      ]
+    },
+    {
+      "id": "mira",
+      "prompt": "Create clean sharp Ember Hall OVERWORLD chibi animation sprites of adult elf Mira using FIRST reference as exact identity/costume, second as proportion guide. Transparent 4x4 atlas SIXTEEN equal square cells. Whole body in all cells, fixed scale baseline, three-quarter front, slightly LEFT facing. Black long hair, elf ears, gold eyes, black top hat with small purple accent, practical BLACK cloak/coat, dark boots and understated gold details, no extravagant purple dress or noble uniform. Four coherent gentle loops row1 relaxed listening/breathing feet planted; row2 speaking with small hand explaining gesture, feet planted; row3 slight head turn/reaction returning to center; row4 restrained amused smile and hand relaxed. Crisp solid color/shading, clean dark contours, fully opaque clothing, clean transparent edges, no gray halo/blur/mist/glow. Real complete poses, no stretched or sliced limbs. Consistent silhouette, sixteen separate fullbody sprites only, no text or borders.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/03_Mira_Veln_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/mira-action-v8.webp"
+      ]
+    },
+    {
+      "id": "revus",
+      "prompt": "Create higher clarity replacement Ember Hall overworld chibi Baron Revus Veln using first canonical reference for appearance and second original atlas for SAME six poses. Transparent 3 columns x2 rows SIX equally sized square cells: row1 calm standing, speaking one small admonishing hand, concerned father; row2 slight surprised reaction, composed idle, turning to leave. Fullbody each cell, fixedscale feetbaseline. Blond swept hair, moustache, violet/navy fur-collar noble coat with goldtrim, whitecravat and purplegem, cane stays HIS RIGHT HAND in EVERY pose (viewer left for front); full canetip visible. Sharp opaque pixel-art rendering, clean distinct face and costume, no blur gray halo semitransparent veil or glow. Keep short compact overworld proportions, not battle sprites. No text.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/08_Baron_Revus_Veln_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/revus.webp"
+      ]
+    },
+    {
+      "id": "nyx",
+      "prompt": "One horizontal strip FOUR full-body equal-cell animation frames on genuine transparency of Nyx Vael, drow teen girl as first reference, compact overworld chibi proportions like second. Dark grey-purple skin, purple eyes, curly black hair golden little star ornaments, dark navy gold-trim scholar dress, cream hem, boots, holding book. Threequarter facing LEFT. Continuous subtle conversation: 1 attentive book held at chest, 2 slight mouthopen and raises eyes from book, 3 small naturally connected hand explaining gesture while other holds book, 4 hand returns and mouthclosed. FEET PLANTED sameplace, head scale/body proportions fixed. Actual complete redrawn poses, tiny smooth connected shoulder/elbow/wrist motion. Not separate body pieces, not only camera translation. Clean solid opaque inked pixels, no blur haze glow or alpha fringe. Four clearly separated centered cells, no text.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/13_Nyx_Vael_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/nyx.webp"
+      ]
+    },
+    {
+      "id": "rava",
+      "prompt": "One horizontal strip FOUR full-body equal-cell animation frames on genuine transparency of Rava Cinderhorn, tiefling TEEN GIRL firstref canonical identity, secondref compact overworld style only. Gray skin, short messy darkgreen hair, upward dark horns, yelloweyes, torn blackhooded jacket, bandaged shirt, patched trousers, boots, thin tail and practice spear. THREE QUARTER facing RIGHT. Connected gentle sequence:1 guarded listening with spear tip onfloor,2 mild speaking browraise with little free-hand gesture,3 freehand rests onhip then small nod,4 backto attentive. Same feetposition, headsize, spearholdinghand, body scale. Smooth actual wholecharacter redraws, natural shoulder/elbow changes, no body being chopped into pieces or floated. Clean crisp opaque interior pixels, no blur haze/glow/graymatte. Four equal horizontal cells no labels.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/14_Rava_Cinderhorn_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/rava.webp"
+      ]
+    },
+    {
+      "id": "jory",
+      "prompt": "Create a FOUR frame horizontal equal-cell animation strip matching the exact cheerful blond orphan boy Jory in supplied Ember Hall sprite reference. Same youthful chibi boy, messy blondhair, orange scarf, white sleeves brown vest/trousers boots, small wood lute. Threequarter LEFT facing. Complete coherent gentle animation:1 holdlute smile attentive,2 openmouth talk lightly lifts strumminghand,3 soft pluck with connected elbow wrist and slight grin,4 strumminghand settles. Feet rooted sameposition, fixedheadsize bodyheight, same lutehand. Entire intact body in EVERY cell, properly redrawn connected poses, not chopped body segments or transformed staticparts. Clean crisp opaque colours dark outlines, no hazy alpha halo, blur, mist or glow. Genuine transparent background no labels. Four equal horizontal cells.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/jory.webp"
+      ]
+    },
+    {
+      "id": "verseborn-walk",
+      "prompt": "EDIT FIRST sprite atlas, preserve its EXACT grid of NINE columns x FIVE rows (45 sprites), original walking poses/directions/footwork and full body placement, fixed scale and baseline. Change ONLY Verseborn's costume to match the SECOND canonical sheet: a worn CHARCOAL hooded CLOAK, hood DOWN behind neck to show brown messy hair, ragged frayed uneven hem, practical dark patched tunic/trousers, scuffed brown lace boots, modest leather belt and wooden lute on back. REMOVE the posh long gold-embroidered noble coat and purple formal tailcoat. No lavish gold cuffs/ornate lapels, no royaluniform. Every direction including front/back/left/diagonals wears the SAME ragged cloak with hood visibly resting behind neck. Retain original motion frames exactly, especially alternating left and right foot contacts, no crouching. Sharper clean opaque pixel-art with transparent background, no hazy border. Output the full same 9x5 atlas, no words, no dropped sprites.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/verseborn-walk-v2.webp",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png"
+      ]
+    },
+    {
+      "id": "mira-daggers",
+      "prompt": "Edit this same transparent FOUR columns FOUR rows sprite atlas. Preserve Mira's appearance, all16 positions, scale, baseline and black hat/clothes exactly. Add her TWO short steel DAGGERS with dark handles consistently across every pose. Firstrow relaxed idle: one dagger held low in each hand pointing safely down. Secondrow she speaks while keeping one dagger low and making a small explanatory gesture with other dagger-hand (no threat at viewer). Thirdrow small controlled dagger-ready guard motions; fourthrow relaxed return. Both daggers short not swords. She is a dual dagger rogue. Fullbody clean opaque sprite interiors, genuine transparency, NO background or glow, no blur. Keep 4x4 grid and same animation content/proportions.",
+      "refs": [
+        "C:/Users/Henri/.codex/generated_images/01a135c6-b1ee-7121-9142-424b666459d2/exec-466fe589-410e-4054-9af2-7407c8698b5f.png"
+      ]
+    },
+    {
+      "id": "revus-facing",
+      "prompt": "Fix this Baron sprite atlas to be genuinely TRANSPARENT, remove ALL the brown black backdrop and glows; preserve exact character costume/lineart. Layout remains THREE columns TWO rows of fullbody sprites. Change poses to directional conversation: TOP ROW all3 face clearly LEFT, bottom row all3 face clearly RIGHT. Columns idle, speaking one small handgesture, concerned father. Same body scale and feet baseline eachcell. His cane stays his ANATOMICAL RIGHT HAND in all six poses; freely gesturing left hand, NO switching cane hand. Treat this as actual body/head turning, not mirrored coat. Black boots, purple coat with white fur and blonde moustache identity preserved. Sharp opaque figure with clean alpha cutout, absolutely no colored alpha halo. All six entirefigures includingcanetips visible, no words.",
+      "refs": [
+        "C:/Users/Henri/.codex/generated_images/01a135c6-b1ee-7121-9142-424b666459d2/exec-ef92fd20-f5df-407b-95fa-e6224cff6d11.png"
+      ]
+    },
+    {
+      "id": "sparky-intimidated",
+      "prompt": "A SINGLE unified expressive Verseborn coloured manga comedy cutaway, NOT sprite sheet, no subpanels, no text/bubbles. Four Flameguard watch the OFFSCREEN furious Mira and Seerin yelling after Verseborn called Sparky 'it'. Lineup foreground Verseborn in WORN RAGGED CHARCOAL HOODED CLOAK (hood down) sweating frozen awkward terrified grin, hands raised surrender; Torren stocky armored beard dwarf frozen with spoon halfway to mouth wideeyes; tiny pinkhaired inventor Glimmer behind her brass goggles stunned clutching gadget; Kael bald white-robed monk normallystoic now tiny tense sweatdrop grippingstaff. All leaning slightly away, intimidated, complete shock. Funny collective 'we will not argue' silence. Warm EmberHall hearth background. Accurate identities fromfirst4refs, fifthrefcolouredinkstyleonly. No Mira/Seerin onscreen, no extra characters, no costume changes. One landscape panel with large readable faces and exaggerated manga fear-lines, no inset panels.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/06_Torren_Stonekin_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/01_Glimmer_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/02_Kael_Ironhand_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/comic-306/mira-stand.webp"
+      ]
+    }
+  ],
+  "note": "Selected sources and deterministic whole-pose runtime preparation are recorded in prepare_hall_sprites_309.py. Rejected Revus facing attempts were replaced by a four-pose left/right atlas, exec-c48430af-0aea-4043-94cf-c7750779b52c.png. Runtime excludes the unused Ash Wyrm lava source image, a build-time input only; its original remains in public assets."
+}

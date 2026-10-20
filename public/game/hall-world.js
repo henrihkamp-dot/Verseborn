@@ -177,7 +177,7 @@
   const ready=Promise.all(['hall-uninhabited-v239','Verseborn',...actors.map(a=>a.id),'hall','effects','hearths'].map(name=>new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error(name+' asset missing'));image.src='assets/hall/'+(['hall','hall-uninhabited-v239','effects','hearths'].includes(name)?name:name.toLowerCase()+'-clean-v3')+'.webp';
   })));
-  const walkReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornWalk=image;resolve();};image.onerror=()=>reject(Error('Verseborn walk asset missing'));image.src='assets/hall/verseborn-walk-v2.webp';});
+  const walkReady=new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images.VersebornWalk=image;resolve();};image.onerror=()=>reject(Error('Verseborn walk asset missing'));image.src='assets/hall/refresh-309/verseborn-walk.webp';});
   const actionsReady=Promise.all(actors.map(actor=>new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>{images[actor.id+'Action']=image;resolve();};image.onerror=()=>reject(Error(actor.id+' action asset missing'));image.src='assets/hall/'+actor.id.toLowerCase()+'-action-'+(actor.id==='Kael'?'v9':'v8')+'.webp';
   })));
@@ -341,10 +341,12 @@
     if(actor.id==='Verseborn'&&row>=0&&row<=7&&images.VersebornWalk){
       const index=actor.poseFrame??(player.walking?Math.floor(player.phase)%8:8);
       const sheetRow=[0,1,2,2,3,3,4,4][row];
+      if(window.HallSpriteRefresh?.draw(ctx,'Verseborn',actor.x-camera.x,actor.y-camera.y,size*1.08,sheetRow*9+index,[2,4,6].includes(row)))return;
       ctx.save();ctx.translate(Math.round(actor.x-camera.x),Math.round(actor.y-camera.y-size*.94));
       if([2,4,6].includes(row))ctx.scale(-1,1);
       ctx.drawImage(images.VersebornWalk,index*128,sheetRow*128,128,128,-size/2,0,size,size);ctx.restore();return;
     }
+    if(row===4&&['Mira','Seerin'].includes(actor.id)&&window.HallSpriteRefresh?.draw(ctx,actor.id,actor.x-camera.x,actor.y-camera.y,size,col%16))return;
     if(row===4&&images[actor.id+'Action']){
       const image=images[actor.id+'Action'],index=col%16;
       ctx.save();if(actor.clipY){ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,actor.clipY-camera.y);ctx.clip();}

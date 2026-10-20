@@ -41,7 +41,7 @@
     const dt=Math.min(80,Math.max(0,now-filmLast));filmLast=now;filmCamera??={...target};const blend=1-Math.exp(-dt/380);for(const key of ['x','y','w'])filmCamera[key]+=(target[key]-filmCamera[key])*blend;
     const safe=LOGICAL_HEIGHT*.76,scale=LOGICAL_WIDTH/filmCamera.w,viewH=safe/scale,x=Math.max(0,Math.min(640-filmCamera.w,filmCamera.x-filmCamera.w/2)),y=Math.max(0,Math.min(356-viewH,filmCamera.y-viewH/2));
     ctx.save();ctx.fillStyle='#140e19';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,safe);ctx.clip();ctx.scale(scale,scale);ctx.translate(-x,-y);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(world.hallBackground(),0,0,640,356);world.drawCinematicFixtures(now);
-    const cast=[...world.residents().filter(a=>a.id!=='Tinus'),...players,...world.foregroundProps.map(prop=>({prop,y:prop.depth}))].sort((a,b)=>a.y-b.y);
+    const cast=[...world.residents().filter(a=>a.id==='Marla'&&moving),...players,...world.foregroundProps.map(prop=>({prop,y:prop.depth}))].sort((a,b)=>a.y-b.y);
     for(const a of cast){if(a.prop)world.drawCinematicForeground(a.prop);else world.drawActor(a,a.id==='Verseborn'?2:4,a.id==='Verseborn'?0:Math.floor(now/350)%16,{x:0,y:0});}
     ctx.restore();return result;
   };

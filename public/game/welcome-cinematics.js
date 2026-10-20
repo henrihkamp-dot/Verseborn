@@ -10,19 +10,19 @@
   const ui=Object.fromEntries(['location','skip','caption','dialogue','portrait','speaker','line','next','auto'].map(k=>[k,overlay.querySelector('.welcome-'+k)]));
   const oldPlay=playRecruitScene,oldDraw=drawTileMap,oldSave=saveGame,oldControl=handleControl,oldTrack=trackForScene,oldNext=nextTalk,oldSkip=skipTalk;
   const load=(id,url)=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{art[id]=img;resolve();};img.onerror=()=>reject(Error('Welcome image unavailable: '+url));img.src=url;});
-  const scripts=fetch('welcome-story.json?v=307').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
+  const scripts=fetch('welcome-story.json?v=309').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
   scripts.catch(console.error);
-  function assets(){return assetsPromise??=Promise.all([scripts,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
+  function assets(){return assetsPromise??=Promise.all([scripts,HallSpriteRefresh.ready,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-intimidated'?'refresh-309/':id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
   const HALL_SIZES={Verseborn:36,Mira:36,Torren:32,Seerin:42,Kael:40,Sparky:30,Marli:38,Glimmer:36,Revus:40,Nyx:30,Rava:30,Jory:30};
   const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:164,y:84,w:240},Glimmer:{x:485,y:77,w:230}};
   const EXTRA={}; // Core family/recruitment casts remain; optional drop-ins are omitted.
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
   const permitted=(id,roster)=>id==='Verseborn'||id==='Marli'||guestIds.includes(id)||roster.has(id);
-  const available=(b,roster)=>{const present=id=>permitted(id,roster)&&scene.actors.some(a=>a.id===id);return(b.requires||[]).every(present)&&!(b.unless||[]).some(present);};
+  const available=(b,roster)=>{const present=id=>permitted(id,roster)&&scene.actors.some(a=>a.id===id);return(b.requires||[]).every(present)&&!(b.unless||[]).some(present)&&(b.comicRequires||[]).every(id=>roster.has(id))&&!(b.comicUnlessAll?.every(id=>roster.has(id)));};
   function actor(id,x,y,size,extra={}){return{id,x,y,size:HALL_SIZES[id]||size||36,pose:0,row:0,alpha:1,...extra};}
   function initial(id){
     if(id==='Glimmer')return[actor('Glimmer',420,188),actor('Verseborn',455,89)];
-    if(id==='Mira')return[actor('Revus',355,227),actor('Mira',310,232),actor('Verseborn',270,267)];
+    if(id==='Mira')return[actor('Revus',320,227),actor('Mira',355,232),actor('Verseborn',270,267)];
     if(id==='Torren')return[actor('Torren',212,88),actor('Verseborn',131,91),actor('Marli',214,88)];
     if(id==='Seerin')return[actor('Seerin',88,180),actor('Rava',48,179,{pose:5}),actor('Nyx',145,180),actor('Jory',120,190),actor('Verseborn',210,190)];
     if(id==='Kael')return[actor('Kael',464,316),actor('Verseborn',510,334)];
@@ -46,7 +46,7 @@
     const s=scene;s.event=name;s.effectAt=s.clock;const get=id=>s.actors.find(a=>a.id===id);
     switch(name){
       case 'verse-enter':move('Verseborn',s.id==='Seerin'?185:277,s.id==='Seerin'?185:237);break;
-      case 'glimmer-arrive':move('Glimmer',438,86);break;
+      case 'glimmer-arrive':fly(438,86);break;
       case 'glimmer-bench':move('Verseborn',440,87);move('Glimmer',464,87);get('Glimmer').labWorking=false;break;
       case 'glimmer-boost':fly(496,78);break;
       case 'glimmer-boost-two':fly(477,105);break;
@@ -144,21 +144,13 @@
     ctx.fillStyle='#0a05084a';ctx.beginPath();ctx.ellipse(p.x,p.y-1,size*.15,size*.05,0,0,Math.PI*2);ctx.fill();
     let source;
     if(['Nyx','Rava','Jory'].includes(a.id)){
-      const image=art[a.id],cell=100,seed=['Nyx','Rava','Jory'].indexOf(a.id),speaking=scene.beat.speaker===a.id;
-      const active=scene.actors.find(a=>a.id==='Seerin')?.practice;
-      const phase=now/1100+seed*1.8,breath=Math.sin(phase)*.0025,envelope=speaking?ease((now-scene.beatAt)/450):0,lean=Math.sin(now/1700+seed)*.009+envelope*Math.sin(now/650+seed)*.015+(active?Math.sin(now/950+seed)*.018:0);
-      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(lean);ctx.scale(a.id==='Rava'?1:-1,1+breath);
-      // Keep the lower body anchored while the head nods on a continuous arc.
-      ctx.drawImage(image,0,46,cell,54,-size/2,-size*.50,size,size*.54);
-      const nod=Math.sin(phase)*.06+envelope*Math.sin(now/620+seed)*.22;
-      ctx.save();ctx.translate(0,-size*.50+nod);ctx.rotate(envelope*Math.sin(now/1000+seed)*.018);ctx.drawImage(image,0,0,cell,46,-size/2,-size*.46,size,size*.46);ctx.restore();
-      ctx.restore();source='hall/welcome-304/'+a.id.toLowerCase()+'.webp';
-      a.gesture={lean,breath,nod};
+      const speaking=scene.beat.speaker===a.id,practice=!!scene.actors.find(a=>a.id==='Seerin')?.practice,index=HallSpriteRefresh.childFrame(a.id,now,speaking,practice);
+      HallSpriteRefresh.draw(ctx,a.id,p.x,p.y,size,index,a.id==='Jory');source='hall/refresh-309/'+a.id.toLowerCase()+'.webp';a.gesture={frame:index,whole:true};
     }else if(guestIds.includes(a.id)){
       const walk=walking&&a.id==='Revus',image=art[a.id],cols=3,cell=100,index=a.pose===0&&scene.beat.speaker===a.id?1:a.pose;
-      if(walk){const front=art.revusFront,cw=front.width/4,ch=front.height,index=Math.floor(p.distance/2.8)%4;ctx.save();ctx.translate(p.x,p.y);ctx.scale(-1,1);ctx.drawImage(front,index*cw,0,cw,ch,-size*cw/ch/2,-size*.96,size*cw/ch,size);ctx.restore();}else{ctx.save();ctx.translate(p.x,p.y);if(a.id==='Revus')ctx.scale(-1,1);ctx.drawImage(image,index%cols*cell,Math.floor(index/cols)*cell,cell,cell,-size/2,-size*.96,size,size);ctx.restore();}source=walk?'hall/comic-307/revus-front.webp':'hall/welcome-304/'+a.id.toLowerCase()+'.webp';
+      if(walk){const front=art.revusFront,cw=front.width/4,ch=front.height,index=Math.floor(p.distance/2.8)%4;ctx.save();ctx.translate(p.x,p.y);ctx.scale(-1,1);ctx.drawImage(front,index*cw,0,cw,ch,-size*cw/ch/2,-size*.96,size*cw/ch,size);ctx.restore();}else{const toVerse=scene.beat.speaker==='Verseborn'||scene.beat.speaker==='Revus'&&/Baron Revus Veln|Ash Quarter tavern|speaking to my daughter/.test(scene.beat.text||''),addressed=toVerse?scene.actors.find(a=>a.id==='Verseborn'):scene.actors.find(a=>a.id==='Mira'),targetX=addressed?currentPos(addressed).x:p.x-1,direction=targetX<p.x?0:1;HallSpriteRefresh.draw(ctx,'Revus',p.x,p.y,size,direction*2+(scene.beat.speaker==='Revus'?1:0));a.gesture={facing:direction===0?'left':'right',whole:true};}source=walk?'hall/comic-307/revus-front.webp':'hall/refresh-309/revus.webp';
     }else if(id==='Verseborn'){
-      emberHallWorld.drawActor({...p,id,size,poseFrame:walking?frame:8},walking?p.facing:idleFacing,0,{x:0,y:0});source='hall/verseborn-walk-v2.webp';
+      emberHallWorld.drawActor({...p,id,size,poseFrame:walking?frame:8},walking?p.facing:idleFacing,0,{x:0,y:0});source='hall/refresh-309/verseborn-walk.webp';
     }else if(id==='Kael'&&walking){
       emberHallWorld.drawActor({...p,id,size,visiting:true,walking:true,facing:p.facing,walkPhase:(p.distance||0)/2.5},0,0,{x:0,y:0});source='hall/kael-walk-v237.webp';
     }else if(id==='Glimmer'&&!a.ambientResident){
@@ -176,7 +168,7 @@
       const image=art.hallCook,cell=image.width/4,index=[0,1,2,1][Math.floor(now/340)%4];ctx.drawImage(image,index*cell,0,cell,cell,p.x-size/2,p.y-size*.94,size,size);source='hall/living-256/torren-kitchen.webp';
     }else{
       const index=id==='Marla'?scene.beat.speaker==='Marli'?12:emberHallWorld.marlaIdleFrame(now):a.practice?[0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,0][Math.floor(now/180)%16]:id==='Kael'?Math.floor(now/350)%16:id==='Mira'&&scene.beat.speaker==='Mira'?Math.floor((now-scene.beatAt)/180)%16:0;
-      emberHallWorld.drawActor({...p,id,size,kitchenActive:false,labActive:id==='Glimmer',labClock:now,labRow:2,labLift:0},4,index,{x:0,y:0});source='hall/'+id.toLowerCase()+'-action-'+(id==='Kael'?'v9':'v8')+'.webp';
+      emberHallWorld.drawActor({...p,id,size,kitchenActive:false,labActive:id==='Glimmer',labClock:now,labRow:2,labLift:0},4,index,{x:0,y:0});source=['Mira','Seerin'].includes(id)?'hall/refresh-309/'+id.toLowerCase()+'.webp':'hall/'+id.toLowerCase()+'-action-'+(id==='Kael'?'v9':'v8')+'.webp';
     }
     scene.draws.push({id:a.id,source,frame,walking,row:id==='Mira'&&p.row>=2?5-p.row:p.row,facing:id==='Verseborn'&&!walking?idleFacing:p.facing,gesture:a.gesture,labWorking:!!a.labWorking,flying:!!a.flying,x:p.x,y:p.y,size});ctx.restore();
   }
@@ -184,7 +176,7 @@
     const world=emberHallWorld,now=scene.clock;scene.draws=[];ctx.drawImage(world.hallBackground(),0,0,640,356);
     const machine=world.resonance;if(window.HallOpening&&stageSelectorImage)HallOpening.drawMachine(ctx,stageSelectorImage,machine.x,machine.y,machine.width,machine.height,now);
     const names=new Set(scene.actors.map(a=>a.id==='Marli'?'Marla':a.id));
-    const residents=world.residents().filter(a=>!a.barStool&&!names.has(a.id)).map(a=>({...a,ambientResident:true,id:a.id==='Marla'?'Marli':a.id}));
+    const residents=[]; // Cinematic cast only: resident AI positions are not staged cameos.
     const things=[...scene.actors,...residents,...world.foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>(a.prop?a.y:currentPos(a).y)-(b.prop?b.y:currentPos(b).y));
     world.drawCinematicFixtures(now);
     for(const a of things){if(a.prop)world.drawCinematicForeground(a.prop);else drawActor(a);}
