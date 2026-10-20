@@ -1,0 +1,963 @@
+{
+  "Mira": {
+    "id": "Mira",
+    "title": "Terms of Membership",
+    "location": "Ember Hall · Lobby",
+    "background": "central-hall",
+    "name": "MIRA VELN",
+    "role": "THE WHISPERING ARROW",
+    "beats": [
+      {
+        "event": "establish",
+        "minMs": 2600,
+        "caption": "Terms of Membership"
+      },
+      {
+        "speaker": "Kael",
+        "text": "There is a chair, Baron. You needn't stand on ceremony.",
+        "requires": [
+          "Kael"
+        ]
+      },
+      {
+        "speaker": "Revus",
+        "text": "Miri. Pick up your things."
+      },
+      {
+        "speaker": "Mira",
+        "text": "They're where I want them."
+      },
+      {
+        "speaker": "Revus",
+        "text": "We have discussed this."
+      },
+      {
+        "speaker": "Mira",
+        "text": "You discussed it. I was in the room."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "You must be—",
+        "event": "verse-enter",
+        "minMs": 2200
+      },
+      {
+        "speaker": "Revus",
+        "text": "Baron Revus Veln."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Yes. The atmosphere suggested a title."
+      },
+      {
+        "speaker": "Revus",
+        "text": "This is the man you intend to follow?"
+      },
+      {
+        "speaker": "Mira",
+        "text": "Work with."
+      },
+      {
+        "speaker": "Revus",
+        "text": "An Ash Quarter tavern performer. No standing. No proper patronage."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "The tavern does have a standing audience. When the chairs run out."
+      },
+      {
+        "speaker": "Revus",
+        "text": "I am speaking to my daughter."
+      },
+      {
+        "speaker": "Mira",
+        "text": "Then stop talking about me as though I've left."
+      },
+      {
+        "speaker": "Revus",
+        "text": "You have a home. Protection. A future that does not depend on whether this boy survives his next bad idea.",
+        "event": "father",
+        "shot": "close"
+      },
+      {
+        "speaker": "Mira",
+        "text": "And the people who don't have those things?"
+      },
+      {
+        "speaker": "Revus",
+        "text": "They are not your responsibility."
+      },
+      {
+        "speaker": "Mira",
+        "text": "That answer is why I'm here."
+      },
+      {
+        "speaker": "Revus",
+        "text": "You know what people will say."
+      },
+      {
+        "speaker": "Mira",
+        "text": "You've been rehearsing it for them."
+      },
+      {
+        "speaker": "Revus",
+        "text": "A Veln should know her worth.",
+        "event": "register",
+        "shot": "prop"
+      },
+      {
+        "speaker": "Mira",
+        "text": "I do. You keep confusing it with a price."
+      },
+      {
+        "speaker": "Revus",
+        "text": "If you expect me to approve—"
+      },
+      {
+        "speaker": "Mira",
+        "text": "I don't. I would like you to visit.",
+        "event": "father",
+        "shot": "close"
+      },
+      {
+        "speaker": "Revus",
+        "text": "Do not make me regret leaving you here."
+      },
+      {
+        "speaker": "Mira",
+        "text": "I was staying either way, Father."
+      },
+      {
+        "event": "revus-leave",
+        "minMs": 3800,
+        "caption": "A choice made in her own name."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "You held your ground. That takes more than a shield.",
+        "requires": [
+          "Seerin"
+        ]
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "For what it's worth, I can provide references.",
+        "event": "sign",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Mira",
+        "text": "From the tavern?"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Some of them can write."
+      },
+      {
+        "speaker": "Mira",
+        "text": "Show me the armoury."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Certainly. We have a cupboard."
+      },
+      {
+        "speaker": "Mira",
+        "text": "We'll start with the cupboard.",
+        "event": "mira-door"
+      },
+      {
+        "speaker": "Marli",
+        "text": "Not the one with the clean glasses.",
+        "requires": [
+          "Marli"
+        ]
+      },
+      {
+        "event": "title",
+        "minMs": 3300,
+        "caption": "MIRA VELN"
+      }
+    ]
+  },
+  "Torren": {
+    "id": "Torren",
+    "title": "A-Rank, Obviously",
+    "location": "Ember Hall · Kitchen",
+    "background": "torren-kitchen",
+    "name": "TORREN STONEKIN",
+    "role": "THE STONEHEART",
+    "beats": [
+      {
+        "event": "establish",
+        "minMs": 2600,
+        "caption": "A-Rank, Obviously"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Torren Stonekin. A-rank Guardian. Which way's the kitchen?",
+        "event": "torren-enter",
+        "minMs": 2500
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I had a welcome speech prepared."
+      },
+      {
+        "speaker": "Torren",
+        "text": "Give it to the onions. They look moved already."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Was that part of the interview?"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Aye. Shelf failed.",
+        "event": "shelf",
+        "shot": "close"
+      },
+      {
+        "speaker": "Torren",
+        "text": "And who might this fine lady be?",
+        "event": "marli-enter",
+        "minMs": 2200
+      },
+      {
+        "speaker": "Marli",
+        "text": "The woman who decides whether you get a kitchen key."
+      },
+      {
+        "speaker": "Torren",
+        "text": "Then let me begin again. Torren Stonekin. Excellent references. Very clean pans."
+      },
+      {
+        "speaker": "Marli",
+        "text": "And the badge?"
+      },
+      {
+        "speaker": "Torren",
+        "text": "A-rank.",
+        "event": "badge",
+        "shot": "prop"
+      },
+      {
+        "speaker": "Marli",
+        "text": "Does it peel potatoes?"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Watch closely."
+      },
+      {
+        "event": "cooking",
+        "minMs": 5200,
+        "caption": "Quick hands. An immovable spoon."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Remarkable defensive instincts."
+      },
+      {
+        "speaker": "Torren",
+        "text": "A-rank."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "There it is again."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Is the spoon supposed to stand up by itself?",
+        "event": "stew",
+        "shot": "prop"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Saves ye holding it."
+      },
+      {
+        "speaker": "Marli",
+        "text": "You planning to feed an army?"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Depends. How many are we bringing home?",
+        "event": "supper",
+        "shot": "close"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "As many as we can."
+      },
+      {
+        "speaker": "Torren",
+        "text": "Right. Bigger pot tomorrow."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Pressure cooker? Four valves. Five, if you want it to remain a cooker.",
+        "requires": [
+          "Glimmer"
+        ]
+      },
+      {
+        "speaker": "Seerin",
+        "text": "If it stands up on its own, does it count as a sparring partner?",
+        "requires": [
+          "Seerin"
+        ]
+      },
+      {
+        "speaker": "Torren",
+        "text": "Spent enough years building things for men who never asked who'd be underneath them.",
+        "event": "quiet",
+        "shot": "close",
+        "minMs": 4200
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "And now?"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Now I want to know who's coming back for supper."
+      },
+      {
+        "speaker": "Marli",
+        "text": "You'll do."
+      },
+      {
+        "speaker": "Torren",
+        "text": "High praise from a beautiful woman. Best keep that between us."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "There are three of us in the room."
+      },
+      {
+        "speaker": "Torren",
+        "text": "Then two of ye can practise discretion."
+      },
+      {
+        "speaker": "Marli",
+        "text": "Is that a portion or a challenge?",
+        "unless": [
+          "Mira"
+        ],
+        "event": "stew"
+      },
+      {
+        "speaker": "Torren",
+        "text": "Depends how hungry ye are.",
+        "unless": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Torren",
+        "text": "A bowl for the lady?",
+        "event": "mira-enter",
+        "requires": [
+          "Mira"
+        ],
+        "minMs": 1800
+      },
+      {
+        "speaker": "Mira",
+        "text": "Is this dinner or a demonstration?",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Torren",
+        "text": "With me, lass, ye get both.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Mira",
+        "text": "Then demonstrate a smaller portion.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Torren",
+        "text": "Sensible woman.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "event": "title",
+        "minMs": 3300,
+        "caption": "TORREN STONEKIN"
+      }
+    ]
+  },
+  "Seerin": {
+    "id": "Seerin",
+    "title": "One More Round",
+    "location": "Orphanage · Training Room",
+    "background": "gym",
+    "name": "SEERIN VAHL",
+    "role": "THE FLAME’S SHIELD",
+    "beats": [
+      {
+        "event": "establish",
+        "minMs": 2600,
+        "caption": "One More Round"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Feet apart. Eyes up. Jory—enthusiasm is not a guard stance.",
+        "event": "practice",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Jory",
+        "text": "It is when I do it with rhythm!"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "I am improving the lesson."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Excellent. No notes.",
+        "event": "verse-enter",
+        "minMs": 2200
+      },
+      {
+        "speaker": "Rava",
+        "text": "You said one more round."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "We had one more round."
+      },
+      {
+        "speaker": "Rava",
+        "text": "You didn't say it was the last one."
+      },
+      {
+        "speaker": "Mira",
+        "text": "A signal at the window if you need us. Someone will answer.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Seerin",
+        "text": "I have to go with Verseborn for a while.",
+        "event": "farewell",
+        "shot": "close"
+      },
+      {
+        "speaker": "Nyx",
+        "text": "The Fiery Tornado. Arach says the poster is understated."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I was wondering about the cape budget.",
+        "event": "poster",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "The artist was enthusiastic."
+      },
+      {
+        "speaker": "Jory",
+        "text": "We made it bigger."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "You improved the historical record."
+      },
+      {
+        "speaker": "Nyx",
+        "text": "But who'll stay here?"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "The people who look after you are staying. I've checked the watches. Twice."
+      },
+      {
+        "speaker": "Rava",
+        "text": "You always stay.",
+        "event": "rava-worry",
+        "shot": "close"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "I know."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "There's trouble outside these walls. If I wait for it to reach your door, I've waited too long."
+      },
+      {
+        "speaker": "Jory",
+        "text": "So you're going to hit it first?"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "I'm going to try talking first."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I'm very good at that part."
+      },
+      {
+        "speaker": "Jory",
+        "text": "And if it doesn't listen?"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "She handles the second conversation."
+      },
+      {
+        "speaker": "Rava",
+        "text": "What if you fall down?",
+        "event": "rava-worry",
+        "shot": "close"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Then I won't be on my own."
+      },
+      {
+        "speaker": "Rava",
+        "text": "You have to help her up.",
+        "event": "promise",
+        "shot": "close"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I will."
+      },
+      {
+        "speaker": "Nyx",
+        "text": "So you remember the team.",
+        "event": "ribbon",
+        "shot": "prop"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "I know my team.",
+        "event": "ribbon",
+        "shot": "close"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Once more. Show me."
+      },
+      {
+        "event": "last-round",
+        "minMs": 3800,
+        "caption": "One more round. Together."
+      },
+      {
+        "speaker": "Torren",
+        "text": "Packed lunches. Proper portions. Don't let the bard ration them.",
+        "requires": [
+          "Torren"
+        ]
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Should I announce the Tornado?",
+        "event": "arrival",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Announce lunch. They'll actually follow you."
+      },
+      {
+        "event": "title",
+        "minMs": 3300,
+        "caption": "SEERIN VAHL"
+      }
+    ]
+  },
+  "Kael": {
+    "id": "Kael",
+    "title": "What the Rules Are For",
+    "location": "Ember Hall · Library",
+    "background": "kael-library",
+    "name": "KAEL IRONHAND",
+    "role": "THE SILENT OATH",
+    "beats": [
+      {
+        "event": "establish",
+        "minMs": 2600,
+        "caption": "What the Rules Are For"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "We found you a rather impressive chair.",
+        "event": "supplies",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Kael",
+        "text": "I noticed. It has more ornament than the room has medical supplies."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "You haven't even seen the cushions."
+      },
+      {
+        "speaker": "Kael",
+        "text": "Can they stop bleeding?"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I'll ask Marli about bandages."
+      },
+      {
+        "speaker": "Kael",
+        "text": "Clean water here. Dressings here. No cups on the bookshelves."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I feel that last rule was written before you arrived."
+      },
+      {
+        "speaker": "Kael",
+        "text": "It was confirmed when I arrived.",
+        "event": "cup",
+        "shot": "close"
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Where do I put the tools that might explode?",
+        "requires": [
+          "Glimmer"
+        ]
+      },
+      {
+        "speaker": "Kael",
+        "text": "Outside. We can begin with that rule.",
+        "requires": [
+          "Glimmer"
+        ]
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Is this why you left your order? Poor shelving?"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Sorry. That wasn't—"
+      },
+      {
+        "speaker": "Kael",
+        "text": "No. It's a fair question.",
+        "event": "heal",
+        "shot": "close"
+      },
+      {
+        "speaker": "Kael",
+        "text": "They called them transfers. I knew some of the children. They hadn't moved.",
+        "event": "ledger",
+        "shot": "prop"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Their names had."
+      },
+      {
+        "speaker": "Kael",
+        "text": "Sold under the church's seal. I took the ledger to my superiors. They asked who had given me permission to read it.",
+        "event": "ledger",
+        "shot": "close",
+        "minMs": 4500
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "What did you tell them?"
+      },
+      {
+        "speaker": "Kael",
+        "text": "That I would like an answer to my question first."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "They didn't give you one."
+      },
+      {
+        "speaker": "Kael",
+        "text": "They gave me an order."
+      },
+      {
+        "speaker": "Kael",
+        "text": "I believe in discipline. People trust a healer to be ready. To keep his hands clean. To arrive when he says he will."
+      },
+      {
+        "speaker": "Kael",
+        "text": "I will not let them use that trust to make obedience look holy.",
+        "event": "oath",
+        "shot": "close",
+        "minMs": 4500
+      },
+      {
+        "speaker": "Jory",
+        "text": "Does it cost anything?",
+        "event": "jory-enter",
+        "minMs": 2000
+      },
+      {
+        "speaker": "Kael",
+        "text": "Let me see your hand."
+      },
+      {
+        "speaker": "Jory",
+        "text": "But—"
+      },
+      {
+        "speaker": "Kael",
+        "text": "No. It doesn't cost anything."
+      },
+      {
+        "speaker": "Kael",
+        "text": "There. Ask your carer to change that this evening.",
+        "event": "heal",
+        "shot": "close"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "So. How many rules are you bringing with you?",
+        "event": "jory-leave",
+        "minMs": 2000
+      },
+      {
+        "speaker": "Kael",
+        "text": "I had seven. Then I met you."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "We can have them printed."
+      },
+      {
+        "speaker": "Kael",
+        "text": "Leave space at the bottom."
+      },
+      {
+        "speaker": "Kael",
+        "text": "Wash that first.",
+        "event": "wash",
+        "shot": "close"
+      },
+      {
+        "event": "title",
+        "minMs": 3300,
+        "caption": "KAEL IRONHAND"
+      }
+    ]
+  },
+  "Sparky": {
+    "id": "Sparky",
+    "title": "He Has a Name",
+    "location": "Ember Hall · Sparky’s Corner",
+    "background": "sparky-coop",
+    "name": "SPARKY",
+    "role": "THE EMBERBORN",
+    "beats": [
+      {
+        "event": "establish",
+        "minMs": 2600,
+        "caption": "He Has a Name"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "That's the water bowl.",
+        "event": "bowl",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Sparky",
+        "text": "Prrrp?"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "A bold interpretation. We'll get a second one."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Oh, sweetheart.",
+        "event": "duo-enter",
+        "minMs": 2000
+      },
+      {
+        "speaker": "Mira",
+        "text": "Wait. Let him do it."
+      },
+      {
+        "speaker": "Sparky",
+        "text": "Rrr!"
+      },
+      {
+        "event": "cute",
+        "minMs": 2800,
+        "caption": "A very small foot. A very large impact."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Did you see his little foot?"
+      },
+      {
+        "speaker": "Mira",
+        "text": "I saw it."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "He was trying so hard."
+      },
+      {
+        "speaker": "Mira",
+        "text": "I saw that as well."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Careful. I don't know what it—",
+        "event": "freeze",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Mira",
+        "text": "He.",
+        "event": "scold",
+        "shot": "close"
+      },
+      {
+        "speaker": "Seerin",
+        "text": "His name is Sparky."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I know his name. I meant—"
+      },
+      {
+        "speaker": "Mira",
+        "text": "Then you have several good alternatives."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "Try one."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Sparky. I am sorry. I don't know what you like to eat yet.",
+        "event": "apology",
+        "shot": "close"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "That is not a suggestion.",
+        "event": "strap",
+        "shot": "close"
+      },
+      {
+        "speaker": "Sparky",
+        "text": "Prrr."
+      },
+      {
+        "speaker": "Seerin",
+        "text": "There. Forgiven."
+      },
+      {
+        "speaker": "Mira",
+        "text": "By him."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "An important distinction."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Is this all right? Staying here?",
+        "event": "choice",
+        "shot": "wide",
+        "minMs": 3500
+      },
+      {
+        "speaker": "Seerin",
+        "text": "I think so.",
+        "event": "settle",
+        "shot": "wide"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Shall I put “Flameguard” on his bowl?"
+      },
+      {
+        "speaker": "Mira",
+        "text": "Put his name on it."
+      },
+      {
+        "speaker": "Torren",
+        "text": "Finally. Someone who appreciates the service.",
+        "event": "torren-cameo",
+        "requires": [
+          "Torren"
+        ],
+        "minMs": 2000
+      },
+      {
+        "speaker": "Seerin",
+        "text": "A tiny portion, Torren.",
+        "requires": [
+          "Torren"
+        ]
+      },
+      {
+        "speaker": "Torren",
+        "text": "That is a tiny portion.",
+        "requires": [
+          "Torren"
+        ]
+      },
+      {
+        "event": "title",
+        "minMs": 3300,
+        "caption": "SPARKY"
+      }
+    ],
+    "shortBeats": [
+      {
+        "speaker": "Verseborn",
+        "text": "That's the water bowl.",
+        "event": "bowl"
+      },
+      {
+        "speaker": "Sparky",
+        "text": "Prrrp?"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "A bold interpretation. We'll get a second one."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Sparky. Is this all right? Staying here?",
+        "event": "choice",
+        "minMs": 3000
+      },
+      {
+        "speaker": "Sparky",
+        "text": "Prrr.",
+        "event": "settle"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Your choice, then. Welcome home."
+      }
+    ]
+  }
+}
