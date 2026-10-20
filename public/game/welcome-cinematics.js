@@ -132,7 +132,12 @@
       emberHallWorld.drawActor({...p,id,size,visiting:true,walking:true,facing:p.facing,walkPhase:(p.distance||0)/2.5},0,0,{x:0,y:0});source='hall/kael-walk-v237.webp';
     }else if(walking){
       const image=emberHallWorld.images[id],cell=image.width/8;ctx.drawImage(image,frame*cell,p.row*cell,cell,cell,p.x-size/2,p.y-size*.94,size,size);source='hall/'+id.toLowerCase()+'-clean-v3.webp';
-    }else if(id==='Torren'&&a.cooking){
+    }else if(id==='Torren'&&!a.cooking&&!a.ambientResident){
+      // Hall's cooking idle includes a pot. Visitors use the existing unarmed
+      // Hall walk art in its quietest passing pose instead.
+      const image=emberHallWorld.images.Torren,cell=image.width/8;ctx.drawImage(image,2*cell,0,cell,cell,p.x-size/2,p.y-size*.94,size,size);source='hall/torren-clean-v3.webp';
+    }else if(id==='Torren'&&(a.cooking||a.ambientResident)){
+
       const image=art.hallCook,cell=image.width/4,index=[0,1,2,1][Math.floor(now/340)%4];ctx.drawImage(image,index*cell,0,cell,cell,p.x-size/2,p.y-size*.94,size,size);source='hall/living-256/torren-kitchen.webp';
     }else{
       const index=id==='Marla'?scene.beat.speaker==='Marli'?12:emberHallWorld.marlaIdleFrame(now):a.practice?[0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,0][Math.floor(now/180)%16]:id==='Kael'?Math.floor(now/350)%16:id==='Mira'&&scene.beat.speaker==='Mira'?Math.floor((now-scene.beatAt)/180)%16:0;
@@ -144,7 +149,7 @@
     const world=emberHallWorld,now=scene.clock;scene.draws=[];ctx.drawImage(world.hallBackground(),0,0,640,356);
     const machine=world.resonance;if(window.HallOpening&&stageSelectorImage)HallOpening.drawMachine(ctx,stageSelectorImage,machine.x,machine.y,machine.width,machine.height,now);
     const names=new Set(scene.actors.map(a=>a.id==='Marli'?'Marla':a.id));
-    const residents=world.residents().filter(a=>!a.barStool&&!names.has(a.id)).map(a=>({...a,id:a.id==='Marla'?'Marli':a.id}));
+    const residents=world.residents().filter(a=>!a.barStool&&!names.has(a.id)).map(a=>({...a,ambientResident:true,id:a.id==='Marla'?'Marli':a.id}));
     const things=[...scene.actors,...residents,...world.foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>(a.prop?a.y:currentPos(a).y)-(b.prop?b.y:currentPos(b).y));
     world.drawCinematicFixtures(now);
     for(const a of things){if(a.prop)world.drawCinematicForeground(a.prop);else drawActor(a);}
