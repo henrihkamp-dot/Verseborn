@@ -6,7 +6,7 @@
     {id:'Torren',x:81,y:77,size:30,action:'Cooking',line:'A warm meal first. Heroics later.'},
     {id:'Sparky',x:165,y:82,size:30,action:'Resting',line:'Prrrp!'},
     {id:'Glimmer',x:464,y:87,size:36,renderScale:.65,approach:{x:448,y:86},action:'Drone maintenance',line:'Careful with that coil. It bites.'},
-    {id:'Seerin',x:88,y:180,size:39,action:'Shield practice',line:'Feet steady. Eyes on your opponent.'},
+    {id:'Seerin',x:88,y:180,size:36,action:'Shield practice',line:'Feet steady. Eyes on your opponent.'},
     {id:'Marla',x:529,y:160,size:38,clipY:155,approach:{x:446,y:181},action:'Serving soup',line:'Welcome back. There is always something warm waiting.'},
     {id:'Mira',x:102,y:297,size:36,action:'Dagger practice',line:'My corner. No unwelcome surprises.'},
     {id:'Kael',x:464,y:316,size:40,approach:{x:452,y:332},action:'Reading',line:'Some answers need a little quiet.'}
@@ -206,6 +206,7 @@
     return index<lines[conversation].length&&phase%5200<4200?lines[conversation][index]:null;
   }
   function ambientChat(key,lines,participants,viewCamera,now,cycle=72000,delay=12000){
+    lines=window.HallProgressionDialogue?.chatter(key,lines)||lines;
     const room=key==='rift-brothers'?'emberRiftVault':'emberHallBattles';
     for(const [id,bubble] of ambientBubbles)if((id==='rift-brothers'?'emberRiftVault':'emberHallBattles')!==state.map)bubble.hidden=true;
     if(state.map!==room||state.gameMode!=='hallBattles'){hideAmbientChat(key);return null;}

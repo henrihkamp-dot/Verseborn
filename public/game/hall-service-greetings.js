@@ -62,8 +62,8 @@
   const counts=new Map();let pending=null;
   function greet(id,after){
     if(!exchanges[id]||pending||mode!=='walk'||state.map!=='emberHallBattles'||activeRecruitScene||window.HallOpening?.active||window.TinusRecruitment?.replaying)return false;
-    const index=counts.get(id)||0;counts.set(id,index+1);pending={id,after};activePoint=null;heldDirection=null;fieldDestination=null;emberHallWorld.clearNavigation();emberHallWorld.hideAmbientChat();
-    showTalk(exchanges[id][index%exchanges[id].length],{portraits:['Verseborn',id],skippable:true,after:()=>{const current=pending;pending=null;if(current&&state.map==='emberHallBattles'&&!activeRecruitScene)current.after();}});return true;
+    const phase=HallProgressionDialogue.cleared()?"cleared":"early",key=id+":"+phase,pool=HallProgressionDialogue.greeting(id,exchanges[id]);const index=counts.get(key)||0;counts.set(key,index+1);pending={id,after};activePoint=null;heldDirection=null;fieldDestination=null;emberHallWorld.clearNavigation();emberHallWorld.hideAmbientChat();
+    showTalk(pool[index%pool.length],{portraits:['Verseborn',id],skippable:true,after:()=>{const current=pending;pending=null;if(current&&state.map==='emberHallBattles'&&!activeRecruitScene)current.after();}});return true;
   }
   const oldService=HallHub.openService;
   HallHub.openService=function(id){if((id==='Marla'||state.party.includes(id))&&greet(id,()=>oldService(id)))return true;return oldService(id);};

@@ -38,7 +38,7 @@
     if(!home)home={x:kael.x,y:kael.y,approach:{...kael.approach}};
     const path=world.findPath(kael,destinations[id].x,destinations[id].y);
     if(!path?.length)return false;
-    const target=world.actors.find(a=>a.id===id),lines=conversations[id][variants[id]++%conversations[id].length];
+    const target=world.actors.find(a=>a.id===id),pool=window.HallProgressionDialogue?.visit(id,conversations[id])||conversations[id],lines=pool[variants[id]++%pool.length];
     visit={id,target,lines,phase:'outbound',path,index:0,elapsed:0,walkPhase:0};
     kael.visiting=true;kael.walking=false;
     return true;
