@@ -5,6 +5,46 @@
   const approach = { x: 434, y: 190 };
   let artReady = false, saved = null, actor = null, path = [], last = 0, portalStarted = 0, replay = null;
   const ready = TinusCharacter.ready.then(() => { artReady = true; });
+  let arrivalComic=false,comicKey=null,comicAt=0;
+  const comicCanvas=document.createElement('canvas'),comicContext=comicCanvas.getContext('2d'),comicArt={};
+  comicCanvas.className='tinus-comic-insert';comicCanvas.hidden=true;comicCanvas.setAttribute('aria-hidden','true');document.querySelector('.game').append(comicCanvas);
+  for(const key of ['arrival','coffee']){const image=new Image();image.src='assets/hall/comic-308/tinus-'+key+'.webp';comicArt[key]=image;}
+  function showArrivalTalk(options){const after=options.after;arrivalComic=true;showTalk(arrivalLines,{...options,after:()=>{arrivalComic=false;after?.();}});}
+  function drawComic(now){
+    let key=null;
+    if(arrivalComic&&mode==='talk'){
+      if(el.line.textContent.startsWith('I was finishing a structural-change request.'))key='arrival';
+      if(el.line.textContent.startsWith('Finally. A sensible operating procedure.'))key='coffee';
+    }
+    if(key!==comicKey){comicKey=key;comicAt=now;}
+    comicCanvas.hidden=!key;
+    if(key&&comicArt[key].complete&&comicArt[key].naturalWidth&&window.WelcomeComicPanels){
+      const bounds=comicCanvas.parentElement.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),width=Math.ceil(bounds.width*dpr),height=Math.ceil(bounds.height*dpr);
+      if(comicCanvas.width!==width||comicCanvas.height!==height){comicCanvas.width=width;comicCanvas.height=height;}
+      comicContext.setTransform(1,0,0,1,0,0);
+      comicContext.clearRect(0,0,comicCanvas.width,comicCanvas.height);
+      comicContext.setTransform(width/LOGICAL_WIDTH,0,0,height/LOGICAL_HEIGHT,0,0);comicContext.imageSmoothingEnabled=true;comicContext.imageSmoothingQuality='high';
+      const id='tinus-'+key;WelcomeComicPanels.pages[id]={label:key==='arrival'?'An unscheduled delivery.':'Critical infrastructure.',mood:key==='arrival'?'impact':'reaction'};
+      WelcomeComicPanels.draw(comicContext,id,comicArt[key],now-comicAt,LOGICAL_WIDTH,LOGICAL_HEIGHT*.74);
+    }
+    requestAnimationFrame(drawComic);
+  }
+  requestAnimationFrame(drawComic);
+  const originalDraw=drawTileMap;let filmCamera=null,filmLast=0;
+  drawTileMap=function(...args){
+    const result=originalDraw(...args);
+    if((!replay&&!arrivalComic)||!emberHallWorld.ready){filmCamera=null;return result;}
+    const now=performance.now(),world=emberHallWorld,tinus=resident();if(!tinus)return result;
+    const moving=replay&&['walking','seated'].includes(replay.phase),players=[{...world.player,id:'Verseborn',size:36,poseFrame:8},tinus];
+    const subjects=moving?[tinus]:players,left=Math.min(...subjects.map(a=>a.x-a.size/2)),right=Math.max(...subjects.map(a=>a.x+a.size/2)),top=Math.min(...subjects.map(a=>a.y-a.size)),bottom=Math.max(...subjects.map(a=>a.y+4));
+    const target={x:(left+right)/2,y:(top+bottom)/2,w:moving?240:mode==='talk'?190:225};
+    const dt=Math.min(80,Math.max(0,now-filmLast));filmLast=now;filmCamera??={...target};const blend=1-Math.exp(-dt/380);for(const key of ['x','y','w'])filmCamera[key]+=(target[key]-filmCamera[key])*blend;
+    const safe=LOGICAL_HEIGHT*.76,scale=LOGICAL_WIDTH/filmCamera.w,viewH=safe/scale,x=Math.max(0,Math.min(640-filmCamera.w,filmCamera.x-filmCamera.w/2)),y=Math.max(0,Math.min(356-viewH,filmCamera.y-viewH/2));
+    ctx.save();ctx.fillStyle='#140e19';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,safe);ctx.clip();ctx.scale(scale,scale);ctx.translate(-x,-y);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(world.hallBackground(),0,0,640,356);world.drawCinematicFixtures(now);
+    const cast=[...world.residents().filter(a=>a.id!=='Tinus'),...players,...world.foregroundProps.map(prop=>({prop,y:prop.depth}))].sort((a,b)=>a.y-b.y);
+    for(const a of cast){if(a.prop)world.drawCinematicForeground(a.prop);else world.drawActor(a,a.id==='Verseborn'?2:4,a.id==='Verseborn'?0:Math.floor(now/350)%16,{x:0,y:0});}
+    ctx.restore();return result;
+  };
   function progress() {
     const hall = hallBattleProgress();
     if (!hall.tinus || typeof hall.tinus !== 'object') hall.tinus = { phase: 'locked', recruited: false };
@@ -105,7 +145,7 @@
       showTalk(barLines[index], { portraits: ['Verseborn', 'Tinus'], after: queueSave });
       return true;
     }
-    showTalk(arrivalLines, { portraits: ['Verseborn', 'Tinus'], skippable: true, after: join });
+    showArrivalTalk({ portraits: ['Verseborn', 'Tinus'], skippable: true, after: join });
     return true;
   }
   function tick(now) {
@@ -170,6 +210,7 @@
   }
   function finishReplay() {
     if (!replay) return;
+    arrivalComic=false;comicCanvas.hidden=true;
     const original = replay.original;
     talkAfter = null; activePoint = null;
     if (mode === 'talk') finishTalk();
@@ -186,7 +227,7 @@
       scene.actor.alpha = Math.min(1, Math.max(0, (now - scene.started - 650) / 1000));
       if (now - scene.started > 2800) {
         scene.phase = 'dialogue'; scene.actor.alpha = 1;
-        showTalk(arrivalLines, { portraits: ['Verseborn', 'Tinus'], skippable: true, after: () => {
+        showArrivalTalk({ portraits: ['Verseborn', 'Tinus'], skippable: true, after: () => {
           if (!replay) return;
           scene.phase = 'walking'; scene.actor.pose = 'walk'; scene.actor.phase = 0;
           scene.path = smoothPath(emberHallWorld.findPath(scene.actor, approach.x, approach.y), scene.actor);

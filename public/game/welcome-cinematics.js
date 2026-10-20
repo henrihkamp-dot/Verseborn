@@ -5,14 +5,14 @@
   let stories,scene=null,loading=false,raf,assetsPromise;
   const game=document.querySelector('.game'),overlay=document.createElement('section');
   overlay.className='welcome-film';overlay.hidden=true;overlay.setAttribute('aria-label','Flameguard introduction');
-  overlay.innerHTML='<div class="welcome-location"></div><button type="button" class="welcome-skip">Skip scene</button><div class="welcome-caption"><small></small><h2></h2><p></p></div><div class="welcome-dialogue" aria-live="polite"><img class="welcome-portrait" alt=""><div><strong class="welcome-speaker"></strong><p class="welcome-line"></p></div><button type="button" class="welcome-next" aria-label="Continue dialogue">Continue <span>↵</span></button></div><button type="button" class="welcome-auto"></button>';
+  overlay.innerHTML='<div class="welcome-location"></div><button type="button" class="welcome-skip">Skip scene</button><div class="welcome-caption"><small></small><h2></h2><p></p></div><div class="welcome-dialogue" aria-live="polite"><div class="welcome-portrait-frame"><img class="welcome-portrait" alt=""></div><div><strong class="welcome-speaker"></strong><p class="welcome-line"></p></div><button type="button" class="welcome-next" aria-label="Continue dialogue">Continue <span>↵</span></button></div><button type="button" class="welcome-auto"></button>';
   game.append(overlay);
   const ui=Object.fromEntries(['location','skip','caption','dialogue','portrait','speaker','line','next','auto'].map(k=>[k,overlay.querySelector('.welcome-'+k)]));
   const oldPlay=playRecruitScene,oldDraw=drawTileMap,oldSave=saveGame,oldControl=handleControl,oldTrack=trackForScene,oldNext=nextTalk,oldSkip=skipTalk;
   const load=(id,url)=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{art[id]=img;resolve();};img.onerror=()=>reject(Error('Welcome image unavailable: '+url));img.src=url;});
   const scripts=fetch('welcome-story.json?v=307').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
   scripts.catch(console.error);
-  function assets(){return assetsPromise??=Promise.all([scripts,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusRig','assets/hall/welcome-304/revus-rig.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1,2].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
+  function assets(){return assetsPromise??=Promise.all([scripts,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
   const HALL_SIZES={Verseborn:36,Mira:36,Torren:32,Seerin:42,Kael:40,Sparky:30,Marli:38,Glimmer:36,Revus:40,Nyx:30,Rava:30,Jory:30};
   const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:164,y:84,w:240},Glimmer:{x:485,y:77,w:230}};
   const EXTRA={}; // Core family/recruitment casts remain; optional drop-ins are omitted.
@@ -91,6 +91,15 @@
     }
   }
   function portrait(id){return art['portrait-'+id]?.src||portraitSources[id==='Marli'?'Marla':id]||'';}
+  function dialogueShot(beat){
+    const wide=SHOTS[scene.id];if(!['close','prop'].includes(beat.shot))return{...wide};
+    const speaker=scene.actors.find(a=>a.id===beat.speaker),lead=scene.actors.find(a=>a.id===scene.id);if(!speaker||!lead)return{...wide};
+    const listener=speaker!==lead?lead:scene.actors.find(a=>a.id===(scene.id==='Mira'?'Revus':scene.id==='Seerin'?'Rava':'Verseborn'));
+    const cast=[speaker,listener].filter(Boolean).map(a=>({...currentPos(a),size:a.size}));
+    const left=Math.min(...cast.map(a=>a.x-a.size*.5)),right=Math.max(...cast.map(a=>a.x+a.size*.5)),top=Math.min(...cast.map(a=>a.y-a.size)),bottom=Math.max(...cast.map(a=>a.y+4));
+    const w=clamp(Math.max(right-left+42,(bottom-top+19)*LOGICAL_WIDTH/(LOGICAL_HEIGHT*.76)),165,wide.w);
+    return{x:(left+right)/2,y:(top+bottom)/2,w};
+  }
   function setBeat(index){
     if(!scene)return false;if(index>=scene.beats.length)return finish();settleMoves();scene.index=index;scene.beatAt=scene.clock;
     const b=scene.beats[index],panelEvents={bowl:'sparky-bowl',cute:'sparky-cute',scold:'sparky-scold','revus-chibi':'revusReaction'};setComic(Object.prototype.hasOwnProperty.call(b,'panel')?b.panel:panelEvents[b.event]||null);if(b.event)event(b.event);scene.beat=b;
@@ -100,9 +109,9 @@
     ui.caption.querySelector('h2').textContent=b.caption||'';ui.caption.querySelector('p').textContent=b.event==='title'?scene.story.role:'';
     ui.caption.classList.toggle('is-title',b.event==='title');
     ui.speaker.textContent=b.speaker==='Revus'?'Baron Revus Veln':b.offscreen?'Marli · from the bar':b.speaker||'';ui.line.textContent=b.text||'';
-    const src=portrait(b.speaker);ui.portrait.hidden=!src;if(src)ui.portrait.src=src;
+    const src=portrait(b.speaker);ui.portrait.hidden=!src;ui.portrait.parentElement.hidden=!src;overlay.dataset.speaker=b.speaker||'';if(src)ui.portrait.src=src;
     ui.auto.textContent=window.CutsceneAutoplay?.enabled?'Autoplay on':'Autoplay off';
-    const shot=SHOTS[scene.id];scene.cameraFrom={...scene.camera};scene.cameraTo={...shot,w:shot.w*(b.shot==='close'?.92:1)};
+    scene.cameraFrom={...scene.camera};scene.cameraTo=dialogueShot(b);
     return true;
   }
   async function start(id,options={},entry=null){
@@ -182,7 +191,7 @@
   }
   function imageAt(id,x,y,w,alpha=1){const image=art[id];if(!image)return;ctx.save();ctx.globalAlpha=alpha;const h=w*image.height/image.width;ctx.drawImage(image,x-w/2,y-h,w,h);ctx.restore();}
   function paint(){
-    if(!scene)return;const s=scene,age=s.clock-s.beatAt,safe=LOGICAL_HEIGHT*.80,blend=ease(age/1100),from=s.cameraFrom||s.camera,to=s.cameraTo||s.camera;
+    if(!scene)return;const s=scene,age=s.clock-s.beatAt,safe=LOGICAL_HEIGHT*.76,blend=ease(age/1100),from=s.cameraFrom||s.camera,to=s.cameraTo||s.camera;
     s.camera={x:from.x+(to.x-from.x)*blend,y:from.y+(to.y-from.y)*blend,w:from.w+(to.w-from.w)*blend};
     const camera=s.camera,scale=LOGICAL_WIDTH/camera.w,viewH=safe/scale,left=clamp(camera.x-camera.w/2,0,640-camera.w),top=clamp(camera.y-viewH/2,0,356-viewH);
     ctx.save();ctx.fillStyle='#100b13';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,safe);ctx.clip();ctx.scale(scale,scale);ctx.translate(-left,-top);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';drawHall();
