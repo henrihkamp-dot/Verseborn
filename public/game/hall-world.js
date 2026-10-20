@@ -363,11 +363,13 @@
     if(id==='Mira'&&row===2)return [0,1,2,4,5,6,7,5][frame];
     return frame;
   }
+  const interactionRadius=a=>a===resonance||a.barStool?23:a.approach?32:42;
+  const interactionDistance=a=>Math.hypot(player.x-(a.approach?.x??a.x),player.y-(a.approach?.y??a.y));
+  const canInteract=a=>interactionDistance(a)<=interactionRadius(a);
   function nearby(){
     const riftDoor=window.EmberRift?.nearbyHallDoor(player);if(riftDoor)return riftDoor;
     if(Math.hypot(player.x-resonance.approach.x,player.y-resonance.approach.y)<23)return resonance;
-    const distance=a=>Math.hypot(player.x-(a.approach?.x??a.x),player.y-(a.approach?.y??a.y));
-    return residents().filter(a=>distance(a)<23).sort((a,b)=>distance(a)-distance(b))[0];
+    return residents().filter(canInteract).sort((a,b)=>interactionDistance(a)-interactionDistance(b))[0];
   }
   function trigger(actor){
     keys.clear();target=null;route=[];pendingActor=null;
@@ -513,7 +515,7 @@
       player.phase+=Math.hypot(mx,my)/9;state.hallPosition={x:player.x,y:player.y,facing:player.facing};
     }
     else {if(wasWalking)queueSave();player.walking=false;}
-    if(!target&&pendingActor){const actor=pendingActor;pendingActor=null;trigger(actor);}
+    if(pendingActor&&(!target||canInteract(pendingActor))){const actor=pendingActor;pendingActor=null;trigger(actor);}
   }
   drawTileMap=function(){
     if(!inHall()||activeRecruitScene){last=performance.now();oldDraw();return;}
@@ -591,7 +593,7 @@
     const rect=canvas.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width*LOGICAL_WIDTH+camera.x,y=(event.clientY-rect.top)/rect.height*LOGICAL_HEIGHT+camera.y;
     const riftDoor=window.EmberRift?.hallDoorHit(x,y);if(riftDoor){if(nearby()?.id===riftDoor.id)trigger(riftDoor);else navigate(riftDoor.approach.x,riftDoor.approach.y,riftDoor);return;}
     const clicked=residents().find(a=>Math.abs(x-a.x)<a.size*.5&&y>a.y-a.size&&y<a.y+4);
-    if(clicked){const near=nearby();if(near?.id===clicked.id)trigger(clicked);else {const point=clicked.approach||clicked;navigate(point.x,point.y,clicked);}}
+    if(clicked){if(canInteract(clicked))trigger(clicked);else {const point=clicked.approach||clicked;navigate(point.x,point.y,clicked);}}
     else if(Math.abs(x-resonance.x)<resonance.width/2&&y>resonance.y-resonance.height&&y<resonance.y){
       if(nearby()?.id===resonance.id)trigger(resonance);else navigate(resonance.approach.x,resonance.approach.y,resonance);
     }
@@ -599,7 +601,7 @@
   },true);
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
-  window.emberHallWorld={hallBackground,closedRooms,vacantClutter,findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  window.emberHallWorld={hallBackground,closedRooms,vacantClutter,findPath,canInteract,interactionRadius,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
   // Cinematics reuse the actual Hall scenery and foreground depth without
   // advancing resident AI or changing saved actors.
   Object.assign(window.emberHallWorld,{foregroundProps,

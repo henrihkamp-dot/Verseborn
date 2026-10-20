@@ -10,11 +10,11 @@
   const ui=Object.fromEntries(['location','skip','caption','dialogue','portrait','speaker','line','next','auto'].map(k=>[k,overlay.querySelector('.welcome-'+k)]));
   const oldPlay=playRecruitScene,oldDraw=drawTileMap,oldSave=saveGame,oldControl=handleControl,oldTrack=trackForScene,oldNext=nextTalk,oldSkip=skipTalk;
   const load=(id,url)=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{art[id]=img;resolve();};img.onerror=()=>reject(Error('Welcome image unavailable: '+url));img.src=url;});
-  const scripts=fetch('welcome-story.json?v=309').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
+  const scripts=fetch('welcome-story.json?v=311').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
   scripts.catch(console.error);
-  function assets(){return assetsPromise??=Promise.all([scripts,HallSpriteRefresh.ready,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-intimidated'?'refresh-309/':id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
+  function assets(){return assetsPromise??=Promise.all([scripts,HallSpriteRefresh.ready,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/'+(id==='sparky-panic'?'refresh-311/':id==='sparky-angry'?'comic-307/':'comic-306/')+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusFront','assets/hall/comic-307/revus-front.webp'),load('glimmerTalk','assets/hall/comic-307/glimmer-talk.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
   const HALL_SIZES={Verseborn:36,Mira:36,Torren:32,Seerin:39,Kael:40,Sparky:30,Marli:38,Glimmer:36,Revus:40,Nyx:30,Rava:30,Jory:30};
-  const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:164,y:84,w:240},Glimmer:{x:485,y:77,w:230}};
+  const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:160,y:79,w:260},Glimmer:{x:485,y:77,w:230}};
   const EXTRA={}; // Core family/recruitment casts remain; optional drop-ins are omitted.
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
   const permitted=(id,roster)=>id==='Verseborn'||id==='Marli'||guestIds.includes(id)||roster.has(id);
@@ -26,7 +26,7 @@
     if(id==='Torren')return[actor('Torren',212,88),actor('Verseborn',131,91),actor('Marli',214,88)];
     if(id==='Seerin')return[actor('Seerin',88,180),actor('Rava',48,179,{pose:5}),actor('Nyx',145,180),actor('Jory',120,190),actor('Verseborn',210,190)];
     if(id==='Kael')return[actor('Kael',464,316),actor('Verseborn',510,334)];
-    return[actor('Sparky',165,82),actor('Verseborn',126,91),...(scene.full?[actor('Mira',206,92),actor('Seerin',235,76)]:[])];
+    return[actor('Sparky',165,82),actor('Verseborn',126,91),...(scene.full?[actor('Mira',206,92),actor('Seerin',235,76),...(scene.roster.has('Torren')?[actor('Torren',95,55,32,{cooking:true})]:[])]:[])];
   }
   function move(id,x,y,duration=1800){
     const a=scene.actors.find(a=>a.id===id);if(!a)return;
@@ -41,12 +41,12 @@
   function settleMoves(){for(const a of scene.actors)if(a.motion){const p=currentPos(a);a.x=p.x;a.y=p.y;if(!p.walking)delete a.motion;}}
   function sfx(id,volume=.22){if(!document.hidden)playSfx(id,volume);}
   function setComic(key){if(scene.comic.key===key)return;scene.comic={key,at:scene.clock,serial:scene.comic.serial+1};}
-  function fly(x,y){const a=scene.actors.find(a=>a.id==='Glimmer'),p=currentPos(a);a.motion={x:p.x,y:p.y,toX:x,toY:y,points:[[p.x,p.y],[x,y]],length:Math.hypot(x-p.x,y-p.y),at:scene.clock,duration:1600};a.flying=true;a.labWorking=false;scene.holdUntil=scene.clock+1850;}
+  function fly(x,y,stairs=false){const a=scene.actors.find(a=>a.id==='Glimmer'),p=currentPos(a);if(stairs){if(!move('Glimmer',x,y,2400))return false;}else{const length=Math.hypot(x-p.x,y-p.y),duration=Math.max(2400,length/24*1000);a.motion={x:p.x,y:p.y,toX:x,toY:y,points:[[p.x,p.y],[x,y]],length,at:scene.clock,duration};scene.holdUntil=Math.max(scene.holdUntil||0,scene.clock+duration+250);}a.flying=true;a.labWorking=false;return true;}
   function event(name){
     const s=scene;s.event=name;s.effectAt=s.clock;const get=id=>s.actors.find(a=>a.id===id);
     switch(name){
       case 'verse-enter':move('Verseborn',s.id==='Seerin'?185:277,s.id==='Seerin'?185:237);break;
-      case 'glimmer-arrive':fly(438,86);break;
+      case 'glimmer-arrive':fly(438,86,true);break;
       case 'glimmer-bench':move('Verseborn',440,87);move('Glimmer',464,87);get('Glimmer').labWorking=false;break;
       case 'glimmer-boost':fly(496,78);break;
       case 'glimmer-boost-two':fly(477,105);break;
@@ -78,13 +78,13 @@
       case 'supplies':case 'cup':case 'healer':case 'healer-end':case 'wash':s.prop='bandages';break;
       case 'ledger':case 'oath':s.prop='ledger';break;
       case 'bowl':s.prop='blanket';setComic('sparky-bowl');break;
-      case 'duo-enter':setComic(null);move('Mira',151,91);move('Seerin',201,91);break;
-      case 'cute':setComic('sparky-cute');sfx('magic',.23);break;
-      case 'freeze':setComic(null);sfx('block',.12);break;
+      case 'duo-enter':s.duoMood='cute';setComic(null);move('Mira',151,91);move('Seerin',201,91);break;
+      case 'cute':s.duoMood='cute';setComic('sparky-cute');sfx('magic',.23);break;
+      case 'freeze':s.duoMood='angry';s.fright=true;if(get('Torren'))get('Torren').cooking=false;setComic(null);sfx('block',.12);break;
       case 'scold':setComic('sparky-scold');break;
-      case 'apology':setComic(null);break;
+      case 'apology':s.duoMood='stern';setComic(null);break;
       case 'strap':s.sparkySniff=true;break;
-      case 'choice':setComic(null);s.sparkySniff=false;s.prop='blanket';break;
+      case 'choice':s.duoMood=null;s.fright=false;if(get('Torren'))get('Torren').cooking=true;setComic(null);s.sparkySniff=false;s.prop='blanket';break;
       case 'settle':break;
       case 'torren-cameo':s.prop='stew';break;
       case 'title':setComic(null);break;
@@ -137,20 +137,38 @@
     if(duo)start('Sparky',{after:s.options.after});else s.options.after?.();return true;
   }
   function next(force=false){if(!scene)return false;if(!force&&(scene.clock<(scene.holdUntil||0)||scene.clock-scene.beatAt<(scene.beat.minMs||350)))return false;return setBeat(scene.index+1);}
+  function drawReactionMarks(p,size,now,cute){
+    ctx.save();ctx.lineWidth=.32;ctx.strokeStyle=cute?'#54253f':'#5a1017';ctx.fillStyle=cute?'#ff72a6':'#ef3f43';
+    if(cute){for(let i=0;i<3;i++){const phase=(now/1800+i/3)%1,x=p.x+Math.sin(i*2.3+phase)*size*.29,y=p.y-size*.83-phase*8,r=1.7;ctx.globalAlpha=Math.sin(phase*Math.PI);ctx.beginPath();ctx.moveTo(x,y+r);ctx.bezierCurveTo(x-r*2,y,x-r*1.6,y-r*1.5,x,y-r*.4);ctx.bezierCurveTo(x+r*1.6,y-r*1.5,x+r*2,y,x,y+r);ctx.fill();ctx.stroke();}}
+    else{ctx.translate(p.x+size*.25,p.y-size*.85);ctx.lineWidth=.7;for(let i=0;i<4;i++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(.5,1.5);ctx.quadraticCurveTo(2,1.5,2,3);ctx.stroke();}}
+    ctx.restore();
+  }
   function drawActor(a){
     if(a.alpha<=0)return;const p=currentPos(a),now=scene.clock,id=a.id==='Marli'?'Marla':a.id,size=a.size;
     const partner=scene.actors.find(other=>other.id===scene.id),idleFacing=(partner?.x??p.x)>p.x?2:3;
     ctx.save();ctx.globalAlpha=a.alpha;const walking=Boolean(p.walking),frame=walking?Math.floor((p.distance||0)/2.5)%8:0;
     ctx.fillStyle='#0a05084a';ctx.beginPath();ctx.ellipse(p.x,p.y-1,size*.15,size*.05,0,0,Math.PI*2);ctx.fill();
-    let source;
+    let source;a.gesture=null;a.gesture=null;
     if(['Nyx','Rava','Jory'].includes(a.id)){
       const speaking=scene.beat.speaker===a.id,practice=!!scene.actors.find(a=>a.id==='Seerin')?.practice,index=HallSpriteRefresh.childFrame(a.id,now,speaking,practice);
       HallSpriteRefresh.draw(ctx,a.id,p.x,p.y,size,index,a.id==='Jory');source='hall/refresh-309/'+a.id.toLowerCase()+'.webp';a.gesture={frame:index,whole:true};
     }else if(guestIds.includes(a.id)){
       const walk=walking&&a.id==='Revus',image=art[a.id],cols=3,cell=100,index=a.pose===0&&scene.beat.speaker===a.id?1:a.pose;
-      if(walk){const front=art.revusFront,cw=front.width/4,ch=front.height,index=Math.floor(p.distance/2.8)%4;ctx.save();ctx.translate(p.x,p.y);ctx.scale(-1,1);ctx.drawImage(front,index*cw,0,cw,ch,-size*cw/ch/2,-size*.96,size*cw/ch,size);ctx.restore();}else{const toVerse=scene.beat.speaker==='Verseborn'||scene.beat.speaker==='Revus'&&/Baron Revus Veln|Ash Quarter tavern|speaking to my daughter/.test(scene.beat.text||''),addressed=toVerse?scene.actors.find(a=>a.id==='Verseborn'):scene.actors.find(a=>a.id==='Mira'),targetX=addressed?currentPos(addressed).x:p.x-1,direction=targetX<p.x?0:1;HallSpriteRefresh.draw(ctx,'Revus',p.x,p.y,size,direction*2+(scene.beat.speaker==='Revus'?1:0));a.gesture={facing:direction===0?'left':'right',whole:true};}source=walk?'hall/comic-307/revus-front.webp':'hall/refresh-309/revus.webp';
+      if(walk){const front=art.revusFront,cw=front.width/4,ch=front.height,index=Math.floor(p.distance/2.8)%4;ctx.save();ctx.translate(p.x,p.y);ctx.scale(-1,1);ctx.drawImage(front,index*cw,0,cw,ch,-size*cw/ch/2,-size*.96,size*cw/ch,size);ctx.restore();}else{const toVerse=scene.beat.speaker==='Verseborn'||scene.beat.speaker==='Revus'&&/Baron Revus Veln|Ash Quarter tavern|speaking to my daughter/.test(scene.beat.text||''),addressed=toVerse?scene.actors.find(a=>a.id==='Verseborn'):scene.actors.find(a=>a.id==='Mira'),targetX=addressed?currentPos(addressed).x:p.x-1,direction=targetX<p.x?0:1;HallSpriteRefresh.draw(ctx,'Revus',p.x,p.y,size,direction*2+(scene.beat.speaker==='Revus'?1:0));a.gesture={facing:direction===0?'left':'right',whole:true};}source=walk?'hall/comic-307/revus-front.webp':'hall/refresh-311/revus.webp';
+    }else if(scene.fright&&['Torren','Verseborn','Sparky'].includes(id)&&!walking){
+      const fearFrame=[0,1,2,1,3,1][Math.floor(now/260)%6];HallSpriteRefresh.draw(ctx,id+'Fear',p.x,p.y,size,fearFrame);source='hall/refresh-311/sparky-fear-reactions.webp';a.gesture={fright:true,frame:fearFrame};
     }else if(id==='Verseborn'){
       emberHallWorld.drawActor({...p,id,size,poseFrame:walking?frame:8},walking?p.facing:idleFacing,0,{x:0,y:0});source='hall/refresh-309/verseborn-walk.webp';
+    }else if(walking&&['Mira','Seerin'].includes(id)){
+      const right=p.facing===2||![2,3].includes(p.facing)&&a.motion?.toX>a.motion?.x,step=Math.floor((p.distance||0)/3)%4;
+      HallSpriteRefresh.draw(ctx,id+'Walk',p.x,p.y,size,(right?4:0)+step);source='hall/refresh-311/'+id.toLowerCase()+'-walk.webp';a.gesture={walking:true,step};
+    }else if(scene.duoMood&&['Mira','Seerin'].includes(id)&&!walking){
+      const cute=scene.duoMood==='cute',reactionFrame=cute?[0,1,2,1,3,0][Math.floor(now/380)%6]:scene.beat.speaker===id?[0,1,2,1,3][Math.floor(now/260)%5]:0,listener=scene.actors.find(a=>a.id===(cute?'Sparky':'Verseborn'));
+      HallSpriteRefresh.draw(ctx,id+(cute?'Cute':'Demon'),p.x,p.y,size,reactionFrame,listener&&currentPos(listener).x>p.x);source='hall/refresh-311/sparky-'+(cute?'cute':'angry')+'-reactions.webp';a.gesture={mood:scene.duoMood,frame:reactionFrame};drawReactionMarks(p,size,now,cute);
+    }else if(id==='Mira'&&!walking){
+      const age=now-scene.beatAt,talking=scene.beat.speaker==='Mira',gesture=talking&&age%9000>=1200&&age%9000<3000,index=gesture?(age%9000<2400?(Math.floor(age/400)%2?4:5):6):talking?[0,1,2,1][Math.floor(age/320)%4]:now%6000>5800?3:0;
+      const listener=scene.actors.find(a=>a.id===(scene.id==='Mira'?'Revus':'Verseborn')),faceRight=listener&&currentPos(listener).x>p.x;
+      HallSpriteRefresh.draw(ctx,'MiraTalk',p.x,p.y,size,index,faceRight);source='hall/refresh-311/mira-talk.webp';a.gesture={frame:index,unarmed:true,lip:gesture};
     }else if(id==='Kael'&&walking){
       emberHallWorld.drawActor({...p,id,size,visiting:true,walking:true,facing:p.facing,walkPhase:(p.distance||0)/2.5},0,0,{x:0,y:0});source='hall/kael-walk-v237.webp';
     }else if(id==='Glimmer'&&!a.ambientResident){
@@ -167,10 +185,10 @@
 
       const image=art.hallCook,cell=image.width/4,index=[0,1,2,1][Math.floor(now/340)%4];ctx.drawImage(image,index*cell,0,cell,cell,p.x-size/2,p.y-size*.94,size,size);source='hall/living-256/torren-kitchen.webp';
     }else{
-      const index=id==='Marla'?scene.beat.speaker==='Marli'?12:emberHallWorld.marlaIdleFrame(now):a.practice?[0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,0][Math.floor(now/180)%16]:id==='Kael'?Math.floor(now/350)%16:id==='Mira'&&scene.beat.speaker==='Mira'?Math.floor((now-scene.beatAt)/180)%16:0;
-      emberHallWorld.drawActor({...p,id,size,kitchenActive:false,labActive:id==='Glimmer',labClock:now,labRow:2,labLift:0},4,index,{x:0,y:0});source=['Mira','Seerin'].includes(id)?'hall/refresh-309/'+id.toLowerCase()+'.webp':'hall/'+id.toLowerCase()+'-action-'+(id==='Kael'?'v9':'v8')+'.webp';
+      const index=id==='Marla'?scene.beat.speaker==='Marli'?12:emberHallWorld.marlaIdleFrame(now):a.practice?[0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,0][Math.floor(now/180)%16]:id==='Kael'?Math.floor(now/350)%16:id==='Mira'?(scene.beat.speaker==='Mira'?[0,1,2,1][Math.floor((now-scene.beatAt)/320)%4]:now%6000>5800?3:0):0;
+      emberHallWorld.drawActor({...p,id,size,kitchenActive:false,labActive:id==='Glimmer',labClock:now,labRow:2,labLift:0},4,index,{x:0,y:0});source=['Mira','Seerin'].includes(id)?'hall/'+(id==='Mira'?'refresh-311/':'refresh-309/')+id.toLowerCase()+'.webp':'hall/'+id.toLowerCase()+'-action-'+(id==='Kael'?'v9':'v8')+'.webp';
     }
-    scene.draws.push({id:a.id,source,frame,walking,row:id==='Mira'&&p.row>=2?5-p.row:p.row,facing:id==='Verseborn'&&!walking?idleFacing:p.facing,gesture:a.gesture,labWorking:!!a.labWorking,flying:!!a.flying,x:p.x,y:p.y,size});ctx.restore();
+    scene.draws.push({id:a.id,source,frame,walking,row:id==='Mira'&&p.row>=2?5-p.row:p.row,facing:id==='Verseborn'&&!walking?idleFacing:p.facing,gesture:a.gesture,labWorking:!!a.labWorking,flying:!!a.flying,x:p.x,y:p.y,size,motion:a.motion?{duration:a.motion.duration,points:a.motion.points}:null});ctx.restore();
   }
   function drawHall(){
     const world=emberHallWorld,now=scene.clock;scene.draws=[];ctx.drawImage(world.hallBackground(),0,0,640,356);
@@ -185,7 +203,12 @@
   function paint(){
     if(!scene)return;const s=scene,age=s.clock-s.beatAt,safe=LOGICAL_HEIGHT*.76,blend=ease(age/1100),from=s.cameraFrom||s.camera,to=s.cameraTo||s.camera;
     s.camera={x:from.x+(to.x-from.x)*blend,y:from.y+(to.y-from.y)*blend,w:from.w+(to.w-from.w)*blend};
-    const camera=s.camera,scale=LOGICAL_WIDTH/camera.w,viewH=safe/scale,left=clamp(camera.x-camera.w/2,0,640-camera.w),top=clamp(camera.y-viewH/2,0,356-viewH);
+    let view=s.camera;
+    if(s.id==='Glimmer'&&s.beat.event==='glimmer-arrive'){
+      const g=s.actors.find(a=>a.id==='Glimmer'),v=s.actors.find(a=>a.id==='Verseborn'),p=currentPos(g);
+      if(p.walking&&g.motion){const progress=clamp((s.clock-g.motion.at)/g.motion.duration,0,1),mix=Math.min(1,(1-progress)*4),q=currentPos(v),w=clamp(Math.max(230,Math.abs(p.x-q.x)+85,(Math.abs(p.y-q.y)+62)*LOGICAL_WIDTH/safe),230,420),follow={x:(p.x+q.x)/2,y:(p.y+q.y)/2-13,w};view={x:s.camera.x+(follow.x-s.camera.x)*mix,y:s.camera.y+(follow.y-s.camera.y)*mix,w:s.camera.w+(follow.w-s.camera.w)*mix};}
+    }
+    const camera=view,scale=LOGICAL_WIDTH/camera.w,viewH=safe/scale,left=clamp(camera.x-camera.w/2,0,640-camera.w),top=clamp(camera.y-viewH/2,0,356-viewH);
     ctx.save();ctx.fillStyle='#100b13';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,safe);ctx.clip();ctx.scale(scale,scale);ctx.translate(-left,-top);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';drawHall();
     ctx.restore();
     if(s.comic.key){const page=WelcomeComicPanels.pages[s.comic.key];WelcomeComicPanels.draw(ctx,s.comic.key,art[page.asset],s.clock-s.comic.at,LOGICAL_WIDTH,safe);}
@@ -202,5 +225,5 @@
   nextTalk=function(...args){if(scene)return next();const r=oldNext(...args);if(el.speaker.textContent==='Marla')el.speaker.textContent='Marli';for(const name of [el.portraitLeftName,el.portraitRightName])if(name?.textContent==='Marla')name.textContent='Marli';return r;};
   skipTalk=function(...args){return scene?finish():oldSkip(...args);};
   playRecruitScene=function(entry,options={}){return ids.includes(entry?.recruit)&&(entry.variant==='welcome'||entry.id.startsWith('ember-hall-start-'))?start(entry.recruit,options,entry):oldPlay(entry,options);};
-  window.FlameguardWelcomes={ready:scripts,start,next,finish,get active(){return Boolean(scene)||loading;},get current(){return scene?{id:scene.id,index:scene.index,full:scene.full,cast:scene.actors.map(a=>a.id),beat:scene.beat,length:scene.beats.length,draws:scene.draws,background:'ember-hall',comic:{...scene.comic},holdUntil:scene.holdUntil,clock:scene.clock}:null;},preview(index){if(!scene)return false;scene.previewing=true;const id=scene.id;scene.actors=initial(id);for(const [extra,[x,y]]of Object.entries(EXTRA[id]||{}))if(scene.roster.has(extra)&&!scene.actors.some(a=>a.id===extra))scene.actors.push(actor(extra,x,y));scene.prop=null;scene.comic={key:null,at:0,serial:0};scene.event='establish';scene.background=scene.story.background;for(let i=0;i<=index&&i<scene.beats.length;i++){setBeat(i);scene.clock=Math.max(scene.clock+Math.max(scene.beat.minMs||0,2000),scene.holdUntil||0);settleMoves();}paint();return true;}};
+  window.FlameguardWelcomes={ready:scripts,start,next,finish,get active(){return Boolean(scene)||loading;},get current(){return scene?{id:scene.id,index:scene.index,full:scene.full,cast:scene.actors.map(a=>a.id),beat:scene.beat,length:scene.beats.length,draws:scene.draws,background:'ember-hall',comic:{...scene.comic},holdUntil:scene.holdUntil,clock:scene.clock}:null;},preview(index){if(!scene)return false;scene.previewing=true;const id=scene.id;scene.actors=initial(id);for(const [extra,[x,y]]of Object.entries(EXTRA[id]||{}))if(scene.roster.has(extra)&&!scene.actors.some(a=>a.id===extra))scene.actors.push(actor(extra,x,y));scene.prop=null;scene.duoMood=null;scene.fright=false;scene.comic={key:null,at:0,serial:0};scene.event='establish';scene.background=scene.story.background;for(let i=0;i<=index&&i<scene.beats.length;i++){setBeat(i);scene.clock=Math.max(scene.clock+Math.max(scene.beat.minMs||0,2000),scene.holdUntil||0);settleMoves();}paint();return true;}};
 })();

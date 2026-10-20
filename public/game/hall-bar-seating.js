@@ -2,7 +2,7 @@
   'use strict';
   const images={},stool={id:'Bar stool',barStool:true,x:501,y:197,size:38,approach:{x:451,y:185}},base='assets/hall/opening-288/';
   let sitting=null,loaded=false;
-  const ready=Promise.all(['bar-seating'].map(name=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=reject;image.src=name==='bar-seating'?'assets/hall/opening-291/verseborn-mount.webp':base+name+'.webp';}))).then(()=>loaded=true);
+  const ready=Promise.all([HallSpriteRefresh.ready,...['bar-seating'].map(name=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=reject;image.src=name==='bar-seating'?'assets/hall/refresh-311/verseborn-mount.webp':base+name+'.webp';}))]).then(()=>loaded=true);
   const inHall=()=>state.gameMode==='hallBattles'&&state.map==='emberHallBattles'&&!activeRecruitScene&&!window.HallOpening?.active&&!window.TinusRecruitment?.replaying;
   const exit=document.createElement('button');exit.type='button';exit.textContent='Stand up · Esc';exit.hidden=true;exit.style.cssText='position:absolute;bottom:20px;left:calc(50% + 180px);transform:translateX(-50%);z-index:12;background:#201725;color:#f4d9a0;border:1px solid #bc9656;padding:7px 13px;font:12px Georgia,serif;cursor:pointer';document.querySelector('.game').append(exit);
   const chat=exit.cloneNode(true);chat.textContent='Talk to Marli · E';chat.style.left='calc(50% - 180px)';exit.before(chat);chat.onclick=()=>talk(true);

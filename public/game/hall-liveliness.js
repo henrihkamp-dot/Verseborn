@@ -71,11 +71,7 @@
     ctx.save();ctx.translate(actor.x-camera.x,actor.y-camera.y-(actor.labLift||0));
     if(!actor.labFlying&&!actor.labHovering)ctx.scale(-1,1);
     ctx.drawImage(source,frame*cell,(actor.labHovering?(actor.labEureka?actor.labEurekaRow:actor.labPonderRow):row)*cell,cell,cell,-size/2,-size*.94,size,size);
-    if(actor.labFlying||actor.labHovering||actor.labRepairHover){
-      const pulse=.55+.3*Math.sin(actor.labClock*.045)+.15*Math.sin(actor.labClock*.083);
-      ctx.globalCompositeOperation='screen';ctx.globalAlpha=.35+pulse*.4;ctx.fillStyle='#a8efff';
-      for(const bx of [-size*.1,size*.08]){ctx.beginPath();ctx.moveTo(bx-1,-size*.17);ctx.lineTo(bx+1,-size*.17);ctx.lineTo(bx+.5,-size*.17+2+pulse*2.5);ctx.closePath();ctx.fill();}
-    }
+    // Thruster flames are painted into the flight frames; do not draw synthetic heel beams.
     ctx.restore();return true;
   }
   function drawLabProps(camera){

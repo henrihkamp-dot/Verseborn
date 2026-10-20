@@ -4,7 +4,7 @@
   const ID='ember-hall-welcome',BASE='assets/hall/opening-254/',art={};
   let story,manifest,scene=null,opening=false,settingLine=false,raf;
   const load=(name,url)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{art[name]=image;resolve();};image.onerror=()=>reject(Error('Opening asset missing: '+url));image.src=url;});
-  const ready=Promise.all([fetch('hall-opening-story.json?v=254').then(r=>{if(!r.ok)throw Error('Opening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>r.json()).then(data=>manifest=data),load('construction',BASE+'construction.webp'),load('tools',BASE+'tools.webp'),load('seated',BASE+'glimmer-seated.webp'),load('verseSeat','assets/hall/opening-291/verseborn-mount.webp'),load('assemblies','assets/hall/glimmer-repair-props-v244.webp'),load('lab','assets/hall/glimmer-lab-v244.webp'),load('hover','assets/hall/glimmer-hover-v244.webp'),load('door','assets/rift/hall-closed-door-crop.webp'),...['Verseborn','Marla','Glimmer'].map(id=>load('portrait-'+id,portraitSources[id]))]);
+  const ready=Promise.all([HallSpriteRefresh.ready,fetch('hall-opening-story.json?v=254').then(r=>{if(!r.ok)throw Error('Opening script unavailable');return r.json();}).then(data=>story=data),fetch(BASE+'manifest.json').then(r=>r.json()).then(data=>manifest=data),load('construction',BASE+'construction.webp'),load('tools',BASE+'tools.webp'),load('seated',BASE+'glimmer-seated.webp'),load('verseSeat','assets/hall/refresh-311/verseborn-mount.webp'),load('assemblies','assets/hall/glimmer-repair-props-v244.webp'),load('lab','assets/hall/glimmer-lab-v244.webp'),load('hover','assets/hall/glimmer-hover-v244.webp'),load('door','assets/rift/hall-closed-door-crop.webp'),...['Verseborn','Marla','Glimmer'].map(id=>load('portrait-'+id,portraitSources[id]))]);
   ready.catch(error=>console.error(error));
   function drawMachine(context,image,x,baseline,width,height,now=performance.now()){
     if(window.ResonanceMachine?.ready)return ResonanceMachine.draw(context,image,x,baseline,width,height,now);
@@ -57,7 +57,8 @@
     if(pose==='sit'){const frame=story.beats[scene.index].speaker==='Glimmer'?2:now%7300>7100?3:Math.floor(now/2600)%2;ctx.drawImage(art.seated,frame*100,0,100,100,x-size/2,y-size*.94,size,size);return;}
     const hovering=['fly','eureka','ponder','hover-wrench','hover-tinker'].includes(pose),thinking=['eureka','ponder'].includes(pose),image=thinking?art.hover:art.lab,cell=image.width/4,row=pose==='fly'?direction:thinking?(direction?5:2):pose.includes('wrench')?3:2,frame=pose==='eureka'?2:pose==='ponder'?(Math.floor(now/950)%5===4?1:0):Math.floor(now/(pose==='fly'?145:190))%4;
     ctx.save();ctx.translate(x,y);if(!thinking&&pose!=='fly'&&direction===0)ctx.scale(-1,1);ctx.drawImage(image,frame*cell,row*cell,cell,cell,-size/2,-size*.94,size,size);
-    if(hovering){const pulse=.6+.2*Math.sin(now*.043)+.15*Math.sin(now*.079),heel=pose.startsWith('hover-')?-size*.03:-size*.18;ctx.globalCompositeOperation='screen';ctx.globalAlpha=.5;ctx.fillStyle='#a8eaff';for(const bx of [-size*.10,size*.08]){ctx.beginPath();ctx.moveTo(bx-1,heel);ctx.lineTo(bx+1,heel);ctx.lineTo(bx,heel+3+pulse*4);ctx.closePath();ctx.fill();}}ctx.restore();
+    // Use the thrusters already painted in the sprite frames.
+    ctx.restore();
   }
   // Every destination is a machine fitting or a visible temporary workbench.
   const workStops=[{x:283,y:144,pose:'hover-wrench'},{x:348,y:141,pose:'hover-wrench'},{x:313,y:163,pose:'hover-tinker'},{x:291,y:105,pose:'hover-wrench'},{x:343,y:102,pose:'hover-tinker'},{x:390,y:177,pose:'hover-wrench'},{x:285,y:144,pose:'hover-wrench'},{x:349,y:139,pose:'hover-tinker'}];
@@ -143,7 +144,7 @@
   },draw(image,camera,progress,frame){
     const t=Math.max(0,Math.min(1,progress)),index=t<1?Math.min(3,Math.floor(t*4)):frame===3?5:4;
     const xs=[488,493,498,501,501,501],ys=[158,155,152,150,149,149];
-    ctx.drawImage(image,index*128,0,128,128,xs[index]-24-camera.x,ys[index]-camera.y,48,44);
+    const f=HallSpriteRefresh.frames.VerseSeat.frames[index];ctx.drawImage(image,f.x,f.y,f.w,f.h,f.dx-camera.x,f.dy-camera.y,f.dw,f.dh);
     if(index>=2)this.front(camera);
   }};
   window.HallOpening={ready,start,next,finish,drawMachine,workStops,get verseborn(){return scene?versebornPose():null;},get glimmer(){return scene?glimmerPosition(performance.now()):null;},get active(){return Boolean(scene);},get beat(){return scene?.index??-1;},get script(){return story;},get stage(){return scene?.stage??-1;},previewBeat(index){if(!scene||!Number.isInteger(index)||!story.beats[index])return false;scene.stage=story.beats[index].stage;if(scene.stage>0){scene.departAt=0;scene.verseSitAt=0;}setBeat(index);scene.clock+=1500;paint(performance.now());return true;}};
