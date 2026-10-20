@@ -194,7 +194,7 @@
   function renderCommands(){
     if(!unit||!battle)return;
     root.dataset.level=ui.level;
-    heading.innerHTML=`<strong>${esc(unit.name)}</strong><span>${ui.level==='target'?'Choose target':ui.level==='items'?'Carried items':ui.level==='itemTarget'?'Choose fallen ally':'Choose an action'}</span>`;
+    heading.innerHTML=`<strong>${esc(unit.name)}</strong><span>${ui.level==='target'?'Choose target':ui.level==='items'?'Carried items':ui.level==='itemTarget'?'Choose fallen ally':esc(battle.encounterNotice?.until>tick?battle.encounterNotice.title+' · '+battle.encounterNotice.text:'Choose an action')}</span>`;
     renderCategories();actionRow.innerHTML='';
     if(ui.level==='items'){renderItems();}
     else if(ui.level==='itemTarget'){renderItemTargets();}
@@ -329,6 +329,7 @@
   };
   renderBattle=function(log){
     if(!battle)return;
+    window.HallEncounters?.dismissSummons();
     retreatButton.disabled=!canRetreatBattle();
     el.battleLog.textContent=battle.lastAttackDamage||log||'';renderDamageMeter();renderTurnOrder();
     el.battleResonance.style.width=`${Math.max(0,Math.min(100,state.resonance))}%`;
@@ -386,7 +387,7 @@
   }
   function captureSprite(u,x,y,draw){
     if(mode!=='battle')return draw();
-    const key=canvas.width+':'+canvas.height,previous=spriteBounds.get(u);
+    const key=canvas.width+':'+canvas.height+':'+(u.encounterDrawScale||1).toFixed(3),previous=spriteBounds.get(u);
     if(previous?.key===key)return draw();
     const original=ctx.drawImage;let bounds=null;
     ctx.drawImage=function(image,...args){
@@ -398,36 +399,57 @@
       }
       return original.call(this,image,...args);
     };
-    try{return draw();}finally{ctx.drawImage=original;if(bounds){spriteBounds.set(u,{key,dx:(bounds.left+bounds.right)/2-x,dy:bounds.bottom-y,width:bounds.right-bounds.left,height:bounds.bottom-bounds.top});lastLayout='';}}
+    try{return draw();}finally{ctx.drawImage=original;if(bounds){if(!u.id&&u.anim!=='attack')u.encounterNativeHeight=(bounds.bottom-bounds.top)/Math.max(.1,u.encounterDrawScale||1);spriteBounds.set(u,{key,dx:(bounds.left+bounds.right)/2-x,dy:bounds.bottom-y,width:bounds.right-bounds.left,height:bounds.bottom-bounds.top});lastLayout='';}}
   }
   const nativePartySprite=drawBattlePartySprite,nativeEnemySprite=drawEnemy;
   drawBattlePartySprite=function(u,x,y,...rest){const s=mode==='battle'?visualScale():1;ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.translate(-x,-y);const result=captureSprite(u,x,y,()=>nativePartySprite(u,x,y,...rest));ctx.restore();return result;};
-  drawEnemy=function(u,x,y,...rest){if(mode!=='battle')return nativeEnemySprite(u,x,y,...rest);const s=visualScale(),ax=x+8,ay=y+31;ctx.save();ctx.translate(ax,ay);ctx.scale(s,s);ctx.translate(-ax,-ay);captureSprite(u,ax,ay,()=>nativeEnemySprite(u,x,y,...rest));ctx.restore();};
+  drawEnemy=function(u,x,y,...rest){if(mode!=='battle')return nativeEnemySprite(u,x,y,...rest);const s=visualScale()*enemyPresentation(u).scale,ax=x+8,ay=y+31;u.encounterDrawScale=s;ctx.save();ctx.translate(ax,ay);ctx.scale(s,s);ctx.translate(-ax,-ay);if(u.arrivalTick!==undefined)ctx.globalAlpha*=Math.min(1,Math.max(0,(tick-u.arrivalTick)/24));if(u.hp>0&&battle.enemies.filter(e=>e.hp>0).length===1&&s>visualScale()*1.2){ctx.save();ctx.fillStyle='#070611';ctx.globalAlpha*=.22;ctx.beginPath();ctx.ellipse(ax,ay+1,14,3,0,0,Math.PI*2);ctx.fill();ctx.restore();}captureSprite(u,ax,ay,()=>nativeEnemySprite(u,x,y,...rest));ctx.restore();};
+  const nativeFloater=battleFloaterPosition,nativeVfx=battleVfxAnchor;
+  battleFloaterPosition=function(u){const b=spriteBounds.get(u),i=battle?.enemies.indexOf(u)??-1;if(i<0||!b)return nativeFloater(u);const [x,y]=enemyBattlePosition(i);return [x+b.dx,y+b.dy-b.height-4];};
+  battleVfxAnchor=function(u){const b=spriteBounds.get(u),i=battle?.enemies.indexOf(u)??-1;if(i<0||!b)return nativeVfx(u);const [x,y]=enemyBattlePosition(i);return {x:x+b.dx,y:y+b.dy-b.height*.5};};
   const nativePartyPosition=partyBattlePosition,nativeEnemyPosition=enemyBattlePosition;
+  const enemyViews=new WeakMap();
+  function enemyPresentation(u){
+    let view=enemyViews.get(u);const wanted=window.HallEncounters?.soloScale(u)||1;
+    if(view&&u.hp<=0)return view;
+    if(!view){view={scale:wanted,tick:-1,positionTick:-1};enemyViews.set(u,view);}
+    if(view.tick!==tick){view.scale+=(wanted-view.scale)*.14;if(Math.abs(wanted-view.scale)<.001)view.scale=wanted;view.tick=tick;}
+    // Actual opaque sprite bounds constrain the larger presentation below the timeline.
+    const bounds=spriteBounds.get(u),baseHeight=u.encounterNativeHeight||(bounds&&bounds.height/Math.max(.1,u.encounterDrawScale||1));
+    if(baseHeight)view.scale=Math.min(view.scale,(BATTLE_ARENA_HEIGHT*.70-18)/Math.max(1,baseHeight*visualScale()));
+    return view;
+  }
   function position(native,index,count,enemySide){
     if(mode!=='battle')return native(index,count);
-    // Three distinct ground positions, mirrored across the battlefield.
+    const u=(enemySide?battle.enemies:battle.party)[index],view=enemySide&&u?enemyPresentation(u):null;
+    if(enemySide&&u?.hp<=0&&view?.position)return view.position;
+    const alive=enemySide?battle.enemies.filter(e=>e.hp>0):battle.party;
+    if(enemySide&&u?.hp>0){index=alive.indexOf(u);count=alive.length;}
+    let [x,y]=native(index,count);
     if(game.getBoundingClientRect().width>700){
-      let [x,y]=native(index,count);
       if(!enemySide){const spot=[[.105,.58],[.24,.78],[.405,.68]][index]||[.24,.78];x=LOGICAL_WIDTH*spot[0];y=BATTLE_ARENA_HEIGHT*spot[1];}
+      else if(count===1){x=LOGICAL_WIDTH*.73;y=BATTLE_ARENA_HEIGHT*.70;}
       else if(count===3){
-        const list=enemySide?battle.enemies:battle.party,roles=list.map(u=>combatRoleKey(u,enemySide));
+        const roles=alive.map(u=>combatRoleKey(u,true));
         const frontScore={tank:5,hybrid:3,dps:2,utility:1,healer:0},rearScore={healer:5,utility:4,dps:3,hybrid:2,tank:0};
         const order=[0,1,2],front=order.reduce((a,b)=>(frontScore[roles[b]]||0)>(frontScore[roles[a]]||0)?b:a),remaining=order.filter(i=>i!==front);
         const rear=remaining.reduce((a,b)=>(rearScore[roles[b]]||0)>(rearScore[roles[a]]||0)?b:a);
         const spot=index===front?[.405,.68]:index===rear?[.105,.58]:[.24,.78];
-        x=LOGICAL_WIDTH*(enemySide?1-spot[0]:spot[0]);y=BATTLE_ARENA_HEIGHT*spot[1];
+        x=LOGICAL_WIDTH*(1-spot[0]);y=BATTLE_ARENA_HEIGHT*spot[1];
       }
       y=Math.min(BATTLE_ARENA_HEIGHT-15,y+5);
-      const u=(enemySide?battle?.enemies:battle?.party)?.[index],bounds=u&&spriteBounds.get(u);
-      if(!bounds)return [x,y];
-      const gutter=30/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
-      return [enemySide?Math.min(x,LOGICAL_WIDTH-gutter-bounds.dx-bounds.width/2):Math.max(x,gutter-bounds.dx+bounds.width/2),y];
+      const bounds=u&&spriteBounds.get(u);
+      if(bounds){const gutter=30/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
+        x=enemySide?Math.min(x,LOGICAL_WIDTH-gutter-bounds.dx-bounds.width/2):Math.max(x,gutter-bounds.dx+bounds.width/2);}
+    }else{
+      const height=battlefieldHeight(),ys=count===1?[.70]:count===2?[.52,.82]:[.47,.67,.86];y=height*(ys[index]||.67);
+      if(enemySide){const h=(enemyAnimationHeights[enemyAnimationKey(u||{})]||44)*enemyBattleScale(enemyAnimationKey(u||{}))*visualScale()*(view?.scale||1);if(h>height*.55)y=Math.max(y,Math.min(height*.82,h+19));}
     }
-    const [x]=native(index,count),height=battlefieldHeight(),ys=count===1?[.67]:count===2?[.52,.82]:[.47,.67,.86];
-    // Keep very tall boss drawings beneath the timeline without obscuring cards.
-    let y=height*(ys[index]||.67);
-    if(enemySide){const e=battle?.enemies[index],h=(enemyAnimationHeights[enemyAnimationKey(e||{})]||44)*enemyBattleScale(enemyAnimationKey(e||{}))*visualScale();if(h>height*.55)y=Math.max(y,Math.min(height*.82,h+19));}
+    if(view){
+      if(!view.position)view.position=[x,y];
+      if(view.positionTick!==tick){view.position=view.position.map((v,i)=>v+([x,y][i]-v)*.14);view.positionTick=tick;}
+      return view.position;
+    }
     return [x,y];
   }
   partyBattlePosition=(i,count=battle?.party?.length||1)=>position(nativePartyPosition,i,count,false);
@@ -435,7 +457,7 @@
   function positionCards(){
     if(!battle||mode!=='battle')return;
     const r=game.getBoundingClientRect(),field=command.getBoundingClientRect().top-r.top;
-    const key=[r.width,r.height,field,statusNodes.length].join(':');if(key===lastLayout)return;lastLayout=key;
+    const key=[r.width,r.height,field,statusNodes.length,Math.floor(tick/2)].join(':');if(key===lastLayout)return;lastLayout=key;
     const canvasRect=canvas.getBoundingClientRect();
     for(const {u,index,side,n} of statusNodes){
       const [x,y]=side==='party'?partyBattlePosition(index,battle.party.length):enemyBattlePosition(index,battle.enemies.length),b=spriteBounds.get(u);
@@ -504,7 +526,7 @@
   let pads=[],lastPad=0;
   function gamepad(now){if(mode==='battle'&&!history.open){const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);if(pad){const values=[pad.buttons[14]?.pressed||pad.axes[0]<-.55,pad.buttons[15]?.pressed||pad.axes[0]>.55,pad.buttons[12]?.pressed||pad.axes[1]<-.55,pad.buttons[13]?.pressed||pad.axes[1]>.55,pad.buttons[0]?.pressed,pad.buttons[1]?.pressed];values.forEach((v,i)=>{if(v&&(!pads[i]||i<4&&now-lastPad>240)){handleControl(['left','right','up','down','confirm','cancel'][i]);lastPad=now;}});pads=values;}}requestAnimationFrame(gamepad);}requestAnimationFrame(gamepad);
   new ResizeObserver(()=>{lastLayout='';if(mode==='battle'&&unit&&!battle.resolving){renderCommands();positionCards();}}).observe(game);
-  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,render:()=>renderBattle(''),previewUnits,positionCards};
+  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},boundsFor:u=>spriteBounds.get(u),presentationFor:enemyPresentation,get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,render:()=>renderBattle(''),previewUnits,positionCards};
 })();
 
 

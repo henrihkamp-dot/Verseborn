@@ -4375,7 +4375,7 @@ const maps = {
     recruitPoint(7, 7, "Mira", [["Mira", "You came alone. Good. Quiet footsteps survive longer on these docks."], ["Verseborn", "I can do quiet. Briefly."], ["Mira", "The route is physical. The lie is administrative. Together, that makes a dungeon."], ["Mira", "Draw your lute. I will cover the blind side."]], "harbor"),
     chest(4, 8, "ash-echo", { gear: "Echo Collector", gold: 30 })
   ], ["A4 - Ledger Docks", "The first story battle sits beyond two explorable field units."], { background: "ash-route", panorama: true, view: 2, views: 3, music: "overworld", walkable: [[1, 5, 14, 10]], grid: [3, 2], gridSize: [5, 5], spawns: [
-    spawn("dock-foreman", 11, 8, "Miniboss: Dock Foreman", [enemy("Dock Foreman", 126, 15, "Tech", "#403b39", 2, "Brokk")], { boss: true, lore: "The foreman kept moving names after the orders stopped." })
+    spawn("dock-foreman", 11, 8, "Miniboss: Dock Foreman", [enemy("Dock Foreman", 126, 15, "Tech", "#403b39", 2, "Brokk"), enemy("Brokk", 64, 9, "Shadow", "#4a4542", 1)], { boss: true, lore: "The foreman kept moving names after the orders stopped." })
   ] }),
 
   ledgerHouse: map("Old Ledger House", "Issue 1", "ash", [{ x: 7, y: 5, to: "ashLane", tx: 8, ty: 6 }], [
@@ -4546,12 +4546,12 @@ const HALL_ENEMY_LIBRARY = {
 const HALL_BATTLE_BLUEPRINTS = [
   ["Sootline Opening", "ashLane", ["ledger"]],
   ["Chain Runners", "sootMarket", ["ledger", "ledger"]],
-  ["Dock Ledger Patrol", "ashDock", ["chain"]],
+  ["Dock Ledger Patrol", "ashDock", ["chain", "ledger"]],
   ["Ink in the Rain", "ashLane", ["ledger", "scribe"]],
   ["The Dock Foreman", "ashDock", ["foreman", "chain"], true],
   ["Courtyard Seal", "reverieCourt", ["construct", "seal"]],
-  ["Dormitory Scribes", "reverieDorm", ["scribe", "sealBearer", "ledger"]],
-  ["Saint Justin", "reverieSeal", ["sigil", "scribe"]],
+  ["Dormitory Scribes", "reverieDorm", ["scribe", "sealBearer"]],
+  ["Saint Justin", "reverieSeal", ["sigil", "seal"]],
   ["Clergy Lockdown", "reverieDorm", ["chain", "auditor", "seal"]],
   ["The Archive Custodian", "reverieArchive", ["custodian", "sealBearer"], true],
   ["Crown Step Construct", "guildSteps", ["construct", "sigil"]],
@@ -4565,28 +4565,28 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["Resonance Breach", "emberCellar", ["grumm", "ashWyrm", "sealBearer"]],
   ["The Red Dragon Lord", "emberRoof", ["kaeldrin", "sealBearer"], true, [["wyrm", "ashWyrm"]]],
   ["Clock Goblin Patrol", "dawnCauseway", ["bell"], false, [["bell", "lock"]]],
-  ["Calibration Locks", "dawnStation", ["lock", "bell"], false, [["bell", "lock", "construct"]]],
+  ["Calibration Locks", "dawnStation", ["lock", "bell", "construct"]],
   ["Baron Revus Veln", "dawnStation", ["null", "bell"]],
-  ["Seal at the Gate", "dawnGate", ["sentinel", "lock"], false, [["sentinel", "lock", "bell"]]],
-  ["Last Gate Protocol", "dawnGate", ["sentinel"], true, [["lock", "sentinel"]]],
+  ["Seal at the Gate", "dawnGate", ["sentinel", "lock"]],
+  ["Last Gate Protocol", "dawnGate", ["bell", "lock"], true, [["sentinel", "bell"]]],
   ["The Shadow's Edge", "reverieArchive", ["shade"]],
   ["Stone and Shadow", "guildHall", ["grumm", "shade"], false, [["grumm", "shade", "lyrsa"]]],
-  ["Quiet Refrain", "reverieDorm", ["nyx", "jory"], false, [["nyx", "jory", "scribe"]]],
-  ["Cinderhorn Convergence", "emberYard", ["rava", "lyrsa"]],
+  ["Quiet Refrain", "reverieDorm", ["nyx", "jory"]],
+  ["Cinderhorn Convergence", "emberYard", ["rava", "lyrsa", "ashWyrm"]],
   ["Full-Rank Company", "guildCouncil", ["kaeldrin", "shade", "grumm"], true, [["nyx", "jory", "lyrsa"]]],
-  ["Audit of the Forbidden", "reverieArchive", ["auditor", "custodian"], false, [["auditor", "custodian", "scribe"]]],
+  ["Audit of the Forbidden", "reverieArchive", ["auditor", "custodian", "scribe"]],
   ["Cinderhorn Hunt", "emberRoof", ["rava", "wyrm"]],
-  ["The Quiet Archive", "reverieArchive", ["nyx", "custodian"], false, [["nyx", "custodian", "shade"]]],
-  ["Winter Spellbinders", "guildHall", ["tja", "lyrsa"], false, [["tja", "lyrsa", "jory"]]],
+  ["The Quiet Archive", "reverieArchive", ["nyx", "custodian", "shade"]],
+  ["Winter Spellbinders", "guildHall", ["tja", "lyrsa", "jory"]],
   ["Crown of Cindervale", "guildCouncil", ["king"], true, [["king", "sentinel", "kaeldrin"]]],
-  ["Three Unwritten Names", "reverieSeal", ["shade", "nyx", "jory"], false, [["nyx", "jory", "custodian"]]],
+  ["Three Unwritten Names", "reverieSeal", ["shade", "nyx", "jory"]],
   ["Stonewake Rebellion", "emberYard", ["grumm", "rava", "kaeldrin"], false, [["rava", "kaeldrin", "lyrsa"]]],
   ["Royal Winter", "dawnCauseway", ["tja", "king"], false, [["tja", "king", "sentinel"]]],
   ["The Final Archive", "alarm", ["custodian", "sentinel", "wyrm"], false, [["sentinel", "lock", "bell"]]],
   ["Hall of Forty Echoes", "alarm", ["king", "kaeldrin", "sentinel"], true, [["king", "grumm", "tja"]]],
-  ["Sootline Uprising", "ashLane", ["mob", "thugg"], true, [["ledger", "chain"], ["bell", "lock", "thugg"]]],
-  ["Reverie Interdict", "reverieSeal", ["seal", "sigil"], true, [["scribe", "custodian"], ["shade", "nyx", "scribe"]]],
-  ["Stonewake Last Trial", "guildHall", ["grumm", "construct"], true, [["kaeldrin", "lyrsa"], ["sigil", "king", "kaeldrin"]]],
+  ["Sootline Uprising", "ashLane", ["mob", "thugg"], true, [["ledger", "chain", "thugg"]]],
+  ["Reverie Interdict", "reverieSeal", ["seal", "sigil"], true, [["scribe", "custodian"]]],
+  ["Stonewake Last Trial", "guildHall", ["grumm", "construct"], true, [["kaeldrin", "lyrsa"]]],
   ["Clockwork Riot", "dawnStation", ["bell", "lock"], true, [["tibby", "thugg"], ["construct", "lock", "bell"]]],
   ["Tavern Refrain", "lantern", ["mob", "tibby"], true, [["berend", "jory"], ["marla", "berend", "mob"]]],
   ["Noble Decree", "guildCouncil", ["null", "sigil"], true, [["prince", "king"], ["prince", "wyrm", "king"]]],
@@ -4604,7 +4604,7 @@ const HALL_BATTLE_BLUEPRINTS = [
   ["Trial of Iron", "guildHall", ["chain", "pillar"], true, [["grumm", "kaeldrin", "reginald"], ["koru", "grumm", "chain"]]],
   ["The Last Chorus", "reverieCourt", ["jory", "tja"], true, [["lyrsa", "sigil", "jory"], ["selyra", "jory", "sigil"]]],
   ["The First Record", "reverieArchive", ["auditor", "scribe", "custodian"], true, [["king", "prince", "sentinel"], ["ilyss", "custodian", "auditor"]]]
-].map(([name, mapId, enemies, boss, waves = []], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss), waves }));
+].map(([name, mapId, enemies, boss, waves = []], index) => ({ stage: index + 1, name, mapId, enemies, boss: Boolean(boss), encounterTier: index >= 40 && index < 49 ? "elite-gauntlet" : boss ? "boss" : "formation", waves }));
 
 const HALL_RECRUITS = ["Mira", "Seerin", "Kael", "Torren", "Sparky", "Glimmer"];
 const HALL_RECRUIT_STAGES = [7, 14, 21, 28];
@@ -8591,9 +8591,10 @@ function drawBattleScene() {
     drawRect(28, 48, LOGICAL_WIDTH - 56, 100, "#17121fef");
     drawRect(28, 48, LOGICAL_WIDTH - 56, 2, "#d9ae65");
     drawText(`PHASE ${phase.number}/${phase.total}`, LOGICAL_WIDTH / 2, 69, "#f4c776", 8, "center");
+    drawText(window.HallEncounters?.phaseTitle(battle.hallStage, phase.number, phase.enemies) || "REINFORCEMENTS ARRIVE", LOGICAL_WIDTH / 2, 79, "#e5d0a4", 5, "center");
     phase.enemies.forEach((unit, index) => {
       const name = unit.finalState === "enraged" ? `${unit.name} / Enraged` : unit.name;
-      const rowY = 80 + index * 17;
+      const rowY = 87 + index * 15;
       drawCombatRoleIcon(combatRoleKey(unit, true), LOGICAL_WIDTH / 2 - 43, rowY, 13);
       drawCompactRosterName(name, LOGICAL_WIDTH / 2 - 26, rowY + 9, 66);
     });
@@ -10026,14 +10027,19 @@ function hallEnemiesForStage(stage, keys = null, phaseIndex = 0) {
   const info = hallBattleInfo(stage);
   if (!info) return [];
   const advanced = stage > 40;
-  const healthScale = (1 + Math.max(0, stage - 1) * .052) * (advanced ? 1.12 + phaseIndex * .08 : 1);
-  const attackScale = (1 + Math.max(0, stage - 1) * .024) * (advanced ? 1.08 + phaseIndex * .04 : 1);
+  // Ramp the existing advanced bonus from zero at 41 to full strength at 50.
+  const advancedBlend = Math.max(0, Math.min(1, (stage - 41) / 9));
+  const healthScale = (1 + Math.max(0, stage - 1) * .052) * (1 + advancedBlend * (.12 + phaseIndex * .08));
+  const attackScale = (1 + Math.max(0, stage - 1) * .024) * (1 + advancedBlend * (.08 + phaseIndex * .04));
   const openingBoost = stage <= 4 ? 1.75 : stage <= 12 ? 1.5 : stage <= 20 ? 1.35 : stage <= 35 ? 1.25 : stage <= 50 ? 1.2 : 1;
   return (keys || info.enemies).map((key, enemyIndex) => {
     const profile = HALL_ENEMY_LIBRARY[key];
     const unit = enemy(profile.name, Math.round(profile.hp * healthScale), Math.round(profile.atk * attackScale), profile.weak, profile.color, profile.node, profile.sprite || null);
     unit.hp = unit.max = unit.baseMax = Math.round(unit.baseMax * openingBoost);
     if (profile.finalState) unit.finalState = profile.finalState;
+    unit.hallEnemyKey = key;
+    unit.hallPhaseIndex = phaseIndex;
+    unit.encounterArchetype = stage === 26 ? "summon" : (stage === 35 && phaseIndex === 0 || stage === 50) ? "solo-boss" : null;
     unit.levelHint = stage;
     unit.fixedLevel = true;
     if (stage > 50 && ENDGAME_BOSS_CONFIG[unit.name]) {
@@ -13356,7 +13362,7 @@ function resolveEnemyTurn(turn, prev) {
 
 function winBattle(log) {
   if (!battle || battle.ended || battle.defeatPending || battle.phaseTransition) return;
-  battle.defeated.push(...battle.enemies);
+  battle.defeated.push(...battle.enemies.filter(unit => !unit.summonedBy));
   if (battle.waves.length) {
     if (battleRoundLimitReached()) return endBattleDraw(log);
     // A phase-winning action still consumes buff and transformation duration.
@@ -13379,7 +13385,7 @@ function winBattle(log) {
       buildTurnOrder();
       // Keep already awarded actions ahead of the new phase's normal initiative.
       battle.turnQueue.unshift(...pendingExtraTurns.filter(turnIsAlive));
-      runCurrentTurn(`${log} The next wave enters.`);
+      runCurrentTurn(`${log} ${window.HallEncounters?.phaseTitle(battle.hallStage, total - battle.waves.length, nextWave.enemies) || "Reinforcements arrive."}`);
     };
     if (!battle.hallStage) {
       advanceWave();

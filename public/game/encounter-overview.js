@@ -9,6 +9,9 @@
   else if(path==='whirlpool'){const id=Number(host.querySelector('[data-whirlpool-select].is-selected')?.dataset.whirlpoolSelect);if(id)waves=[[prepareEnemyForBattle(TinusWhirlpool.makeEnemy(id),'emberHallBattles')]];}
   else {const id=host.querySelector('[data-shadow].is-selected')?.dataset.shadow;if(id){const total=HallHub.shadowStats(id),source=enemy('Shadow '+id,total.max,total.str,baseJobs[id].element,'#bd9971',1,id);source.sparringId=id;source.levelHint=40;source.fixedLevel=true;waves=[[prepareEnemyForBattle(source,'emberHallBattles')]];}}
   if(!waves.length)return;
+  const stage=path==='ember'?Number(host.querySelector('[data-hall-stage].is-selected')?.dataset.hallStage):0;
+  overview.querySelector('.encounter-design-note')?.remove();
+  if(stage&&window.HallEncounters){const note=document.createElement('small');note.className='encounter-design-note';note.textContent=HallEncounters.encounterLabel(stage)+(stage===26?' · Starts alone; calls one Shadow Echo below 65% HP.':' · '+waves.length+' phase'+(waves.length>1?'s':''));overview.prepend(note);}
   overview.querySelectorAll('ol,ul,.encounter-enemies,.encounter-wave-tabs').forEach(n=>n.remove());
   const list=document.createElement('div');list.className='encounter-enemies';
   const tabs=document.createElement('nav');tabs.className='encounter-wave-tabs';tabs.setAttribute('aria-label','Enemy waves');
