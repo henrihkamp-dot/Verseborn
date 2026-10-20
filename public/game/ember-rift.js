@@ -221,6 +221,8 @@
     const curio=curios[Math.floor(Math.random()*curios.length)],stats=Object.fromEntries(Object.entries(curio.stats).map(([key,value])=>[key,value+id*2]));awardGearDrop(curio.name,'Rift Artifact',drops,{separateCopy:true,affixes:riftArtifactAffixes(curio),stats});
     drops.push({kind:'item',name:material,type:'Secret merchant material',amount,stored:true},{kind:'item',name:'Rift Shards',type:'Rare upgrade material / Rift Forge wallet',amount:shards,stored:true});return {gold:0,drops,gearDrops:[]};
   }
+  const oldRetreat=retreatBattle;
+  retreatBattle=options=>battle?.riftEncounter?oldRetreat({restore:()=>{restoreHallParty();state.resonance=battle.startingResonance??state.resonance;},after:returnToRoom}):oldRetreat(options);
   const oldResult=showBattleResult;
   showBattleResult=function(kind,entries,after){const rift=Boolean(battle?.riftEncounter);hud.classList.add('hidden');oldResult(kind,entries,rift?returnToRoom:after);if(rift){el.battleResultContinue.setAttribute('aria-label','Return to the vortex room');el.battleResultArt.alt=kind==='victory'?'Rift encounter cleared':'The party returns to the vortex room';}if(state.gameMode==='hallBattles')saveGame(hallSaveKey());};
   function forge(){

@@ -15,6 +15,8 @@
   const actionRow=make('div','bc-action-row',left),detail=make('aside','bc-detail',command);
   detail.setAttribute('aria-label','Selected action details');
   const foot=make('div','bc-command-foot',left),instruction=make('span','bc-instruction',foot);
+  const retreatButton=make('button','bc-retreat-button',foot);retreatButton.type='button';retreatButton.textContent='Retreat';retreatButton.title='Leave this battle without rewards. Available on your turn.';
+  retreatButton.onclick=()=>{if(canRetreatBattle()){hideUnitTooltip();if(history.open)history.close();retreatBattle();}};
   const historyButton=make('button','bc-history-button',foot);historyButton.type='button';historyButton.textContent='Battle history';
   const history=make('dialog','bc-history',document.body);history.innerHTML='<header><strong>Battle history</strong><button type="button" aria-label="Close history">×</button></header><div class="bc-history-content"></div>';
   const unitTooltip=make('aside','bc-unit-tooltip',root);unitTooltip.hidden=true;unitTooltip.setAttribute('role','tooltip');
@@ -327,6 +329,7 @@
   };
   renderBattle=function(log){
     if(!battle)return;
+    retreatButton.disabled=!canRetreatBattle();
     el.battleLog.textContent=battle.lastAttackDamage||log||'';renderDamageMeter();renderTurnOrder();
     el.battleResonance.style.width=`${Math.max(0,Math.min(100,state.resonance))}%`;
     el.enemyBattleResonance.style.width=`${Math.max(0,Math.min(100,battle.enemyResonance||0))}%`;

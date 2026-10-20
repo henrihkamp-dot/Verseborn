@@ -1091,6 +1091,18 @@
     return true;
   }
   winBattle = log => battle?.sparring ? finishSparring('victory') : oldWin(log);
+  const oldRetreat = retreatBattle;
+  retreatBattle = options => {
+    if (!battle?.sparring) return oldRetreat(options);
+    if (!canRetreatBattle() || !sparringSnapshot) return false;
+    return oldRetreat({ restore: () => {
+      state.activeParty = sparringSnapshot.activeParty;
+      state.resonance = sparringSnapshot.resonance; state.fieldWard = sparringSnapshot.fieldWard;
+      state.inventory = sparringSnapshot.inventory; state.stash = sparringSnapshot.stash;
+      for (const [id, stats] of Object.entries(sparringSnapshot.heroes)) Object.assign(baseJobs[id], stats);
+      sparringSnapshot = null;
+    }, after: () => { returnToHallAfterBattle(); renderSparring(); } });
+  };
   const oldDefeat = triggerPartyDefeat, oldDraw = endBattleDraw;
   triggerPartyDefeat = log => battle?.sparring ? finishSparring('defeat') : oldDefeat(log);
   endBattleDraw = log => battle?.sparring ? finishSparring('draw') : oldDraw(log);

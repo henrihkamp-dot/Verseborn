@@ -10676,6 +10676,43 @@ function finishTurn(log) {
   runCurrentTurn(log);
 }
 
+function canRetreatBattle() {
+  return Boolean(mode === "battle" && battle && !battle.resolving && !battle.phaseTransition && !battle.ended && !battle.defeatPending && !battleResultState && currentTurn()?.side === "party");
+}
+
+function retreatBattle(options = {}) {
+  if (!canRetreatBattle()) return false;
+  archiveDamageMeter("retreat");
+  const leaving = battle;
+  leaving.ended = true;
+  leaving.resolving = true;
+  if (options.restore) options.restore();
+  else {
+    leaving.party.forEach(unit => {
+      const hero = baseJobs[unit.id];
+      if (!hero) return;
+      hero.hp = Math.max(1, Math.min(totals(unit.id).max, unit.hp));
+      hero.mp = Math.max(0, Math.min(totals(unit.id).mp, unit.mp));
+    });
+    if (leaving.hallStage) returnToHallAfterBattle();
+    state.resonance = Number.isFinite(leaving.startingResonance) ? leaving.startingResonance : state.resonance;
+  }
+  if (leaving.retryEvent) delete state.flags[leaving.retryEvent];
+  hideBattlePreview();
+  effect = null;
+  battleFloaters = [];
+  fieldDestination = null; activePoint = null;
+  el.turnOrder.innerHTML = "";
+  el.battle.classList.add("hidden");
+  document.querySelector(".game")?.classList.remove("battle-final-fall", "has-endgame-mechanics", "has-early-mechanics");
+  battle = null;
+  mode = "walk";
+  if (options.after) options.after();
+  updateMusic(); updatePanels(); queueSave();
+  showHudNotice("Retreated. No rewards or victory progress awarded.");
+  return true;
+}
+
 function endBattleDraw(log = "") {
   if (!battle || mode !== "battle") return false;
   archiveDamageMeter("draw");

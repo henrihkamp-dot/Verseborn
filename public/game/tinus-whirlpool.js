@@ -211,6 +211,14 @@
     });
     saveGame(hallSaveKey());return true;
   }
+  const oldRetreat=retreatBattle;
+  retreatBattle=options=>{
+    if(!current())return oldRetreat(options);
+    if(!canRetreatBattle()||!snapshot)return false;
+    return oldRetreat({restore,after:()=>{
+      state.map='emberHallBattles';state.hallPosition=snapshot.hallPosition;Object.assign(emberHallWorld.player,snapshot.player);snapshot=null;open();
+    }});
+  };
   const oldWin=winBattle,oldDefeat=triggerPartyDefeat,oldDraw=endBattleDraw;
   winBattle=log=>current()?finish('victory'):oldWin(log);
   triggerPartyDefeat=log=>current()?finish('defeat'):oldDefeat(log);
