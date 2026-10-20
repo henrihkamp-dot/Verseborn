@@ -1,0 +1,96 @@
+{
+  "provider": "built-in image_gen",
+  "jobs": [
+    {
+      "id": "mira-stand",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-8ab92f7b-7f17-408d-9975-1c6a25d02585.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Three connected comic panels: overprotective Baron Revus Veln in purple fur-collared noble coat towers verbally over the young bard Verseborn; center adult daughter Mira in black top hat calmly steps into the foreground between them, chin raised, quietly fierce independence; small comedic inset Verseborn sweating with a polite strained smile. Ember Hall lobby, carved wood and warm lamps. Make emotions strong without making Mira helpless.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/08_Baron_Revus_Veln_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/03_Mira_Veln_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "torren-rank",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-f270cdb6-e1f9-4752-9e3b-6653b6ed8169.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Playful two-panel comic spread. First broad-panel Torren Stonekin the red-brown-bearded armored dwarf puffing his chest proudly and displaying a small shield-shaped guild rank badge with a single letter A. Warm kitchen, Marli the adult dark-haired innkeeper gives a knowing amused smile. Second narrow-panel the young bard Verseborn looks dryly alarmed at a heroic mountain of stew with a spoon standing straight up. Exaggerated proud cook-dad energy, wholesome flirting.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/06_Torren_Stonekin_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/22_Marli_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "torren-memory",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-3746fd31-5e4f-4815-be9d-4f9d3a08e035.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Quiet somber three-panel recollection: Torren Stonekin younger-looking but same red-brown beard and armor, in a desaturated stone construction yard, sees an immense unfinished stone wall looming over small anonymous workers; close-up his large calloused gauntleted hand lowering a mason hammer; final warm panel a simple bowl of stew held out with both hands. Regret becoming protection. No battlefield, no gore, no invented named villain. Sepia memory transitioning to amber present.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/06_Torren_Stonekin_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "seerin-tornado",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-ca375387-8205-41e0-a208-19b57d938861.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Dynamic remembered arena-poster comic with two angular panels and a little reaction inset. Seerin Vahl the adult red-haired horned tiefling paladin in white-gold armor and red cape swings through a dramatic athletic shield pivot; immense spiral of scarlet cape and harmless golden light evokes her old Fiery Tornado persona. Second panel proud bold athletic hero silhouette before arena lights, not a different outfit or weapon. Inset her present-day embarrassed smile, cheeks warm. Exaggerated kinetic action and celebratory energy, no injured opponents.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/04_Seerin_Vahl_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "seerin-team",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-af311833-75a2-42b2-9fa0-049d1779c7a0.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Tender three-panel comic sequence in Ember Hall training corner. Adult Seerin Vahl kneels at eye level with three children: green-haired horned Rava, dark-skinned dark-haired pointed-ear Nyx carrying a book, and blond curly-haired human boy Jory with orange scarf and a little lute. Small panel of a ribbon being placed into Seerin's armored hand. Broad panel she gently brings the children close while promising to return. Warm found-family emotion, strong protective hands, children's distinct identities retained. No other characters.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/04_Seerin_Vahl_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/nyx.webp",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/rava.webp",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/hall/welcome-304/jory.webp",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "kael-ledger",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-46857dcf-aa30-4fa3-8245-96708d243582.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Serious three-panel sepia flashback. Bald young adult priest Kael Ironhand in plain ivory robe discovers an open ecclesiastical ledger whose symbolic lines of names are crossed by a church seal; close-up anonymous senior cleric's hand sliding coins beside sealed papers; final panel Kael stands erect, closes the ledger firmly, and turns away from a shadowed church doorway into daylight. Institutional corruption and a moral refusal, convey name trading through documents only, no children shown, no violence. His face controlled and resolute.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/02_Kael_Ironhand_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "kael-rules",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-241771d5-3b1c-47c4-95e6-045a081cce14.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Comedic three-panel reaction comic in the warm Ember Hall library. Bald ivory-robed priest Kael Ironhand notices a mug teetering on a precious stack of books; laser-sharp deadpan close-up of his disapproving eyes; final exaggerated chibi young bard Verseborn urgently washing the mug at a basin while Kael points with solemn authority toward clean bandages neatly arranged instead of fancy cushions. Funny stern dad-priest energy, affectionate not angry violence. Characters recognizable.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/02_Kael_Ironhand_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "glimmer-return",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-8375a01f-f0f9-4ad4-bfec-34ca64bc8014.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Three-panel character decision comic. Left desaturated short recollection: pink-haired gnome engineer Glimmer in goggles and a white workshop coat eagerly reports to tall stern dark-haired Kaeldrin of Stonewake, who stands with orderly stone-guild paperwork. Center close-up her frown turning into a determined mischievous grin, one small purple-lit gadget in her hand. Broad right panel back in Ember Hall, Glimmer arrives at the welcoming cluttered workshop with a packed toolbox over her shoulder and eyes bright with possibility. Her choice to return to people who need her imagination. No explosion, no rerun of the bar opening or resonance machine construction.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/01_Glimmer_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/18_Kaeldrin_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    },
+    {
+      "id": "glimmer-lab",
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-cc6fc1ca-03f7-4494-9cd5-de1db97f2bba.png",
+      "prompt": "Create a finished landscape comic-page insert for the user's original Verseborn comics. Use the provided character design sheets as identity authority and the final comic page as the visual language reference: detailed colored fantasy manga, expressive inked faces, warm painterly light, dark crisp contours, occasional deliberate chibi exaggeration, cream page gutters and bold irregular black panel borders. This is narrative illustration, NOT a sprite sheet and NOT a character reference sheet. Compose a coherent 3:2 landscape mini-page readable at game size, one large main panel and 1-2 smaller story/reaction panels. No dialogue lettering, no speech bubbles, no captions, no labels (the game supplies readable text), except the single A badge where requested. Full scene artwork reaches the panel edges; cream gutters only. Exuberant three-panel comedy in the actual Ember Hall workshop. Gnome engineer Glimmer with vivid pink messy curls, goggles and white coat proudly presents a tiny hovering brass drone; close-up one harmless purple spark sends its little mechanical eyebrows into a comic expression; wide last panel young black-cloaked bard Verseborn ducks instinctively behind a toolbox while Glimmer grins with both hands up as if this is an intended feature. Extreme chibi reaction inset of her pleased expression. Joyful tinkering, no damage to Hall, no cooking pot or other cast.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/01_Glimmer_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/07_Verseborn_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ]
+    }
+  ]
+}

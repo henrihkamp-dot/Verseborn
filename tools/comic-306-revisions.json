@@ -1,0 +1,23 @@
+{
+  "jobs": [
+    {
+      "id": "seerin-tornado",
+      "prompt": "Draw ONE large landscape comic panel with a small inset reaction, in the same colored inked fantasy-manga rendering as the character sheets and existing game comic inserts. The FIRST reference is the canon joke and outfit authority from How Seerin Got Her Groove Back: Seerin's embarrassing OLD FIERY TORNADO kit, ridiculously massive red-and-gold spiked shoulder pads, clashing reds, an overblown red cape, red-gold angular mask. This is a lovingly awful past costume, not her current white-gold paladin kit. Main panel is a worn boastful illustrated poster pinned to an Ember Hall training wall, Seerin poses in this hideous overdesigned old kit, cape absurdly oversized. Include only this exact short poster text in readable bold vintage lettering: 'THE FIERY TORNADO' and '40% MORE CAPE!'. Small separate ink-bordered inset at lower right: PRESENT DAY adult Seerin in her normal white-gold armor covers her embarrassed face, her horns and red curls recognizable, little ghost-of-shame reaction. Comic joke about dreadful costume design and shoulder pads too big to turn her head, not a glamorous heroic victory scene. Black panel edges, cream paper border, no other dialogue or captions. Landscape 3:2.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/groove-detail-3.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/04_Seerin_Vahl_Clean_Quest_Manga_Sheet.png"
+      ],
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-72d62f92-491f-46d7-ad4a-47818f3d1375.png"
+    },
+    {
+      "id": "glimmer-return",
+      "prompt": "Create a landscape 3:2 colored manga comic insert with one narrow left flashback panel, one small close-up and one large present-day right panel. Match inked warm detailed fantasy manga style of identity references. ONLY TWO DISTINCT PEOPLE may appear anywhere: pink-haired gnome engineer GLIMMER and tall dark-haired adult Stonewake leader KAELDRIN. Left flashback: Glimmer reports with schematics to stern white-fur-caped Kaeldrin in orderly Stonewake office. Tiny close-up: Glimmer grips her toolbox strap, vulnerable determination in her face. Large present-day panel: Glimmer ALONE arrives at an EMPTY welcoming Ember Hall workbench, purple-lit drone and scattered tools, hand on her heart and a relieved smile. Nobody standing behind her, no crowd, no Torren, no Kael, no Mira, no Seerin, no Lysra, no Verseborn. Belonging instead of merely being useful; her choice to return to the Flameguard. Rich warm amber/purple contrast, clean black comic borders and cream gutters. No text, bubbles, captions or labels. No bar opening, no resonance machine construction.",
+      "refs": [
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/01_Glimmer_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/work/endgame-source/public/game/assets/18_Kaeldrin_Clean_Quest_Manga_Sheet.png",
+        "C:/Users/Henri/Documents/Codex/2026-10-13/github-plugin-github-openai-curated-remote/outputs/comic-306-references/issue3-11.png"
+      ],
+      "source": "C:\\Users\\Henri\\.codex\\generated_images\\01a135c6-b1ee-7121-9142-424b666459d2\\exec-cc67fb96-2d04-4ff6-abde-e9346c263556.png"
+    }
+  ]
+}

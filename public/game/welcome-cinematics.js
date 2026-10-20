@@ -1,7 +1,7 @@
 // Recruitment vignettes are transient: guests, poses and camera never enter a save.
 (() => {
   'use strict';
-  const BASE='assets/hall/welcome-302/',art={},guestIds=['Revus','Nyx','Rava','Jory'],ids=['Mira','Torren','Seerin','Kael','Sparky'],coreIds=['Verseborn','Mira','Torren','Seerin','Kael','Sparky','Marli'];
+  const BASE='assets/hall/welcome-302/',art={},guestIds=['Revus','Nyx','Rava','Jory'],ids=['Mira','Torren','Seerin','Kael','Sparky','Glimmer'],coreIds=['Verseborn','Mira','Torren','Seerin','Kael','Sparky','Marli'];
   let stories,scene=null,loading=false,raf,assetsPromise;
   const game=document.querySelector('.game'),overlay=document.createElement('section');
   overlay.className='welcome-film';overlay.hidden=true;overlay.setAttribute('aria-label','Flameguard introduction');
@@ -10,17 +10,18 @@
   const ui=Object.fromEntries(['location','skip','caption','dialogue','portrait','speaker','line','next','auto'].map(k=>[k,overlay.querySelector('.welcome-'+k)]));
   const oldPlay=playRecruitScene,oldDraw=drawTileMap,oldSave=saveGame,oldControl=handleControl,oldTrack=trackForScene,oldNext=nextTalk,oldSkip=skipTalk;
   const load=(id,url)=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{art[id]=img;resolve();};img.onerror=()=>reject(Error('Welcome image unavailable: '+url));img.src=url;});
-  const scripts=fetch('welcome-story.json?v=304').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
+  const scripts=fetch('welcome-story.json?v=306').then(r=>{if(!r.ok)throw Error('Welcome scripts unavailable');return r.json();}).then(v=>{stories=v;for(const s of RECRUIT_SCENES)if(ids.includes(s.recruit)&&s.variant==='welcome')s.title=v[s.recruit].title;return v;});
   scripts.catch(console.error);
-  function assets(){return assetsPromise??=Promise.all([scripts,...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusRig','assets/hall/welcome-304/revus-rig.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1,2].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
+  function assets(){return assetsPromise??=Promise.all([scripts,...WelcomeComicPanels.fresh.map(id=>load(id,'assets/hall/comic-306/'+id+'.webp')),...guestIds.flatMap(id=>[load(id,'assets/hall/welcome-304/'+id.toLowerCase()+'.webp'),load('portrait-'+id,BASE+id.toLowerCase()+'-portrait.webp')]),load('revusReaction','assets/hall/welcome-303/revus-chibi.webp'),load('revusRig','assets/hall/welcome-304/revus-rig.webp'),load('hallCook','assets/hall/living-256/torren-kitchen.webp'),...['register','badge','bandages','ribbon','ledger','stew','blanket','provisions',0,1,2].map(id=>load(id,BASE+(Number.isInteger(id)?'chibi-'+id:id)+'.webp'))]);}
   const HALL_SIZES={Verseborn:36,Mira:36,Torren:32,Seerin:42,Kael:40,Sparky:30,Marli:38,Glimmer:36,Revus:40,Nyx:30,Rava:30,Jory:30};
-  const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:164,y:84,w:240}};
-  const EXTRA={Mira:{Kael:[245,230],Seerin:[390,248]},Torren:{Mira:[151,91],Seerin:[195,92],Glimmer:[214,88]},Seerin:{Mira:[155,162],Torren:[226,200]},Kael:{Glimmer:[540,334]},Sparky:{Torren:[95,55]}};
+  const SHOTS={Mira:{x:320,y:235,w:230},Torren:{x:135,y:81,w:244},Seerin:{x:122,y:170,w:270},Kael:{x:510,y:308,w:230},Sparky:{x:164,y:84,w:240},Glimmer:{x:485,y:77,w:230}};
+  const EXTRA={}; // Core family/recruitment casts remain; optional drop-ins are omitted.
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
   const permitted=(id,roster)=>id==='Verseborn'||id==='Marli'||guestIds.includes(id)||roster.has(id);
-  const available=(b,roster)=>(b.requires||[]).every(id=>permitted(id,roster))&&!(b.unless||[]).some(id=>permitted(id,roster));
+  const available=(b,roster)=>{const present=id=>permitted(id,roster)&&scene.actors.some(a=>a.id===id);return(b.requires||[]).every(present)&&!(b.unless||[]).some(present);};
   function actor(id,x,y,size,extra={}){return{id,x,y,size:HALL_SIZES[id]||size||36,pose:0,row:0,alpha:1,...extra};}
   function initial(id){
+    if(id==='Glimmer')return[actor('Glimmer',420,188),actor('Verseborn',455,89)];
     if(id==='Mira')return[actor('Revus',355,227),actor('Mira',310,232),actor('Verseborn',270,267)];
     if(id==='Torren')return[actor('Torren',212,88),actor('Verseborn',131,91),actor('Marli',214,88)];
     if(id==='Seerin')return[actor('Seerin',88,180),actor('Rava',48,179,{pose:5}),actor('Nyx',145,180),actor('Jory',120,190),actor('Verseborn',210,190)];
@@ -36,17 +37,21 @@
     scene.holdUntil=Math.max(scene.holdUntil||0,a.motion.at+a.motion.duration+250);return true;
   }
   function add(id,x,y){return scene.actors.find(a=>a.id===id)||null;}
-  function currentPos(a){const m=a.motion;if(!m)return a;const t=clamp((scene.clock-m.at)/m.duration,0,1),lengths=m.points.slice(1).map((p,i)=>Math.hypot(p[0]-m.points[i][0],p[1]-m.points[i][1]));let distance=lengths.reduce((v,n)=>v+n,0)*t;for(let i=0;i<lengths.length;i++){if(distance<=lengths[i]||i===lengths.length-1){const from=m.points[i],to=m.points[i+1],f=lengths[i]?Math.min(1,distance/lengths[i]):1,dx=to[0]-from[0],dy=to[1]-from[1];return{...a,x:from[0]+dx*f,y:from[1]+dy*f,walking:t<1,row:Math.abs(dx)>Math.abs(dy)?dx>0?3:2:dy>0?0:1,facing:Math.abs(dx)>Math.abs(dy)?dx>0?2:3:dy>0?0:1,distance:m.length*t};}distance-=lengths[i];}return a;}
+  function currentPos(a){const m=a.motion;if(!m)return a;const t=clamp((scene.clock-m.at)/m.duration,0,1),lengths=m.points.slice(1).map((p,i)=>Math.hypot(p[0]-m.points[i][0],p[1]-m.points[i][1]));let distance=lengths.reduce((v,n)=>v+n,0)*t;for(let i=0;i<lengths.length;i++){if(distance<=lengths[i]||i===lengths.length-1){const from=m.points[i],to=m.points[i+1],f=lengths[i]?Math.min(1,distance/lengths[i]):1,dx=to[0]-from[0],dy=to[1]-from[1];return{...a,x:from[0]+dx*f,y:from[1]+dy*f,walking:t<1,row:Math.abs(dx)>Math.abs(dy)?dx>0?2:3:dy>0?0:1,facing:Math.abs(dx)>Math.abs(dy)?dx>0?2:3:dy>0?0:1,distance:m.length*t};}distance-=lengths[i];}return a;}
   function settleMoves(){for(const a of scene.actors)if(a.motion){const p=currentPos(a);a.x=p.x;a.y=p.y;if(!p.walking)delete a.motion;}}
   function sfx(id,volume=.22){if(!document.hidden)playSfx(id,volume);}
+  function setComic(key){if(scene.comic.key===key)return;scene.comic={key,at:scene.clock,serial:scene.comic.serial+1};}
   function event(name){
     const s=scene;s.event=name;s.effectAt=s.clock;const get=id=>s.actors.find(a=>a.id===id);
     switch(name){
       case 'verse-enter':move('Verseborn',s.id==='Seerin'?185:277,s.id==='Seerin'?185:237);break;
+      case 'glimmer-arrive':move('Glimmer',438,86);break;
+      case 'glimmer-bench':move('Verseborn',440,87);move('Glimmer',464,87);get('Glimmer').labWorking=true;break;
+      case 'glimmer-gadget':s.gadgetAt=s.clock;sfx('magic',.12);break;
       case 'father':get('Revus').pose=2;break;
       case 'register':s.prop='register';get('Revus').pose=1;break;
-      case 'revus-chibi':s.cutaway='revusReaction';sfx('magic',.18);break;
-      case 'revus-composed':s.cutaway=null;get('Revus').pose=0;break;
+      case 'revus-chibi':setComic('revusReaction');sfx('magic',.18);break;
+      case 'revus-composed':setComic(null);get('Revus').pose=0;break;
       case 'revus-leave':get('Revus').pose=5;move('Revus',320,340);break;
       case 'sign':get('Revus').alpha=0;s.prop='register';break;
       case 'mira-door':break;
@@ -67,25 +72,25 @@
       case 'last-round-end':get('Seerin').practice=false;break;
       case 'supplies':case 'cup':case 'healer':case 'healer-end':case 'wash':s.prop='bandages';break;
       case 'ledger':case 'oath':s.prop='ledger';break;
-      case 'bowl':s.prop='blanket';s.cutaway=1;break;
-      case 'duo-enter':s.cutaway=null;move('Mira',151,91);move('Seerin',201,91);break;
-      case 'cute':s.cutaway=0;sfx('magic',.23);break;
-      case 'freeze':s.cutaway=null;sfx('block',.12);break;
-      case 'scold':s.cutaway=2;break;
-      case 'apology':s.cutaway=null;break;
+      case 'bowl':s.prop='blanket';setComic('sparky-bowl');break;
+      case 'duo-enter':setComic(null);move('Mira',151,91);move('Seerin',201,91);break;
+      case 'cute':setComic('sparky-cute');sfx('magic',.23);break;
+      case 'freeze':setComic(null);sfx('block',.12);break;
+      case 'scold':setComic('sparky-scold');break;
+      case 'apology':setComic(null);break;
       case 'strap':s.sparkySniff=true;break;
-      case 'choice':s.cutaway=null;s.sparkySniff=false;s.prop='blanket';break;
+      case 'choice':setComic(null);s.sparkySniff=false;s.prop='blanket';break;
       case 'settle':break;
       case 'torren-cameo':s.prop='stew';break;
-      case 'title':s.cutaway=null;break;
+      case 'title':setComic(null);break;
     }
   }
   function portrait(id){return art['portrait-'+id]?.src||portraitSources[id==='Marli'?'Marla':id]||'';}
   function setBeat(index){
     if(!scene)return false;if(index>=scene.beats.length)return finish();settleMoves();scene.index=index;scene.beatAt=scene.clock;
-    const b=scene.beats[index];if(b.event)event(b.event);scene.beat=b;
+    const b=scene.beats[index];if(b.event)event(b.event);if(Object.prototype.hasOwnProperty.call(b,'panel'))setComic(b.panel);scene.beat=b;
     // The cast is staged once. Dialogue never creates or removes an actor.
-    ui.location.textContent=scene.story.location;ui.dialogue.hidden=!b.text;ui.caption.hidden=Boolean(b.text);
+    ui.location.textContent=scene.story.location;ui.dialogue.hidden=!b.text;ui.caption.hidden=Boolean(b.text)||Boolean(scene.comic.key);
     ui.caption.querySelector('small').textContent=b.event==='title'?'FLAMEGUARD':scene.story.location;
     ui.caption.querySelector('h2').textContent=b.caption||'';ui.caption.querySelector('p').textContent=b.event==='title'?scene.story.role:'';
     ui.caption.classList.toggle('is-title',b.event==='title');
@@ -103,7 +108,7 @@
       await assets();const until=performance.now()+15000;while(!emberHallWorld.ready){if(performance.now()>until)throw Error('Hall actors unavailable');await new Promise(r=>setTimeout(r,60));}
       clearTimeout(saveTimer);emberHallWorld.clearNavigation();emberHallWorld.hideAmbientChat();activePoint=null;
       const roster=new Set(state.party),full=id!=='Sparky'||roster.has('Mira')&&roster.has('Seerin'),story=stories[id];
-      scene={id,story,full,original,options,entry,roster,background:story.background,index:0,clock:0,last:performance.now(),beatAt:0,event:'establish',effectAt:0,prop:null,cutaway:null,cutAt:-1000,camera:{...SHOTS[id]},draws:[]};
+      scene={id,story,full,original,options,entry,roster,background:story.background,index:0,clock:0,last:performance.now(),beatAt:0,event:'establish',effectAt:0,prop:null,comic:{key:null,at:0,serial:0},cutAt:-1000,camera:{...SHOTS[id]},draws:[]};
       scene.actors=initial(id);for(const [extra,[x,y]]of Object.entries(EXTRA[id]||{}))if(roster.has(extra)&&!scene.actors.some(a=>a.id===extra))scene.actors.push(actor(extra,x,y));scene.beats=(full?story.beats:[story.beats[0],...story.shortBeats,story.beats.at(-1)]).filter(b=>available(b,roster));
       mode='welcomeCinematic';overlay.hidden=false;game.classList.add('welcome-cinematic-active');setBeat(0);updateMusic();raf=requestAnimationFrame(frame);return true;
     }catch(error){console.error(error);mode=original.mode;el.menu.classList.toggle('hidden',original.menuHidden);el.dialogue.classList.toggle('hidden',original.dialogueHidden);if(entry)return oldPlay(entry,options);showHudNotice('The welcome scene could not load. It remains in Memories.');return false;}finally{loading=false;}
@@ -131,7 +136,7 @@
     }else if(id==='Kael'&&walking){
       emberHallWorld.drawActor({...p,id,size,visiting:true,walking:true,facing:p.facing,walkPhase:(p.distance||0)/2.5},0,0,{x:0,y:0});source='hall/kael-walk-v237.webp';
     }else if(walking){
-      const image=emberHallWorld.images[id],cell=image.width/8;ctx.drawImage(image,frame*cell,p.row*cell,cell,cell,p.x-size/2,p.y-size*.94,size,size);source='hall/'+id.toLowerCase()+'-clean-v3.webp';
+      const image=emberHallWorld.images[id],cell=image.width/8,renderSize=id==='Glimmer'?size*.65:size;ctx.drawImage(image,frame*cell,p.row*cell,cell,cell,p.x-renderSize/2,p.y-renderSize*.94,renderSize,renderSize);source='hall/'+id.toLowerCase()+'-clean-v3.webp';
     }else if(id==='Torren'&&!a.cooking&&!a.ambientResident){
       // Hall's cooking idle includes a pot. Visitors use the existing unarmed
       // Hall walk art in its quietest passing pose instead.
@@ -143,7 +148,7 @@
       const index=id==='Marla'?scene.beat.speaker==='Marli'?12:emberHallWorld.marlaIdleFrame(now):a.practice?[0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,0][Math.floor(now/180)%16]:id==='Kael'?Math.floor(now/350)%16:id==='Mira'&&scene.beat.speaker==='Mira'?Math.floor((now-scene.beatAt)/180)%16:0;
       emberHallWorld.drawActor({...p,id,size,kitchenActive:false,labActive:id==='Glimmer',labClock:now,labRow:2,labLift:0},4,index,{x:0,y:0});source='hall/'+id.toLowerCase()+'-action-'+(id==='Kael'?'v9':'v8')+'.webp';
     }
-    scene.draws.push({id:a.id,source,frame,walking,x:p.x,y:p.y,size});ctx.restore();
+    scene.draws.push({id:a.id,source,frame,walking,row:p.row,x:p.x,y:p.y,size});ctx.restore();
   }
   function drawHall(){
     const world=emberHallWorld,now=scene.clock;scene.draws=[];ctx.drawImage(world.hallBackground(),0,0,640,356);
@@ -161,8 +166,7 @@
     const camera=s.camera,scale=LOGICAL_WIDTH/camera.w,viewH=safe/scale,left=clamp(camera.x-camera.w/2,0,640-camera.w),top=clamp(camera.y-viewH/2,0,356-viewH);
     ctx.save();ctx.fillStyle='#100b13';ctx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,safe);ctx.clip();ctx.scale(scale,scale);ctx.translate(-left,-top);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';drawHall();
     ctx.restore();
-    // Cutaways use their own stage, rather than stretching a field sprite.
-    if(s.cutaway!==null){ctx.save();const a=Math.min(1,age/450);ctx.globalAlpha=a;ctx.fillStyle=s.cutaway===2?'#170b20dd':'#28142be6';const w=LOGICAL_WIDTH*.47,h=safe*.78,x=(LOGICAL_WIDTH-w)/2,y=(safe-h)/2;ctx.fillRect(x-12,y-10,w+24,h+20);const im=art[s.cutaway],fit=Math.min(w/im.width,h/im.height);ctx.drawImage(im,(LOGICAL_WIDTH-im.width*fit)/2,(safe-im.height*fit)/2,im.width*fit,im.height*fit);ctx.restore();}
+    if(s.comic.key){const page=WelcomeComicPanels.pages[s.comic.key];WelcomeComicPanels.draw(ctx,s.comic.key,art[page.asset],s.clock-s.comic.at,LOGICAL_WIDTH,safe);}
     ctx.save();const shade=ctx.createLinearGradient(0,0,0,safe);shade.addColorStop(0,'#07030a65');shade.addColorStop(.25,'#07030a00');shade.addColorStop(.82,'#07030a00');shade.addColorStop(1,'#07030a65');ctx.fillStyle=shade;ctx.fillRect(0,0,LOGICAL_WIDTH,safe);if(s.beat.event==='title'){ctx.fillStyle='#08050d77';ctx.fillRect(0,0,LOGICAL_WIDTH,safe);}if(s.clock-s.cutAt<600){ctx.fillStyle=`rgba(10,5,15,${1-(s.clock-s.cutAt)/600})`;ctx.fillRect(0,0,LOGICAL_WIDTH,safe);}ctx.restore();
   }
   function frame(now){if(!scene)return;scene.clock+=document.hidden?0:clamp(now-scene.last,0,80);scene.last=now;const b=scene.beat,delay=b.text?window.CutsceneAutoplay?.delay(b.text,b.minMs)||4500:b.minMs||2500;if(!scene.previewing&&(!b.text||window.CutsceneAutoplay?.enabled)&&scene.clock-scene.beatAt>=delay&&scene.clock>=(scene.holdUntil||0))next(true);if(scene)raf=requestAnimationFrame(frame);}
@@ -176,5 +180,5 @@
   nextTalk=function(...args){if(scene)return next();const r=oldNext(...args);if(el.speaker.textContent==='Marla')el.speaker.textContent='Marli';for(const name of [el.portraitLeftName,el.portraitRightName])if(name?.textContent==='Marla')name.textContent='Marli';return r;};
   skipTalk=function(...args){return scene?finish():oldSkip(...args);};
   playRecruitScene=function(entry,options={}){return ids.includes(entry?.recruit)&&(entry.variant==='welcome'||entry.id.startsWith('ember-hall-start-'))?start(entry.recruit,options,entry):oldPlay(entry,options);};
-  window.FlameguardWelcomes={ready:scripts,start,next,finish,get active(){return Boolean(scene)||loading;},get current(){return scene?{id:scene.id,index:scene.index,full:scene.full,cast:scene.actors.map(a=>a.id),beat:scene.beat,length:scene.beats.length,draws:scene.draws,background:'ember-hall',holdUntil:scene.holdUntil,clock:scene.clock}:null;},preview(index){if(!scene)return false;scene.previewing=true;const id=scene.id;scene.actors=initial(id);for(const [extra,[x,y]]of Object.entries(EXTRA[id]||{}))if(scene.roster.has(extra)&&!scene.actors.some(a=>a.id===extra))scene.actors.push(actor(extra,x,y));scene.prop=null;scene.cutaway=null;scene.event='establish';scene.background=scene.story.background;for(let i=0;i<=index&&i<scene.beats.length;i++){setBeat(i);scene.clock=Math.max(scene.clock+Math.max(scene.beat.minMs||0,2000),scene.holdUntil||0);settleMoves();}paint();return true;}};
+  window.FlameguardWelcomes={ready:scripts,start,next,finish,get active(){return Boolean(scene)||loading;},get current(){return scene?{id:scene.id,index:scene.index,full:scene.full,cast:scene.actors.map(a=>a.id),beat:scene.beat,length:scene.beats.length,draws:scene.draws,background:'ember-hall',comic:{...scene.comic},holdUntil:scene.holdUntil,clock:scene.clock}:null;},preview(index){if(!scene)return false;scene.previewing=true;const id=scene.id;scene.actors=initial(id);for(const [extra,[x,y]]of Object.entries(EXTRA[id]||{}))if(scene.roster.has(extra)&&!scene.actors.some(a=>a.id===extra))scene.actors.push(actor(extra,x,y));scene.prop=null;scene.comic={key:null,at:0,serial:0};scene.event='establish';scene.background=scene.story.background;for(let i=0;i<=index&&i<scene.beats.length;i++){setBeat(i);scene.clock=Math.max(scene.clock+Math.max(scene.beat.minMs||0,2000),scene.holdUntil||0);settleMoves();}paint();return true;}};
 })();

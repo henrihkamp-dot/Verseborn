@@ -89,11 +89,14 @@
       },
       {
         "speaker": "Mira",
-        "text": "That answer is why I'm here."
+        "text": "That answer is why I'm here.",
+        "panel": "mira-stand",
+        "minMs": 3600
       },
       {
         "speaker": "Revus",
-        "text": "You know what people will say."
+        "text": "You know what people will say.",
+        "panel": null
       },
       {
         "speaker": "Mira",
@@ -213,7 +216,8 @@
         "speaker": "Torren",
         "text": "Torren Stonekin. A-rank Guardian. Which way's the kitchen?",
         "event": "torren-enter",
-        "minMs": 2500
+        "minMs": 3600,
+        "panel": "torren-rank"
       },
       {
         "speaker": "Verseborn",
@@ -268,7 +272,8 @@
       {
         "event": "cooking",
         "minMs": 5200,
-        "caption": "Quick hands. An immovable spoon."
+        "caption": "Quick hands. An immovable spoon.",
+        "panel": null
       },
       {
         "speaker": "Verseborn",
@@ -329,7 +334,8 @@
         "text": "Spent enough years building things for men who never asked who'd be underneath them.",
         "event": "quiet",
         "shot": "close",
-        "minMs": 4200
+        "minMs": 4200,
+        "panel": "torren-memory"
       },
       {
         "speaker": "Verseborn",
@@ -341,7 +347,8 @@
       },
       {
         "speaker": "Marli",
-        "text": "You'll do."
+        "text": "You'll do.",
+        "panel": null
       },
       {
         "speaker": "Torren",
@@ -474,29 +481,32 @@
       },
       {
         "speaker": "Nyx",
-        "text": "The Fiery Tornado. Arach says the poster is understated."
+        "text": "The Fiery Tornado. This poster says forty percent more cape."
       },
       {
         "speaker": "Verseborn",
-        "text": "The Fiery Tornado? I was wondering about the cape budget.",
+        "text": "Those shoulder pads could apply for their own guild rank.",
         "event": "poster",
-        "shot": "wide"
+        "shot": "wide",
+        "panel": "seerin-tornado",
+        "minMs": 3600
       },
       {
         "speaker": "Seerin",
-        "text": "The artist was enthusiastic."
+        "text": "I couldn't turn my head left."
       },
       {
         "speaker": "Jory",
-        "text": "We made it bigger."
+        "text": "We thought it needed more cape."
       },
       {
         "speaker": "Verseborn",
-        "text": "You improved the historical record."
+        "text": "Of course. That was what it was missing."
       },
       {
         "speaker": "Nyx",
-        "text": "But who'll stay at the orphanage?"
+        "text": "But who'll stay at the orphanage?",
+        "panel": null
       },
       {
         "speaker": "Seerin",
@@ -560,7 +570,9 @@
         "speaker": "Nyx",
         "text": "So you remember the team.",
         "event": "ribbon",
-        "shot": "prop"
+        "shot": "prop",
+        "panel": "seerin-team",
+        "minMs": 3600
       },
       {
         "speaker": "Seerin",
@@ -575,7 +587,8 @@
       {
         "event": "last-round",
         "minMs": 3800,
-        "caption": "One more round. Together."
+        "caption": "One more round. Together.",
+        "panel": null
       },
       {
         "speaker": "Torren",
@@ -648,7 +661,9 @@
         "speaker": "Kael",
         "text": "It was confirmed when I arrived.",
         "event": "cup",
-        "shot": "close"
+        "shot": "close",
+        "panel": "kael-rules",
+        "minMs": 3600
       },
       {
         "speaker": "Glimmer",
@@ -666,7 +681,8 @@
       },
       {
         "speaker": "Verseborn",
-        "text": "Is this why you left your order? Poor shelving?"
+        "text": "Is this why you left your order? Poor shelving?",
+        "panel": null
       },
       {
         "speaker": "Verseborn",
@@ -682,7 +698,9 @@
         "speaker": "Kael",
         "text": "They called them transfers. I knew some of the children. They hadn't moved.",
         "event": "ledger",
-        "shot": "prop"
+        "shot": "prop",
+        "panel": "kael-ledger",
+        "minMs": 3600
       },
       {
         "speaker": "Verseborn",
@@ -713,7 +731,8 @@
       },
       {
         "speaker": "Kael",
-        "text": "I believe in discipline. People trust a healer to be ready. To keep his hands clean. To arrive when he says he will."
+        "text": "I believe in discipline. People trust a healer to be ready. To keep his hands clean. To arrive when he says he will.",
+        "panel": null
       },
       {
         "speaker": "Kael",
@@ -966,6 +985,203 @@
       {
         "speaker": "Verseborn",
         "text": "Your choice, then. Welcome home."
+      }
+    ]
+  },
+  "Glimmer": {
+    "id": "Glimmer",
+    "title": "Bench Rights",
+    "location": "Ember Hall · Workshop",
+    "background": "ember-hall",
+    "name": "GLIMMER",
+    "role": "THE GEARMIND",
+    "beats": [
+      {
+        "event": "establish",
+        "caption": "Bench Rights",
+        "minMs": 2400
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Good news. I came back.",
+        "event": "glimmer-arrive",
+        "minMs": 2500
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "You told Stonewake?"
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "I told Kaeldrin. Very professionally."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "How professionally?"
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Only one demonstration. And I put the pin back in before the end.",
+        "panel": "glimmer-return",
+        "minMs": 4000
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "He wanted a maintenance report. I wanted to talk about what that machine could do for people."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "And?"
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Stonewake taught me to be useful. Here, I think I could belong. That is rather more frightening."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Then let us start with a bench. You do not have to earn the right to belong here.",
+        "panel": null
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "I noticed. It has potential.",
+        "event": "glimmer-bench",
+        "minMs": 2400
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "You could have stayed somewhere established."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Yes. And maintained things that already work. Here, when something breaks, somebody actually needs it fixed."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "People. Not just equipment. You are trying to bring people home. I can build things that help."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Then the bench is yours."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Excellent. I have improved it already.",
+        "event": "glimmer-gadget"
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Why is it smoking?",
+        "panel": "glimmer-lab",
+        "minMs": 3600
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Because progress is happening."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "I admire the confidence. I fear the result."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Both are correct."
+      },
+      {
+        "speaker": "Kael",
+        "text": "Where do you put the tools that might explode?",
+        "requires": [
+          "Kael"
+        ]
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Where do you put the tools that might explode?",
+        "unless": [
+          "Kael"
+        ]
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Within reach. That is what makes them useful."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Could we agree on a warning first?",
+        "panel": null
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "The little light turns purple."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "It is purple now."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "See? An excellent warning system."
+      },
+      {
+        "speaker": "Mira",
+        "text": "Glinda.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Professional names, Mira. We discussed this.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Mira",
+        "text": "My mistake.",
+        "requires": [
+          "Mira"
+        ]
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "I built Torren a locking hinge once. He jammed it during a collapse. Once. A statistical miracle."
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "You are proud of that?"
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Of him holding up the building? Yes. Of the hinge? We do not discuss the hinge."
+      },
+      {
+        "speaker": "Kael",
+        "text": "No cups on the bookshelves. No live current on the medical table.",
+        "requires": [
+          "Kael"
+        ]
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Separate tables. Sensible. I like working with professionals.",
+        "requires": [
+          "Kael"
+        ]
+      },
+      {
+        "speaker": "Verseborn",
+        "text": "Welcome to the Flameguard, Glimmer."
+      },
+      {
+        "speaker": "Glimmer",
+        "text": "Good. Now hold this. Carefully.",
+        "event": "glimmer-gadget"
+      },
+      {
+        "event": "title",
+        "caption": "GLIMMER",
+        "minMs": 3300
       }
     ]
   }
