@@ -77,7 +77,8 @@
         "speaker": "Revus",
         "text": "You have a home. Protection. A future that does not depend on whether this boy survives his next bad idea.",
         "event": "father",
-        "shot": "close"
+        "shot": "close",
+        "panel": "mira-talk"
       },
       {
         "speaker": "Mira",
@@ -90,13 +91,17 @@
       {
         "speaker": "Mira",
         "text": "That answer is why I'm here.",
-        "panel": "mira-stand",
-        "minMs": 3600
+        "minMs": 3600,
+        "panel": "mira-stare"
+      },
+      {
+        "panel": "mira-awkward",
+        "minMs": 2100,
+        "caption": "A delicate introduction."
       },
       {
         "speaker": "Revus",
-        "text": "You know what people will say.",
-        "panel": null
+        "text": "You know what people will say."
       },
       {
         "speaker": "Mira",
@@ -216,8 +221,7 @@
         "speaker": "Torren",
         "text": "Torren Stonekin. A-rank Guardian. Which way's the kitchen?",
         "event": "torren-enter",
-        "minMs": 3600,
-        "panel": "torren-rank"
+        "minMs": 3600
       },
       {
         "speaker": "Verseborn",
@@ -253,13 +257,15 @@
       },
       {
         "speaker": "Marli",
-        "text": "And the badge?"
+        "text": "And the badge?",
+        "panel": "torren-rank"
       },
       {
         "speaker": "Torren",
         "text": "A-rank.",
         "event": "badge",
-        "shot": "prop"
+        "shot": "prop",
+        "panel": "torren-rank"
       },
       {
         "speaker": "Marli",
@@ -272,8 +278,7 @@
       {
         "event": "cooking",
         "minMs": 5200,
-        "caption": "Quick hands. An immovable spoon.",
-        "panel": null
+        "caption": "Quick hands. An immovable spoon."
       },
       {
         "speaker": "Verseborn",
@@ -291,7 +296,8 @@
         "speaker": "Verseborn",
         "text": "Is the spoon supposed to stand up by itself?",
         "event": "stew",
-        "shot": "prop"
+        "shot": "prop",
+        "panel": "torren-stew"
       },
       {
         "speaker": "Torren",
@@ -343,12 +349,12 @@
       },
       {
         "speaker": "Torren",
-        "text": "Now I want to know who's coming back for supper."
+        "text": "Now I want to know who's coming back for supper.",
+        "panel": "torren-supper"
       },
       {
         "speaker": "Marli",
-        "text": "You'll do.",
-        "panel": null
+        "text": "You'll do."
       },
       {
         "speaker": "Torren",
@@ -481,19 +487,21 @@
       },
       {
         "speaker": "Nyx",
-        "text": "The Fiery Tornado. This poster says forty percent more cape."
+        "text": "The Fiery Tornado. This poster says forty percent more cape.",
+        "panel": "seerin-tornado"
       },
       {
         "speaker": "Verseborn",
         "text": "Those shoulder pads could apply for their own guild rank.",
         "event": "poster",
         "shot": "wide",
-        "panel": "seerin-tornado",
-        "minMs": 3600
+        "minMs": 3600,
+        "panel": "seerin-tornado"
       },
       {
         "speaker": "Seerin",
-        "text": "I couldn't turn my head left."
+        "text": "I couldn't turn my head left.",
+        "panel": "seerin-shame"
       },
       {
         "speaker": "Jory",
@@ -505,8 +513,7 @@
       },
       {
         "speaker": "Nyx",
-        "text": "But who'll stay at the orphanage?",
-        "panel": null
+        "text": "But who'll stay at the orphanage?"
       },
       {
         "speaker": "Seerin",
@@ -571,14 +578,15 @@
         "text": "So you remember the team.",
         "event": "ribbon",
         "shot": "prop",
-        "panel": "seerin-team",
-        "minMs": 3600
+        "minMs": 3600,
+        "panel": "seerin-ribbon"
       },
       {
         "speaker": "Seerin",
         "text": "I know my team.",
         "event": "ribbon",
-        "shot": "close"
+        "shot": "close",
+        "panel": "seerin-team"
       },
       {
         "speaker": "Seerin",
@@ -587,8 +595,7 @@
       {
         "event": "last-round",
         "minMs": 3800,
-        "caption": "One more round. Together.",
-        "panel": null
+        "caption": "One more round. Together."
       },
       {
         "speaker": "Torren",
@@ -651,7 +658,8 @@
       },
       {
         "speaker": "Kael",
-        "text": "Clean water here. Dressings here. No cups on the bookshelves."
+        "text": "Clean water here. Dressings here. No cups on the bookshelves.",
+        "panel": "kael-rules"
       },
       {
         "speaker": "Verseborn",
@@ -662,8 +670,8 @@
         "text": "It was confirmed when I arrived.",
         "event": "cup",
         "shot": "close",
-        "panel": "kael-rules",
-        "minMs": 3600
+        "minMs": 3600,
+        "panel": "kael-cup"
       },
       {
         "speaker": "Glimmer",
@@ -681,8 +689,7 @@
       },
       {
         "speaker": "Verseborn",
-        "text": "Is this why you left your order? Poor shelving?",
-        "panel": null
+        "text": "Is this why you left your order? Poor shelving?"
       },
       {
         "speaker": "Verseborn",
@@ -699,8 +706,8 @@
         "text": "They called them transfers. I knew some of the children. They hadn't moved.",
         "event": "ledger",
         "shot": "prop",
-        "panel": "kael-ledger",
-        "minMs": 3600
+        "minMs": 3600,
+        "panel": "kael-ledger"
       },
       {
         "speaker": "Verseborn",
@@ -711,7 +718,8 @@
         "text": "Sold under the church's seal. I took the ledger to my superiors. They asked who had given me permission to read it.",
         "event": "ledger",
         "shot": "close",
-        "minMs": 4500
+        "minMs": 4500,
+        "panel": "kael-coins"
       },
       {
         "speaker": "Verseborn",
@@ -727,12 +735,12 @@
       },
       {
         "speaker": "Kael",
-        "text": "They gave me an order."
+        "text": "They gave me an order.",
+        "panel": "kael-leave"
       },
       {
         "speaker": "Kael",
-        "text": "I believe in discipline. People trust a healer to be ready. To keep his hands clean. To arrive when he says he will.",
-        "panel": null
+        "text": "I believe in discipline. People trust a healer to be ready. To keep his hands clean. To arrive when he says he will."
       },
       {
         "speaker": "Kael",
@@ -865,7 +873,8 @@
       },
       {
         "speaker": "Seerin",
-        "text": "His name is Sparky."
+        "text": "His name is Sparky.",
+        "panel": "sparky-scold"
       },
       {
         "speaker": "Verseborn",
@@ -1022,8 +1031,8 @@
       {
         "speaker": "Glimmer",
         "text": "Only one demonstration. And I put the pin back in before the end.",
-        "panel": "glimmer-return",
-        "minMs": 4000
+        "minMs": 4000,
+        "panel": "glimmer-report"
       },
       {
         "speaker": "Glimmer",
@@ -1035,12 +1044,12 @@
       },
       {
         "speaker": "Glimmer",
-        "text": "Stonewake taught me to be useful. Here, I think I could belong. That is rather more frightening."
+        "text": "Stonewake taught me to be useful. Here, I think I could belong. That is rather more frightening.",
+        "panel": "glimmer-worry"
       },
       {
         "speaker": "Verseborn",
-        "text": "Then let us start with a bench. You do not have to earn the right to belong here.",
-        "panel": null
+        "text": "Then let us start with a bench. You do not have to earn the right to belong here."
       },
       {
         "speaker": "Glimmer",
@@ -1050,34 +1059,40 @@
       },
       {
         "speaker": "Verseborn",
-        "text": "You could have stayed somewhere established."
+        "text": "You could have stayed somewhere established.",
+        "event": "glimmer-boost"
       },
       {
         "speaker": "Glimmer",
-        "text": "Yes. And maintained things that already work. Here, when something breaks, somebody actually needs it fixed."
+        "text": "Yes. And maintained things that already work. Here, when something breaks, somebody actually needs it fixed.",
+        "event": "glimmer-repair"
       },
       {
         "speaker": "Glimmer",
-        "text": "People. Not just equipment. You are trying to bring people home. I can build things that help."
+        "text": "People. Not just equipment. You are trying to bring people home. I can build things that help.",
+        "event": "glimmer-back"
       },
       {
         "speaker": "Verseborn",
-        "text": "Then the bench is yours."
+        "text": "Then the bench is yours.",
+        "panel": "glimmer-return"
       },
       {
         "speaker": "Glimmer",
         "text": "Excellent. I have improved it already.",
-        "event": "glimmer-gadget"
+        "event": "glimmer-gadget",
+        "panel": "glimmer-drone"
       },
       {
         "speaker": "Verseborn",
         "text": "Why is it smoking?",
-        "panel": "glimmer-lab",
-        "minMs": 3600
+        "minMs": 3600,
+        "panel": "glimmer-lab"
       },
       {
         "speaker": "Glimmer",
-        "text": "Because progress is happening."
+        "text": "Because progress is happening.",
+        "panel": "glimmer-progress"
       },
       {
         "speaker": "Verseborn",
@@ -1107,20 +1122,22 @@
       },
       {
         "speaker": "Verseborn",
-        "text": "Could we agree on a warning first?",
-        "panel": null
+        "text": "Could we agree on a warning first?"
       },
       {
         "speaker": "Glimmer",
-        "text": "The little light turns purple."
+        "text": "The little light turns purple.",
+        "event": "glimmer-boost-two"
       },
       {
         "speaker": "Verseborn",
-        "text": "It is purple now."
+        "text": "It is purple now.",
+        "event": "glimmer-repair"
       },
       {
         "speaker": "Glimmer",
-        "text": "See? An excellent warning system."
+        "text": "See? An excellent warning system.",
+        "event": "glimmer-back"
       },
       {
         "speaker": "Mira",
