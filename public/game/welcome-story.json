@@ -2,8 +2,8 @@
   "Mira": {
     "id": "Mira",
     "title": "Terms of Membership",
-    "location": "Ember Hall · Lobby",
-    "background": "central-hall",
+    "location": "Ember Hall · Main Hall",
+    "background": "ember-hall",
     "name": "MIRA VELN",
     "role": "THE WHISPERING ARROW",
     "beats": [
@@ -121,6 +121,21 @@
       },
       {
         "speaker": "Revus",
+        "text": "Have you eaten, Miri? Properly? And are you sleeping?",
+        "event": "revus-chibi",
+        "minMs": 3000
+      },
+      {
+        "speaker": "Mira",
+        "text": "Father. You can ask that at supper."
+      },
+      {
+        "speaker": "Revus",
+        "text": "Yes. Quite. Supper.",
+        "event": "revus-composed"
+      },
+      {
+        "speaker": "Revus",
         "text": "Do not make me regret leaving you here."
       },
       {
@@ -171,7 +186,8 @@
         "text": "Not the one with the clean glasses.",
         "requires": [
           "Marli"
-        ]
+        ],
+        "offscreen": true
       },
       {
         "event": "title",
@@ -184,7 +200,7 @@
     "id": "Torren",
     "title": "A-Rank, Obviously",
     "location": "Ember Hall · Kitchen",
-    "background": "torren-kitchen",
+    "background": "ember-hall",
     "name": "TORREN STONEKIN",
     "role": "THE STONEHEART",
     "beats": [
@@ -401,8 +417,8 @@
   "Seerin": {
     "id": "Seerin",
     "title": "One More Round",
-    "location": "Orphanage · Training Room",
-    "background": "gym",
+    "location": "Ember Hall · Training Corner",
+    "background": "ember-hall",
     "name": "SEERIN VAHL",
     "role": "THE FLAME’S SHIELD",
     "beats": [
@@ -445,14 +461,14 @@
       },
       {
         "speaker": "Mira",
-        "text": "A signal at the window if you need us. Someone will answer.",
+        "text": "A signal from the orphanage if you need us. Someone will answer.",
         "requires": [
           "Mira"
         ]
       },
       {
         "speaker": "Seerin",
-        "text": "I have to go with Verseborn for a while.",
+        "text": "I'll be staying here with the Flameguard for a while.",
         "event": "farewell",
         "shot": "close"
       },
@@ -462,7 +478,7 @@
       },
       {
         "speaker": "Verseborn",
-        "text": "I was wondering about the cape budget.",
+        "text": "The Fiery Tornado? I was wondering about the cape budget.",
         "event": "poster",
         "shot": "wide"
       },
@@ -480,15 +496,15 @@
       },
       {
         "speaker": "Nyx",
-        "text": "But who'll stay here?"
+        "text": "But who'll stay at the orphanage?"
       },
       {
         "speaker": "Seerin",
-        "text": "The people who look after you are staying. I've checked the watches. Twice."
+        "text": "Your carers are staying at the orphanage. I've checked the watches. Twice."
       },
       {
         "speaker": "Rava",
-        "text": "You always stay.",
+        "text": "You've always been there.",
         "event": "rava-worry",
         "shot": "close"
       },
@@ -498,7 +514,7 @@
       },
       {
         "speaker": "Seerin",
-        "text": "There's trouble outside these walls. If I wait for it to reach your door, I've waited too long."
+        "text": "There's trouble outside these walls. If I wait for it to reach the orphanage door, I've waited too long."
       },
       {
         "speaker": "Jory",
@@ -571,7 +587,7 @@
       {
         "speaker": "Verseborn",
         "text": "Should I announce the Tornado?",
-        "event": "arrival",
+        "event": "last-round-end",
         "shot": "wide"
       },
       {
@@ -589,7 +605,7 @@
     "id": "Kael",
     "title": "What the Rules Are For",
     "location": "Ember Hall · Library",
-    "background": "kael-library",
+    "background": "ember-hall",
     "name": "KAEL IRONHAND",
     "role": "THE SILENT OATH",
     "beats": [
@@ -707,33 +723,26 @@
         "minMs": 4500
       },
       {
-        "speaker": "Jory",
-        "text": "Does it cost anything?",
-        "event": "jory-enter",
-        "minMs": 2000
+        "speaker": "Verseborn",
+        "text": "If someone comes here needing help, what do we charge?",
+        "event": "healer"
       },
       {
         "speaker": "Kael",
-        "text": "Let me see your hand."
+        "text": "For clean water, a dressing, a little kindness? Nothing."
       },
       {
-        "speaker": "Jory",
-        "text": "But—"
-      },
-      {
-        "speaker": "Kael",
-        "text": "No. It doesn't cost anything."
+        "speaker": "Verseborn",
+        "text": "Even if they cannot give you their name?"
       },
       {
         "speaker": "Kael",
-        "text": "There. Ask your carer to change that this evening.",
-        "event": "heal",
-        "shot": "close"
+        "text": "Especially then. A name is not a price of admission."
       },
       {
         "speaker": "Verseborn",
         "text": "So. How many rules are you bringing with you?",
-        "event": "jory-leave",
+        "event": "healer-end",
         "minMs": 2000
       },
       {
@@ -764,8 +773,8 @@
   "Sparky": {
     "id": "Sparky",
     "title": "He Has a Name",
-    "location": "Ember Hall · Sparky’s Corner",
-    "background": "sparky-coop",
+    "location": "Ember Hall · Hearth",
+    "background": "ember-hall",
     "name": "SPARKY",
     "role": "THE EMBERBORN",
     "beats": [

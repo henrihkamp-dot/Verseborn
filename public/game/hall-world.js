@@ -598,6 +598,20 @@
   // The legacy tile-grid click handler must not run after our world-space path.
   canvas.addEventListener('click',event=>{if(inHall()&&suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
   window.emberHallWorld={hallBackground,closedRooms,vacantClutter,findPath,player,actors,resonance,walls,floors,obstacles,collision,images,trigger,navigate,nearby,residents,resetNavigation,marlaIdleFrame,barMoment,ambientMoment,ambientChat,hideAmbientChat,resetAmbientChat,kitchenLines,barLines,clearNavigation(){keys.clear();target=null;route=[];pendingActor=null;},drawActor(actor,row,col,externalCamera){const previous={...camera};if(externalCamera)Object.assign(camera,externalCamera);drawActor(actor,row,col);Object.assign(camera,previous);},get route(){return route;},get target(){return target;},get camera(){return camera;},get scene(){return scene;}};
+  // Cinematics reuse the actual Hall scenery and foreground depth without
+  // advancing resident AI or changing saved actors.
+  Object.assign(window.emberHallWorld,{foregroundProps,
+    drawCinematicForeground(prop){const previous={...camera};Object.assign(camera,{x:0,y:0});drawForegroundProp(prop);Object.assign(camera,previous);},
+    drawCinematicFixtures(now){
+      window.HallLiveliness?.drawLabProps({x:0,y:0});
+      const fx=images.effects,cw=fx.width/4,ch=fx.height/2,frame=Math.floor(now/180)%4;
+      for(const [i,[x,y,w,h]]of [[77,23,25,21],[564,136,19,19]].entries()){
+        if(i===0&&!state.party.includes('Torren'))continue;
+        ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.drawImage(images.hearths,i*32,0,32,32,x,y,w,h);ctx.drawImage(fx,frame*cw,0,cw,ch,x-2,y-1,w+4,h+2);ctx.restore();
+      }
+      window.HallKitchen?.drawPot({x:0,y:0},now);
+    }
+  });
   const engineReady=new Promise(resolve=>{const timer=setInterval(()=>{if(runtimeAssetsReady){clearInterval(timer);resolve();}},50);});
   Promise.all([ready,walkReady,luteReady,actionsReady,engineReady]).then(()=>{
     active=true;
