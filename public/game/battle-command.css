@@ -386,3 +386,13 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
  .command-battle .bc-statuses img{width:21px;height:21px}
  .command-battle .bc-statuses>b{font:bold 11px/25px 'Segoe UI',sans-serif;min-width:20px;color:#eee1ca}
 }
+
+/* Portrait-first multi-round preview; keep the next round visible beside this one. */
+.command-battle .bc-turns{overflow-x:auto;scrollbar-width:none;align-items:stretch}
+.command-battle .bc-turn{flex:1 0 55px;max-width:140px;min-width:55px;margin:0;height:100%;box-sizing:border-box;position:relative;flex-direction:column;justify-content:center;gap:1px;padding:1px 4px;clip-path:none}
+.command-battle .bc-turn img{width:28px;height:28px;object-fit:cover;clip-path:none;object-position:50% 20%}
+.command-battle .bc-turn b{font:600 10px Georgia,serif;max-width:100%}
+.command-battle .bc-turn>small{position:absolute;right:1px;top:1px;font-size:7px}
+.bc-round-divider{flex:0 0 24px;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#f3cf84;border-left:1px solid #a7854b;font:bold 11px Georgia,serif}
+.bc-round-divider small{font:7px Arial,sans-serif;writing-mode:vertical-rl;margin-top:2px}
+@media(max-width:700px){.command-battle .bc-turn{flex:0 0 55px}.command-battle .bc-turn img{width:22px;height:22px}.command-battle .bc-turn b{font-size:9px}}

@@ -10561,11 +10561,11 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
   runCurrentTurn(openingNotes);
 }
 
-function battleInitiative(unit, base) {
+function battleInitiative(unit, base, round = battle.round) {
   const agility = effectiveAgility(unit, base);
   if (!unit.endgameBoss || battle?.hallStage < 51 || battle?.hallStage > 60) return agility;
   const boosted = agility * 1.1;
-  if ((unit.actionsTaken || 0) === 0 || (battle.round - 1) % 3 === 0) {
+  if ((unit.actionsTaken || 0) === 0 || (round - 1) % 3 === 0) {
     const fastest = Math.max(0, ...battle.party.filter(hero => hero.hp > 0).map(hero => effectiveAgility(hero, totals(hero.id).agi)),
       ...battle.enemies.filter(enemy => enemy.hp > 0).map(enemy => effectiveAgility(enemy, enemy.stats.agi) * (enemy.endgameBoss ? 1.1 : 1)));
     return Math.max(boosted, fastest + 1);

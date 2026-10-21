@@ -318,15 +318,24 @@
     renderCommands();
   }
   function portrait(turn){
-    if(turn.side==='party')return portraitSources[turn.id]||menuPortraitSources[turn.id];
+    if(turn.side==='party')return window.EncounterPortraits?.party(turn.id)||portraitSources[turn.id]||menuPortraitSources[turn.id];
     const e=battle.enemies[turn.index];
+    if(e&&window.EncounterPortraits)return EncounterPortraits.unit(e);
     if(e?.sparringId)return portraitSources[e.sparringId];
     return e?enemyPortraitDataUrl(e.sprite||e.name):'';
   }
   renderTurnOrder=function(){
     if(!battle?.turnQueue)return;
-    const turns=battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive);
-    timeline.innerHTML=`<strong class="bc-round">R${battle.round}<small>/ ${battle.roundCap||MAX_BATTLE_ROUNDS}</small></strong><div class="bc-turns">${turns.map((t,i)=>{const src=portrait(t);return `<span class="bc-turn ${t.side} ${i===0?'is-current':''}" ${i===0?'aria-current="step"':''} title="${esc(t.name)} · AGI ${t.agi}">${src?`<img src="${esc(src)}" alt="">`:''}<b>${esc(t.name)}</b>${t.extra?'<small>Extra</small>':''}</span>`;}).join('')}</div>`;
+    const turns=battle.turnQueue.slice(battle.turnIndex).filter(turnIsAlive).map(t=>({...t,round:battle.round}));
+    // Read-only forecast: current stats, no queue changes or random rolls.
+    for(let round=battle.round+1;round<=Math.min(battle.round+2,battle.roundCap||MAX_BATTLE_ROUNDS);round++){
+      const next=[
+        ...battle.party.filter(u=>u.hp>0).map(u=>({side:'party',id:u.id,name:u.name,agi:battleInitiative(u,totals(u.id).agi,round),round})),
+        ...battle.enemies.map((u,index)=>({side:'enemy',index,name:u.name,agi:battleInitiative(u,u.stats.agi,round),round})).filter(turnIsAlive)
+      ].sort((a,b)=>b.agi-a.agi||(a.side===b.side?0:a.side===(round%2?'enemy':'party')?-1:1));
+      turns.push(...next);
+    }
+    timeline.innerHTML=`<strong class="bc-round">R${battle.round}<small>/ ${battle.roundCap||MAX_BATTLE_ROUNDS}</small></strong><div class="bc-turns">${turns.map((t,i)=>{const src=portrait(t),future=t.round>battle.round,boundary=i===0||turns[i-1].round!==t.round;return `${boundary?`<span class="bc-round-divider" title="${future?'Forecast — order may change with actions and status effects':'Current round'}">R${t.round}${future?'<small>Preview</small>':''}</span>`:''}<span class="bc-turn ${t.side} ${i===0?'is-current':''} ${future?'is-forecast':''}" ${i===0?'aria-current="step"':''} title="${esc(t.name)} · Round ${t.round} · AGI ${t.agi}${future?' · Forecast using current stats':''}">${src?`<img src="${esc(src)}" alt="">`:''}<b>${esc(t.name)}</b>${t.extra?'<small>Extra</small>':''}</span>`;}).join('')}</div>`;
   };
   renderBattle=function(log){
     if(!battle)return;
@@ -404,28 +413,28 @@
   }
   const nativePartySprite=drawBattlePartySprite,nativeEnemySprite=drawEnemy;
   drawBattlePartySprite=function(u,x,y,...rest){const s=mode==='battle'?visualScale():1;ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.translate(-x,-y);const result=captureSprite(u,x,y,()=>nativePartySprite(u,x,y,...rest));ctx.restore();return result;};
-  drawEnemy=function(u,x,y,...rest){if(mode!=='battle')return nativeEnemySprite(u,x,y,...rest);const s=visualScale()*enemyPresentation(u).scale,ax=x+8,ay=y+31;u.encounterDrawScale=s;ctx.save();ctx.translate(ax,ay);ctx.scale(s,s);ctx.translate(-ax,-ay);if(u.arrivalTick!==undefined)ctx.globalAlpha*=Math.min(1,Math.max(0,(tick-u.arrivalTick)/24));if(u.hp>0&&battle.enemies.filter(e=>e.hp>0).length===1&&s>visualScale()*1.2){ctx.save();ctx.fillStyle='#070611';ctx.globalAlpha*=.22;ctx.beginPath();ctx.ellipse(ax,ay+1,14,3,0,0,Math.PI*2);ctx.fill();ctx.restore();}captureSprite(u,ax,ay,()=>nativeEnemySprite(u,x,y,...rest));ctx.restore();};
+  drawEnemy=function(u,x,y,...rest){if(mode!=='battle')return nativeEnemySprite(u,x,y,...rest);const s=visualScale()*enemyPresentation(u).scale,ax=x+8,ay=y+31;u.encounterDrawScale=s;ctx.save();ctx.translate(ax,ay);ctx.scale(s,s);ctx.translate(-ax,-ay);if(u.arrivalTick!==undefined)ctx.globalAlpha*=Math.min(1,Math.max(0,(tick-u.arrivalTick)/24));if(u.hp>0&&battle.enemies.length===1&&s>visualScale()*1.2){ctx.save();ctx.fillStyle='#070611';ctx.globalAlpha*=.22;ctx.beginPath();ctx.ellipse(ax,ay+1,14,3,0,0,Math.PI*2);ctx.fill();ctx.restore();}captureSprite(u,ax,ay,()=>nativeEnemySprite(u,x,y,...rest));ctx.restore();};
   const nativeFloater=battleFloaterPosition,nativeVfx=battleVfxAnchor;
   battleFloaterPosition=function(u){const b=spriteBounds.get(u),i=battle?.enemies.indexOf(u)??-1;if(i<0||!b)return nativeFloater(u);const [x,y]=enemyBattlePosition(i);return [x+b.dx,y+b.dy-b.height-4];};
   battleVfxAnchor=function(u){const b=spriteBounds.get(u),i=battle?.enemies.indexOf(u)??-1;if(i<0||!b)return nativeVfx(u);const [x,y]=enemyBattlePosition(i);return {x:x+b.dx,y:y+b.dy-b.height*.5};};
   const nativePartyPosition=partyBattlePosition,nativeEnemyPosition=enemyBattlePosition;
   const enemyViews=new WeakMap();
   function enemyPresentation(u){
-    let view=enemyViews.get(u);const wanted=window.HallEncounters?.soloScale(u)||1;
-    if(view&&u.hp<=0)return view;
-    if(!view){view={scale:wanted,tick:-1,positionTick:-1};enemyViews.set(u,view);}
-    if(view.tick!==tick){view.scale+=(wanted-view.scale)*.14;if(Math.abs(wanted-view.scale)<.001)view.scale=wanted;view.tick=tick;}
-    // Actual opaque sprite bounds constrain the larger presentation below the timeline.
-    const bounds=spriteBounds.get(u),baseHeight=u.encounterNativeHeight||(bounds&&bounds.height/Math.max(.1,u.encounterDrawScale||1));
-    if(baseHeight)view.scale=Math.min(view.scale,(BATTLE_ARENA_HEIGHT*.70-18)/Math.max(1,baseHeight*visualScale()));
+    let view=enemyViews.get(u);
+    if(!view){
+      const wanted=window.HallEncounters?.soloScale(u)||1;
+      const key=enemyAnimationKey(u),height=(enemyAnimationHeights[key]||44)*enemyBattleScale(key)*BATTLE_COMPOSITION_SCALE*visualScale();
+      view={scale:Math.min(wanted,(BATTLE_ARENA_HEIGHT*.70-18)/Math.max(1,height))};
+      enemyViews.set(u,view);
+    }
     return view;
   }
   function position(native,index,count,enemySide){
     if(mode!=='battle')return native(index,count);
     const u=(enemySide?battle.enemies:battle.party)[index],view=enemySide&&u?enemyPresentation(u):null;
     if(enemySide&&u?.hp<=0&&view?.position)return view.position;
-    const alive=enemySide?battle.enemies.filter(e=>e.hp>0):battle.party;
-    if(enemySide&&u?.hp>0){index=alive.indexOf(u);count=alive.length;}
+    const alive=enemySide?battle.enemies:battle.party;
+    if(enemySide)count=alive.length;
     let [x,y]=native(index,count);
     if(game.getBoundingClientRect().width>700){
       if(!enemySide){const spot=[[.105,.58],[.24,.78],[.405,.68]][index]||[.24,.78];x=LOGICAL_WIDTH*spot[0];y=BATTLE_ARENA_HEIGHT*spot[1];}
@@ -447,8 +456,7 @@
       if(enemySide){const h=(enemyAnimationHeights[enemyAnimationKey(u||{})]||44)*enemyBattleScale(enemyAnimationKey(u||{}))*visualScale()*(view?.scale||1);if(h>height*.55)y=Math.max(y,Math.min(height*.82,h+19));}
     }
     if(view){
-      if(!view.position)view.position=[x,y];
-      if(view.positionTick!==tick){view.position=view.position.map((v,i)=>v+([x,y][i]-v)*.14);view.positionTick=tick;}
+      view.position=[x,y];
       return view.position;
     }
     return [x,y];

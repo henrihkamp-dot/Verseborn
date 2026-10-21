@@ -102,8 +102,8 @@
   // Display multipliers never enter stats, initiative, targeting or damage.
   function soloScale(u) {
     if(u.summonedBy)return u.encounterSize||.6;
-    const live=battle?.enemies.filter(e=>e.hp>0)||[];
-    if(live.length!==1||live[0]!==u)return 1;
+    const formation=battle?.enemies||[];
+    if(formation.length!==1||formation[0]!==u)return formation.length===2?1.1:1;
     const large=/Dragon|Wyrm|Leviathan|Guardian|Solinar/.test(u.name);
     if(u.encounterArchetype==='solo-boss'||u.encounterArchetype==='summon')return large?1.28:1.45;
     return u.resistanceTier==='boss'?large?1.2:1.4:u.resistanceTier==='elite'?1.28:1.17;
