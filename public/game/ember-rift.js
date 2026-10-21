@@ -169,7 +169,8 @@
       const pending=data.pending;
       if(statusOf(unit,'stun')||statusOf(unit,'sleep')||pending.kind==='magic'&&statusOf(unit,'silence')){interrupt(unit,'control');return basic(unit);}
       if(pending.marked&&(!pending.target||pending.target.hp<=0||!statusOf(pending.target,'riftMark'))){interrupt(unit,'mark cleansed');return basic(unit);}
-      if(pending.heal)return FinisherFlow.execute(unit,{kind:'magic',name:'The Hearth Holds',element:'Sound',healing:true,allAllies:true,healCoefficient:4.2,buffs:[{type:'barrier',value:.25,duration:2}],mpCost:24});
+      // Support finishers must use the ultimate path too: animation, free MP cost and Resonance consumption.
+      if(pending.heal)return FinisherFlow.execute(unit,{kind:'ultimate',name:'The Hearth Holds',element:'Sound',healing:true,allAllies:true,healCoefficient:4.2,buffs:[{type:'barrier',value:.25,duration:2}],mpCost:0});
       const helpers=battle.enemies.filter(e=>e!==unit&&e.hp>0).length;
       const action={kind:'ultimate',name:unit.riftKey==='dragon'?'Vortex Breath':info.strike,element:pending.kind==='melee'?'Physical':enemyAbilityProfile(unit).element,scaling:pending.kind==='melee'?'str':'mag',coefficient:1.45+helpers*.14,allTargets:!pending.marked,target:pending.target,mpCost:0,riftCollection:unit.riftKey==='engine',status:info.mechanic==='spores'?{type:'poison',chance:.9,duration:3}:unit.riftKey==='dragon'?{type:'scorched',chance:.65,duration:2}:['hunt','crossfire'].includes(info.mechanic)?{type:'bleed',chance:.65,duration:3}:{type:'disrupted',chance:.6,duration:2}};
       return FinisherFlow.execute(unit,action);
