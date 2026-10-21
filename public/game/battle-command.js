@@ -515,19 +515,19 @@
     if(!foreground){
       ctx.globalAlpha=pulse;
       const glow=ctx.createRadialGradient(center,feet,0,center,feet,radius*1.65);
-      glow.addColorStop(0,colour(.48));glow.addColorStop(.5,colour(.19));glow.addColorStop(1,colour(0));
+      glow.addColorStop(0,colour(.70));glow.addColorStop(.5,colour(.32));glow.addColorStop(1,colour(0));
       ctx.save();ctx.translate(center,feet);ctx.scale(1,.28);ctx.translate(-center,-feet);ctx.fillStyle=glow;ctx.fillRect(center-radius*1.7,feet-radius*1.7,radius*3.4,radius*3.4);ctx.restore();
       const beam=ctx.createLinearGradient(0,feet-height,0,feet);
-      beam.addColorStop(0,colour(0));beam.addColorStop(.18,colour(.045));beam.addColorStop(.55,colour(.16));beam.addColorStop(1,colour(.34));
+      beam.addColorStop(0,colour(0));beam.addColorStop(.18,colour(.10));beam.addColorStop(.55,colour(.29));beam.addColorStop(1,colour(.52));
       ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(center-radius,feet);ctx.bezierCurveTo(center-radius*.9,feet-height*.45,center-radius*1.2,feet-height*.75,center-radius*1.3,feet-height);ctx.lineTo(center+radius*1.3,feet-height);ctx.bezierCurveTo(center+radius*1.2,feet-height*.75,center+radius*.9,feet-height*.45,center+radius,feet);ctx.ellipse(center,feet,radius,4.2,0,0,Math.PI);ctx.fill();
       // Thin curved filaments lift the eye without a solid wall of light.
       for(let j=0;j<5;j++){
         const offset=(j-2)*radius*.38,drift=Math.sin(time*.4+j)*1.8;
-        const shaft=ctx.createLinearGradient(0,feet-height,0,feet);shaft.addColorStop(0,bright(0));shaft.addColorStop(.35,bright(.08));shaft.addColorStop(1,bright(.25));
-        ctx.strokeStyle=shaft;ctx.lineWidth=j===2?.7:.4;ctx.beginPath();ctx.moveTo(center+offset,feet-2);ctx.bezierCurveTo(center+offset+drift,feet-height*.3,center+offset-drift,feet-height*.65,center+offset*1.35,feet-height);ctx.stroke();
+        const shaft=ctx.createLinearGradient(0,feet-height,0,feet);shaft.addColorStop(0,bright(0));shaft.addColorStop(.35,bright(.16));shaft.addColorStop(1,bright(.44));
+        ctx.strokeStyle=shaft;ctx.lineWidth=j===2?1:.6;ctx.beginPath();ctx.moveTo(center+offset,feet-2);ctx.bezierCurveTo(center+offset+drift,feet-height*.3,center+offset-drift,feet-height*.65,center+offset*1.35,feet-height);ctx.stroke();
       }
-      ctx.strokeStyle=bright(.9);ctx.lineWidth=.65;ctx.beginPath();ctx.ellipse(center,feet,radius,4.2,0,0,Math.PI*2);ctx.stroke();
-      ctx.strokeStyle=colour(.38);ctx.lineWidth=.45;ctx.beginPath();ctx.ellipse(center,feet,radius+3.1,6.2,0,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=bright(1);ctx.lineWidth=.65;ctx.beginPath();ctx.ellipse(center,feet,radius,4.2,0,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=colour(.62);ctx.lineWidth=.45;ctx.beginPath();ctx.ellipse(center,feet,radius+3.1,6.2,0,0,Math.PI*2);ctx.stroke();
       for(let j=0;j<4;j++){
         const angle=time*.22+j*Math.PI/2;
         ctx.strokeStyle=bright(.72);ctx.lineWidth=.8;ctx.beginPath();ctx.ellipse(center,feet,radius+3.1,6.2,0,angle,angle+.35);ctx.stroke();
@@ -538,7 +538,7 @@
     for(let i=foreground?1:0;i<22;i+=2){
       const phase=(time/(5.5+(i%4)*.7)+i*.6180339)%1,angle=i*2.39996+time*.16;
       const px=center+Math.sin(angle)*radius*(.65+(i%3)*.18)+Math.sin(phase*6+i)*1.2,py=feet-phase*height;
-      ctx.globalAlpha=Math.sin(phase*Math.PI)*(.4+(i%3)*.15);ctx.fillStyle=bright(1);
+      ctx.globalAlpha=Math.sin(phase*Math.PI)*(.56+(i%3)*.17);ctx.fillStyle=bright(1);
       const size=i%3===0?1:.45;ctx.beginPath();ctx.arc(px,py,size,0,Math.PI*2);ctx.fill();
       if(i%3===0){ctx.strokeStyle=bright(1);ctx.lineWidth=.35;ctx.beginPath();ctx.moveTo(px-1.9,py);ctx.lineTo(px+1.9,py);ctx.moveTo(px,py-2.6);ctx.lineTo(px,py+2.6);ctx.stroke();}
     }
@@ -549,11 +549,11 @@
     const cool=/rift|whirlpool|reverie|dawn|guild/i.test(arena||'')||Boolean(battle.riftEncounter);
     const tint=cool?'87,103,181':'91,74,126',warm=cool?'190,135,225':'255,156,71';
     ctx.save();
-    ctx.fillStyle=`rgba(${tint},.10)`;ctx.fillRect(0,0,w,h);
-    const shade=ctx.createLinearGradient(0,0,0,h);shade.addColorStop(0,'rgba(4,5,17,.28)');shade.addColorStop(.4,'rgba(7,9,23,.17)');shade.addColorStop(1,'rgba(6,8,19,.23)');ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);
-    const vignette=ctx.createRadialGradient(w*.5,h*.59,h*.13,w*.5,h*.59,w*.62);vignette.addColorStop(0,'rgba(3,4,13,0)');vignette.addColorStop(.62,'rgba(3,4,13,.06)');vignette.addColorStop(1,'rgba(3,4,13,.42)');ctx.fillStyle=vignette;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle=`rgba(${tint},.16)`;ctx.fillRect(0,0,w,h);
+    const shade=ctx.createLinearGradient(0,0,0,h);shade.addColorStop(0,'rgba(4,5,17,.46)');shade.addColorStop(.4,'rgba(7,9,23,.34)');shade.addColorStop(1,'rgba(6,8,19,.39)');ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);
+    const vignette=ctx.createRadialGradient(w*.5,h*.59,h*.13,w*.5,h*.59,w*.62);vignette.addColorStop(0,'rgba(3,4,13,0)');vignette.addColorStop(.62,'rgba(3,4,13,.13)');vignette.addColorStop(1,'rgba(3,4,13,.60)');ctx.fillStyle=vignette;ctx.fillRect(0,0,w,h);
     ctx.globalCompositeOperation='screen';
-    for(const [x,y,rgb,radius,alpha] of [[w*.14,h*.22,warm,w*.38,.10],[w*.86,h*.3,'100,133,211',w*.36,.08]]){
+    for(const [x,y,rgb,radius,alpha] of [[w*.14,h*.22,warm,w*.38,.17],[w*.86,h*.3,'100,133,211',w*.36,.14]]){
       const light=ctx.createRadialGradient(x,y,0,x,y,radius);light.addColorStop(0,`rgba(${rgb},${alpha*(.96+Math.sin(time*.35)*.04)})`);light.addColorStop(1,`rgba(${rgb},0)`);ctx.fillStyle=light;ctx.fillRect(0,0,w,h);
     }
     // A handful of slow motes; deterministic motion never consumes combat RNG.
