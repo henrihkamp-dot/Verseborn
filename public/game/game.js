@@ -8020,7 +8020,7 @@ function addBattleFloater(target, amount, options = {}) {
 
 const battleFloaterLaneOffsets = [[0, 0], [0, -15], [-20, -8], [20, -23], [-20, -23], [20, -8]];
 
-function drawBattleFloaters() {
+function drawBattleFloaters(context = ctx) {
   battleFloaters = battleFloaters.filter(floater => tick - floater.born < BATTLE_FLOATER_LIFETIME);
   battleFloaters.forEach(floater => {
     const age = tick - floater.born;
@@ -8033,34 +8033,34 @@ function drawBattleFloaters() {
     const main = floater.text || `${floater.crit ? "CRIT! " : ""}${healing ? "+" : ""}${floater.amount}`;
     const mainSize = evaded || floater.kind === "broken" ? 13 : feedback ? 9 : floater.crit ? 15 : 10;
     const [laneX, laneY] = battleFloaterLaneOffsets[floater.lane] || battleFloaterLaneOffsets[0];
-    const mainY = floater.y - rise + laneY;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.lineJoin = "round";
-    ctx.font = `${floater.crit || feedback ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
-    const halfWidth = Math.ceil(ctx.measureText(main).width / 2) + 4;
+    const mainY = Math.max(mainSize + 7, floater.y - rise + laneY + (floater.y + laneY < 30 ? 5 : 0));
+    context.save();
+    context.globalAlpha = alpha;
+    context.textAlign = "center";
+    context.textBaseline = "alphabetic";
+    context.lineJoin = "round";
+    context.font = `${floater.crit || feedback ? 900 : "bold"} ${mainSize}px "Arial Black", "Trebuchet MS", sans-serif`;
+    const halfWidth = Math.ceil(context.measureText(main).width / 2) + 4;
     const mainX = Math.max(halfWidth, Math.min(LOGICAL_WIDTH - halfWidth, floater.x + laneX));
-    ctx.lineWidth = floater.crit || feedback ? 5 : 2;
-    ctx.strokeStyle = "#160d13";
-    ctx.strokeText(main, mainX, mainY);
+    context.lineWidth = floater.crit || feedback ? 5 : 2;
+    context.strokeStyle = "#160d13";
+    context.strokeText(main, mainX, mainY);
     if (floater.crit || feedback) {
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = "#ffd45c";
-      ctx.strokeText(main, mainX, mainY);
+      context.lineWidth = 2.5;
+      context.strokeStyle = "#ffd45c";
+      context.strokeText(main, mainX, mainY);
     }
-    ctx.fillStyle = floater.kind === "mp" ? "#79ddff" : evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : floater.kind === "broken" ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
-    ctx.fillText(main, mainX, mainY);
-    ctx.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#160d13";
+    context.fillStyle = floater.kind === "mp" ? "#79ddff" : evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : floater.kind === "broken" ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
+    context.fillText(main, mainX, mainY);
+    context.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
+    context.lineWidth = 2;
+    context.strokeStyle = "#160d13";
     const label = feedback ? "" : healing ? "HEAL" : floater.damageType.toUpperCase();
     if (label) {
-      ctx.strokeText(label, mainX, mainY + 7);
-      ctx.fillText(label, mainX, mainY + 7);
+      context.strokeText(label, mainX, mainY + 7);
+      context.fillText(label, mainX, mainY + 7);
     }
-    ctx.restore();
+    context.restore();
   });
 }
 
