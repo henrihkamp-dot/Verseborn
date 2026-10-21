@@ -24,7 +24,8 @@
   function showUnitTooltip(u,event){
     if(mode!=='battle')return;
     const scroll=hoveredUnit===u?unitTooltip.scrollTop:0;hoveredUnit=u;
-    unitTooltip.innerHTML=`<strong>${esc(u.name)}</strong><div class="bc-tooltip-vitals">HP ${Math.max(0,Math.round(u.hp))} / ${u.max} · MP ${Math.max(0,Math.round(u.mp||0))} / ${u.maxmp||0}</div>${(u.statuses||[]).map(s=>{const data=statusDisplayData(u,s);return `<section><b>${esc(data.name)}</b><small>${esc(data.timing)}</small><p>${esc(data.description)}</p></section>`;}).join('')||'<p>No active buffs or debuffs.</p>'}`;
+    const enemySide=battle.enemies.includes(u),rawRole=String(u.role||'hybrid').toLowerCase(),roleKey=enemySide?({fighter:'dps',caster:'dps',mage:'dps',ranger:'dps'}[rawRole]||combatRoleKey(u,true)):combatRoleKey(u,false),roleLabel=roleKey==='dps'?'DPS':roleKey.charAt(0).toUpperCase()+roleKey.slice(1);
+    unitTooltip.innerHTML=`<strong>${esc(u.name)}</strong><div class="bc-tooltip-role">Role · ${esc(roleLabel)}</div><div class="bc-tooltip-vitals">HP ${Math.max(0,Math.round(u.hp))} / ${u.max} · MP ${Math.max(0,Math.round(u.mp||0))} / ${u.maxmp||0}</div>${(u.statuses||[]).map(s=>{const data=statusDisplayData(u,s);return `<section><b>${esc(data.name)}</b><small>${esc(data.timing)}</small><p>${esc(data.description)}</p></section>`;}).join('')||'<p>No active buffs or debuffs.</p>'}`;
     unitTooltip.hidden=false;unitTooltip.scrollTop=scroll;
     const r=game.getBoundingClientRect(),x=event?.clientX??r.left+r.width/2,y=event?.clientY??r.top+r.height/2;
     unitTooltip.style.left=`${Math.max(6,Math.min(r.width-unitTooltip.offsetWidth-6,x-r.left+16))}px`;
