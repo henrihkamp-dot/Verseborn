@@ -12,3 +12,8 @@
 .game .menu:not(.hidden){animation:comfort-menu-in .14s ease-out both}
 @keyframes comfort-menu-in{from{opacity:.35}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.game .menu:not(.hidden){animation:none}.game .menu :is(.selection-row,.status-hero,.skill-hero,.gear-hero,.menu-tabs button,.res-standard-action){transition:none}}
+@media(min-width:701px){
+ .game .menu[data-menu-view="gear"] .equip-desktop-workspace .equip-body .equip-character{left:50%!important;top:54%!important;bottom:auto!important;width:108%!important;height:90%!important;max-width:none!important;max-height:none!important;transform:translate(-50%,-50%);object-fit:contain!important;object-position:center center!important}
+ .game .menu[data-menu-view="gear"] .equip-desktop-workspace .equip-body[data-character="Glimmer"] .equip-character{height:84%!important}
+ .game .menu[data-menu-view="gear"] .equip-desktop-workspace .equip-body[data-character="Sparky"] .equip-character{height:76%!important}
+}
