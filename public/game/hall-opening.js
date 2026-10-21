@@ -106,6 +106,7 @@
     const speaking=beat.speaker==='Marla',marlaFrame=emberHallWorld.marlaIdleFrame(now);ctx.save();ctx.beginPath();ctx.rect(0,0,640,155);ctx.clip();emberHallWorld.drawActor({id:'Marla',x:529,y:160,size:38},4,speaking?12:marlaFrame,{x:0,y:0});ctx.restore();
     drawVerseborn(now,beat.sing||shot==='listen');BarSeatMotion.foreground({x:0,y:0});
     const g=glimmerPosition(now);ctx.save();ctx.globalAlpha=g.alpha??1;drawGlimmer(g.x,g.y,g.pose,now,g.direction);ctx.restore();
+    window.HallAtmosphere?.draw({x:0,y:0},now,640,356);
     if(shot==='snap'){
       ctx.fillStyle=age<120?'#cfe9ffba':`rgba(4,4,15,${age<1050?.82:Math.max(0,.82-(age-1050)/650)})`;ctx.fillRect(view.x,view.y,view.w,LOGICAL_HEIGHT/scale);
       if(age<700){ctx.save();ctx.translate(321,83);ctx.rotate(-.12);ctx.font='italic bold 15px Georgia';ctx.textAlign='center';ctx.lineWidth=2;ctx.strokeStyle='#22132c';ctx.strokeText('KRRZZT—POP!',0,0);ctx.fillStyle='#fff1b5';ctx.fillText('KRRZZT—POP!',0,0);ctx.restore();}

@@ -200,6 +200,7 @@
     const things=[...scene.actors,...residents,...world.foregroundProps.map(prop=>({y:prop.depth,prop}))].sort((a,b)=>(a.prop?a.y:currentPos(a).y)-(b.prop?b.y:currentPos(b).y));
     world.drawCinematicFixtures(now);
     for(const a of things){if(a.prop)world.drawCinematicForeground(a.prop);else drawActor(a);}
+    window.HallAtmosphere?.draw({x:0,y:0},now,640,356);
   }
   function imageAt(id,x,y,w,alpha=1){const image=art[id];if(!image)return;ctx.save();ctx.globalAlpha=alpha;const h=w*image.height/image.width;ctx.drawImage(image,x-w/2,y-h,w,h);ctx.restore();}
   function paint(){

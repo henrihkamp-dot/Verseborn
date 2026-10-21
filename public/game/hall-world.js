@@ -571,6 +571,7 @@
       drawActor(actor,row,col);
     }
     window.HallLiveliness?.drawEffects(camera);window.HallBarSeating?.drawPlayer(camera,now);
+    window.HallAtmosphere?.draw(camera,now);
     const near=nearby();if(near&&mode==='walk'&&!window.HallBarSeating?.active)drawText(near.id+'  [E]',near.x-camera.x,near.y-camera.y-38,'#fff0b5',6,'center');
     drawText('EMBER HALL',7,11,'#fff0b5',7);
     el.place.textContent='Ember Hall';
