@@ -9,6 +9,7 @@
   const make=(tag,cls,parent)=>{const n=document.createElement(tag);n.className=cls;parent?.appendChild(n);return n;};
   const timeline=make('nav','bc-timeline',root);timeline.setAttribute('aria-label','Upcoming turns');
   const cards=make('div','bc-combatants',root);
+  const recap=make('aside','bc-recap',root);recap.setAttribute('aria-label','Last battle action');recap.setAttribute('aria-live','polite');
   const command=make('section','bc-command',root);command.setAttribute('aria-label','Battle commands');
   const left=make('div','bc-command-left',command),heading=make('div','bc-command-heading',left);
   const categories=make('nav','bc-categories',left);categories.setAttribute('aria-label','Action categories');
@@ -35,7 +36,21 @@
   command.addEventListener('pointerenter',hideUnitTooltip);
   root.addEventListener('wheel',event=>{if(hoveredUnit&&!unitTooltip.hidden&&unitTooltip.scrollHeight>unitTooltip.clientHeight){unitTooltip.scrollTop+=event.deltaY;event.preventDefault();}},{passive:false});
   history.querySelector('button').onclick=()=>history.close();
-  historyButton.onclick=()=>{history.querySelector('header strong').textContent='Battle history';history.querySelector('.bc-history-content').innerHTML=(battle.actionHistory||[]).map(a=>`<div><strong>R${a.round} · ${esc(a.actor)}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small>${esc(e.target)}: ${e.crit?'CRIT ':''}${e.amount} ${esc(e.type||e.kind)} ${esc(e.text)}</small>`).join('')}</div>`).join('')||'<p>No actions yet.</p>';history.showModal();};
+  function eventLabel(e){return `${e.target}: ${e.crit?'CRIT ':''}${e.kind==='status'?(e.text||e.type||'Status effect'):`${e.amount??0} ${e.kind==='heal'?'HP healed':e.kind==='mp'?'MP':e.type||e.kind||'damage'}${e.text?' · '+e.text:''}`}`;}
+  function renderRecap(){
+    const action=battle.actionHistory?.at(-1);
+    recap.classList.toggle('is-empty',!action);
+    if(!action){recap.innerHTML='<strong>Battle ready</strong><span>Action results will appear here.</span>';return;}
+    const message=action.message||battle.lastAttackDamage||'';
+    recap.title=message+' '+(action.events||[]).map(eventLabel).join(' · ');
+    recap.innerHTML=`<strong>R${action.round} · ${esc(action.actor)}</strong><span class="bc-recap-message">${esc(message)}</span><div class="bc-recap-events">${(action.events||[]).map(e=>`<small class="${e.kind==='heal'?'is-heal':e.kind==='status'?'is-status':'is-damage'}">${esc(eventLabel(e))}</small>`).join('')}</div>`;
+  }
+  historyButton.onclick=()=>{
+    history.querySelector('header strong').textContent='Battle history · newest first';
+    const content=history.querySelector('.bc-history-content');
+    content.innerHTML=[...(battle.actionHistory||[])].reverse().map((a,i)=>`<article class="${i===0?'is-latest':''}"><strong>${i===0?'Latest · ':''}#${a.number??''} · R${a.round} · ${esc(a.actor)}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small class="${e.kind==='heal'?'is-heal':e.kind==='status'?'is-status':'is-damage'}">${esc(eventLabel(e))}</small>`).join('')}</article>`).join('')||'<p>No actions yet.</p>';
+    history.showModal();content.scrollTop=0;history.scrollTop=0;
+  };
   let lockedAction=null,lockedItem=null,targetMemory={enemy:null,party:null};
   let owner=null,turnOwner=null,ui={level:'category',category:'all',action:0,target:0,page:0},groups=[],unit=null,selected=null,targetList=[],targetGroup=false,lastLayout='',statusNodes=[];
   let lastActions={};try{lastActions=JSON.parse(localStorage.getItem('verseborn-battle-ui-v1')||'{}');}catch{}
@@ -341,7 +356,7 @@
     if(!battle)return;
     window.HallEncounters?.dismissSummons();
     retreatButton.disabled=!canRetreatBattle();
-    el.battleLog.textContent=battle.lastAttackDamage||log||'';renderDamageMeter();renderTurnOrder();
+    el.battleLog.textContent=battle.lastAttackDamage||log||'';renderDamageMeter();renderTurnOrder();renderRecap();
     el.battleResonance.style.width=`${Math.max(0,Math.min(100,state.resonance))}%`;
     el.enemyBattleResonance.style.width=`${Math.max(0,Math.min(100,battle.enemyResonance||0))}%`;
     el.battleResonance.parentElement.setAttribute('aria-label',`Party Resonance ${Math.round(state.resonance)} / 100`);
@@ -474,7 +489,7 @@
       const feet=(y+(b?.dy||0))/LOGICAL_HEIGHT*canvasRect.height+canvasRect.top-r.top;
       const statusHeight=n.querySelector('.bc-statuses')?.offsetHeight||0;
       n.style.left=`${Math.max(28,Math.min(r.width-n.offsetWidth-10,center-n.offsetWidth/2))}px`;
-      n.style.top=`${Math.min(field-n.offsetHeight-statusHeight-12,feet+10)}px`;
+      n.style.top=`${Math.min(field-recap.offsetHeight-n.offsetHeight-statusHeight-17,feet+10)}px`;
     }
   }
 

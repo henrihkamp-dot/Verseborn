@@ -396,3 +396,19 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
 .bc-round-divider{flex:0 0 24px;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#f3cf84;border-left:1px solid #a7854b;font:bold 11px Georgia,serif}
 .bc-round-divider small{font:7px Arial,sans-serif;writing-mode:vertical-rl;margin-top:2px}
 @media(max-width:700px){.command-battle .bc-turn{flex:0 0 55px}.command-battle .bc-turn img{width:22px;height:22px}.command-battle .bc-turn b{font-size:9px}}
+
+/* Persistent result ribbon above the commands; history keeps navigation outside its scroll area. */
+.command-battle .bc-recap{position:absolute;left:8px;right:8px;bottom:calc(var(--bc-command-height) + var(--bc-strip) + 5px);z-index:9;min-height:37px;max-height:55px;box-sizing:border-box;padding:5px 9px;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:3px;border:1px solid #9e8050;background:linear-gradient(100deg,#17131ff0,#0e101aeb);box-shadow:0 2px 12px #0006;color:#e9dfcd;pointer-events:auto;font:11px/1.3 'Segoe UI',sans-serif}
+.bc-recap>strong{color:#f3d08a;font:600 12px Georgia,serif;align-self:center}
+.bc-recap-message{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;align-self:center}
+.bc-recap-events{grid-column:1/-1;display:flex;gap:5px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.bc-recap-events:empty{display:none}.bc-recap-events small{font-size:10px;padding:1px 5px;background:#ffffff08;border-left:2px solid #a790bd}
+.bc-recap .is-heal,.bc-history-content .is-heal{color:#9de5bb}.bc-recap .is-damage,.bc-history-content .is-damage{color:#f0bd97}.bc-recap .is-status,.bc-history-content .is-status{color:#d2b9f0}
+.bc-history[open]{display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;max-height:80dvh;padding:0}
+.bc-history>header{flex-shrink:0;padding:12px 16px;margin:0;background:#211827;border-bottom:1px solid #8d7145;font-size:20px;gap:12px}
+.bc-history>header button{min-width:42px;min-height:36px;flex-shrink:0;cursor:pointer}
+.bc-history-content{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 16px 14px}
+.bc-history-content>article,.bc-history-content>div{border-top:1px solid #50434e;padding:12px 0}
+.bc-history-content>article:first-child{border-top:0}.bc-history-content .is-latest>strong{color:#ffe0a0}
+.bc-history-content p{margin:5px 0}.bc-history-content small{margin-top:3px}
+@media(max-width:700px){.command-battle .bc-recap{left:5px;right:5px;font-size:10px;padding:4px 6px;column-gap:7px}.bc-recap>strong{font-size:10px}.bc-recap-events small{font-size:9px}}
