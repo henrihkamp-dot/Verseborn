@@ -85,7 +85,7 @@
     }
     context.restore();
   }
-  function drawDragon(now,camera){if(!loaded||!EmberRift.progress().awakeningSeen)return false;dragonPose(ctx,3,-30-camera.x,192-camera.y,198,now,true);breathMist(ctx,now,camera);return true;}
+  function drawDragon(now,camera){if(!loaded||!EmberRift.progress().awakeningSeen)return false;dragonPose(ctx,3,-30-camera.x,192-camera.y,198,now,true);return true;}
   function particle(context,x,y,r,color,alpha){context.save();context.globalAlpha=alpha;const light=context.createRadialGradient(x,y,0,x,y,r);light.addColorStop(0,color);light.addColorStop(1,'#a879ff00');context.fillStyle=light;context.fillRect(x-r,y-r,r*2,r*2);context.restore();}
   function quakeLevel(){const phase=scene.phase,t=(scene.clock-scene.phaseAt)/1000;if(phase==='tremor')return Math.min(1,t/2)*.45;if(phase==='stir')return .7;if(phase==='warning'||phase==='arrival')return 1;if(phase==='essence')return Math.max(.15,1-t/5);if(phase==='calm')return Math.max(0,.4-(scene.clock-scene.calmAt)/2000);return 0;}
   function actor(id,x,y,size,now,alert=false){const image=emberHallWorld.images[id];if(!image)return;const cols=id==='Verseborn'?4:8,rows=id==='Verseborn'?4:5,col=alert&&id!=='Verseborn'?Math.floor(now/260)%3:0,row=id==='Verseborn'?0:alert?3:0;g.drawImage(image,col*image.width/cols,row*image.height/rows,image.width/cols,image.height/rows,x-size/2,y-size*.94,size,size);}
@@ -144,7 +144,7 @@
     'What comes next':[['Verseborn','What should we do now?'],['Stone Sleeper','Keep the memories alive. Learn what was erased before deciding what must be rebuilt. And when someone offers a perfect world, ask whose voice it costs.'],['Stone Sleeper','Return when you have questions. There is time for a conversation now.']]
   };
   function converse(){if(scene||!EmberRift.progress().awakeningSeen)return false;const topics=()=>{showTalk([['Stone Sleeper',{html:'What would you remember?<div class="rift-lore-topics">'+[...Object.keys(lore),'Rest'].map((name,i)=>'<button type="button" data-dragon-topic="'+i+'">'+name+'</button>').join('')+'</div>'}]],{portraits:[]});el.line.querySelectorAll('[data-dragon-topic]').forEach(button=>button.onclick=event=>{event.stopPropagation();const key=Object.keys(lore)[Number(button.dataset.dragonTopic)];if(key)showTalk(lore[key],{portraits:[],after:topics});else{talkAfter=null;finishTalk();}});};topics();return true;}
-  window.RiftAwakening={ready,start,maybeStart,next,finish,drawDragon,converse,get active(){return Boolean(scene);},get phase(){return scene?.phase||null;},get script(){return story;},get beat(){return scene?.index??-1;},previewBeat(index){if(scene&&Number.isInteger(index)&&index>=0&&index<story.beats.length){setBeat(index);scene.clock+=2000;paint(performance.now());return true;}return false;}};
+  window.RiftAwakening={drawAmbient(now,camera){if(loaded&&EmberRift.progress().awakeningSeen)breathMist(ctx,now,camera);},ready,start,maybeStart,next,finish,drawDragon,converse,get active(){return Boolean(scene);},get phase(){return scene?.phase||null;},get script(){return story;},get beat(){return scene?.index??-1;},previewBeat(index){if(scene&&Number.isInteger(index)&&index>=0&&index<story.beats.length){setBeat(index);scene.clock+=2000;paint(performance.now());return true;}return false;}};
 })();
 
 
