@@ -3,7 +3,7 @@ from PIL import Image,ImageDraw
 import json
 jobs=json.loads(Path('tools/encounter-315-generation.json').read_text())['portraits'];out=Path('public/game/assets/encounter-portraits-315');out.mkdir(exist_ok=True)
 for j in jobs:
- im=Image.open(j['generated']).convert('RGB');im.thumbnail((224,224),Image.Resampling.LANCZOS);im.save(out/(j['id']+'.webp'),quality=60,method=6)
+ im=Image.open(j['generated']).convert('RGB');im.thumbnail((224,224),Image.Resampling.LANCZOS);im.save(out/(j['id']+'.webp'),quality=54,method=6)
 for start in range(0,len(jobs),20):
  group=jobs[start:start+20];im=Image.new('RGB',(1000,240*((len(group)+4)//5)),'#211a28');d=ImageDraw.Draw(im)
  for i,j in enumerate(group):
