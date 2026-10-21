@@ -535,10 +535,10 @@
         ctx.fillStyle=bright(.85);ctx.beginPath();ctx.moveTo(dx,dy-1.5);ctx.lineTo(dx+1,dy);ctx.lineTo(dx,dy+1.5);ctx.lineTo(dx-1,dy);ctx.closePath();ctx.fill();
       }
     }
-    for(let i=foreground?1:0;i<22;i+=2){
+    for(let i=foreground?1:0;i<12;i+=foreground?4:2){
       const phase=(time/(5.5+(i%4)*.7)+i*.6180339)%1,angle=i*2.39996+time*.16;
       const px=center+Math.sin(angle)*radius*(.65+(i%3)*.18)+Math.sin(phase*6+i)*1.2,py=feet-phase*height;
-      ctx.globalAlpha=Math.sin(phase*Math.PI)*(.56+(i%3)*.17);ctx.fillStyle=bright(1);
+      ctx.globalAlpha=Math.sin(phase*Math.PI)*(.42+(i%3)*.17);ctx.fillStyle=bright(1);
       const size=i%3===0?1:.45;ctx.beginPath();ctx.arc(px,py,size,0,Math.PI*2);ctx.fill();
       if(i%3===0){ctx.strokeStyle=bright(1);ctx.lineWidth=.35;ctx.beginPath();ctx.moveTo(px-1.9,py);ctx.lineTo(px+1.9,py);ctx.moveTo(px,py-2.6);ctx.lineTo(px,py+2.6);ctx.stroke();}
     }
@@ -557,7 +557,7 @@
       const light=ctx.createRadialGradient(x,y,0,x,y,radius);light.addColorStop(0,`rgba(${rgb},${alpha*(.96+Math.sin(time*.35)*.04)})`);light.addColorStop(1,`rgba(${rgb},0)`);ctx.fillStyle=light;ctx.fillRect(0,0,w,h);
     }
     // A handful of slow motes; deterministic motion never consumes combat RNG.
-    for(let i=0;i<14;i++){const x=(i*71.7+time*(.35+i%3*.15))%w,y=23+(i*37.1-time*.65)%(h-30);ctx.globalAlpha=(.10+Math.sin(time*.55+i)*.05);ctx.fillStyle=cool?'#c7b7ee':'#f2c18a';ctx.beginPath();ctx.arc(x,y,.32+(i%3)*.12,0,Math.PI*2);ctx.fill();}
+    for(let i=0;i<8;i++){const x=(i*71.7+time*(.35+i%3*.15))%w,y=23+(i*37.1-time*.65)%(h-30);ctx.globalAlpha=(.075+Math.sin(time*.55+i)*.035);ctx.fillStyle=cool?'#c7b7ee':'#f2c18a';ctx.beginPath();ctx.arc(x,y,.32+(i%3)*.12,0,Math.PI*2);ctx.fill();}
     ctx.restore();
   }
   const nativeBackdrop=drawBattleBackground,nativeMarker=drawBattleGroundMarker;
