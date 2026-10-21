@@ -1,0 +1,10 @@
+/* Landscape is the supported play orientation. No portrait game controls are exposed. */
+#landscapeNotice{display:none}
+@media(orientation:portrait){
+ html,body{overflow:hidden!important}
+ #landscapeNotice{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:35px;text-align:center;background:radial-gradient(ellipse at 50% 40%,#352332,#0b0b15 75%);color:#efd6a3;font:16px/1.5 Georgia,serif;pointer-events:auto;touch-action:none}
+ #landscapeNotice strong{font-size:clamp(23px,6vw,34px);margin:15px 0 6px;color:#ffe2a2}
+ #landscapeNotice p{max-width:320px;margin:0;color:#c7b598;font:14px/1.5 'Segoe UI',sans-serif}
+ #landscapeNotice svg{width:100px;height:75px;stroke:#ddb776;fill:none;stroke-width:2;filter:drop-shadow(0 0 12px #d0a04455)}
+ body>*:not(#landscapeNotice):not(script):not(style){visibility:hidden!important}
+}

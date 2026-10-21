@@ -63,7 +63,7 @@
       emberBrowser=host;
       const panel=document.createElement('aside');panel.className='trial-ember-detail';panel.innerHTML='<p>Select a stage to prepare your party.</p>';host.appendChild(panel);
       host.addEventListener('click',event=>{const button=event.target.closest('[data-hall-stage]');if(button)emberSelection=Number(button.dataset.hallStage);},true);
-      const stage=hallBattleProgress().unlockedStage||1;emberSelection=stage;
+      const stage=window.HallResonanceMap?.preferredStage(hallBattleProgress().unlockedStage)||hallBattleProgress().unlockedStage||1;emberSelection=stage;
       queueMicrotask(()=>{if(host.isConnected&&mode==='hallMap'&&el.menuBody.contains(host))HallHub.openPreparation(stage);});
     }
     if(host.querySelector('.hall-stage-grid,.whirlpool-grid')){

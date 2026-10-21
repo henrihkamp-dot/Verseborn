@@ -1,0 +1,145 @@
+[
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-f400b7ea-a3e7-4d49-ab41-15822d4d5fd9.png",
+    "name": "resonance-depths",
+    "role": "region",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGB",
+    "sha256": "230bbace761db134a475b7e1c041106228f39e775459249a143d94389b510d6e"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-301486d9-727c-4e0c-ba59-5141eecca92f.png",
+    "name": "ornate-ui",
+    "role": "sheet",
+    "size": [
+      1448,
+      1086
+    ],
+    "mode": "RGBA",
+    "sha256": "787458bee3b72063894d63a228bbb09136c58bdaad47304b3a5dd756e3bc2828"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-b22a0841-04d2-4fac-b268-b7e55fbab982.png",
+    "name": "indicators",
+    "role": "sheet",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "sha256": "67340e46e8c3ebf923cf405c433bf6ea29131df4d3fc7f9d45e733621b368f1c"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-f67ac7b3-4e30-45cb-9d2c-5e78e7de792d.png",
+    "name": "boss-landmarks",
+    "role": "sheet",
+    "size": [
+      1448,
+      1086
+    ],
+    "mode": "RGBA",
+    "sha256": "531107e9b9880a807480bdcb7c69f089608c5a4930012372b5dc753cac1cd777"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-0f124072-b48b-42f1-88ce-dd95a0744d2c.png",
+    "name": "environment",
+    "role": "sheet",
+    "size": [
+      1448,
+      1086
+    ],
+    "mode": "RGBA",
+    "sha256": "975a4d33c28b07f134c222417bdc9c120d64c09ffd6c97911e974718750ebb24"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-90c66609-ab0e-4ebd-9204-6afeecd8dd2d.png",
+    "name": "ashen-march",
+    "role": "region",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGB",
+    "sha256": "19372a3bfa83401c8cdf2188ad649a128c7e47c8fe7ce8509473fcd8e5bc38e0"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-49038ee9-d220-460d-a640-d916fcd598fe.png",
+    "name": "crownspire",
+    "role": "region-cleanup",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGB",
+    "sha256": "404dae63e349b6e4c8478ca481fe42ff1dbfac5c922662219480a05f9a173f30"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-f93e256d-394f-4bd8-814c-e68eb4f5e5f8.png",
+    "name": "false-dawn-circuit",
+    "role": "region",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGB",
+    "sha256": "ea7e6555f432f1fada9bc9bb7fc1ecba4acb2b6731ac2e6ef0f08de9b803f7c3"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-0b8af08f-1ddd-4916-a363-eeace8c0fcfe.png",
+    "name": "hall-of-echoes",
+    "role": "region-cleanup",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGB",
+    "sha256": "8ed4c286c4e7aa8e3ae382af74e6c2e37f10846a91327955e71882605de00881"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-6c28ee4f-cb5c-4286-89ea-d038efa6f815.png",
+    "name": "broken-ascension",
+    "role": "region",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGB",
+    "sha256": "cd184f1b0e7aabd92220ca977ec4d641e2f2bc72ecda6da94661356168e40308"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-800fa939-d004-4560-9a26-89e4f45a2653.png",
+    "name": "overview-a",
+    "role": "reference",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "sha256": "4cd381608ffa143a1d865410f79e76cc28ad1b5c34a214edcc99c79a1dc82f9a"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-daad41a8-b8e9-4cf3-b8d8-4d8d2b881c22.png",
+    "name": "overview-b",
+    "role": "fixture-extract",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "sha256": "454a7fce266fa99e636b8891f32350537bd9fa1b5a3d731119d1eb4884e2224f"
+  },
+  {
+    "file": "C:\\Users\\Henri\\AppData\\Local\\Temp\\codex-clipboard-b745adc2-0048-4374-b675-730516a955cb.png",
+    "name": "overview-c",
+    "role": "reference",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "sha256": "913b4183d708cdcc02e399e07febd07b666dc91ef9a89c6cd38862abe79251f8"
+  }
+]
