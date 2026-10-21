@@ -488,6 +488,38 @@
   function highlightTargets(){const targets=ui.level==='itemTarget'?[targetList[ui.target]]:previewUnits();statusNodes.forEach(({u,n})=>{n.classList.toggle('is-target',targets.includes(u));n.classList.toggle('is-valid-target',ui.level==='target'&&targetList.includes(u));n.classList.toggle('is-active',unit===u&&!battle.resolving);});}
   // Replace old canvas HUD only; existing sprites, telegraphs, attacks and effects remain native.
   drawBattleVitals=()=>{};drawBattleTurnRail=()=>{};drawBattleRoleRosters=()=>{};drawEnemyBreakIcon=()=>{};drawBossIndicatorStrip=()=>{};
+  // Active turn: a soft volume behind the sprite, with a sparse foreground sparkle pass.
+  function drawActiveTurnAura(u,x,y,foreground=false){
+    const bounds=spriteBounds.get(u),height=Math.max(36,Math.min(112,(bounds?.height||48)+18));
+    const radius=Math.max(16,Math.min(30,(bounds?.width||24)*.64));
+    const center=x+(bounds?.dx||0),feet=y+(bounds?.dy||0)+1;
+    const time=performance.now()/1000,pulse=.94+Math.sin(time*1.5)*.06;
+    ctx.save();ctx.globalCompositeOperation='screen';ctx.imageSmoothingEnabled=true;
+    if(!foreground){
+      const glow=ctx.createRadialGradient(center,feet,0,center,feet,radius*1.65);
+      glow.addColorStop(0,'rgba(255,224,147,.30)');glow.addColorStop(.5,'rgba(255,200,91,.12)');glow.addColorStop(1,'rgba(255,192,77,0)');
+      ctx.save();ctx.translate(center,feet);ctx.scale(1,.28);ctx.fillStyle=glow;ctx.translate(-center,-feet);ctx.fillRect(center-radius*1.7,feet-radius*1.7,radius*3.4,radius*3.4);ctx.restore();
+      const beam=ctx.createLinearGradient(0,feet-height,0,feet);
+      beam.addColorStop(0,'rgba(255,235,179,0)');beam.addColorStop(.24,'rgba(255,230,165,.055)');beam.addColorStop(.7,'rgba(255,220,135,.15)');beam.addColorStop(1,'rgba(255,222,143,.24)');
+      ctx.globalAlpha=pulse;ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(center-radius,feet);ctx.bezierCurveTo(center-radius*.95,feet-height*.45,center-radius*1.3,feet-height*.75,center-radius*1.2,feet-height);ctx.lineTo(center+radius*1.2,feet-height);ctx.bezierCurveTo(center+radius*1.3,feet-height*.75,center+radius*.95,feet-height*.45,center+radius,feet);ctx.ellipse(center,feet,radius,3.8,0,0,Math.PI);ctx.fill();
+      // Feathered narrow shafts give the pillar depth without covering the character.
+      for(const offset of [-.65,0,.65]){const shaft=ctx.createLinearGradient(center+radius*offset-2,0,center+radius*offset+2,0);shaft.addColorStop(0,'rgba(255,231,161,0)');shaft.addColorStop(.5,'rgba(255,231,161,.07)');shaft.addColorStop(1,'rgba(255,231,161,0)');ctx.fillStyle=shaft;ctx.fillRect(center+radius*offset-2,feet-height*.8,4,height*.8);}
+      ctx.strokeStyle='rgba(255,230,166,.78)';ctx.lineWidth=.55;ctx.beginPath();ctx.ellipse(center,feet,radius,3.8,0,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle='rgba(255,213,115,.24)';ctx.lineWidth=.4;ctx.beginPath();ctx.ellipse(center,feet,radius+2.3,5.3,0,0,Math.PI*2);ctx.stroke();
+    }
+    for(let i=foreground?1:0;i<14;i+=2){
+      const phase=(time/(5.5+(i%4)*.7)+i*.6180339)%1;
+      const angle=i*2.39996+time*.16;
+      const px=center+Math.sin(angle)*radius*(.65+(i%3)*.18)+Math.sin(phase*6+i)*1.2;
+      const py=feet-phase*height;
+      const opacity=Math.sin(phase*Math.PI)*(.28+(i%3)*.12);
+      ctx.globalAlpha=opacity;ctx.fillStyle='#ffe9ae';
+      const size=i%3===0?.85:.4;
+      ctx.beginPath();ctx.arc(px,py,size,0,Math.PI*2);ctx.fill();
+      if(i%3===0){ctx.strokeStyle='#fff3cd';ctx.lineWidth=.3;ctx.beginPath();ctx.moveTo(px-1.6,py);ctx.lineTo(px+1.6,py);ctx.moveTo(px,py-2.1);ctx.lineTo(px,py+2.1);ctx.stroke();}
+    }
+    ctx.restore();
+  }
   const nativeBackdrop=drawBattleBackground,nativeMarker=drawBattleGroundMarker;
   let drawingScene=false;
   drawBattleGroundMarker=function(...args){if(!drawingScene)return nativeMarker(...args);};
@@ -505,12 +537,12 @@
     const turn=currentTurn(),targets=previewUnits();
     for(const [side,list]of [['party',battle.party],['enemy',battle.enemies]])list.forEach((u,i)=>{
       const [x,y]=side==='party'?partyBattlePosition(i,list.length):enemyBattlePosition(i,list.length);
-      if(u.hp>0&&turn?.side===side&&(side==='party'?turn.id===u.id:turn.index===i))nativeMarker(x,y,'turn');
+      if(u.hp>0&&turn?.side===side&&(side==='party'?turn.id===u.id:turn.index===i))drawActiveTurnAura(u,x,y);
       if(targets.includes(u))nativeMarker(x,y,'target');
     });
   };
   const nativeScene=drawBattleScene;
-  drawBattleScene=function(){drawingScene=true;try{nativeScene();}finally{drawingScene=false;}positionCards();};
+  drawBattleScene=function(){drawingScene=true;try{nativeScene();}finally{drawingScene=false;}const turn=currentTurn(),list=turn?.side==='party'?battle.party:battle.enemies,index=turn?.side==='party'?list.findIndex(u=>u.id===turn.id):turn?.index,u=list?.[index];if(u?.hp>0&&!battle.phaseTransition){const [x,y]=turn.side==='party'?partyBattlePosition(index,list.length):enemyBattlePosition(index,list.length);drawActiveTurnAura(u,x,y,true);}positionCards();};
   selectedBattleEnemy=()=>ui.level==='target'&&selected?.targetScope.includes('enemy')?targetList[ui.target]||null:null;
   canvas.addEventListener('pointermove',event=>{
     if(mode!=='battle'||!battle)return hideUnitTooltip();const p=canvasLogicalPoint(event);
