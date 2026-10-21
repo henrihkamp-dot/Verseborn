@@ -3311,7 +3311,7 @@ const baseJobs = {
   ]),
   Mira: character("Mira", "Whispering Arrow", "Shadow", "#12151d", "#050508", "#7e62a8", { str: 12, agi: 17, mag: 9, stam: 7, echo: 8 }, ["Twin Voidthorns", "Ashcloak", "Quiet Circuit", "Veln Crest Token", "Mira Top Hat"], [
     skill("Attack", "melee", "Neutral", 14, 0, "Twin dagger slash."),
-    skill("Voidthorn Mark", "magic", "Shadow", 32, 5, "Marks and exploits weakness, with a devastating payoff against Shadow Exposed enemies.", { shadowExposureBonus: .6 }),
+    skill("Voidthorn Mark", "melee", "Shadow", 32, 5, "Marks and exploits weakness, with a devastating payoff against Shadow Exposed enemies.", { shadowExposureBonus: .6 }),
     skill("Silent Step", "melee", "Shadow", 20, 4, "Pushes one node back. Doubles Stun chance this turn and on Mira's next turn.", { doublesStunChance: true }),
     skill("Cut the Tongue", "melee", "Shadow", 28, 7, "A precise dirty strike that Silences and inflicts Shadow Exposed for 2 turns.", { status: { type: "silence", duration: 2, force: true }, extraStatuses: [{ type: "shadowExposed", duration: 2, force: true }] }),
     skill("ULT: Whispering Arrow", "ultimate", "Shadow", 92, 100, "Screen-darkening precision strike.")
@@ -3319,7 +3319,7 @@ const baseJobs = {
   Seerin: character("Seerin", "Flame's Shield", "Holy Fire", "#8d382e", "#9e3d20", "#f0d39a", { str: 13, agi: 7, mag: 11, stam: 18, echo: 10 }, ["Earth Shield", "Flameguard Plate", "Red Ember Band", "Cinder Star", "Stone Brow Guard"], [
     skill("Attack", "melee", "Neutral", 13, 0, "Sword and shield hit."),
     skill("Cinder Guard", "block", "Holy Fire", -26, 7, "Blocks and heals weakest ally."),
-    skill("Starflame Cut", "magic", "Holy Fire", 34, 7, "Holy fire arc."),
+    skill("Starflame Cut", "melee", "Holy Fire", 34, 7, "Physical sword cut wreathed in holy fire."),
     skill("Oathbreak", "magic", "Holy Fire", 22, 8, "Clears all enemy Resonance.", { enemyResonanceClear: true }),
     skill("Radiant Purge", "magic", "Holy Fire", 0, 7, "Remove one positive buff from one enemy.", { targetSide: "enemy", dispel: true }),
     skill("ULT: The Woman in the Door", "ultimate", "Holy Fire", 70, 100, "Party-wide shield and counterfire.")
@@ -3594,7 +3594,7 @@ Object.entries(baseJobs).forEach(([id, hero]) => {
     }
     if (sk.name === "ULT: The Name I Chose") sk.allEnemies = true;
     if (sk.name === "ULT: Between Two Names") sk.desc = "STR-based eclipse strike against every enemy; uses your normal critical chance.";
-    if (sk.name === "Voidthorn Mark") sk.desc = "MAG + half AGI Shadow damage. Deals 60% extra damage after Shadow Exposed triggers weakness.";
+    if (sk.name === "Voidthorn Mark") sk.desc = "STR + half AGI physical Shadow damage. Deals 60% extra damage after Shadow Exposed triggers weakness.";
     if (sk.name === "Patch Job") sk.desc = "Heal the most wounded ally.";
     if (sk.pierce) sk.desc = sk.desc.replace("ignores defenses", "partially penetrates Defense Up");
     if (sk.buffs?.some(buff => buff.type === "agilityUp")) {
@@ -3630,7 +3630,7 @@ const compactTalentTrees = {
     talentNode(1, "Open Wound", "critBleed", .45, "Critical hits have a 45% chance to inflict Bleed."),
     talentNode(2, "Marked for Death", "newSkill", skill("Marked for Death", "magic", "Shadow", 0, 6, "Light Shadow damage and Mark the target for 4 actions.", { coefficient: .65, status: { type: "marked", chance: 1, duration: 4, value: .12 } })),
     talentNode(2, "Shadowstep", "evasionAfterDodge", .5, "After avoiding an attack, Mira gains +50% CRIT on her next attack."),
-    talentNode(2, "Voidthorn Rain", "aoeSkill", "Voidthorn Mark", "Voidthorn Mark becomes an area spell that damages every living enemy."),
+    talentNode(2, "Voidthorn Rain", "aoeSkill", "Voidthorn Mark", "Voidthorn Mark becomes a rapid physical dagger assault against every living enemy."),
     talentNode(3, "Executioner", "lowHpDamage", .25, "Deal 25% more damage to enemies below 35% HP."),
     talentNode(3, "Twin Fang", "basicTwinStrike", .45, "Normal Attack has a 45% chance to add a second strike at 45% power."),
     talentNode(3, "Void Weakness", "shadowResistanceDown", .15, "Shadow attacks can reduce magical resistance for 2 actions."),
@@ -8721,7 +8721,8 @@ function partyMeleeMotion(unit, now = performance.now()) {
   const [targetX, targetY] = fx.meleeMotion.targetPosition;
   const profile = PARTY_MELEE_STYLES[unit.id] || { style: "lute", reach: 28 };
   const impact = fx.timing.impactMs;
-  const arrive = impact - 120, returnAt = impact + 100;
+  const approachImpact=fx.timing.approachImpactMs||impact;
+  const arrive = approachImpact - 120, returnAt = impact + 100;
   const smooth = value => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
   const outbound = elapsed < arrive;
   const retreat = Math.max(0, Math.min(1, (elapsed - returnAt) / (fx.timing.totalMs - returnAt)));
@@ -8767,7 +8768,7 @@ function partyMeleeMotion(unit, now = performance.now()) {
     case "staff": lift = presence * 9; rotation = drive * .08; break;
     case "mug": {
       const jab = time => smooth((elapsed - time + 55) / 55) * (1 - smooth((elapsed - time) / 55));
-      const mugContact = Math.max(jab(impact - 85), jab(impact));
+      const mugContact = Math.max(...(fx.timing.comboHitMs||[impact-85,impact]).map(jab));
       const faceHeight = fx.meleeMotion.faceHeight || 34;
       lift = Math.max(0, faceHeight - 40) * mugContact;
       rotation = drive * .08 + mugContact * Math.max(-.12, Math.min(.4, (40 - faceHeight) / 40));
@@ -8783,11 +8784,12 @@ function partyMeleeMotion(unit, now = performance.now()) {
   if (profile.style === "lute" && elapsed >= 70 && elapsed < fx.timing.totalMs - 100) {
     attackFrame = elapsed < impact - 145 ? 0 : elapsed < impact - 35 ? 1 : elapsed < returnAt ? 2 : 3;
   }
-  if (profile.style === "mug" && elapsed >= impact - 145 && elapsed < returnAt) {
-    attackFrame = elapsed < impact - 115 || elapsed >= impact - 50 && elapsed < impact - 30 ? 0 : elapsed < impact - 50 ? 1 : elapsed < impact + 65 ? 2 : 3;
+  if(profile.style==='mug'&&elapsed>=approachImpact-145&&elapsed<returnAt){
+    const hits=fx.timing.comboHitMs||[impact-85,impact],hit=hits.find(t=>elapsed<t+85)??hits.at(-1),phase=elapsed-hit;
+    attackFrame=phase< -65?0:phase< -20?1:phase<65?2:3;
   }
-  const runFrame = profile.style === "mug" && (elapsed > 70 && elapsed < impact - 145 || returning && elapsed < fx.timing.totalMs - 90)
-    ? returning ? 3 - Math.floor((elapsed - returnAt) / 85) % 4 : Math.floor((elapsed - 70) / 65) % 4 : -1;
+  const runFrame=profile.style==='mug'&&(elapsed>70&&elapsed<approachImpact-145||returning&&elapsed<fx.timing.totalMs-90)
+    ?returning?3-Math.floor((elapsed-returnAt)/85)%4:Math.floor((elapsed-70)/65)%4:-1;
   return { x, y: groundY - lift, groundY, rotation, lift, style: profile.style, attackFrame, runFrame,
     jet: profile.style === "rocket" && elapsed > 70 && elapsed < fx.timing.totalMs - 35,
     returning, elapsed, drive, activity: Math.max(0, arc), presence };
@@ -8978,7 +8980,8 @@ function drawEffect() {
   if (effect.meleeMotion) {
     const elapsed = performance.now() - effect.startedAt;
     effect.t = elapsed / effect.timing.totalMs * effect.duration;
-    const visualImpact = effect.source.id === "Tinus" && elapsed < effect.timing.impactMs - 35 ? effect.timing.impactMs - 85 : effect.timing.impactMs;
+    if(effect.timing.comboHitMs){const cue=effect.timing.comboHitMs.slice(0,-1).findIndex((t,i)=>elapsed>=t&&(effect.comboSoundIndex??-1)<i);if(cue>=0){effect.comboSoundIndex=cue;playSfx('hit',.16);}}
+    const visualImpact=effect.timing.comboHitMs?effect.timing.comboHitMs.reduce((a,b)=>Math.abs(elapsed-a)<Math.abs(elapsed-b)?a:b):effect.timing.impactMs;
     const hit = (elapsed - visualImpact) / (effect.source.id === "Tinus" ? 85 : 180);
     if (hit >= -.18 && hit <= 1) {
       ctx.save();
@@ -11088,6 +11091,8 @@ function characterVfxRow(caster, sk) {
 
 function skillVisualTiming(caster, sk) {
   if (partyMeleeSkill(caster, sk)) {
+    if(caster.id==='Tinus')return {effectTicks:105,impactTicks:65,approachImpactMs:650,comboHitMs:[650,850,1050],impactMs:1050,totalMs:1750};
+    if(sk.name==='Voidthorn Mark')return {effectTicks:104,impactTicks:68,approachImpactMs:650,impactMs:1100,totalMs:1700};
     return { effectTicks: 80, impactTicks: 39, impactMs: 650, totalMs: 1350 };
   }
   const timing = battleActionTiming(sk.anim);
@@ -12119,6 +12124,14 @@ function enemyDispelStatus(unit) {
   return removableStatus(unit, DISPEL_PRIORITY);
 }
 
+// Percentage floors keep enemy healing meaningful as encounter HP grows.
+function enemyHealingBase(unit, action, ally) {
+  const raw=(unit.stats.mag*(action.healCoefficient||1.35)+unit.stats.stam*.22+unit.level*1.4)*(1+(unit.affixes?.healPotency||0))*(unit.combatPotency?.healing||1);
+  if(state.gameMode!=='hallBattles')return raw;
+  const group=action.allAllies||action.kind==='ultimate',floor=action.kind==='ultimate'?(group?.24:.28):group?.12:.18;
+  return Math.max(raw*1.25,ally.max*floor);
+}
+
 function chooseEnemyHealTarget() {
   return battle.enemies.filter(ally => ally.hp > 0 && ally.hp < ally.max)
     .sort((a, b) => a.hp / a.max - b.hp / b.max)[0] || null;
@@ -12452,7 +12465,7 @@ function stageRhythmAction(unit) {
     if (data.stagePending && rhythm.support === 'guard') return { kind: 'buff', name: 'Escort the Assault', element: 'Earth', mpCost: 12, target: leader, protectAlly: true, buffs: [{ type: 'defenseUp', value: .15, duration: 1 }] };
     if (['heal', 'cleanse'].includes(rhythm.support)) {
       const profile = enemyAbilityProfile(unit);
-      const wounded = live.filter(ally => ally.hp < ally.max * .7).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
+      const wounded = live.filter(ally => ally.hp < ally.max * .78).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
       const heal = Object.values(profile?.moves || {}).find(move => move.healing && enemyCanAfford(unit, move));
       if (heal && wounded) return { ...heal, target: wounded };
       const cleanse = Object.values(profile?.moves || {}).find(move => move.kind === 'cleanse' && enemyCanAfford(unit, move));
@@ -12526,7 +12539,7 @@ function stageBossSupportAction(unit) {
   const boss = battle.enemies.find(ally => ally.hp > 0 && ally.endgameBoss);
   if (!boss || stageUnitControlled(unit)) return null;
   const profile = enemyAbilityProfile(unit);
-  const wounded = battle.enemies.filter(ally => ally.hp > 0 && ally.hp < ally.max * .65).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
+  const wounded = battle.enemies.filter(ally => ally.hp > 0 && ally.hp < ally.max * .78).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];
   const heal = Object.values(profile?.moves || {}).find(move => move.healing && enemyCanAfford(unit, move));
   if (wounded && heal) return { ...heal, target: wounded, name: 'Sustain the Ritual' };
   const data = endgameMechanicState(boss);
@@ -12928,7 +12941,7 @@ function chooseEnemyAction(unit) {
   if (finisher) return { ...finisher };
   const wounded = chooseEnemyHealTarget();
   const healingKey = Object.keys(profile?.moves || {}).find(key => profile.moves[key].healing && enemyCanAfford(unit, profile.moves[key]));
-  if (wounded && wounded.hp / wounded.max < .35 && healingKey) {
+  if (wounded && wounded.hp / wounded.max < .45 && healingKey) {
     const action = enemyProfileAction(unit, healingKey);
     action.target = wounded;
     return action;
@@ -12938,7 +12951,7 @@ function chooseEnemyAction(unit) {
     const cleanse = enemyProfileAction(unit, cleanseKey);
     if (enemyActionUseful(unit, cleanse)) return cleanse;
   }
-  if (wounded && wounded.hp/wounded.max < .65 && healingKey) {
+  if (wounded && wounded.hp/wounded.max < .78 && healingKey) {
     const action = enemyProfileAction(unit, healingKey); action.target = wounded; return action;
   }
   const protection = profile?.moves?.buff;
@@ -13165,6 +13178,7 @@ function resolveEnemyTurn(turn, prev) {
   e.animTick = 0;
   e.attackStyle = action.kind === "melee" ? "melee" : action.kind === "ultimate" ? "ultimate" : "magic";
   effect = makeEnemyBattleEffect(e, target, action);
+  if(action.kind === "ultimate")addBattleFloater(e,0,{kind:"dispel",text:"ULTIMATE"});
   playSfx(action.kind === "melee" ? (e.npcBoss ? "boss" : "melee") : "magic");
   renderBattle(`${e.name} prepares ${action.name}${action.kind === "ultimate" ? " - ULTIMATE" : ""}...`);
   const resolvingBattle=battle;
@@ -13173,7 +13187,7 @@ function resolveEnemyTurn(turn, prev) {
     battle.attackDamage = [];
     window.StatusSystem?.begin(e, action);
     const preparationName=action.hallPlan?.action.name||action.rhythm?.title||(/^Preparing /.test(action.name)?e.finisherState?.name:null);
-    let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${action.recoveryFrom ? `${e.name} is recovering from ${action.recoveryInterrupted ? 'the interrupted ' : ''}${action.recoveryFrom}. Recovery Opening: damage received +15%.` : preparationName?`${e.name} begins preparing ${preparationName}.`:`${e.name} uses ${action.name}.`}`;
+    let actionLog = `${battle.turnStartMessage ? `${battle.turnStartMessage} ` : ""}${action.recoveryFrom ? `${e.name} is recovering from ${action.recoveryInterrupted ? 'the interrupted ' : ''}${action.recoveryFrom}. Recovery Opening: damage received +15%.` : preparationName?`${e.name} begins preparing ${preparationName}.`:`${e.name} uses ${action.kind === "ultimate" ? "ULTIMATE — " : ""}${action.name}.`}`;
     if (action.endgameEffect) {
       actionLog += endgameResolveEnemyEffect(e, action, target);
       if (!["stagePrepare", "hallFinisherPrepare", "sanctuaryPrepare", "receptionPrepare", "charge", "core", "sanctuaryCleanse", "sanctuaryWard"].includes(action.endgameEffect) && target?.id && target.hp > 0) {
@@ -13195,8 +13209,7 @@ function resolveEnemyTurn(turn, prev) {
       const healTargets = action.allAllies || action.kind === "ultimate" ? battle.enemies.filter(ally => ally.hp > 0) : [target].filter(ally => ally?.hp > 0);
       let total = 0;
       healTargets.forEach(ally => {
-        let amount = (e.stats.mag * (action.healCoefficient || 1.35) + e.stats.stam * .22 + e.level * 1.4) * (1 + (e.affixes?.healPotency || 0)) * (e.combatPotency?.healing || 1);
-        if (state.gameMode === "hallBattles" && e.levelHint > 20) amount = Math.max(amount, ally.max * (action.kind === "ultimate" ? .18 : .12));
+        let amount = enemyHealingBase(e, action, ally);
         const critical = enemyActionCrit(e, action, ally);
         if (critical) amount *= 2 + (e.affixes?.critDamage || 0);
         amount = healingReceived(ally, Math.max(1, Math.round(amount)));
@@ -13335,7 +13348,7 @@ function resolveEnemyTurn(turn, prev) {
       const notes = enemyApplyBuffs(e, battle.enemies.filter(ally => ally.hp > 0), action.teamBuffs);
       if (notes.length) actionLog += ` ${notes.join("; ")}.`;
     }
-    if (action.kind === "ultimate" || action.isUltimate) { battle.enemyResonance = 0; delete e.ultimateTelegraphed; }
+    if (action.kind === "ultimate" || action.isUltimate) { const spent=battle.enemyResonance||0; battle.enemyResonance = 0; battle.lastEnemyResonanceSpend={amount:spent,at:performance.now()}; actionLog += ` Enemy Resonance: ${Math.round(spent)} → 0 (ULTIMATE spent).`; delete e.ultimateTelegraphed; }
     else gainEnemyResonance(e, enemyResonanceGainForAction(e, action));
     if (e.hp <= 0) {
       e.anim = "death";

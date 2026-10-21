@@ -1061,7 +1061,7 @@
     const damagingUltimate = readyUltimates.filter(offensive).sort((a,b) => payoff(b) - payoff(a))[0];
     const ultimate = healingUltimate || damagingUltimate;
     const buff = skills.find(sk => sk.anim !== 'ultimate' && sk.buffs?.length && !skillTargetsEnemies(sk) && !statusOf(unit, sk.buffs[0].type));
-    const chosen = ultimate || (heal && unit.hp < unit.max * .45 ? heal : buff && !((unit.actionsTaken || 0) % 4) ? buff : damage[(unit.actionsTaken || 0) % Math.max(1, damage.length)] || skills.find(sk => sk.basicAttack));
+    const chosen = ultimate || (heal && battle.enemies.some(ally=>ally.hp>0&&ally.hp<ally.max*.72) ? heal : buff && !((unit.actionsTaken || 0) % 4) ? buff : damage[(unit.actionsTaken || 0) % Math.max(1, damage.length)] || skills.find(sk => sk.basicAttack));
     if (!chosen) return oldEnemyAction(unit);
     const isBuff = chosen.power >= 0 && !skillTargetsEnemies(chosen);
     const potency = chosen.anim === 'ultimate' ? 1.44 * (1 + (unit.stats.echo || 0) * .0015) : 1;

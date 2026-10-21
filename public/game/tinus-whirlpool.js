@@ -174,6 +174,7 @@
     if(data.recovery>0){data.recovery--;return {...base,name:'Recovering Strike',coefficient:.55,status:null};}
     if(statusOf(unit,'silence'))return {...base,kind:'melee',name:'Measured Strike',element:'Physical',coefficient:1.25,status:null};
     const actions=unit.actionsTaken||0;
+    if(e.key==='benji'&&unit.hp<unit.max*.78&&unit.mp>=24&&actions%4!==2)return {kind:'magic',name:'Mandala Renewal',element:'Sigil',healing:true,target:unit,healCoefficient:2.4,mpCost:24};
     if(actions%4===2){data.pending=true;FinisherFlow.begin(unit,{name:e.strike,scope:'all-allies',controls:['silence','stun','sleep'],cancel:reason=>interrupt(unit,reason),clear:()=>{data.pending=false;},after:()=>{data.recovery=2;battle.whirlpoolNotice=e.strike+' resolved. Two recovery actions follow.';},afterText:e.strike+' resolved. Two recovery actions follow.',recoveryText:'incoming damage +20%; two recovery actions follow'});battle.whirlpoolNotice=`${e.name} begins preparing ${e.strike}. Target: ALL ALLIES. Silence or valid Stun cancels it; Guard and barriers soften it.`;return {kind:'buff',name:'Preparing '+e.strike,target:unit,buffs:[],mpCost:0};}
     if(['benji','bill'].includes(e.key)&&actions%4===0)return {kind:'buff',name:e.key==='bill'?'Ledger Shelter':'Geometric Shelter',target:unit,buffs:[{type:'barrier',value:.18,duration:2}],mpCost:0};
     if(e.role==='bruiser'&&actions%3===0)return {...base,kind:'melee',name:e.key==='demonlord'?'Uncrowned Greatblade':'Bronze Knuckle',element:'Physical'};

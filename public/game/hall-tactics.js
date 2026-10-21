@@ -65,7 +65,7 @@
     if(a.kind==='ultimate'&&battle.hallUltimateOwner&&battle.hallUltimateOwner!==u)a=basic(u);
     if(statusOf(u,'silence')&&!physical(a))a={...enemyActionForKind(u,'melee')};
     const support=!enemyActionDealsDamage(a);
-    if(support&&d.support>=1)a=basic(u);
+    if(support&&d.support>=1&&!(a.healing&&d.support<2&&battle.enemies.some(ally=>ally.hp>0&&ally.hp<ally.max*.32)))a=basic(u);
     // Utility debuffs also exert modest pressure; slow alone is no longer a whole action.
     if(a.kind==='utility'&&!a.endgameEffect&&(a.status||a.extraStatuses?.length)){
       const melee=u.stats.str>=u.stats.mag;
