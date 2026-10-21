@@ -1,4 +1,4 @@
-/* Ember Hall only. Other selectors retain their existing presentation. */
+/* Shared map geometry; each mode supplies its own landscape and native preparation. */
 .menu.compact-trials .trial-screen.resonance-mode{grid-template-columns:minmax(0,1.55fr) minmax(350px,1fr)!important;grid-template-rows:55px 29px minmax(0,1fr)!important;gap:7px!important;overflow:hidden!important}
 .resonance-mode>.hall-stage-grid{display:none!important}
 .resonance-mode>.res-map-area{grid-column:1;grid-row:3;min-width:0;min-height:0;position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) 68px auto;gap:6px;border:1px solid #967747;background:#0c0c15;overflow:hidden}

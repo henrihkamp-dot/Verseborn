@@ -412,3 +412,11 @@ body[data-play-mode="battle"] #bossMechanicHud{display:none!important}
 .bc-history-content>article:first-child{border-top:0}.bc-history-content .is-latest>strong{color:#ffe0a0}
 .bc-history-content p{margin:5px 0}.bc-history-content small{margin-top:3px}
 @media(max-width:700px){.command-battle .bc-recap{left:5px;right:5px;font-size:10px;padding:4px 6px;column-gap:7px}.bc-recap>strong{font-size:10px}.bc-recap-events small{font-size:9px}}
+/* Readable comic portraits, with names beneath and future rounds retained in the scroll strip. */
+.command-battle .bc-timeline{height:88px!important}
+body[data-play-mode="battle"] .hud{top:99px!important}
+.command-battle .bc-turn{flex:0 0 110px;min-width:110px;max-width:110px;padding:3px 5px;gap:3px}
+.command-battle .bc-turn img{width:48px;height:48px;flex-shrink:0;border:1px solid #b08b52;box-shadow:0 1px 5px #0008}
+.command-battle .bc-turn b{font:600 13px/15px Georgia,serif;white-space:normal;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:15px;max-height:30px;width:100%}
+.command-battle .bc-turn>small{font-size:9px}
+.bc-round-divider{flex-basis:32px;font-size:13px}.bc-round-divider small{font-size:9px}
