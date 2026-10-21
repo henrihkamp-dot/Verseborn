@@ -1,7 +1,7 @@
 /* Keep the comic framing; quieter secondary borders and more room for reading. */
 .game .menu:not(.compact-trials) .menu-body{background:radial-gradient(ellipse at 15% 3%,#916c3920,transparent 65%),linear-gradient(115deg,#2b202b,#1c1823);color:#e8dfd2}
 .game .menu:not(.compact-trials) :is(.selection-detail,.selection-list-panel,.skill-tree-panel,.status-detail-section,.status-biography,.gear-summary,.scene-memory-group){border-color:#80684e88;box-shadow:0 2px 7px #09070f38}
-.game .menu:not(.compact-trials) :is(.selection-detail p,.selection-detail>small,.skill-tree-panel p,.status-biography p,.scene-memory-group p,.archive-enemy p){font-size:13px;line-height:1.55;color:#ded3c4}
+.game .menu:not(.compact-trials) :is(.selection-detail p,.selection-detail>small,.skill-tree-panel p,.scene-memory-group p,.archive-enemy p){font-size:13px;line-height:1.55;color:#ded3c4}
 .game .menu:not(.compact-trials) .selection-row{min-height:58px;padding:9px 11px;gap:10px;border-color:#80684e66}
 .game .menu:not(.compact-trials) .selection-row strong{font-size:13px;line-height:1.3}
 .game .menu:not(.compact-trials) .selection-row small{font-size:11px;line-height:1.45;color:#c5b9a9}
@@ -17,3 +17,6 @@
  .game .menu[data-menu-view="gear"] .equip-desktop-workspace .equip-body[data-character="Glimmer"] .equip-character{height:84%!important}
  .game .menu[data-menu-view="gear"] .equip-desktop-workspace .equip-body[data-character="Sparky"] .equip-character{height:76%!important}
 }
+
+.game .menu[data-menu-view="status"] .status-biography p{color:#35271f!important;font-size:14px!important;line-height:1.6!important;text-shadow:none!important;opacity:1}
+.game .menu[data-menu-view="status"] .status-biography h4{color:#68452c!important;text-shadow:none!important}
