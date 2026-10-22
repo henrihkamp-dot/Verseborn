@@ -36,19 +36,19 @@
   command.addEventListener('pointerenter',hideUnitTooltip);
   root.addEventListener('wheel',event=>{if(hoveredUnit&&!unitTooltip.hidden&&unitTooltip.scrollHeight>unitTooltip.clientHeight){unitTooltip.scrollTop+=event.deltaY;event.preventDefault();}},{passive:false});
   history.querySelector('button').onclick=()=>history.close();
-  function eventLabel(e){return `${e.target}: ${e.crit?'CRIT ':''}${e.kind==='status'?(e.text||e.type||'Status effect'):`${e.amount??0} ${e.kind==='heal'?'HP healed':e.kind==='mp'?'MP':e.type||e.kind||'damage'}${e.text?' · '+e.text:''}`}`;}
+  function eventLabel(e){return `${battleLogMember(e.target,e.targetPosition)}: ${e.crit?'CRIT ':''}${e.kind==='status'?(e.text||e.type||'Status effect'):`${e.amount??0} ${e.kind==='heal'?'HP healed':e.kind==='mp'?'MP':e.type||e.kind||'damage'}${e.text?' · '+e.text:''}`}`;}
   function renderRecap(){
     const action=battle.actionHistory?.at(-1);
     recap.classList.toggle('is-empty',!action);
     if(!action){recap.innerHTML='<strong>Battle ready</strong><span>Action results will appear here.</span>';return;}
     const message=action.message||battle.lastAttackDamage||'';
     recap.title=message+' '+(action.events||[]).map(eventLabel).join(' · ');
-    recap.innerHTML=`<strong>R${action.round} · ${esc(action.actor)}</strong><span class="bc-recap-message">${esc(message)}</span><div class="bc-recap-events">${(action.events||[]).map(e=>`<small class="${e.kind==='heal'?'is-heal':e.kind==='status'?'is-status':'is-damage'}">${esc(eventLabel(e))}</small>`).join('')}</div>`;
+    recap.innerHTML=`<strong>R${action.round} · ${esc(battleLogMember(action.actor,action.actorPosition))}</strong><span class="bc-recap-message">${esc(message)}</span><div class="bc-recap-events">${(action.events||[]).map(e=>`<small class="${e.kind==='heal'?'is-heal':e.kind==='status'?'is-status':'is-damage'}">${esc(eventLabel(e))}</small>`).join('')}</div>`;
   }
   historyButton.onclick=()=>{
     history.querySelector('header strong').textContent='Battle history · newest first';
     const content=history.querySelector('.bc-history-content');
-    content.innerHTML=[...(battle.actionHistory||[])].reverse().map((a,i)=>`<article class="${i===0?'is-latest':''}"><strong>${i===0?'Latest · ':''}#${a.number??''} · R${a.round} · ${esc(a.actor)}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small class="${e.kind==='heal'?'is-heal':e.kind==='status'?'is-status':'is-damage'}">${esc(eventLabel(e))}</small>`).join('')}</article>`).join('')||'<p>No actions yet.</p>';
+    content.innerHTML=[...(battle.actionHistory||[])].reverse().map((a,i)=>`<article class="${i===0?'is-latest':''}"><strong>${i===0?'Latest · ':''}#${a.number??''} · R${a.round} · ${esc(battleLogMember(a.actor,a.actorPosition))}</strong><p>${esc(a.message)}</p>${(a.events||[]).map(e=>`<small class="${e.kind==='heal'?'is-heal':e.kind==='status'?'is-status':'is-damage'}">${esc(eventLabel(e))}</small>`).join('')}</article>`).join('')||'<p>No actions yet.</p>';
     history.showModal();content.scrollTop=0;history.scrollTop=0;
   };
   let lockedAction=null,lockedItem=null,targetMemory={enemy:null,party:null};
