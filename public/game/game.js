@@ -6699,6 +6699,7 @@ function battleVisualId(unit) {
 }
 
 function drawBattlePartySprite(unit, anchorX, baseline, frame = tick) {
+  if(unit.id==='Mira'&&Number.isFinite(unit.voidSprintFrame)&&window.HallSpriteRefresh?.loaded)return HallSpriteRefresh.draw(ctx,'MiraWalk',anchorX,baseline,(battleSpriteHeights.Mira||54)*BATTLE_COMPOSITION_SCALE/.82,(unit.voidSprintDirection>0?4:0)+unit.voidSprintFrame);
   const visualId = battleVisualId(unit);
   const activeEffect = effect?.caster === unit.id ? effect : null;
   const runSheet = Number.isFinite(unit.meleeRunFrame) ? battleChargeSheets[visualId] : null;
@@ -8585,21 +8586,7 @@ function drawBattleScene() {
   if (!battle.hallStage) drawBattleRoleRosters();
   drawBattleFloaters();
   updateStatusTooltip();
-  if (battle.phaseTransition?.step === "incoming") {
-    const phase = battle.phaseTransition;
-    drawRect(0, 19, LOGICAL_WIDTH, BATTLE_ARENA_HEIGHT - 19, "#090a15d9");
-    drawRect(28, 48, LOGICAL_WIDTH - 56, 100, "#17121fef");
-    drawRect(28, 48, LOGICAL_WIDTH - 56, 2, "#d9ae65");
-    drawText(`PHASE ${phase.number}/${phase.total}`, LOGICAL_WIDTH / 2, 69, "#f4c776", 8, "center");
-    drawText(window.HallEncounters?.phaseTitle(battle.hallStage, phase.number, phase.enemies) || "REINFORCEMENTS ARRIVE", LOGICAL_WIDTH / 2, 79, "#e5d0a4", 5, "center");
-    phase.enemies.forEach((unit, index) => {
-      const name = unit.finalState === "enraged" ? `${unit.name} / Enraged` : unit.name;
-      const rowY = 87 + index * 15;
-      drawCombatRoleIcon(combatRoleKey(unit, true), LOGICAL_WIDTH / 2 - 43, rowY, 13);
-      drawCompactRosterName(name, LOGICAL_WIDTH / 2 - 26, rowY + 9, 66);
-    });
-    drawText("CLICK TO CONTINUE", LOGICAL_WIDTH / 2, 138, "#f1d8a0", 5, "center");
-  }
+  window.BattlePhaseBanner?.update();
 }
 
 function battleArenaFor(map) {
@@ -11001,7 +10988,7 @@ function chooseSkillTarget(u, sk) {
     battleActionIndex = 0;
     return renderBattle(`${u.name}: choose an ally for ${sk.name}.`);
   }
-  if (skillTargetsEnemies(sk) && live.length > 1 && !skillHitsAll(u.id, sk)) {
+  if (skillTargetsEnemies(sk) && live.length > 1 && (!skillHitsAll(u.id, sk) || u.id === "Mira" && sk.name === "Voidthorn Mark")) {
     battle.targetMode = true;
     battle.pendingSkill = sk;
     battleActionIndex = 0;
@@ -11476,7 +11463,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       ? (chosenTarget?.hp > 0 ? chosenTarget : liveAtStart[0])
       : u;
   target = endgamePlayerTarget(u, sk, target);
-  if (meleeAreaSkill(u, sk)) target = frontlineTargetOrder(liveAtStart)[0] || target;
+  if (meleeAreaSkill(u, sk) && !(u.id === "Mira" && sk.name === "Voidthorn Mark")) target = frontlineTargetOrder(liveAtStart)[0] || target;
   const previousSkill = u.lastInspectionSkill;
   u.lastInspectionSkill = selectedSkill.name;
   const timing = skillVisualTiming(u, sk);
@@ -11613,7 +11600,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     } else if (target) {
       const live = battle.enemies.filter(e => e.hp > 0);
       const t = totals(u.id);
-      const hitTargets = skillHitsAll(u.id, sk) ? (meleeAreaSkill(u, sk) ? frontlineTargetOrder(live) : live) : [target];
+      const hitTargets = u.id === "Mira" && sk.name === "Voidthorn Mark" ? (skillHitsAll(u.id, sk) ? [target, ...live.filter(e => e !== target)].slice(0, 3) : [target]) : skillHitsAll(u.id, sk) ? (meleeAreaSkill(u, sk) ? frontlineTargetOrder(live) : live) : [target];
       let totalDamageDealt = 0;
       let directDamageDealt = 0;
       let vampiricRestored = 0;

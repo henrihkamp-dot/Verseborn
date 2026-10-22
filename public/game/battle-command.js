@@ -260,11 +260,11 @@
   function rememberTarget(target){if(battle.enemies.includes(target))targetMemory.enemy=target;else if(battle.party.includes(target))targetMemory.party=target;}
   function selectTarget(target){const index=targetList.indexOf(target);if(index>=0){ui.target=index;rememberTarget(target);}}
   function chooseTarget(){
-    const sk=skill();targetList=model.targets(unit,sk);targetGroup=['all-enemies','all-allies','all-combatants'].includes(sk.targetScope);
+    const sk=skill();targetList=model.targets(unit,sk);targetGroup=['all-enemies','all-allies','all-combatants'].includes(sk.targetScope)&&!(unit.id==='Mira'&&sk.name==='Voidthorn Mark');
     if(!targetList.length)return;
     // First selection only locks, including self and automatic-target skills.
     const previous=targetMemory[skillTargetsEnemies(sk)?'enemy':'party'];
-    const first=meleeAreaSkill(unit,sk)?frontlineTargetOrder(targetList)[0]:targetList.includes(previous)?previous:targetList[0];
+    const first=meleeAreaSkill(unit,sk)&&!(unit.id==='Mira'&&sk.name==='Voidthorn Mark')?frontlineTargetOrder(targetList)[0]:targetList.includes(previous)?previous:targetList[0];
     ui.level='target';ui.target=Math.max(0,targetList.indexOf(first));battle.targetMode=true;battle.pendingSkill=sk;battleActionIndex=ui.target;renderCommands();
   }
   function renderTargetCards(){
@@ -280,7 +280,7 @@
   function execute(target){
     const sk=skill();if(disabled(sk)||!target)return;
     if(!model.targets(unit,sk).includes(target)){targetList=model.targets(unit,sk);ui.target=0;return renderCommands();}
-    if(meleeAreaSkill(unit,sk))target=frontlineTargetOrder(model.targets(unit,sk))[0]||target;
+    if(meleeAreaSkill(unit,sk)&&!(unit.id==='Mira'&&sk.name==='Voidthorn Mark'))target=frontlineTargetOrder(model.targets(unit,sk))[0]||target;
     if(!targetGroup)rememberTarget(target);remember(sk);useSkill(unit,sk,target);
   }
   function activate(){
