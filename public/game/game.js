@@ -5669,7 +5669,14 @@ function statusDurationFor(source, type, requested) {
   return Math.max(1, Math.round(base + talentBonus + gearBonus + burnBonus));
 }
 
+function enemyProtectionOptions(target, type, source, options) {
+  if(!battle?.enemies?.includes(source)||!battle.enemies.includes(target)||!['barrier','defenseUp'].includes(type))return options;
+  return {...options,value:Math.max(options.value??STATUS_DEFS[type]?.value??0,type==='barrier'?.45:.35),duration:Math.max(2,options.duration||STATUS_DEFS[type]?.duration||1)};
+}
+
 function applyStatus(target, type, source, options = {}) {
+  // Enemy protection must remain meaningful against late-game party damage.
+  options=enemyProtectionOptions(target,type,source,options);
   const def = STATUS_DEFS[type];
   if (!target || !def || target.hp <= 0) return { applied: false, message: "" };
   if (target.endgameBoss && ["stun", "sleep"].includes(type)) return { applied: false, message: `${def.label} IMMUNE (boss)` };
@@ -12114,8 +12121,7 @@ function enemyDispelStatus(unit) {
 // Percentage floors keep enemy healing meaningful as encounter HP grows.
 function enemyHealingBase(unit, action, ally) {
   const raw=(unit.stats.mag*(action.healCoefficient||1.35)+unit.stats.stam*.22+unit.level*1.4)*(1+(unit.affixes?.healPotency||0))*(unit.combatPotency?.healing||1);
-  if(state.gameMode!=='hallBattles')return raw;
-  const group=action.allAllies||action.kind==='ultimate',floor=action.kind==='ultimate'?(group?.24:.28):group?.12:.18;
+  const group=action.allAllies||action.kind==='ultimate',floor=action.kind==='ultimate'?.90:group?.65:.80;
   return Math.max(raw*1.25,ally.max*floor);
 }
 
