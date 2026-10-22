@@ -25,3 +25,24 @@
  let timer=null;
  renderBattle=function(...args){const result=original(...args);labels();clearTimeout(timer);if(battle?.lastEnemyResonanceSpend){const owner=battle;timer=setTimeout(()=>{if(battle===owner&&mode==='battle')labels();},1650);}return result;};
 })();
+// Starflame Cut's holy light follows Seerin through the melee motion.
+(()=>{
+ const original=drawMeleeChargeTrail;
+ drawMeleeChargeTrail=function(unit,m){
+  if(unit.id==='Seerin'&&effect?.source===unit&&effect.skill==='Starflame Cut'){
+   const height=(battleSpriteHeights.Seerin||54)*BATTLE_COMPOSITION_SCALE,centerY=m.y-height*.5;
+   const elapsed=performance.now()-effect.startedAt,total=effect.timing.totalMs;
+   const fade=Math.min(1,elapsed/150,(total-elapsed)/220);
+   ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.max(0,fade)*.75;
+   const glow=ctx.createRadialGradient(m.x,centerY,2,m.x,centerY,height*.72);
+   glow.addColorStop(0,'rgba(255,239,161,.5)');glow.addColorStop(.45,'rgba(255,196,64,.32)');glow.addColorStop(1,'rgba(255,170,25,0)');
+   ctx.fillStyle=glow;ctx.fillRect(m.x-height,centerY-height,height*2,height*2);
+   ctx.strokeStyle='#ffe89c';ctx.lineWidth=.8;ctx.shadowColor='#ffce54';ctx.shadowBlur=5;
+   ctx.beginPath();ctx.ellipse(m.x,m.groundY+1,height*.34,height*.095,0,0,Math.PI*2);ctx.stroke();
+   for(let i=0;i<7;i++){const phase=(elapsed/650+i/7)%1,x=m.x+Math.sin(i*2.4+elapsed/380)*height*.28,y=m.groundY-phase*height;ctx.globalAlpha=Math.max(0,fade)*Math.sin(phase*Math.PI)*.8;ctx.fillStyle='#fff3bc';ctx.fillRect(x,y,1,1.8);}
+   ctx.restore();
+  }
+  return original(unit,m);
+ };
+})();
+
