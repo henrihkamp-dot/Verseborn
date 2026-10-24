@@ -1,0 +1,1 @@
+const fs=require('fs');let f='public/game/lost-dimensions.js',s=fs.readFileSync(f,'utf8');for(const pattern of [/const panel=document.createElement\('canvas'\);.*?materialTiles\[4\]=panel;/g,/function wallSection\(r\)\{[^\n]+\}/g]){let seen=false;s=s.replace(pattern,m=>seen?'':(seen=true,m))}fs.writeFileSync(f,s);
