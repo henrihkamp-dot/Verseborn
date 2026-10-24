@@ -7,6 +7,8 @@
  function recruit(id){if(!state.party.includes(id))addParty(id);if(id==='Tinus'){const p=TinusRecruitment.progress();p.recruited=true;p.phase='resident';}}
  function unlockAll(){Object.keys(baseJobs).forEach(recruit);hallBattleProgress().pendingRecruit=0;}
  function unlockModes(){['Seerin','Tinus'].forEach(recruit);const hall=hallBattleProgress();hall.unlockedStage=HALL_BATTLE_BLUEPRINTS.length;hall.developerUnlocks={...(hall.developerUnlocks||{}),rift:true,whirlpool:true};EmberRift.progress().unlocked=true;}
+ const completions={hall:{label:'Ember Hall · 60 stages',get:()=>hallBattleProgress().clearedStages,all:()=>Array.from({length:60},(_,i)=>i+1)},shadow:{label:'Shadow Trials · 7 trials → Tinus arrival',get:()=>HallHub.progress().shadowDefeated,all:()=>Object.keys(HallHub.shadowTrials)},whirlpool:{label:'Whirlpool of Destinies · 8 encounters',get:()=>TinusWhirlpool.progress().cleared,all:()=>Array.from({length:8},(_,i)=>i+1)},rift:{label:'Ember Rift · 10 battles → sleeping dragon',get:()=>EmberRift.progress().cleared,all:()=>Array.from({length:10},(_,i)=>i+1)}};
+ function setCleared(key,on){const spec=completions[key];if(!spec)return;const values=spec.get();values.splice(0,values.length,...(on?spec.all():[]));if(key==='hall'&&on){hallBattleProgress().unlockedStage=60;EmberRift.progress().unlocked=true;}save();}
  const original=renderMenu;
  renderMenu=function(...args){const result=original(...args);if(menuTab!=='developer'||state.gameMode!=='hallBattles')return result;
   const owned=state.party.length,total=Object.keys(baseJobs).length,hall=hallBattleProgress();
@@ -15,6 +17,8 @@
   el.menuBody.querySelectorAll('[data-raise-hero]').forEach(button=>button.onclick=()=>{if(!writable())return;const id=button.dataset.raiseHero,input=[...el.menuBody.querySelectorAll('[data-recovery-hero]')].find(input=>input.dataset.recoveryHero===id);if(raise(id,input.value))save();});
   el.menuBody.querySelector('[data-recruit-all]').onclick=()=>{if(writable()){unlockAll();save();}};
   el.menuBody.querySelector('[data-unlock-modes]').onclick=()=>{if(writable()){unlockModes();save();}};
+  el.menuBody.insertAdjacentHTML('beforeend',`<section class="developer-controls"><h3>Mode completion</h3><p>Restore completion records without battle rewards. Shadow Trials brings Tinus to the Hall entrance; Rift completion wakes the dragon when you enter the Rift. Already recruited characters and watched stories remain.</p>${Object.entries(completions).map(([key,spec])=>`<label class="developer-gold"><strong>${spec.label}</strong><input type="checkbox" data-mode-cleared="${key}" ${spec.all().every(id=>spec.get().includes(id))?'checked':''}> Cleared</label>`).join('')}<p>Turning a switch off removes that mode’s clear records only; it does not remove characters, gear or rewards.</p></section>`);
+  el.menuBody.querySelectorAll('[data-mode-cleared]').forEach(input=>input.onchange=()=>{if(writable())setCleared(input.dataset.modeCleared,input.checked);});
   return result;
  };
 })();
