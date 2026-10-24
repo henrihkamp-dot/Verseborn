@@ -81,7 +81,7 @@
     return hall;
   };
   const progress=()=>hallBattleProgress().rift;
-  const available=id=>progress().unlocked&&(progress().cleared.includes(id)||Array.from({length:id-1},(_,i)=>i+1).every(n=>progress().cleared.includes(n)));
+  const available=id=>Number.isInteger(id)&&id>=1&&id<=10&&progress().unlocked&&(hallBattleProgress().developerUnlocks?.rift||progress().cleared.includes(id)||Array.from({length:id-1},(_,i)=>i+1).every(n=>progress().cleared.includes(n)));
   const oldRecord=recordHallBattleClear;
   recordHallBattleClear=function(stage){const was=progress().unlocked,result=oldRecord(stage);if(!was&&progress().unlocked)showHudNotice('The rear flame shield is unsealed. Return to the back of Ember Hall.');return result;};
   maps[MAP]={...maps.emberHallBattles,name:'Ember Rift — The Revealed Vault',chapter:'Ember Rift',points:[],spawns:[],exits:[]};

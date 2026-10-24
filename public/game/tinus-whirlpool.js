@@ -84,7 +84,7 @@
   };
   const progress = () => hallBattleProgress().whirlpool;
   const unlocked = () => state.gameMode === 'hallBattles' && state.party.includes('Tinus') && TinusRecruitment.progress().recruited;
-  const available = id => unlocked() && Number.isInteger(id) && id >= 1 && id <= 8 && Array.from({length:id-1},(_,i)=>i+1).every(n=>progress().cleared.includes(n));
+  const available = id => unlocked() && Number.isInteger(id) && id >= 1 && id <= 8 && (hallBattleProgress().developerUnlocks?.whirlpool || Array.from({length:id-1},(_,i)=>i+1).every(n=>progress().cleared.includes(n)));
   const sheets = {}, images = {};
   let assetFailure = null, assetsReady = false, selected = 1, snapshot = null;
   const load = file => new Promise((resolve,reject) => {const image=new Image(); image.onload=()=>resolve(image); image.onerror=()=>reject(Error('Whirlpool asset unavailable: '+file)); image.src=BASE+file;});
