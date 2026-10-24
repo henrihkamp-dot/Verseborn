@@ -1,0 +1,1 @@
+const fs=require('fs'),f='public/game/lost-dimensions.js';let s=fs.readFileSync(f,'utf8').replace("root.classList.remove('is-loading');modal.hidden=false;modal.innerHTML=", "artworkPromise=null;root.classList.remove('is-loading');modal.hidden=false;modal.innerHTML=");fs.writeFileSync(f,s);
