@@ -1,0 +1,14 @@
+const fs=require('fs'),f='public/game/developer-recovery.js';let s=fs.readFileSync(f,'utf8');const at=' function setCleared(key,on)';s=s.replace(at,` // Only the fixed first-clear gear is recovered; no repeat loot, shards or shop purchases.
+ function recoverRewards(keys=['shadow','whirlpool','rift']){const hall=hallBattleProgress(),claims=hall.developerStageRewardClaims??={};let added=0;
+  HallHub.upgradeShadowRewards();
+  for(const key of keys){if(!['shadow','whirlpool','rift'].includes(key))continue;for(const id of completions[key].get()){
+   let gear,options,legacy;
+   if(key==='shadow'){const trial=HallHub.shadowTrials[id];if(!trial)continue;gear={name:trial.ring};legacy=trial.legacy;options={rarity:'Shadow Personal Artifact',stats:{...trial.stats},affixes:HallHub.premiumShadowAffixes(id)};}
+   else if(key==='whirlpool'){gear=TinusWhirlpool.encounters.find(e=>e.id===Number(id))?.reward;options={rarity:'Personal Artifact',stats:{},affixes:[]};}
+   else{gear=EmberRift.rewards[Number(id)-1];if(gear)options={rarity:'Rift Artifact',stats:{...gear.stats},affixes:EmberRift.riftArtifactAffixes(gear)};}
+   if(!gear)continue;const claim=key+':'+id;if(claims[claim])continue;
+   if(gearCopyCount(gear.name)>0||(legacy&&gearCopyCount(legacy)>0)){claims[claim]=true;continue;}
+   const refs=addOwnedGear(gear.name,1,{...options,separateCopy:true,rollAffixes:false});if(refs.length){claims[claim]=true;added++;}
+  }}HallHub.upgradeShadowRewards();hall.developerLastRewardRecovery=added;return added;
+ }
+`+at);s=s.replace("if(key==='hall'&&on)","if(on)recoverRewards([key]);if(key==='hall'&&on)");s=s.replace('Restore completion records without battle rewards.','Marking Shadow Trials, Whirlpool or Rift cleared also grants missing fixed first-clear gear rewards.');s=s.replace('<p>Turning a switch off removes', '<button type="button" data-recover-stage-rewards>Claim missing rewards for cleared modes</button><p>Recovers the 7 Shadow personal rings, 8 Destiny Ring II rewards and 10 Rift stage artifacts when their fights are cleared. Existing or previously recovered rewards are skipped; no random drops or currency are added.</p>${Number.isInteger(hall.developerLastRewardRecovery)?`<p role="status">Last recovery: ${hall.developerLastRewardRecovery} reward(s) added to your gear bag.</p>`:""}<p>Turning a switch off removes');s=s.replace("  return result;","  el.menuBody.querySelector('[data-recover-stage-rewards]').onclick=()=>{if(!writable())return;const count=recoverRewards();save();showHudNotice(count?count+' missing stage rewards added to your gear bag.':'All cleared-stage rewards are already owned or recovered.');};\n  return result;");fs.writeFileSync(f,s);const h='public/game/index.html';fs.writeFileSync(h,fs.readFileSync(h,'utf8').replace('developer-recovery.js?v=338','developer-recovery.js?v=344'));

@@ -8,7 +8,20 @@
  function unlockAll(){Object.keys(baseJobs).forEach(recruit);hallBattleProgress().pendingRecruit=0;}
  function unlockModes(){['Seerin','Tinus'].forEach(recruit);const hall=hallBattleProgress();hall.unlockedStage=HALL_BATTLE_BLUEPRINTS.length;hall.developerUnlocks={...(hall.developerUnlocks||{}),rift:true,whirlpool:true};EmberRift.progress().unlocked=true;}
  const completions={hall:{label:'Ember Hall · 60 stages',get:()=>hallBattleProgress().clearedStages,all:()=>Array.from({length:60},(_,i)=>i+1)},shadow:{label:'Shadow Trials · 7 trials → Tinus arrival',get:()=>HallHub.progress().shadowDefeated,all:()=>Object.keys(HallHub.shadowTrials)},whirlpool:{label:'Whirlpool of Destinies · 8 encounters',get:()=>TinusWhirlpool.progress().cleared,all:()=>Array.from({length:8},(_,i)=>i+1)},rift:{label:'Ember Rift · 10 battles → sleeping dragon',get:()=>EmberRift.progress().cleared,all:()=>Array.from({length:10},(_,i)=>i+1)}};
- function setCleared(key,on){const spec=completions[key];if(!spec)return;const values=spec.get();values.splice(0,values.length,...(on?spec.all():[]));if(key==='hall'&&on){hallBattleProgress().unlockedStage=60;EmberRift.progress().unlocked=true;}save();}
+ // Only the fixed first-clear gear is recovered; no repeat loot, shards or shop purchases.
+ function recoverRewards(keys=['shadow','whirlpool','rift']){const hall=hallBattleProgress(),claims=hall.developerStageRewardClaims??={};let added=0;
+  HallHub.upgradeShadowRewards();
+  for(const key of keys){if(!['shadow','whirlpool','rift'].includes(key))continue;for(const id of completions[key].get()){
+   let gear,options,legacy;
+   if(key==='shadow'){const trial=HallHub.shadowTrials[id];if(!trial)continue;gear={name:trial.ring};legacy=trial.legacy;options={rarity:'Shadow Personal Artifact',stats:{...trial.stats},affixes:HallHub.premiumShadowAffixes(id)};}
+   else if(key==='whirlpool'){gear=TinusWhirlpool.encounters.find(e=>e.id===Number(id))?.reward;options={rarity:'Personal Artifact',stats:{},affixes:[]};}
+   else{gear=EmberRift.rewards[Number(id)-1];if(gear)options={rarity:'Rift Artifact',stats:{...gear.stats},affixes:EmberRift.riftArtifactAffixes(gear)};}
+   if(!gear)continue;const claim=key+':'+id;if(claims[claim])continue;
+   if(gearCopyCount(gear.name)>0||(legacy&&gearCopyCount(legacy)>0)){claims[claim]=true;continue;}
+   const refs=addOwnedGear(gear.name,1,{...options,separateCopy:true,rollAffixes:false});if(refs.length){claims[claim]=true;added++;}
+  }}HallHub.upgradeShadowRewards();hall.developerLastRewardRecovery=added;return added;
+ }
+ function setCleared(key,on){const spec=completions[key];if(!spec)return;const values=spec.get();values.splice(0,values.length,...(on?spec.all():[]));if(on)recoverRewards([key]);if(key==='hall'&&on){hallBattleProgress().unlockedStage=60;EmberRift.progress().unlocked=true;}save();}
  const original=renderMenu;
  renderMenu=function(...args){const result=original(...args);if(menuTab!=='developer'||state.gameMode!=='hallBattles')return result;
   const owned=state.party.length,total=Object.keys(baseJobs).length,hall=hallBattleProgress();
@@ -17,8 +30,9 @@
   el.menuBody.querySelectorAll('[data-raise-hero]').forEach(button=>button.onclick=()=>{if(!writable())return;const id=button.dataset.raiseHero,input=[...el.menuBody.querySelectorAll('[data-recovery-hero]')].find(input=>input.dataset.recoveryHero===id);if(raise(id,input.value))save();});
   el.menuBody.querySelector('[data-recruit-all]').onclick=()=>{if(writable()){unlockAll();save();}};
   el.menuBody.querySelector('[data-unlock-modes]').onclick=()=>{if(writable()){unlockModes();save();}};
-  el.menuBody.insertAdjacentHTML('beforeend',`<section class="developer-controls"><h3>Mode completion</h3><p>Restore completion records without battle rewards. Shadow Trials brings Tinus to the Hall entrance; Rift completion wakes the dragon when you enter the Rift. Already recruited characters and watched stories remain.</p>${Object.entries(completions).map(([key,spec])=>`<label class="developer-gold"><strong>${spec.label}</strong><input type="checkbox" data-mode-cleared="${key}" ${spec.all().every(id=>spec.get().includes(id))?'checked':''}> Cleared</label>`).join('')}<p>Turning a switch off removes that mode’s clear records only; it does not remove characters, gear or rewards.</p></section>`);
+  el.menuBody.insertAdjacentHTML('beforeend',`<section class="developer-controls"><h3>Mode completion</h3><p>Marking Shadow Trials, Whirlpool or Rift cleared also grants missing fixed first-clear gear rewards. Shadow Trials brings Tinus to the Hall entrance; Rift completion wakes the dragon when you enter the Rift. Already recruited characters and watched stories remain.</p>${Object.entries(completions).map(([key,spec])=>`<label class="developer-gold"><strong>${spec.label}</strong><input type="checkbox" data-mode-cleared="${key}" ${spec.all().every(id=>spec.get().includes(id))?'checked':''}> Cleared</label>`).join('')}<button type="button" data-recover-stage-rewards>Claim missing rewards for cleared modes</button><p>Recovers the 7 Shadow personal rings, 8 Destiny Ring II rewards and 10 Rift stage artifacts when their fights are cleared. Existing or previously recovered rewards are skipped; no random drops or currency are added.</p>${Number.isInteger(hall.developerLastRewardRecovery)?`<p role="status">Last recovery: ${hall.developerLastRewardRecovery} reward(s) added to your gear bag.</p>`:""}<p>Turning a switch off removes that mode’s clear records only; it does not remove characters, gear or rewards.</p></section>`);
   el.menuBody.querySelectorAll('[data-mode-cleared]').forEach(input=>input.onchange=()=>{if(writable())setCleared(input.dataset.modeCleared,input.checked);});
+  el.menuBody.querySelector('[data-recover-stage-rewards]').onclick=()=>{if(!writable())return;const count=recoverRewards();save();showHudNotice(count?count+' missing stage rewards added to your gear bag.':'All cleared-stage rewards are already owned or recovered.');};
   return result;
  };
 })();
