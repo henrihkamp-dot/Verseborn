@@ -249,7 +249,7 @@ const music = {
 };
 Object.values(music).forEach(track => {
   track.loop = true;
-  track.preload = "auto";
+  track.preload = "none";
   track.volume = 0.46;
 });
 let musicUnlocked = false;

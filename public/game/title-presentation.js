@@ -3,11 +3,19 @@
   'use strict';
   const W=1448,H=1086,wide=new Image(),art=new Image(),clean=new Image(),lute=new Image(),banners=[];
   const bannerReady=fetch('assets/ui/title-263/banners.json').then(r=>r.json()).then(async configs=>{await Promise.all(configs.map(async (c,i)=>{const image=new Image();await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=`assets/ui/title-263/banner-${i}.webp`;});banners[i]={...c,image};}));});let loaded=false,intent='continue',hits=[];
-  const ready=Promise.all([new Promise((resolve,reject)=>{wide.onload=resolve;wide.onerror=reject;wide.src="assets/ui/title-289/widescreen.webp";}),window.TitleCharacterLife.ready,new Promise((resolve,reject)=>{lute.onload=resolve;lute.onerror=reject;lute.src="assets/ui/title-280/lute.webp";}),bannerReady,new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=()=>reject(Error('Title illustration unavailable'));art.src='assets/ui/title-263/title.webp';}),new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=()=>reject(Error('Title menu plate unavailable'));clean.src='assets/ui/title-259/menu-clean.webp';})]).then(()=>{window.TitleCharacterLife?.prepare(art);loaded=true;});
+  wide.fetchPriority='high';art.fetchPriority='high';
+  const wideReady=new Promise((resolve,reject)=>{wide.onload=resolve;wide.onerror=reject;wide.src='assets/ui/title-289/widescreen.webp';});
+  const artReady=new Promise((resolve,reject)=>{art.onload=resolve;art.onerror=reject;art.src='assets/ui/title-263/title.webp';});
+  const cleanReady=new Promise((resolve,reject)=>{clean.onload=resolve;clean.onerror=reject;clean.src='assets/ui/title-259/menu-clean.webp';});
+  const luteReady=new Promise((resolve,reject)=>{lute.onload=resolve;lute.onerror=reject;lute.src='assets/ui/title-280/lute.webp';});
+  // Decorative animation loads independently and cannot hold the title screen hostage.
+  Promise.all([artReady,window.TitleCharacterLife.ready]).then(()=>window.TitleCharacterLife.prepare(art)).catch(console.warn);
+  Promise.allSettled([cleanReady,luteReady,bannerReady]);
+  const ready=Promise.any([wideReady,artReady]).then(()=>{loaded=true;});
   ready.catch(error=>console.error(error));
   titleMenuState='press';titleMenuIndex=1;titleSubmenuIndex=0;
   function layout(){const scale=Math.min(canvas.width/(H*16/9),canvas.height/H);return{x:(canvas.width-W*scale)/2,y:(canvas.height-H*scale)/2,width:W*scale,height:H*scale,scale};}
-  const centerArt=document.createElement('canvas');centerArt.width=W;centerArt.height=H;ready.then(()=>{const c=centerArt.getContext('2d');c.drawImage(art,0,0,W,H);const fade=c.createLinearGradient(0,0,W,0);fade.addColorStop(0,'#fff0');fade.addColorStop(.025,'#fff');fade.addColorStop(.975,'#fff');fade.addColorStop(1,'#fff0');c.globalCompositeOperation='destination-in';c.fillStyle=fade;c.fillRect(0,0,W,H);});
+  const centerArt=document.createElement('canvas');centerArt.width=W;centerArt.height=H;artReady.then(()=>{const c=centerArt.getContext('2d');c.drawImage(art,0,0,W,H);const fade=c.createLinearGradient(0,0,W,0);fade.addColorStop(0,'#fff0');fade.addColorStop(.025,'#fff');fade.addColorStop(.975,'#fff');fade.addColorStop(1,'#fff0');c.globalCompositeOperation='destination-in';c.fillStyle=fade;c.fillRect(0,0,W,H);}).catch(console.warn);
   const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   function diamond(x,y,r=12,selected=false){
     ctx.save();ctx.translate(x,y);ctx.strokeStyle=selected?'#ffdfa4':'#ccb389';ctx.lineWidth=1.2;
@@ -31,7 +39,7 @@
     ctx.save();ctx.beginPath();ctx.rect(330,915,790,155);ctx.clip();
     // Only the prompt region comes from the edited plate; all heroes, logo,
     // city and sky remain the exact pixels of the supplied illustration.
-    ctx.drawImage(clean,330,915,790,155);ctx.restore();
+    if(clean.complete&&clean.naturalWidth)ctx.drawImage(clean,330,915,790,155);else{ctx.fillStyle='#100c22';ctx.fillRect(330,915,790,155);}ctx.restore();
   }
   function saveData(slot){
     const summary=saveSlotSummary(titleMenuIndex,slot);let data;
@@ -156,8 +164,8 @@
   }
   drawTitle=function(now=performance.now()){
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#070615';ctx.fillRect(0,0,canvas.width,canvas.height);
-    if(!loaded){ctx.restore();return;}
-    const l=layout();ctx.imageSmoothingEnabled=true;ctx.translate(l.x,l.y);ctx.scale(l.scale,l.scale);ctx.drawImage(wide,-(H*16/9-W)/2,0,H*16/9,H);ctx.drawImage(centerArt,0,0,W,H);ctx.drawImage(lute,34,536);drawBanners(now);window.TitleCharacterLife?.draw(ctx,now,reduced());atmosphere(now);drawMenu(now);ctx.restore();
+    if(!loaded){ctx.fillStyle='#f1d6a2';ctx.font='20px Georgia';ctx.textAlign='center';ctx.fillText('Loading Verseborn…',canvas.width/2,canvas.height/2);ctx.restore();return;}
+    const l=layout();ctx.imageSmoothingEnabled=true;ctx.translate(l.x,l.y);ctx.scale(l.scale,l.scale);if(wide.complete&&wide.naturalWidth)ctx.drawImage(wide,-(H*16/9-W)/2,0,H*16/9,H);if(art.complete&&art.naturalWidth)ctx.drawImage(centerArt,0,0,W,H);if(lute.complete&&lute.naturalWidth)ctx.drawImage(lute,34,536);drawBanners(now);window.TitleCharacterLife?.draw(ctx,now,reduced());atmosphere(now);drawMenu(now);ctx.restore();
     canvas.setAttribute('aria-label','Verseborn. '+(titleMenuState==='press'?'Press Start.':entries().join(', ')+'. Use arrow keys, Enter and Escape.'));
   };
   titleImageLayout=layout;
