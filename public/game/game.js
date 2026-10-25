@@ -1083,7 +1083,8 @@ function loadWalkSpriteSheet(id) {
 function loadAnimationSheet(id, fileName = id.toLowerCase()) {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => {
+    image.fetchPriority = "high";
+    image.onload = () => {try {
       const cleaned = document.createElement("canvas");
       cleaned.width = image.naturalWidth;
       cleaned.height = image.naturalHeight;
@@ -1114,8 +1115,8 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
       };
       if (spriteScale[id]) spriteLoadProgress++;
       resolve();
-    };
-    image.onerror = () => { if (spriteScale[id]) spriteLoadProgress++; resolve(); };
+    } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = `assets/sprites/animation/${fileName}.png`;
   });
 }
@@ -1209,7 +1210,8 @@ async function loadEnemyAnimationSheets() {
 function loadChestSheet() {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => {
+    image.fetchPriority = "high";
+    image.onload = () => {try {
       const cleaned = document.createElement("canvas");
       cleaned.width = image.naturalWidth;
       cleaned.height = image.naturalHeight;
@@ -1223,8 +1225,8 @@ function loadChestSheet() {
       }
       chestSheet = { image: cleaned, cells, cellWidth: cleaned.width / 5, cellHeight: cleaned.height / 3 };
       resolve();
-    };
-    image.onerror = resolve;
+    } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = "assets/sprites/chests.png";
   });
 }
@@ -1232,7 +1234,8 @@ function loadChestSheet() {
 function loadEnemySheet() {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => {
+    image.fetchPriority = "high";
+    image.onload = () => {try {
       const cleaned = document.createElement("canvas");
       cleaned.width = image.naturalWidth;
       cleaned.height = image.naturalHeight;
@@ -1246,8 +1249,8 @@ function loadEnemySheet() {
       }
       enemySheet = { image: cleaned, cells };
       resolve();
-    };
-    image.onerror = resolve;
+    } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = "assets/sprites/enemies-runtime.png";
   });
 }
@@ -1255,7 +1258,8 @@ function loadEnemySheet() {
 function loadEnemyAttackSheet() {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => {
+    image.fetchPriority = "high";
+    image.onload = () => {try {
       const cleaned = document.createElement("canvas");
       cleaned.width = image.naturalWidth;
       cleaned.height = image.naturalHeight;
@@ -1269,8 +1273,8 @@ function loadEnemyAttackSheet() {
       }
       enemyAttackSheet = { image: cleaned, cells };
       resolve();
-    };
-    image.onerror = resolve;
+    } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = "assets/sprites/enemies-attack-runtime.png";
   });
 }
@@ -1278,7 +1282,8 @@ function loadEnemyAttackSheet() {
 function loadWorldEnemySheet() {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => {
+    image.fetchPriority = "high";
+    image.onload = () => {try {
       const cleaned = document.createElement("canvas");
       cleaned.width = image.naturalWidth;
       cleaned.height = image.naturalHeight;
@@ -1292,8 +1297,8 @@ function loadWorldEnemySheet() {
       }
       worldEnemySheet = { image: cleaned, cells };
       resolve();
-    };
-    image.onerror = resolve;
+    } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = "assets/sprites/enemies-field-runtime.png";
   });
 }
@@ -1301,7 +1306,8 @@ function loadWorldEnemySheet() {
 function loadNpcSheet() {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => {
+    image.fetchPriority = "high";
+    image.onload = () => {try {
       const cleaned = document.createElement("canvas");
       cleaned.width = image.naturalWidth;
       cleaned.height = image.naturalHeight;
@@ -1321,8 +1327,8 @@ function loadNpcSheet() {
       }
       npcSheet = { image: cleaned, cells, metrics };
       resolve();
-    };
-    image.onerror = resolve;
+    } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = "assets/sprites/npcs-runtime.png";
   });
 }
@@ -1330,8 +1336,9 @@ function loadNpcSheet() {
 function loadMapImage(id) {
   return new Promise(resolve => {
     const image = new Image();
-    image.onload = () => { mapImages[id] = image; resolve(); };
-    image.onerror = resolve;
+    image.fetchPriority = "high";
+    image.onload = () => {try { mapImages[id] = image; resolve(); } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
+    image.onerror = ()=>resolve({failed:true});
     image.src = `assets/maps/runtime/${id}.png`;
   });
 }
@@ -1459,34 +1466,17 @@ async function loadCharacterVfxSheets() {
   }
 }
 
-Promise.all([
-  loadEndgameBossVfx(),
-  loadBossMechanicAssets(),
-  loadStatusIcons(),
-  loadCharacterVfxSheets(),
-  loadBreakIconSheet(),
-  loadCombatRoleIconSheet(),
-  loadBattleAnimationSheets(),
-  ...Object.keys(spriteScale).map(id => loadAnimationSheet(id)),
-  ...Object.entries(animatedNpcFiles).map(([id, fileName]) => loadAnimationSheet(id, fileName)),
-  loadEnemyAnimationSheets(),
-  loadChestSheet(),
-  loadEnemySheet(),
-  loadEnemyAttackSheet(),
-  loadWorldEnemySheet(),
-  loadNpcSheet(),
-  loadTitleImage(),
-  loadTitleIdleFrames(),
-  loadStageSelectorImage(),
-  loadMarlaBattleSheet(),
-  loadEchoProjectileSheet(),
-  ...Object.keys(battleImageFiles).map(loadBattleImage),
-  ...Object.keys(recruitSceneImageFiles).map(loadRecruitSceneImage),
-  ...["lantern", "ember-hall-battle", "ash", "reverie", "guildspire", "ember", "alarm", "ash-route", "reverie-route", "guildspire-route", "ember-route", "dawn-route"].map(loadMapImage)
-]).then(() => {
-  runtimeAssetsReady = true;
-  el.hint.textContent = "Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party";
-});
+// Enter the Hall after essential world art; unrelated regions and combat decoration load separately.
+const tabletStartup=/iPad/.test(navigator.userAgent)||navigator.platform==="MacIntel"&&(navigator.maxTouchPoints||0)>1;
+const startupState={pending:[],failed:[],ready:false};
+function startupJob(name,load){startupState.pending.push(name);let timer;let work;try{work=load();}catch(error){work=Promise.reject(error);}return Promise.race([Promise.resolve(work),new Promise(resolve=>{timer=setTimeout(()=>resolve({failed:true}),45000);})]).then(result=>{if(result?.failed)startupState.failed.push(name);},()=>{startupState.failed.push(name);}).finally(()=>{clearTimeout(timer);startupState.pending=startupState.pending.filter(id=>id!==name);});}
+const essentialStartup=Promise.all([
+ ...Object.keys(spriteScale).map(id=>startupJob('Character '+id,()=>loadAnimationSheet(id))),
+ ...Object.entries(animatedNpcFiles).map(([id,file])=>startupJob('Resident '+id,()=>loadAnimationSheet(id,file))),
+ ...[['Chests',loadChestSheet],['Enemies',loadEnemySheet],['Enemy attacks',loadEnemyAttackSheet],['World enemies',loadWorldEnemySheet],['Residents',loadNpcSheet],['Ember Hall',()=>loadMapImage('ember-hall-battle')],['Lantern',()=>loadMapImage('lantern')]].map(([name,load])=>startupJob(name,load))
+]).then(async()=>{if(!tabletStartup&&!startupState.failed.length)await optionalStartup;startupState.ready=!startupState.failed.length;runtimeAssetsReady=startupState.ready;if(runtimeAssetsReady){el.hint.textContent='Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party';return;}const retry=document.createElement('button');retry.textContent='Retry game loading';retry.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;padding:14px;background:#302039;color:#ffdfa4;border:1px solid #c89c57;font:17px Georgia';retry.onclick=()=>location.reload();document.body.append(retry);});
+window.RuntimeStartup={ready:essentialStartup,get status(){return {...startupState,pending:[...startupState.pending],failed:[...startupState.failed]};}};
+const optionalStartup=Promise.allSettled([loadEndgameBossVfx(),loadBossMechanicAssets(),loadStatusIcons(),loadCharacterVfxSheets(),loadBreakIconSheet(),loadCombatRoleIconSheet(),loadBattleAnimationSheets(),loadEnemyAnimationSheets(),loadTitleImage(),loadTitleIdleFrames(),loadStageSelectorImage(),loadMarlaBattleSheet(),loadEchoProjectileSheet(),...Object.keys(battleImageFiles).map(loadBattleImage),...Object.keys(recruitSceneImageFiles).map(loadRecruitSceneImage),...['ash','reverie','guildspire','ember','alarm','ash-route','reverie-route','guildspire-route','ember-route','dawn-route'].map(loadMapImage)]);
 
 const codex = [
   ["Verseborn", "07_Verseborn_Clean_Quest_Manga_Sheet.png"],

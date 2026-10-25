@@ -21,6 +21,7 @@
   function waitForGame(){
     const request=pendingStart;if(!request)return;
     if(mode!=='title'||!slotMenu()||titleMenuIndex!==request.mode||intent!==request.intent){cancelPendingStart();return;}
+    if(window.RuntimeStartup?.status.failed.length){pendingStart=null;startNotice='Essential game art could not load. Tap Retry game loading.';return;}
     if(runtimeAssetsReady){cancelPendingStart();titleSubmenuIndex=request.slot-1;activateTitleSelection();return;}
     if(performance.now()-request.at>30000){pendingStart=null;startNotice='Game artwork is still loading. Please try again.';return;}
     startTimer=setTimeout(waitForGame,100);
