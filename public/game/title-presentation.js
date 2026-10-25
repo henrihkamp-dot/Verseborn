@@ -75,7 +75,7 @@
       return;
     }
     cleanedBackground();
-    if(canvas.getBoundingClientRect().width<700){drawCompactMenu();return;}
+    if(document.documentElement.classList.contains('touch-tablet')||canvas.getBoundingClientRect().width<700){drawCompactMenu();return;}
     if(titleMenuState==='main'){
       panel(890,1045);row('Ember Hall',0,962,913,1010);line(1020);diamond(725,1020,7);
     }else if(actionMenu()){

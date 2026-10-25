@@ -123,11 +123,16 @@ function syncResponsiveDevice() {
   if (!root) return;
   const coarse = window.matchMedia?.("(pointer: coarse)")?.matches === true;
   const noHover = window.matchMedia?.("(hover: none)")?.matches === true;
-  const touchLayout = (navigator.maxTouchPoints || 0) > 0 && coarse && noHover;
-  const phone = touchLayout && Math.min(window.innerWidth, window.innerHeight) <= 600;
+  const ipad = /iPad/.test(navigator.userAgent) || navigator.platform === "MacIntel" && (navigator.maxTouchPoints || 0) > 1;
+  const touchLayout = (navigator.maxTouchPoints || 0) > 0 && (coarse && noHover || ipad);
+  const phone = touchLayout && !ipad && Math.min(window.innerWidth, window.innerHeight) <= 600;
   const portrait = window.innerHeight >= window.innerWidth;
   root.classList.toggle("touch-layout", touchLayout);
   root.classList.toggle("touch-phone", phone);
+  root.classList.toggle("touch-tablet", touchLayout && !phone);
+  root.classList.toggle("ipad-layout", ipad);
+  const visual = window.visualViewport;
+  root.style.setProperty("--tablet-viewport-height", `${Math.round(visual && visual.scale === 1 ? visual.height : window.innerHeight)}px`);
   root.classList.toggle("touch-portrait", touchLayout && portrait);
   root.classList.toggle("touch-landscape", touchLayout && !portrait);
   if (touchLayout || window.innerWidth < 794) {
@@ -15980,6 +15985,7 @@ document.querySelectorAll("[data-control]").forEach(button => {
 });
 
 document.addEventListener("visibilitychange", () => {
+  if (document.hidden) heldDirection = null;
   if (document.hidden) Object.values(music).forEach(track => track.pause());
   else updateMusic();
 });
@@ -16732,6 +16738,7 @@ sanitizeWorldSpawns();
 syncResponsiveDevice();
 syncResponsiveMode();
 window.addEventListener("resize", syncResponsiveDevice);
+window.visualViewport?.addEventListener("resize", syncResponsiveDevice);
 window.addEventListener("orientationchange", syncResponsiveDevice);
 refreshHeroVitals();
 updateCodex();

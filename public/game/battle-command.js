@@ -23,6 +23,7 @@
   const unitTooltip=make('aside','bc-unit-tooltip',root);unitTooltip.hidden=true;unitTooltip.setAttribute('role','tooltip');
   let hoveredUnit=null;
   function showUnitTooltip(u,event){
+    if(event?.pointerType==='touch')return;
     if(mode!=='battle')return;
     const scroll=hoveredUnit===u?unitTooltip.scrollTop:0;hoveredUnit=u;
     const enemySide=battle.enemies.includes(u),rawRole=String(u.role||'hybrid').toLowerCase(),roleKey=enemySide?({fighter:'dps',caster:'dps',mage:'dps',ranger:'dps'}[rawRole]||combatRoleKey(u,true)):combatRoleKey(u,false),roleLabel=roleKey==='dps'?'DPS':roleKey.charAt(0).toUpperCase()+roleKey.slice(1);
@@ -249,7 +250,8 @@
   }
   function renderConfirmHint(){
     const hint=make('div','bc-confirm-hint',detail);
-    hint.textContent=ui.level==='target'?`Target: ${targetGroup?targetName(skill()):targetList[ui.target]?.name||'Choose target'} · Click the selected skill again to use`:ui.level==='items'?'Click an item to select; click it again to use':'Click a skill to lock it; click it again to use';
+    const verb=document.documentElement.classList.contains('touch-layout')?'Tap':'Click';
+    hint.textContent=ui.level==='target'?`Target: ${targetGroup?targetName(skill()):targetList[ui.target]?.name||'Choose target'} · ${verb} the selected skill again to use`:ui.level==='items'?`${verb} an item to select; ${verb.toLowerCase()} it again to use`:`${verb} a skill to lock it; ${verb.toLowerCase()} it again to use`;
   }
   function addPages(total,size){
     if(total<=size)return;

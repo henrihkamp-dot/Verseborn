@@ -1,0 +1,91 @@
+/* Tablet rules are isolated from desktop and phone layouts. */
+html.ipad-layout #landscapeNotice{display:none!important}
+html.ipad-layout body>*:not(script):not(style){visibility:visible!important}
+html.touch-tablet .shell{height:var(--tablet-viewport-height,100dvh);padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(120px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));display:flex;align-items:flex-start;justify-content:center}
+html.touch-tablet .game{width:100%;max-width:none;min-width:0;height:calc(var(--tablet-viewport-height,100dvh) - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:0;display:flex;flex-direction:column;transform:none}
+html.touch-tablet #screen{width:100%;height:calc(100% - 32px);max-height:none;aspect-ratio:auto;flex:1;min-height:0;touch-action:manipulation}
+html.touch-tablet body:not([data-play-mode="title"]):not([data-play-mode="battle"]) .gamepad{display:block!important;position:fixed;inset:0;pointer-events:none;z-index:30}
+html.touch-tablet :is(.dpad,.command-pad){pointer-events:auto}
+html.touch-tablet .hud{height:32px;min-height:32px;flex:none;font-size:12px}
+html.touch-tablet .dpad{grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:5px;bottom:max(8px,env(safe-area-inset-bottom));touch-action:none}
+html.touch-tablet .gamepad button{min-width:48px;height:48px;font-size:14px;touch-action:none}
+html.touch-tablet .command-pad{width:auto;grid-template-columns:repeat(3,84px);gap:6px;bottom:max(8px,env(safe-area-inset-bottom))}
+html.touch-tablet .command-pad button{width:84px}
+html.touch-tablet #musicToggle{grid-column:3;width:48px;min-width:48px}
+html.touch-tablet .hall-menu-toggle{width:48px;height:48px;min-width:48px;z-index:25}
+html.touch-tablet .skill-point-notice{min-height:48px;max-width:240px}
+html.touch-tablet body[data-play-mode="title"] .shell{padding-bottom:max(6px,env(safe-area-inset-bottom))}
+html.touch-tablet body[data-play-mode="title"] .game{height:calc(var(--tablet-viewport-height,100dvh) - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+html.touch-tablet body[data-play-mode="title"] #screen{height:100%;object-fit:contain}
+html.touch-tablet body:is([data-play-mode="menu"],[data-play-mode="shop"],[data-play-mode="hallMap"],[data-play-mode="atlas"]) .game{height:calc(var(--tablet-viewport-height,100dvh) - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;max-height:none!important;flex:none;transform:none}
+html.touch-tablet .menu{inset:0;padding:8px;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column}
+html.touch-tablet .menu.hidden{display:none}
+html.touch-tablet .menu:not(.hidden){inset:0!important;height:100%!important;max-height:none!important;box-sizing:border-box}
+html.touch-tablet .menu-tabs{display:flex;overflow-x:auto;flex:none;gap:5px;padding:5px;min-height:54px;scrollbar-width:thin;overscroll-behavior-x:contain;touch-action:pan-x}
+html.touch-tablet .menu-tabs button{flex:0 0 auto;min-width:86px;min-height:44px;font-size:13px;padding:8px 10px;letter-spacing:0}
+html.touch-tablet .menu-body{min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+html.touch-tablet .menu-body :is(button,select,summary){min-height:44px}
+html.touch-tablet :is(input,select,textarea){font-size:16px}
+html.touch-tablet input[type="checkbox"]{width:22px;height:22px;flex-shrink:0}
+html.touch-tablet .gear-auto-members label{min-height:44px;padding:0 5px}
+html.touch-tablet .menu-body input[type="range"]{min-height:44px}
+html.touch-tablet .res-region-title{pointer-events:none}
+html.touch-tablet .res-region-title button{pointer-events:auto}
+html.touch-tablet .res-map-area{grid-template-rows:auto auto 68px auto!important;min-height:440px!important;overflow:visible}
+html.touch-tablet .res-viewport{min-height:330px;overflow:auto;touch-action:pan-x pan-y}
+html.touch-tablet .res-canvas{min-width:580px}
+html.touch-tablet .res-fixture{min-width:44px!important;min-height:44px!important}
+html.touch-tablet .menu[data-menu-view="gear"] .menu-body{display:block;overflow-y:auto}
+html.touch-tablet .equip-screen{min-height:100%;height:auto;overflow:visible}
+html.touch-tablet .equip-workspace{min-height:460px;flex:none}
+html.touch-tablet .equip-body{min-height:440px}
+html.touch-tablet .equip-slot-picker{min-height:600px;flex:none}
+html.touch-tablet .equip-optimize-menu>.gear-auto-equip{max-height:65vh;overflow-y:auto;touch-action:pan-y}
+html.touch-tablet .dialogue{bottom:8px;min-height:120px;padding:14px 18px}
+html.touch-tablet .dialogue p{font-size:18px;line-height:1.45}
+html.touch-tablet .dialogue #speaker{font-size:16px}
+html.touch-tablet .dialogue-skip{min-height:44px;min-width:64px}
+html.touch-tablet .battle-result-card{max-height:calc(var(--tablet-viewport-height,100dvh) - 24px);overflow-y:auto;overscroll-behavior:contain}
+html.touch-tablet #battleResultContinue{min-height:48px;min-width:80px}
+
+/* Keep the native combat scene above a finger-sized command area. */
+html.touch-tablet body[data-play-mode="battle"]{--bc-command-height:clamp(328px,38dvh,368px);--bc-strip:0px}
+html.touch-tablet body[data-play-mode="battle"] .shell{height:var(--tablet-viewport-height,100dvh)!important;min-height:0!important;padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;box-sizing:border-box}
+html.touch-tablet body[data-play-mode="battle"] .game{width:100%!important;height:100%!important;min-height:0!important;max-width:none!important;zoom:1!important;transform:none!important}
+html.touch-tablet body[data-play-mode="battle"] .gamepad{display:none!important}
+html.touch-tablet body[data-play-mode="battle"] .hud{font-size:12px}
+html.touch-tablet .command-battle .bc-command{grid-template-columns:minmax(0,1.8fr) minmax(270px,1fr);gap:8px;left:6px;right:6px}
+html.touch-tablet .bc-command-left{grid-template-rows:22px 72px minmax(136px,1fr) 44px;padding:6px;gap:5px;min-height:0}
+html.touch-tablet .bc-categories{overflow-x:auto;overflow-y:hidden;gap:5px;touch-action:pan-x;overscroll-behavior:contain}
+html.touch-tablet .bc-category{min-width:58px;min-height:64px;padding:5px 3px}
+html.touch-tablet .bc-category .bc-icon{width:24px;height:24px}
+html.touch-tablet .bc-category>span{display:block;font-size:12px;white-space:normal;line-height:1.2;text-align:center;letter-spacing:0}
+html.touch-tablet .bc-action-row{grid-auto-rows:minmax(62px,1fr);min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+html.touch-tablet .bc-action{min-height:62px;padding:7px;touch-action:manipulation}
+html.touch-tablet .bc-action strong{font-size:15px;overflow-wrap:anywhere}
+html.touch-tablet .bc-action-row:has(.bc-pager){padding-right:49px}
+html.touch-tablet .bc-pager{width:44px}
+html.touch-tablet .bc-pager button{width:44px;height:44px;min-height:44px}
+html.touch-tablet .bc-command-foot{font-size:12px;white-space:normal}
+html.touch-tablet .bc-instruction{display:none}
+html.touch-tablet :is(.bc-retreat-button,.bc-history-button){min-height:44px;padding:8px 12px;font-size:12px!important}
+html.touch-tablet .bc-detail{padding:10px 12px 76px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+html.touch-tablet .bc-description{font-size:14px;line-height:1.4}
+html.touch-tablet .bc-confirm-hint{font-size:12px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+html.touch-tablet .bc-detail h3{font-size:20px}
+html.touch-tablet .bc-act-footer{min-height:54px;bottom:8px;background:#14111f}
+html.touch-tablet .command-battle .bc-act{min-height:48px;min-width:112px;font-size:18px}
+html.touch-tablet .bc-history{max-width:90vw;max-height:80dvh;overflow:auto;touch-action:pan-y}
+html.touch-tablet .bc-history header button{min-width:44px;min-height:44px}
+html.touch-tablet .bc-unit{min-height:44px}
+@media(max-width:950px){
+ html.touch-tablet .menu.compact-trials .trial-screen.resonance-mode{display:flex!important;flex-direction:column;min-height:0;height:auto!important;overflow:visible}
+ html.touch-tablet .res-map-area{flex:none}
+ html.touch-tablet .trial-ember-detail{min-height:420px;flex:none}
+ html.touch-tablet .equip-workspace{grid-template-columns:minmax(0,1fr)}
+ html.touch-tablet .equip-body{min-height:470px}
+ html.touch-tablet .equip-sidebar{min-height:350px}
+ html.touch-tablet .bc-command-left{grid-template-rows:22px 72px minmax(136px,1fr) 44px;gap:5px;padding:6px}
+ html.touch-tablet .command-battle .bc-command{grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr)}
+ html.touch-tablet .bc-action .bc-icon{width:24px;height:24px}
+}
