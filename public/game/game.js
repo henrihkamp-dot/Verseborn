@@ -106,6 +106,7 @@ const gearBrowser = {
 let gearPickerOpen = false, gearOptimizeOpen = false;
 let autoEquipPool = "all";
 let autoEquipStrategy = "utility";
+let autoEquipMembers = null;
 let selectedItemCategory = "consumables";
 let selectedItemRef = null;
 let selectedSkillHero = "Verseborn";
@@ -3021,7 +3022,8 @@ function autoEquipToolbarHtml(id) {
         <button type="button" data-unequip-all="hero" ${Object.values(baseJobs[id].gear).some(Boolean) ? '' : 'disabled'}>Unequip ${id}</button>
       </section>
       <section aria-label="Equipment for everybody"><h4>Everybody / all recruited heroes</h4>
-        <button type="button" data-auto-equip="party">Optimize everybody</button>
+        <fieldset class="gear-auto-members"><legend>Optimize members</legend>${state.party.filter(heroId => baseJobs[heroId]).map(heroId => `<label><input type="checkbox" data-auto-equip-member="${heroId}" ${autoEquipMembers === null || autoEquipMembers.has(heroId) ? 'checked' : ''}> ${heroId}</label>`).join('')}</fieldset>
+        <button type="button" data-auto-equip="party" ${autoEquipMembers !== null && !state.party.some(heroId => autoEquipMembers.has(heroId)) ? 'disabled' : ''}>Optimize selected members</button>
         <button type="button" data-unequip-all="party" ${state.party.some(heroId => Object.values(baseJobs[heroId].gear).some(Boolean)) ? '' : 'disabled'}>Unequip everybody</button>
       </section>
     </div>
@@ -5288,15 +5290,15 @@ function autoEquipHero(id, pool = autoEquipPool) {
   return changed;
 }
 
-function autoEquipParty(pool = autoEquipPool) {
+function autoEquipParty(pool = autoEquipPool, members = state.party) {
   if (developerGearLoadout) return false;
-  const heroes = state.party.filter(id => baseJobs[id]);
+  const heroes = state.party.filter(id => baseJobs[id] && members.includes(id));
   if (!heroes.length) return false;
   let changed = false;
   Object.keys(baseJobs[heroes[0]].gear).forEach(slot => {
     const unlockedHeroes = heroes.filter(id => !equippedGearLocked(id, slot));
     if (!unlockedHeroes.length) return;
-    const tokens = gearInventoryTokens(slot).filter(token => !token.equippedBy || !equippedGearLocked(token.equippedBy, slot));
+    const tokens = gearInventoryTokens(slot).filter(token => !token.equippedBy || heroes.includes(token.equippedBy) && !equippedGearLocked(token.equippedBy, slot));
     const choices = [...tokens, ...unlockedHeroes.map((id, index) => ({ id: `empty:${slot}:${index}`, ref: null, gear: null, equippedBy: null }))];
     const weights = unlockedHeroes.map(id => choices.map(choice => {
       if (choice.gear && !canEquip(id, choice.gear)) return -1e9;
@@ -5335,13 +5337,14 @@ function runUnequipAll(target) {
 }
 
 function runAutoEquip(target) {
-  const changed = target === "party" ? autoEquipParty() : autoEquipHero(selectedGearHero);
+  const members = state.party.filter(id => baseJobs[id] && (autoEquipMembers === null || autoEquipMembers.has(id)));
+  const changed = target === "party" ? autoEquipParty(autoEquipPool, members) : autoEquipHero(selectedGearHero);
   selectedGearRef = null;
   playSfx(changed ? "item" : "menu");
   updatePanels();
   renderMenu();
   showHudNotice(changed
-    ? target === "party" ? `AUTO EQUIP - ${state.party.length} heroes optimized` : `AUTO EQUIP - ${selectedGearHero} optimized`
+    ? target === "party" ? `AUTO EQUIP - ${members.length} selected heroes optimized` : `AUTO EQUIP - ${selectedGearHero} optimized`
     : "AUTO EQUIP - current loadout is already optimal");
 }
 
@@ -14796,6 +14799,12 @@ function renderMenu() {
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-auto-equip]").forEach(btn => btn.onclick = () => runAutoEquip(btn.dataset.autoEquip));
+    el.menuBody.querySelectorAll("[data-auto-equip-member]").forEach(input => input.onchange = () => {
+      autoEquipMembers ??= new Set(state.party);
+      if (input.checked) autoEquipMembers.add(input.dataset.autoEquipMember);
+      else autoEquipMembers.delete(input.dataset.autoEquipMember);
+      renderMenu();
+    });
     el.menuBody.querySelectorAll("[data-unequip-all]").forEach(btn => btn.onclick = () => runUnequipAll(btn.dataset.unequipAll));
     el.menuBody.querySelectorAll("[data-auto-equip-strategy]").forEach(btn => btn.onclick = () => {
       autoEquipStrategy = btn.dataset.autoEquipStrategy;
@@ -14967,7 +14976,7 @@ function renderMenu() {
     });
     const gearChoice = developerGearLoadout || state.developerGearChoice || { stage: Math.min(60, hallBattleProgress().unlockedStage), rarity: "Epic" };
     const gearStage = Math.max(1, Math.min(60, Number(gearChoice.stage) || 1));
-    const gearRarities = ["Rare", "Epic", "Legendary", "Mythic", "Artifact"];
+    const gearRarities = ["Rare", "Epic", "Legendary", "Mythic", "Artifact", "Rift Artifact"];
     const gearRarity = developerGearCandidates(gearStage, gearChoice.rarity).length ? gearChoice.rarity : "Rare";
     el.menuBody.insertAdjacentHTML("beforeend", `<section class="developer-controls"><h3>Team Gear Test</h3><label class="developer-slider"><span>Gear Stage</span><input type="range" min="1" max="60" step="1" value="${gearStage}" data-gear-stage aria-label="Gear Stage"><output>${gearStage}</output></label><label>Rarity <select data-gear-rarity>${gearRarities.map(rarity => `<option value="${rarity}" ${rarity === gearRarity ? "selected" : ""} ${developerGearCandidates(gearStage, rarity).length ? "" : "disabled"}>${rarity}</option>`).join("")}</select></label><label><input type="checkbox" data-gear-enabled ${developerGearLoadout ? "checked" : ""}> Test sets: all characters</label><strong>${developerGearLoadout ? `${gearRarity} / Stage ${gearStage}` : "Own gear"}</strong></section>`);
     const changeGearTest = () => {
@@ -15245,6 +15254,7 @@ function hallShopGearPool(rarity, stage) {
 const HALL_SHOP_AFFIX_COUNTS = HALL_GENERATED_AFFIX_COUNTS;
 
 function developerGearCandidates(stage, rarity) {
+  if (rarity === "Rift Artifact") return Object.values(gearDb).flat().filter(gear => gear.riftArtifact).map(gear => ({ gear, stage, rift: true }));
   const candidates = new Map();
   for (let value = 1; value <= stage; value++) {
     if (rollHallGearRarity(value) === rarity) hallGearRewardCandidates(value, rarity).forEach(gear => candidates.set(gear.name, { gear, stage: value, drop: true }));
@@ -15276,9 +15286,9 @@ function setDeveloperGear(stage, rarity, enabled) {
       const { gear } = entry;
       Math.random = hallSeededRandom(`developer-gear:${stage}:${rarity}:${gear.name}`);
       const scale = entry.drop && entry.stage > 50 ? 1 + (entry.stage - 50) * .045 : 1;
-      const stats = entry.commissioned ? { ...gear.stats } : Object.fromEntries(Object.entries(rollHallBaseStats(rarity)).map(([key, value]) => [key, Math.round(value * scale)]));
+      const stats = entry.commissioned || entry.rift ? { ...gear.stats } : Object.fromEntries(Object.entries(rollHallBaseStats(rarity)).map(([key, value]) => [key, Math.round(value * scale)]));
       const affixPool = affixPools[gear.slot] || affixPools.accessory;
-      const affixes = entry.commissioned ? entry.affixKeys.map(key => { const affix = affixPool.find(a => a.key === key); return { ...affix, value: affix.max }; })
+      const affixes = entry.rift ? EmberRift.riftArtifactAffixes(gear, `developer:${gear.name}`) : entry.commissioned ? entry.affixKeys.map(key => { const affix = affixPool.find(a => a.key === key); return { ...affix, value: affix.max }; })
         : rollGearAffixes(gear, rarity, hallShopAffixTheme(entry.stage), HALL_GENERATED_AFFIX_COUNTS[rarity]).map(affix => ({ ...affix, value: affix.max > 1 ? Math.round(affix.value * scale) : Number((affix.value * scale).toFixed(4)) }));
       prepared.set(gear.name, { gear, stats, affixes });
     }

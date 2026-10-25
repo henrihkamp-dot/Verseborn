@@ -75,3 +75,6 @@
 @media(prefers-reduced-motion:reduce){.menu[data-menu-view="gear"] .equip-slot-picker{animation:none}}
 @media(max-width:700px){.menu[data-menu-view="gear"] .equip-roster .gear-hero{flex:0 0 120px;min-width:120px;grid-template-columns:54px minmax(0,1fr)}.menu[data-menu-view="gear"] .equip-roster .gear-hero img{width:54px;height:54px}.equip-sidebar:has(.equip-slot-picker){height:580px;min-height:580px}.equip-header>h2{width:auto}.equip-slot-picker .gear-filter-grid{grid-template-columns:1fr 1fr}}
 .equip-slot-picker .gear-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.equip-slot-picker .gear-filter-grid fieldset{min-width:0}
+.gear-auto-members{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0;padding:8px;border:1px solid #604830;min-width:0}
+.gear-auto-members label{display:inline-flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}
+.gear-auto-members input{width:16px;height:16px;margin:0;accent-color:#d7b15c}

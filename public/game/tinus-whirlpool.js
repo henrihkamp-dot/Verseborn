@@ -5,11 +5,11 @@
   const ringSpecs = [
     ['Verseborn', 'Ring of the Listening World', 'Resonant Verse', 'Resonant Verse also applies 15% Magic Vulnerability for 2 actions.'],
     ['Mira', 'Ring of the Unseen Margin', 'Voidthorn Mark', 'Voidthorn Mark also inflicts Shadow Exposed for 2 actions, setting up the next mark.'],
-    ['Torren', 'Ring of the Moving Mountain', 'Foundation Break', 'Foundation Break gains one additional base Break buildup and applies 15% Physical Vulnerability for 2 actions.'],
+    ['Torren', 'Ring of the Moving Mountain', 'Foundation Break', 'Foundation Break costs 2 less base MP, before talent and gear cost reductions.'],
     ['Glimmer', 'Ring of the Open Circuit', 'Klik-Wrench 7', 'Klik-Wrench 7 also drains 20% of enemy Resonance and applies 15% Disrupted for 2 actions.'],
     ['Kael', 'Ring of the Quiet Exception', 'Quiet Rite', 'Quiet Rite also cleanses one negative effect from each healed ally.'],
-    ['Sparky', 'Ring of the Remembered Dawn', 'Memory Flare', 'Memory Flare also applies Burn for 3 actions.'],
-    ['Seerin', 'Ring of the Unbroken Choice', 'Starflame Cut', 'Starflame Cut also applies 15% Holy Vulnerability for 2 actions.'],
+    ['Sparky', 'Ring of the Remembered Dawn', 'Memory Flare', 'Memory Flare deals 25% more direct damage. Ember Bite still supplies its Burn.'],
+    ['Seerin', 'Ring of the Unbroken Choice', 'Starflame Cut', 'Starflame Cut deals 25% more direct damage. Radiant Brand still supplies Holy Vulnerability.'],
     ['Tinus', 'Ring of the Unscheduled Tomorrow', 'Form 17.2-B', 'Form 17.2-B also applies 15% Disrupted for 2 actions and costs 2 less base MP.']
   ];
   gearDb.ring2 ??= [];
@@ -41,16 +41,20 @@
       };
       if (id === 'Verseborn') add('magicVulnerability', .15, 2);
       if (id === 'Mira') add('shadowExposed', null, 2);
-      if (id === 'Torren') { sk.staggerPower = (sk.staggerPower || 1) + 1; add('physicalVulnerability', .15, 2); }
+      if (id === 'Torren') sk.cost = Math.max(0, sk.cost - 2);
       if (id === 'Glimmer') { sk.enemyResonanceDrainRatio = Math.max(.2, sk.enemyResonanceDrainRatio || 0); add('disrupted', .15, 2); }
       if (id === 'Kael') sk.cleanse = true;
-      if (id === 'Sparky') add('burn', null, 3);
-      if (id === 'Seerin') add('holyVulnerability', .15, 2);
+      if (id === 'Sparky' || id === 'Seerin') sk.destinyDamageMultiplier = 1.25;
       if (id === 'Tinus') { sk.cost = Math.max(0, sk.cost - 2); add('disrupted', .15, 2); }
       sk.desc += ' Destiny Ring II: ' + ring.desc.split(' Personal Destiny')[0];
       sk.destinyRing = ring.name;
       return sk;
     });
+  };
+
+  const oldDamageMultiplier = skillDamageTalentMultiplier;
+  skillDamageTalentMultiplier = function(source, sk, ...args) {
+    return oldDamageMultiplier(source, sk, ...args) * (sk.destinyDamageMultiplier || 1);
   };
 
   // These are dimensional counterparts. Combat adaptations are not new comic canon.
