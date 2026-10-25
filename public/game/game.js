@@ -10560,7 +10560,15 @@ function startBattle(name, enemies, winFlag, spawnRef = null, waves = [], option
     opening ? `Rare gear sings: +${opening} Resonance.` : "Turn order begins.",
     preparedWard ? "A prepared ward protects the party's opening turn." : ""
   ].filter(Boolean).join(" ");
-  runCurrentTurn(openingNotes);
+  const openingBattle = battle;
+  battle.phaseTotal = waves.length + 1;
+  battle.phaseTransition = {step:'incoming',number:1,total:battle.phaseTotal,enemies:battle.enemies,opening:true,advance:()=>{
+    if(battle!==openingBattle||mode!=='battle'||!battle.phaseTransition?.opening)return;
+    battle.phaseTransition=null;
+    runCurrentTurn(openingNotes);
+  }};
+  battle.resolving=true;
+  renderBattle('The battle starts. Review the opening formation.');
 }
 
 function battleInitiative(unit, base, round = battle.round) {
