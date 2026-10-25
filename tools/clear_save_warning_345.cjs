@@ -1,0 +1,1 @@
+const fs=require('fs'),f='public/game/save-safety.js';let s=fs.readFileSync(f,'utf8').replace("cache.set(key,raw);last={text:'Saved',bad:false,at:Date.now()};backup", "cache.set(key,raw);if(last?.bad)note('Save verified. Progress is stored.',false);else last={text:'Saved',bad:false,at:Date.now()};backup");fs.writeFileSync(f,s);

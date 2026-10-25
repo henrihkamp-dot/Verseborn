@@ -4038,7 +4038,7 @@ const state = {
 
 function savedGameExists(saveKey = storySaveKey()) {
   try {
-    return Boolean(localStorage.getItem(saveKey));
+    return Boolean(window.SaveSafety?.read(saveKey) || localStorage.getItem(saveKey));
   } catch {
     return false;
   }
@@ -4067,7 +4067,7 @@ function titleSaveKey(modeIndex = titleMenuIndex, slot = activeSaveSlot) {
 function saveSlotSummary(modeIndex, slot) {
   let data;
   try {
-    data = JSON.parse(localStorage.getItem(titleSaveKey(modeIndex, slot)) || "null");
+    data = JSON.parse((window.SaveSafety?.read(titleSaveKey(modeIndex, slot)) || localStorage.getItem(titleSaveKey(modeIndex, slot))) || "null");
   } catch {
     data = null;
   }
@@ -4102,9 +4102,13 @@ function saveGame(saveKey = activeSaveKey()) {
       returnAt: spawnPoint.returnAt,
       retryAt: spawnPoint.retryAt
     }]))]));
-    localStorage.setItem(saveKey, JSON.stringify({ version: 4, savedAt: Date.now(), state, heroes, questState, spawnState }));
+    const raw = JSON.stringify({ version: 4, savedAt: Date.now(), state, heroes, questState, spawnState });
+    if (window.SaveSafety) return SaveSafety.commit(saveKey, raw);
+    localStorage.setItem(saveKey, raw);
+    if (localStorage.getItem(saveKey) !== raw) return false;
     return true;
   } catch {
+    window.SaveSafety?.failed();
     return false;
   }
 }
@@ -4138,7 +4142,7 @@ function migrateHallEquippedOnlyV1() {
 function loadGame(saveKey = activeSaveKey()) {
   let data;
   try {
-    data = JSON.parse(localStorage.getItem(saveKey) || "null");
+    data = JSON.parse((window.SaveSafety?.read(saveKey) || localStorage.getItem(saveKey)) || "null");
   } catch {
     return false;
   }
@@ -5602,7 +5606,7 @@ function developerScale(side, stat, value, minimum = 0) {
 function exportHallSave(slot) {
   try {
     if (slot === activeSaveSlot) saveGame(hallSaveKey(slot));
-    const raw = localStorage.getItem(hallSaveKey(slot));
+    const raw = window.SaveSafety?.exportRaw(hallSaveKey(slot)) || localStorage.getItem(hallSaveKey(slot));
     if (!raw || !JSON.parse(raw)?.state) return showHudNotice("No save in this slot.");
     const url = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
     const link = document.createElement("a");
@@ -7208,6 +7212,7 @@ function startTitleGame(continueGame = false) {
   if (!runtimeAssetsReady) return;
   restoreDeveloperGear();
   const loaded = continueGame && loadGame(storySaveKey());
+  if (continueGame && !loaded) { showHudNotice("Saved journey could not be loaded. It has not been reset."); return false; }
   if (!continueGame) {
     try { localStorage.removeItem(storySaveKey()); } catch {}
   }
@@ -7277,6 +7282,7 @@ function resetHallBattleRun() {
 function startHallBattles(continueGame = false) {
   if (!runtimeAssetsReady) return;
   const loaded = continueGame && loadGame(hallSaveKey());
+  if (continueGame && !loaded) { showHudNotice("Saved run could not be loaded. It has not been reset. Use Restore Save Files."); return false; }
   if (!loaded) resetHallBattleRun();
   state.gameMode = "hallBattles";
   state.map = "emberHallBattles";
@@ -10452,6 +10458,7 @@ function showBattleResult(kind, entries = [], after = null) {
   el.battleResultRewards.classList.toggle("hidden", kind !== "victory");
   el.battleResultRewards.innerHTML = kind === "victory" ? battleResultRowsHtml(entries) : "";
   el.battleResultContinue.setAttribute("aria-label", kind === "victory" ? "Continue" : "Return to Ember Hall");
+  saveGame();
 }
 
 function completeBattleResult() {
