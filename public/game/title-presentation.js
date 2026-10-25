@@ -16,6 +16,15 @@
   titleMenuState='press';titleMenuIndex=1;titleSubmenuIndex=0;
   function layout(){const scale=Math.min(canvas.width/(H*16/9),canvas.height/H);return{x:(canvas.width-W*scale)/2,y:(canvas.height-H*scale)/2,width:W*scale,height:H*scale,scale};}
   const centerArt=document.createElement('canvas');centerArt.width=W;centerArt.height=H;artReady.then(()=>{const c=centerArt.getContext('2d');c.drawImage(art,0,0,W,H);const fade=c.createLinearGradient(0,0,W,0);fade.addColorStop(0,'#fff0');fade.addColorStop(.025,'#fff');fade.addColorStop(.975,'#fff');fade.addColorStop(1,'#fff0');c.globalCompositeOperation='destination-in';c.fillStyle=fade;c.fillRect(0,0,W,H);}).catch(console.warn);
+  let pendingStart=null,startTimer=null,startNotice='';
+  function cancelPendingStart(){clearTimeout(startTimer);pendingStart=null;startNotice='';}
+  function waitForGame(){
+    const request=pendingStart;if(!request)return;
+    if(mode!=='title'||!slotMenu()||titleMenuIndex!==request.mode||intent!==request.intent){cancelPendingStart();return;}
+    if(runtimeAssetsReady){cancelPendingStart();titleSubmenuIndex=request.slot-1;activateTitleSelection();return;}
+    if(performance.now()-request.at>30000){pendingStart=null;startNotice='Game artwork is still loading. Please try again.';return;}
+    startTimer=setTimeout(waitForGame,100);
+  }
   const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   function diamond(x,y,r=12,selected=false){
     ctx.save();ctx.translate(x,y);ctx.strokeStyle=selected?'#ffdfa4':'#ccb389';ctx.lineWidth=1.2;
@@ -79,12 +88,13 @@
         const s=saveData(i+1),y=817+i*105,active=selected()===i,disabled=intent==='continue'&&!s.exists;
         hits.push({index:i,x:450,y:y-25,w:555,h:96});
         if(active){line(y-27,450,1000,true);line(y+66,450,1000,true);diamond(474,y+10,24,true);}else diamond(474,y+10,18);
-        const color=disabled?'#8c8195':active?'#ffe1a0':'#e0d8e3';
+        const color=disabled?'#8c8195':active?'#ffe1a0':intent==='new'&&!s.exists?'#f4e7c6':'#e0d8e3';
         text('SAVE '+(i?'II':'I'),567,y,23,2,color,true);
         const location=s.location.toUpperCase(),fit=Math.min(23,320/(location.length*.63+1));text(location,811,y,fit,2,color,true);
         if(s.exists){text(s.detail,759,y+27,20,1,'#ede4d8');if(s.date)text(s.date,759,y+52,17,1,'#d6c9dd');}
-        else text(intent==='new'?'Begin a new journey':'No saved journey',760,y+30,19,1,'#ac9db3');
+        else text(pendingStart?.slot===i+1?'Preparing game…':intent==='new'?'START NEW RUN':'No saved journey',760,y+30,19,1,intent==='new'?'#f5d887':'#ac9db3');
       }
+      if(startNotice)text(startNotice,725,1048,15,0,'#ffe1a0');
       hits.push({index:2,x:470,y:995,w:510,h:55});if(selected()===2)diamond(620,1020,14,true);text('BACK',735,1020,26,5,selected()===2?'#ffe1a0':'#e5dccf');line(1043,510,940);diamond(725,1043,6);
     }
   }
@@ -99,7 +109,7 @@
         hits.push({index:i,x:155,y:y-40,w:1135,h:190});if(active){diamond(204,y+15,31,true);line(y-43,170,1275,true);line(y+143,170,1275,true);}
         const color=disabled?'#918598':active?'#ffe1a0':'#e5dbe4';text('SAVE '+(i?'II':'I'),392,y,44,2,color,true);
         text(s.location.toUpperCase(),896,y,Math.min(44,600/(s.location.length*.65+1)),2,color,true);
-        text(s.exists?s.detail:intent==='new'?'Begin a new journey':'No saved journey',774,y+57,43,1,'#e7dcde');if(s.date&&s.exists)text(s.date,774,y+104,37,1,'#cdbfd8');
+        text(pendingStart?.slot===i+1?'Preparing game…':s.exists?s.detail:intent==='new'?'START NEW RUN':'No saved journey',774,y+57,43,1,intent==='new'&&!s.exists?'#f5d887':'#e7dcde');if(s.date&&s.exists)text(s.date,774,y+104,37,1,'#cdbfd8');
       }
       hits.push({index:2,x:185,y:926,w:1080,h:160});if(current===2)diamond(540,1005,24,true);text('BACK',740,1005,48,6,current===2?'#ffe1a0':'#e5dccf');line(1054,260,1190);return;
     }
@@ -176,6 +186,7 @@
     titleMenuState=titleMenuIndex===0?'storyActions':'hallActions';titleSubmenuIndex=[1,2].some(slot=>saveSlotSummary(titleMenuIndex,slot).exists)?1:0;playSfx('menu');
   };
   closeTitleSubmenu=function(){
+    cancelPendingStart();
     if(titleMenuState==='main')titleMenuState='press';
     else if(slotMenu()){titleMenuState=titleMenuIndex===0?'storyActions':'hallActions';titleSubmenuIndex=intent==='new'?0:1;}
     else if(actionMenu()){titleMenuState='main';titleSubmenuIndex=0;}
@@ -189,7 +200,8 @@
       intent=titleSubmenuIndex===0?'new':'continue';if(intent==='continue'&&![1,2].some(slot=>saveSlotSummary(titleMenuIndex,slot).exists))return;
       titleMenuState=titleMenuIndex===0?'story':'hall';const preferred=[0,1].find(i=>saveSlotSummary(titleMenuIndex,i+1).exists===(intent==='continue'));titleSubmenuIndex=preferred??0;playSfx('menu');return;
     }
-    if(!runtimeAssetsReady)return;
+    if(!runtimeAssetsReady){clearTimeout(startTimer);pendingStart={slot:titleSubmenuIndex+1,mode:titleMenuIndex,intent,at:performance.now()};startNotice='';waitForGame();return;}
+    cancelPendingStart();
     const slot=titleSubmenuIndex+1,exists=saveSlotSummary(titleMenuIndex,slot).exists;if(intent==='continue'&&!exists)return;
     if(intent==='new'&&exists&&!window.confirm(`Start a new ${titleMenuIndex===0?'story':'Ember Hall run'} in Save ${slot===1?'I':'II'}? This slot's existing progress will be replaced.`))return;
     activeSaveSlot=slot;playSfx('menu');if(titleMenuIndex===1)startHallBattles(intent==='continue');else startTitleGame(intent==='continue');
