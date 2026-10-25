@@ -13440,9 +13440,6 @@ function winBattle(log) {
   const hallProgress = hallStage ? hallBattleProgress() : null;
   const firstHallClear = Boolean(hallStage && recordHallBattleClear(hallStage));
   if (battle.winFlag) state.flags[battle.winFlag] = true;
-  const resonanceBeforeVictory = state.resonance;
-  state.resonance = Math.min(100, state.resonance + 15);
-  const resonanceEarned = state.resonance - resonanceBeforeVictory;
   battle.party.forEach(u => {
     const h = baseJobs[u.id];
     const gearVictoryRegen = state.gameMode === "hallBattles" ? 0 : effectValue(u.id, "battleRegen");
@@ -13505,7 +13502,6 @@ function winBattle(log) {
       rarity: drop.rarity
     });
   });
-  if (resonanceEarned) resultEntries.push({ kind: "resonance", icon: "R", label: "Resonance", value: `+${resonanceEarned}` });
   resultEntries.push({ kind: "xp", icon: "EXP", label: "EXP", value: `+${earnedXp}` });
   if (hallStage && firstHallClear) resultEntries.push({ kind: "record", icon: "#", label: "Hall Record", detail: hallStage >= HALL_BATTLE_BLUEPRINTS.length ? "All battle records cleared" : `Stage ${hallStage + 1} unlocked`, value: `${hallStage}/${HALL_BATTLE_BLUEPRINTS.length}` });
   showBattleResult("victory", resultEntries, () => {
