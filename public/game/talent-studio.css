@@ -237,3 +237,4 @@ html .game .menu[data-menu-view="skills"] .menu-body{padding:0!important;overflo
 .game .menu[data-menu-view="skills"] .ts-world{position:absolute;inset:0;overflow:hidden;z-index:-4;pointer-events:none}
 .game .menu[data-menu-view="skills"] .ts-world>.ts-scene{z-index:auto}
 .game .menu[data-menu-view="skills"] .skill-studio[data-hero="Tinus"] .ts-scene{left:-10%}
+.game .menu[data-menu-view="skills"] .ts-scene{left:-10%}.game .menu[data-menu-view="skills"] .ts-identity :is(h2,p){text-shadow:0 2px 8px #000,0 0 22px #100d18!important}
