@@ -1,0 +1,125 @@
+{
+  "tool": "Built-in imagegen",
+  "characterReferences": "Existing native portraits, unchanged; identity reference only.",
+  "heroes": [
+    {
+      "id": "verseborn",
+      "identity": "Lyricus Verseborn, youthful male bard, tousled black hair, black/gold hooded cloak, lute",
+      "palette": "gold and burgundy",
+      "statusSetting": "quiet moonlit music room with handwritten scores",
+      "gearSetting": "travelling instrument maker's alcove with cloak and lute tools",
+      "files": [
+        "status-verseborn.webp",
+        "gear-verseborn.webp",
+        "party-verseborn.webp"
+      ]
+    },
+    {
+      "id": "mira",
+      "identity": "Mira Veln, black-haired HALF-ELF female rogue, signature black top hat, black/gold cloak, TWO violet daggers, never a lute",
+      "palette": "violet and muted green",
+      "statusSetting": "hidden moonlit rose garden with a reflecting pool",
+      "gearSetting": "secret gothic armory with purple glass and velvet dagger cases",
+      "files": [
+        "status-mira.webp",
+        "gear-mira.webp",
+        "party-mira.webp"
+      ]
+    },
+    {
+      "id": "seerin",
+      "identity": "Seerin Vahl, red curly-haired horned TIEFLING female paladin in white/red/gold armor",
+      "palette": "gold and warm crimson",
+      "statusSetting": "sunrise cloister with red banners and white flowers",
+      "gearSetting": "paladin armory with white marble, gold shields and a sword rack",
+      "files": [
+        "status-seerin.webp",
+        "gear-seerin.webp",
+        "party-seerin.webp"
+      ]
+    },
+    {
+      "id": "kael",
+      "identity": "Kael Ironhand, BALD CLEAN-SHAVEN human male priest, ivory/gold robes, golden ritual staff",
+      "palette": "cyan and deep violet",
+      "statusSetting": "silent ward library with blue rune light",
+      "gearSetting": "ritual vestment chamber with pale stone, gold staff stands and blue wards",
+      "files": [
+        "status-kael.webp",
+        "gear-kael.webp",
+        "party-kael.webp"
+      ]
+    },
+    {
+      "id": "torren",
+      "identity": "Torren Stonekin, broad stocky DWARF male, long red-brown beard and hair, heavy rune armor",
+      "palette": "copper and weathered stone",
+      "statusSetting": "ancestral stone courtyard under a mountain arch",
+      "gearSetting": "dwarven forge equipment room with stone shields and copper tools",
+      "files": [
+        "status-torren.webp",
+        "gear-torren.webp",
+        "party-torren.webp"
+      ]
+    },
+    {
+      "id": "glimmer",
+      "identity": "Glimmer, tiny female GNOME, bright pink hair, brass goggles, white inventor coat, mechanical wrench",
+      "palette": "pink and cyan",
+      "statusSetting": "cozy inventor's study with miniature blue star machine",
+      "gearSetting": "brass engineering equipment bay with protective gear and workbench",
+      "files": [
+        "status-glimmer.webp",
+        "gear-glimmer.webp",
+        "party-glimmer.webp"
+      ]
+    },
+    {
+      "id": "sparky",
+      "identity": "Sparky, TINY cute purple/black dragonling with big violet eyes, little wings, never humanoid/adult",
+      "palette": "violet and amber",
+      "statusSetting": "quiet crystal garden with a moonlit pool",
+      "gearSetting": "small dragon's treasure alcove with jewelry and protective trinkets",
+      "files": [
+        "status-sparky.webp",
+        "gear-sparky.webp",
+        "party-sparky.webp"
+      ]
+    },
+    {
+      "id": "tinus",
+      "identity": "Tinus, sturdy human man, black B beanie, sunglasses, beard, black/gold jacket, steaming blue magical coffee",
+      "palette": "midnight blue and gold",
+      "statusSetting": "quiet midnight study with coffee, starlight and blank legal forms",
+      "gearSetting": "astral equipment vault with gold astrolabes and blue defensive wards",
+      "files": [
+        "status-tinus.webp",
+        "gear-tinus.webp",
+        "party-tinus.webp"
+      ]
+    }
+  ],
+  "support": [
+    {
+      "file": "items.webp",
+      "scene": "an atmospheric medieval alchemist's workshop, richly painted satchel, potions, tiny specimen drawers and softly glowing violet liquid, warm candlelight; focal objects on LEFT quarter"
+    },
+    {
+      "file": "world.webp",
+      "scene": "an open illustrated combat field manual on an antique wooden library desk, ivory pages with faint abstract diagrams but NO readable writing, brass instruments and luminous blue rune motes; book on left quarter"
+    },
+    {
+      "file": "lore.webp",
+      "scene": "an ancient field archive chamber, carved stone beast reliefs and tall antique specimen cabinets, dark crimson and smoky violet, loose scrolls and warm lanterns, empty space for selected monster portrait"
+    },
+    {
+      "file": "system.webp",
+      "scene": "a quiet midnight observatory, beautiful brass astrolabe on LEFT quarter, deep blue star-filled windows, soft violet starlight and gold highlights, peaceful"
+    },
+    {
+      "file": "developer.webp",
+      "scene": "an arcane engineer's planning desk, blue crystals, gold drafting instruments, blank parchment diagrams and brass controls, dark blue laboratory, focal objects on LEFT quarter"
+    }
+  ],
+  "prompt": "One opaque panoramic 16:9 finished painterly anime-fantasy RPG scene, no UI/lettering/frames. Character integrated into actual scenery with perspective, contact shadows, reflected light and atmospheric overlap; never a cutout. Subject in left 35%, quieter continuous environment to right. Status: new thoughtful waist-up pose in personal setting. Gear: new full-body pose inspecting/adjusting equipment, complete head/hands/boots or paws visible, own armory. Party: new full-body relaxed ready-for-adventure pose in warm timber/stone preparation hall. Preserve exact native identity and individual color palette. Support backgrounds have thematic objects on left and no characters."
+}
