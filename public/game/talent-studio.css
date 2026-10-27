@@ -104,3 +104,136 @@ html .game .menu[data-menu-view="skills"] .menu-body{padding:0!important;overflo
 @media(max-width:1150px){.game .menu[data-menu-view="skills"] .skill-studio{grid-template-columns:minmax(150px,.7fr) minmax(320px,1.5fr) minmax(225px,1fr)}.game .menu[data-menu-view="skills"] .ts-workspace{padding:0 13px}.game .menu[data-menu-view="skills"] .ts-detail{padding:20px 15px}.game .menu[data-menu-view="skills"] .ts-identity{padding:0 15px 12px}.game .menu[data-menu-view="skills"] .ts-view-tabs>span{display:none}.game .menu[data-menu-view="skills"] .ts-node-name{font-size:10px}.game .menu[data-menu-view="skills"] .ts-points{font-size:10px;padding:7px}}
 @media(max-height:740px){.game .menu[data-menu-view="skills"] .ts-top{padding-top:12px;padding-bottom:10px}.game .menu[data-menu-view="skills"] .ts-portrait{max-height:230px}.game .menu[data-menu-view="skills"] .ts-detail-main .ts-detail-icon{width:72px;height:72px}.game .menu[data-menu-view="skills"] .ts-roster{gap:5px;padding:10px}.game .menu[data-menu-view="skills"] .ts-identity{padding-bottom:9px}}
 @media(prefers-reduced-motion:reduce){.game .menu[data-menu-view="skills"] .skill-studio *{transition:none!important;scroll-behavior:auto!important}}
+
+/* Illustrated, atmospheric pass: portraits inhabit the scene rather than a card. */
+.game .menu[data-menu-view="skills"] .skill-studio{position:relative;isolation:isolate;background:#100d18;grid-template-columns:minmax(210px,1fr) minmax(400px,1.64fr) minmax(270px,1.06fr)}
+.game .menu[data-menu-view="skills"] .skill-studio::before{content:'';position:absolute;inset:0;z-index:-3;background:linear-gradient(90deg,#100d1822 0%,#100d18b5 39%,#100d18b0 72%,#100d1855),url('assets/talent-studio-352/sanctum.webp') center/cover;opacity:.8;pointer-events:none}
+.game .menu[data-menu-view="skills"] .skill-studio::after{content:'';position:absolute;inset:0;z-index:-2;background:radial-gradient(ellipse at 12% 35%,color-mix(in srgb,var(--ts-accent) 14%,transparent),transparent 42%),radial-gradient(ellipse at 94% 5%,color-mix(in srgb,var(--ts-second) 8%,transparent),transparent 45%);pointer-events:none}
+.game .menu[data-menu-view="skills"] .menu-tabs button.is-active{color:var(--ts-accent)!important;border-bottom-color:var(--ts-accent)!important}
+.game .menu[data-menu-view="skills"] .ts-profile{position:relative;z-index:0;isolation:auto;overflow:visible;border:0;background:transparent;justify-content:flex-end}
+.game .menu[data-menu-view="skills"] .ts-profile::before{inset:0 -90% 0 0;z-index:-3;border:0;border-radius:0;box-shadow:none;background-image:url('assets/talent-studio-352/environments.webp');background-size:400% 200%;background-position:calc(var(--ts-scene-x)*100%/3) calc(var(--ts-scene-y)*100%);opacity:.66;mask-image:linear-gradient(90deg,#000 10%,#000b 50%,transparent 97%)}
+.game .menu[data-menu-view="skills"] .ts-profile::after{content:'';position:absolute;inset:0 -20% 0 0;z-index:-1;background:linear-gradient(0deg,#100d18f5 2%,#100d18cf 21%,#100d1880 34%,transparent 62%);pointer-events:none}
+.game .menu[data-menu-view="skills"] .ts-profile>.ts-portrait{position:absolute;z-index:-2;left:-24%;top:-4%;width:163%;height:106%;max-height:none!important;min-height:0;padding:0;object-fit:cover;object-position:50% 8%;filter:drop-shadow(8px 0 28px color-mix(in srgb,var(--ts-accent) 18%,transparent));mask-image:linear-gradient(90deg,#000 0%,#000 53%,transparent 98%);pointer-events:none}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Sparky"] .ts-portrait{object-fit:contain;top:-8%;height:94%;left:-17%;width:155%}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Tinus"] .ts-portrait{object-fit:contain;top:-5%;height:95%;left:-15%;width:150%}
+.game .menu[data-menu-view="skills"] .ts-identity{position:relative;padding:0 24px 16px;text-shadow:0 2px 12px #000;z-index:1}
+.game .menu[data-menu-view="skills"] .ts-identity h2{font-size:clamp(32px,3.5vw,52px)!important;margin:8px 0;color:#fff0d8!important}
+.game .menu[data-menu-view="skills"] .ts-identity .ts-eyebrow{font-size:10px;letter-spacing:.22em;text-shadow:0 0 15px var(--ts-accent)}
+.game .menu[data-menu-view="skills"] .ts-identity>p{color:#e4d7e6!important;font-size:12px!important}
+.game .menu[data-menu-view="skills"] .ts-level{display:none}
+.game .menu[data-menu-view="skills"] .ts-identity .xp-progress{margin-top:16px}
+.game .menu[data-menu-view="skills"] .ts-roster{position:relative;z-index:1;gap:8px;padding:15px 17px 18px;background:linear-gradient(#100d1833,#100d18a0);border:0}
+.game .menu[data-menu-view="skills"] .ts-roster button{background:#100d1840;border-radius:3px!important;padding:2px;transition:filter .18s}
+.game .menu[data-menu-view="skills"] .ts-roster img{height:clamp(37px,5.6vh,64px);border-radius:2px;filter:drop-shadow(0 2px 5px #000)}
+.game .menu[data-menu-view="skills"] .ts-roster button.is-selected{box-shadow:0 0 17px color-mix(in srgb,var(--ts-accent) 24%,transparent)!important;background:color-mix(in srgb,var(--ts-accent) 13%,transparent)}
+.game .menu[data-menu-view="skills"] .ts-roster button:hover{filter:brightness(1.2)}
+.game .menu[data-menu-view="skills"] .ts-roster span{font-size:10px;color:#d8cbdc}
+.game .menu[data-menu-view="skills"] .ts-workspace{position:relative;z-index:1;padding:0 22px;background:linear-gradient(90deg,transparent,#100d1833 20%,#100d1855)}
+.game .menu[data-menu-view="skills"] .ts-workspace::before{content:'';position:absolute;z-index:-1;left:10%;top:28%;width:80%;aspect-ratio:1;background-image:url('assets/talent-studio-352/icons.webp');background-size:400% 400%;background-position:calc(var(--ts-sigil-x)*100%/3) calc(var(--ts-sigil-y)*100%/3);mix-blend-mode:screen;opacity:.035;pointer-events:none;mask-image:radial-gradient(#000 40%,transparent 70%)}
+.game .menu[data-menu-view="skills"] .ts-top{padding:17px 0 8px}
+.game .menu[data-menu-view="skills"] .ts-top h2{font-size:clamp(30px,3vw,46px)!important;text-shadow:0 0 30px color-mix(in srgb,var(--ts-accent) 16%,transparent)}
+.game .menu[data-menu-view="skills"] .ts-points{font-size:12px;background:#100d18a0;box-shadow:inset 0 0 18px color-mix(in srgb,var(--ts-accent) 6%,transparent)}
+.game .menu[data-menu-view="skills"] .ts-view-tabs button{font-size:13px}.game .menu[data-menu-view="skills"] .ts-view-tabs>span{font-size:10px;color:var(--ts-second)}
+.game .menu[data-menu-view="skills"] .ts-tree-intro{padding-bottom:12px}.game .menu[data-menu-view="skills"] .ts-tree-intro>small{display:none}
+.game .menu[data-menu-view="skills"] .ts-tier{display:grid;grid-template-columns:26px minmax(0,1fr);align-items:start;padding:0 0 7px;min-height:111px}
+.game .menu[data-menu-view="skills"] .ts-tier>header{display:flex;flex-direction:column;justify-content:center;gap:5px;align-items:center;padding:21px 0 0;margin:0;border:0}
+.game .menu[data-menu-view="skills"] .ts-tier>header>strong{color:#dec69a;font:400 19px Georgia,serif}
+.game .menu[data-menu-view="skills"] .ts-tier>header>small{font-size:8px;text-align:center;white-space:nowrap;color:#9c8ca9}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"]{display:block;padding-bottom:16px;min-height:0}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"]>header{flex-direction:row;justify-content:space-between;align-items:center;padding:0 0 7px;border-bottom:1px solid #d2b78a22;margin-bottom:7px}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"]>header>strong{font:500 11px 'Segoe UI',sans-serif;color:#ddceba}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"]>header>small{font-size:9px}
+.game .menu[data-menu-view="skills"] .ts-nodes{gap:8px}
+.game .menu[data-menu-view="skills"] .ts-nodes::before{top:36px;left:16%;right:16%;background:linear-gradient(90deg,#d2ae7055,color-mix(in srgb,var(--ts-accent) 45%,transparent),#d2ae7055)}
+.game .menu[data-menu-view="skills"] .ts-node{padding:2px 3px 8px;min-height:0;overflow:visible}
+.game .menu[data-menu-view="skills"] .ts-tier:not([data-tier="0"]):not([data-tier="5"]) .ts-node::before{content:'';position:absolute;left:50%;top:70px;bottom:-28px;width:1px;background:linear-gradient(color-mix(in srgb,var(--ts-accent) 30%,transparent),#d5bd8422);z-index:-1}
+.game .menu[data-menu-view="skills"] .ts-node:hover{background:transparent}
+.game .menu[data-menu-view="skills"] .ts-node .ts-icon{width:70px;height:70px;box-shadow:0 0 0 1px #c5a77399,0 0 0 4px #100e1988!important;transition:transform .2s,box-shadow .2s,filter .2s}
+.game .menu[data-menu-view="skills"] .ts-node:hover .ts-icon{transform:translateY(-3px);filter:brightness(1.18)}
+.game .menu[data-menu-view="skills"] .ts-node.is-locked:hover .ts-icon{filter:saturate(.3) brightness(.8)}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-icon{width:44px;height:44px}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes::before{top:23px}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-node-name{font-size:10px;margin-top:8px}
+.game .menu[data-menu-view="skills"] .ts-node-name{font-size:12px;margin-top:10px;color:#e4d8e9;text-shadow:0 1px 8px #000;line-height:1.3}
+.game .menu[data-menu-view="skills"] .ts-node-status{font-size:8px;margin-top:4px;min-height:10px;background:#100d1870;border-radius:20px;padding:1px 5px}
+.game .menu[data-menu-view="skills"] .ts-node.is-selected .ts-icon{box-shadow:0 0 0 2px var(--ts-accent),0 0 0 5px #100e19aa,0 0 0 6px color-mix(in srgb,var(--ts-accent) 55%,transparent),0 0 35px color-mix(in srgb,var(--ts-accent) 50%,transparent)!important}
+.game .menu[data-menu-view="skills"] .ts-node.is-selected .ts-icon::after{inset:-9px;border-color:color-mix(in srgb,var(--ts-accent) 45%,transparent);animation:ts-ring 3s ease-in-out infinite}
+.game .menu[data-menu-view="skills"] .ts-detail{position:relative;z-index:1;background:linear-gradient(180deg,#100d1833,#100d18e8 70%);border-left:1px solid #dec49322;padding:25px 25px 40px;backdrop-filter:blur(2px)}
+.game .menu[data-menu-view="skills"] .ts-detail-main .ts-detail-icon{width:108px;height:108px;margin:10px auto 25px;box-shadow:0 0 0 1px var(--ts-accent),0 0 0 7px #15111d88,0 0 0 8px #b99b6544,0 0 45px color-mix(in srgb,var(--ts-accent) 23%,transparent)!important}
+.game .menu[data-menu-view="skills"] .ts-detail h2{font-size:clamp(25px,2.5vw,36px)!important}
+.game .menu[data-menu-view="skills"] .ts-description{font-size:14px!important;line-height:1.8!important;color:#e4d9e8!important}
+.game .menu[data-menu-view="skills"] .ts-learn{font-size:13px!important;padding:15px 10px;background:linear-gradient(100deg,color-mix(in srgb,var(--ts-accent) 36%,#1b1228),color-mix(in srgb,var(--ts-accent) 14%,#1b1228));border-radius:4px 17px 4px 17px!important;box-shadow:inset 0 0 25px color-mix(in srgb,var(--ts-accent) 8%,transparent),0 0 20px color-mix(in srgb,var(--ts-accent) 8%,transparent)!important}
+.game .menu[data-menu-view="skills"] .ts-state{font-size:12px!important}
+.game .menu[data-menu-view="skills"] .ts-bonuses h3{font-size:18px!important}
+.game .menu[data-menu-view="skills"] .ts-bonuses p{font-size:11px!important}.game .menu[data-menu-view="skills"] .ts-bonuses strong{font-size:12px}
+.game .menu[data-menu-view="skills"] .ts-skill-row{background:linear-gradient(90deg,#100d1833,transparent);min-height:80px}
+.game .menu[data-menu-view="skills"] .ts-skill-row .ts-icon{width:52px;height:52px}
+.game .menu[data-menu-view="skills"] .ts-skill-row strong{font-size:14px}.game .menu[data-menu-view="skills"] .ts-skill-row small{font-size:11px}
+.game .menu[data-menu-view="skills"] .ts-atmosphere{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.game .menu[data-menu-view="skills"] .ts-atmosphere i{position:absolute;left:8%;top:70%;width:3px;height:3px;background:var(--ts-accent);border-radius:50%;box-shadow:0 0 10px 3px color-mix(in srgb,var(--ts-accent) 35%,transparent);animation:ts-mote 12s ease-in-out infinite}
+.game .menu[data-menu-view="skills"] .ts-atmosphere i:nth-child(2){left:24%;top:50%;animation-delay:-4s}.game .menu[data-menu-view="skills"] .ts-atmosphere i:nth-child(3){left:35%;top:80%;animation-delay:-7s}.game .menu[data-menu-view="skills"] .ts-atmosphere i:nth-child(4){left:88%;top:30%;animation-delay:-2s}.game .menu[data-menu-view="skills"] .ts-atmosphere i:nth-child(5){left:70%;top:15%;animation-delay:-9s}
+.game .menu[data-menu-view="skills"] .ts-lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0 0 15px 26px;gap:8px;color:var(--ts-accent);font:400 11px Georgia,serif;text-transform:uppercase;letter-spacing:.16em;text-align:center;text-shadow:0 0 16px color-mix(in srgb,var(--ts-accent) 35%,transparent)}
+.game .menu[data-menu-view="skills"] .ts-lanes>span:nth-child(2){color:#d0b6df}.game .menu[data-menu-view="skills"] .ts-lanes>span:nth-child(3){color:var(--ts-second)}
+.game .menu[data-menu-view="skills"] .ts-view-tabs>span{display:none}
+.game .menu[data-menu-view="skills"] .ts-detail{background-color:#100d18;background-image:linear-gradient(0deg,#100d18f5 0%,#100d18e8 38%,#100d18b8 70%,#100d1855 100%),url('assets/talent-studio-352/environments.webp');background-size:100% 100%,400% 200%;background-position:0 0,calc(var(--ts-scene-x)*100%/3) calc(var(--ts-scene-y)*100%);background-repeat:no-repeat;backdrop-filter:none}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes{margin-left:26px}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes::before{top:36px}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes .ts-icon{width:70px;height:70px}
+.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-node-name{font-size:12px;margin-top:10px}
+@media(max-width:1150px){.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes .ts-icon{width:60px;height:60px}.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-node-name{font-size:11px}.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes::before{top:31px}}
+.game .menu[data-menu-view="skills"] .ts-node-name{min-height:2.6em}
+
+/* Opaque character art, with the environment behind its silhouette. */
+.game .menu[data-menu-view="skills"] .ts-profile>.ts-portrait{left:-10%;top:1%;width:132%;height:86%;object-fit:contain;object-position:50% 0%;mask-image:linear-gradient(0deg,transparent 0%,#000 18%,#000 100%)}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Sparky"] .ts-portrait{left:-10%;top:4%;width:140%;height:83%}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Tinus"] .ts-portrait{left:-6%;top:8%;width:135%;height:80%}
+.game .menu[data-menu-view="skills"] .ts-profile::after{background:linear-gradient(0deg,#100d18f5 0%,#100d18d9 13%,#100d1840 30%,transparent 45%)}
+.game .menu[data-menu-view="skills"] .ts-identity h2{font-size:clamp(28px,2.8vw,44px)!important;text-transform:uppercase;letter-spacing:.025em!important;margin:0 0 7px}
+.game .menu[data-menu-view="skills"] .ts-identity .ts-character-title{font:400 15px/1.5 Georgia,'Times New Roman',serif!important;letter-spacing:.08em!important;color:#e7d7e8!important;margin:0 0 8px}
+.game .menu[data-menu-view="skills"] .ts-identity .ts-eyebrow{font-size:9px;letter-spacing:.18em}
+.game .menu[data-menu-view="skills"] .ts-tier .ts-node-name,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-node-name{font-family:Georgia,'Times New Roman',serif!important;font-size:13px;line-height:1.3;letter-spacing:.01em}
+.game .menu[data-menu-view="skills"] .ts-node-status{font-family:Georgia,serif;font-size:9px;letter-spacing:.025em}
+.game .menu[data-menu-view="skills"] .ts-lanes{font-size:13px;letter-spacing:.19em;padding-top:7px;padding-bottom:21px}
+.game .menu[data-menu-view="skills"] .ts-detail-main>.ts-description{font:400 16px/1.7 Georgia,'Times New Roman',serif!important;color:#eadfe9!important;letter-spacing:.005em}
+.game .menu[data-menu-view="skills"] .ts-benefit{display:block;color:var(--ts-accent);font:400 27px/1.4 Georgia,serif;margin:0 0 15px;text-shadow:0 0 22px color-mix(in srgb,var(--ts-accent) 25%,transparent)}
+.game .menu[data-menu-view="skills"] .ts-detail-main .ts-eyebrow{font-size:10px;letter-spacing:.22em}
+.game .menu[data-menu-view="skills"] .ts-state{font-family:Georgia,serif!important;font-size:14px!important}
+.game .menu[data-menu-view="skills"] .ts-learn{font:400 15px/1.4 Georgia,'Times New Roman',serif!important;letter-spacing:.025em;padding:14px 15px;border:1px solid color-mix(in srgb,var(--ts-accent) 65%,transparent)!important;border-radius:0!important;clip-path:polygon(5% 0,95% 0,100% 50%,95% 100%,5% 100%,0 50%);outline:0;background:linear-gradient(110deg,color-mix(in srgb,var(--ts-accent) 30%,#241333),#251538 55%,color-mix(in srgb,var(--ts-accent) 22%,#241333));color:#f6e7ff}
+.game .menu[data-menu-view="skills"] .ts-bonuses h3{font:400 20px/1.4 Georgia,'Times New Roman',serif!important;color:#ead1a2}
+.game .menu[data-menu-view="skills"] .ts-bonuses strong{font:400 13px/1.5 Georgia,serif;color:#e7dce9}
+.game .menu[data-menu-view="skills"] .ts-bonuses p{font:400 12px/1.65 Georgia,'Times New Roman',serif!important;color:#bdb0c8!important}
+.game .menu[data-menu-view="skills"] .ts-skill-row strong{font:400 16px/1.4 Georgia,'Times New Roman',serif}
+.game .menu[data-menu-view="skills"] .ts-points{font:400 13px Georgia,serif}
+.game .menu[data-menu-view="skills"] .ts-view-tabs button{font:400 14px Georgia,serif!important}
+.game .menu[data-menu-view="skills"] .menu-tabs button{font:400 14px/1.3 Georgia,'Times New Roman',serif!important}
+@media(max-width:1150px){.game .menu[data-menu-view="skills"] .ts-tier .ts-node-name,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-node-name{font-size:12px}.game .menu[data-menu-view="skills"] .ts-lanes{font-size:11px;letter-spacing:.13em}.game .menu[data-menu-view="skills"] .ts-detail-main>.ts-description{font-size:15px!important}}
+.game .menu[data-menu-view="skills"] .ts-profile>.ts-portrait{height:auto;aspect-ratio:1;mask-image:linear-gradient(0deg,transparent 0%,#000 12%,#000 100%)}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Sparky"] .ts-portrait,.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Tinus"] .ts-portrait{height:auto;aspect-ratio:1}
+.game .menu[data-menu-view="skills"] .ts-identity .xp-progress{display:block;margin-top:15px}
+.game .menu[data-menu-view="skills"] .ts-identity .xp-progress>span{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.game .menu[data-menu-view="skills"] .ts-identity .xp-progress>span>b{font:400 17px Georgia,serif;color:#ead3a7}
+.game .menu[data-menu-view="skills"] .ts-identity .xp-progress>i{display:block;height:4px;border:0;background:#ffffff18;border-radius:4px;overflow:visible}
+.game .menu[data-menu-view="skills"] .ts-identity .xp-progress>i>em{display:block;height:4px;background:linear-gradient(90deg,var(--ts-accent),var(--ts-second));box-shadow:0 0 12px color-mix(in srgb,var(--ts-accent) 40%,transparent);border-radius:4px}
+.game .menu[data-menu-view="skills"] .ts-tier-count{display:block;font:400 10px/1.5 'Segoe UI',sans-serif;color:#ae9fba;margin-top:5px}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Tinus"] .ts-portrait{aspect-ratio:352/248}
+@keyframes ts-ring{50%{opacity:.35;transform:scale(1.04)}}
+@keyframes ts-mote{0%,100%{opacity:0;transform:translate(0,0)}35%,65%{opacity:.55}90%{transform:translate(12px,-90px)}}
+@media(max-width:1150px){.game .menu[data-menu-view="skills"] .skill-studio{grid-template-columns:minmax(165px,.8fr) minmax(330px,1.5fr) minmax(235px,1fr)}.game .menu[data-menu-view="skills"] .ts-node .ts-icon{width:60px;height:60px}.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-icon{width:40px;height:40px}.game .menu[data-menu-view="skills"] .ts-detail{padding:20px 16px}.game .menu[data-menu-view="skills"] .ts-node-name{font-size:11px}}
+@media(max-height:740px){.game .menu[data-menu-view="skills"] .ts-detail-main .ts-detail-icon{width:80px;height:80px}.game .menu[data-menu-view="skills"] .ts-identity h2{font-size:32px!important}.game .menu[data-menu-view="skills"] .ts-roster{padding:8px 13px 14px;gap:5px}.game .menu[data-menu-view="skills"] .ts-identity{padding:0 18px 12px}}
+@media(prefers-reduced-motion:reduce){.game .menu[data-menu-view="skills"] .skill-studio *,.game .menu[data-menu-view="skills"] .skill-studio *::after{animation:none!important}}
+
+/* One painted world, including its character, spans all three columns. */
+.game .menu[data-menu-view="skills"] .ts-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 35%;z-index:-4;pointer-events:none;image-rendering:auto;opacity:0}
+.game .menu[data-menu-view="skills"] .has-scene .ts-scene{opacity:1}
+.game .menu[data-menu-view="skills"] .has-scene::before{background:linear-gradient(90deg,transparent 0%,#100d1810 23%,#100d188c 35%,#100d18c9 48%,#100d18bb 73%,#100d1866 100%);opacity:1}
+.game .menu[data-menu-view="skills"] .has-scene .ts-profile::before{display:none}
+.game .menu[data-menu-view="skills"] .has-scene .ts-profile>.ts-portrait{visibility:hidden}
+.game .menu[data-menu-view="skills"] .has-scene .ts-profile::after{inset:0 -25% 0 0;background:linear-gradient(0deg,#100d18fc 0%,#100d18e8 15%,#100d18a0 29%,transparent 48%)}
+.game .menu[data-menu-view="skills"] .has-scene .ts-workspace{background:linear-gradient(90deg,#100d1822,#100d1822)}
+.game .menu[data-menu-view="skills"] .has-scene .ts-detail{background:linear-gradient(180deg,#100d1833,#100d18b3 68%,#100d18e8);background-size:100% 100%}
+@media(max-width:1150px){.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes .ts-icon{width:60px;height:60px}}
+.game .menu[data-menu-view="skills"] .ts-scene{left:-6%;width:110%;max-width:none}
+
+.game .menu[data-menu-view="skills"] .ts-world{position:absolute;inset:0;overflow:hidden;z-index:-4;pointer-events:none}
+.game .menu[data-menu-view="skills"] .ts-world>.ts-scene{z-index:auto}
+.game .menu[data-menu-view="skills"] .skill-studio[data-hero="Tinus"] .ts-scene{left:-10%}
