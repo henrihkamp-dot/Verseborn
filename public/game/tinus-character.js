@@ -53,7 +53,8 @@
 
   rank0Choices[ID] = [
     skill('Read the Fine Print', 'magic', 'Tech', 0, 7, '1.35× MAG Tech damage to one enemy; 25% extra damage if the target has a negative status.', { coefficient: 1.35, afflictedBonus: .25, rank0: true }),
-    skill('A Plan With Room', 'magic', 'Sigil', 0, 7, 'Grant one living ally 20% MAG and 15% Evasion for 2 incoming attacks.', { targetSide: 'ally', rank0: true, buffs: [{ type: 'magicUp', value: .2, duration: 2 }, { type: 'evasion', value: .15, duration: 2 }] })
+    skill('A Plan With Room', 'magic', 'Sigil', 0, 7, 'Grant one living ally 20% MAG and 15% Evasion for 2 incoming attacks.', { targetSide: 'ally', rank0: true, buffs: [{ type: 'magicUp', value: .2, duration: 2 }, { type: 'evasion', value: .15, duration: 2 }] }),
+    skill('Protective Clause', 'magic', 'Tech', 0, 7, 'Grant one living ally a 25% Barrier for 3 actions, reducing incoming damage.', { targetSide: 'ally', rank0: true, buffs: [{ type: 'barrier', value: .25, duration: 3 }] })
   ];
   const restore = skill('Amend the Damage', 'magic', 'Heart', -40, 9, 'Heal the most wounded living ally for 40 + 0.8× MAG and cleanse one negative effect.', { healScaling: .8, cleanse: true });
   const circuit = skill('Open Circuit', 'magic', 'Tech', 0, 11, '1.35× MAG Tech damage to all enemies, with a 55% base chance to inflict 15% Magic Defense Down for 2 actions.', { coefficient: 1.35, allEnemies: true, status: { type: 'magicDefenseDown', value: .15, duration: 2, chance: .55 } });
