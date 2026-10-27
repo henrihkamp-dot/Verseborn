@@ -107,7 +107,7 @@ html .game .menu[data-menu-view="skills"] .menu-body{padding:0!important;overflo
 
 /* Illustrated, atmospheric pass: portraits inhabit the scene rather than a card. */
 .game .menu[data-menu-view="skills"] .skill-studio{position:relative;isolation:isolate;background:#100d18;grid-template-columns:minmax(210px,1fr) minmax(400px,1.64fr) minmax(270px,1.06fr)}
-.game .menu[data-menu-view="skills"] .skill-studio::before{content:'';position:absolute;inset:0;z-index:-3;background:linear-gradient(90deg,#100d1822 0%,#100d18b5 39%,#100d18b0 72%,#100d1855),url('assets/talent-studio-352/sanctum.webp') center/cover;opacity:.8;pointer-events:none}
+.game .menu[data-menu-view="skills"] .skill-studio::before{content:'';position:absolute;inset:0;z-index:-3;background:linear-gradient(90deg,#100d1822 0%,#100d18b5 39%,#100d18b0 72%,#100d1855);opacity:.8;pointer-events:none}
 .game .menu[data-menu-view="skills"] .skill-studio::after{content:'';position:absolute;inset:0;z-index:-2;background:radial-gradient(ellipse at 12% 35%,color-mix(in srgb,var(--ts-accent) 14%,transparent),transparent 42%),radial-gradient(ellipse at 94% 5%,color-mix(in srgb,var(--ts-second) 8%,transparent),transparent 45%);pointer-events:none}
 .game .menu[data-menu-view="skills"] .menu-tabs button.is-active{color:var(--ts-accent)!important;border-bottom-color:var(--ts-accent)!important}
 .game .menu[data-menu-view="skills"] .ts-profile{position:relative;z-index:0;isolation:auto;overflow:visible;border:0;background:transparent;justify-content:flex-end}

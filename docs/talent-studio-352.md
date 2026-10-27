@@ -32,3 +32,5 @@ Publication and GitHub synchronization are separate steps; complete both after v
 ## Fit-to-screen refinement (355)
 
 All six talent rows fit at once at 1280x720 and larger desktop layouts. Long skill lists use page controls rather than scrolling. Ability details and build bonuses have separate views; chosen talent details are paginated four at a time with equipped proc chances and prolonging effects directly underneath. Selected-character artwork receives a brief soft light bloom and its roster portrait stays illuminated in that character's color. Reset talents is available in the top bar using the native Kael recruitment requirement and native reset action.
+
+The earlier shared sanctum draft is retained in source for provenance but no longer referenced or included in the compact deployment; the final full character paintings supply the central scenery.
