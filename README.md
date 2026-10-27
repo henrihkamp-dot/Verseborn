@@ -1,29 +1,29 @@
 # Verseborn: Episodic JRPG
 
-## Source import complete
+Current game source synchronized from the maintained Codex/Sites project on 27 October 2026. Game files match Sites source commit `85cf148009cacf39a84ececac98c7285d6406f14`; existing GitHub comic documentation and history are preserved.
 
-This repository contains **all 605 source files** from Sites release 153. Every imported Git blob was verified against the recovery manifest on 8 October 2026. No game changes or Sites deployments were made. A clean rebuild and recovery of the optimized deployment package remain unverified.
+Live game: https://verseborn-episodic-jrpg.benji-pendragon.chatgpt.site/
 
-Live game: https://verseborn-episodic-jrpg.benji-pendragon.chatgpt.site
+## Finding Tinus
 
-Original Sites source commit: `09c8bb00502d117910a1ee46e7d0ed5e154e0fa4` (release 153, 6 October 2026).
+- Character abilities and signature gear: [public/game/tinus-character.js](public/game/tinus-character.js)
+- Recruitment: [public/game/tinus-recruitment.js](public/game/tinus-recruitment.js)
+- Portrait, battle art, equipment and animation sheets: [public/game/assets/tinus/](public/game/assets/tinus/)
+- Animated idle sprites: [public/game/assets/sprites/flameguard-idle/tinus-cosmic-v6.webp](public/game/assets/sprites/flameguard-idle/tinus-cosmic-v6.webp)
+- Whirlpool battles: [public/game/tinus-whirlpool.js](public/game/tinus-whirlpool.js)
+- Whirlpool encounter artwork: [public/game/assets/tinus-gauntlet/](public/game/assets/tinus-gauntlet/)
+- The Inn Between Worlds: [public/game/lost-dimensions.js](public/game/lost-dimensions.js) and [artwork](public/game/assets/lost-dimensions/)
 
-See [recovery/source-manifest.json](recovery/source-manifest.json) for the complete source inventory, exact Git blob hashes and completed import status.
+## Build and run
 
-## Remaining deployment recovery
+Use Node.js 22.13 or newer and install the dependencies from `pnpm-lock.yaml`. Run `pnpm build` for the production build and `pnpm start` to serve it. A fresh build of this game source completed successfully on 26 October 2026. The game is served at `/game/`.
 
-Recover the optimized deployment package separately. Existing packaging scripts reference prior runtime directories and Windows-specific paths; a clean rebuild is not yet verified. Preserve the imported source and its manifest as the release 153 baseline before changing those scripts.
+The active game uses `title-presentation.js`. The earlier GitHub `title-modern.js` experiment is retained for history but is not loaded by the current game.
 
-Browser-local game saves are separate from source control. Changes pushed here are not automatically deployed to Sites.
+## Source history and publishing
 
-## Development and synchronization
+The `recovery/source-manifest.json` file documents the original release 153 import; it is a historical baseline, not the current source inventory. The `docs/comics`, `docs/new-run` and `docs/reference-sheets` directories preserve the separately added GitHub references.
 
-The maintained Codex/Sites checkout is the authoritative development source.
-Its existing `origin` remote remains the Sites source repository; the additional
-`github` remote points to https://github.com/henrihkamp-dot/Verseborn.git.
-The independent GitHub import history has been merged without changing game files.
+GitHub and Sites are separate destinations. A GitHub push does not publish the live game. Future game releases should be synchronized to this repository as well as published through Sites. Fetch and review independent GitHub changes before synchronization, and never force-push over them.
 
-After verified changes, synchronize committed source to GitHub with
-`git push github main`. Publish separately through the existing Sites workflow;
-a GitHub push alone does not update the live game. Fetch and review any independent
-GitHub changes before synchronization, and never force-push over them.
+Browser saves and private save backups are separate from this repository and are not included.
