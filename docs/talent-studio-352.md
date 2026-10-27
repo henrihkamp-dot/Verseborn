@@ -28,3 +28,7 @@ Generated with the built-in image generation tool, using each original native po
 For the retained compact deployment bundle, run the existing runtime sync, copy this new icon atlas into `dist/client/game/assets/talent-studio-352/`, remove deployment comments, and run `tools/compact_runtime_whitespace_352.cjs`. The latter removes formatting from the runtime scripts with compression and identifier mangling disabled and verifies equivalent parsed operations before writing. Run `tools/compact_css_353.cjs` as well to remove deployment-only CSS formatting with syntax minification disabled. Source files remain readable. This preserves headroom under the deployment archive limit without changing artwork quality or executable logic.
 
 Publication and GitHub synchronization are separate steps; complete both after verified changes.
+
+## Fit-to-screen refinement (355)
+
+All six talent rows fit at once at 1280x720 and larger desktop layouts. Long skill lists use page controls rather than scrolling. Ability details and build bonuses have separate views; chosen talent details are paginated four at a time with equipped proc chances and prolonging effects directly underneath. Selected-character artwork receives a brief soft light bloom and its roster portrait stays illuminated in that character's color. Reset talents is available in the top bar using the native Kael recruitment requirement and native reset action.
