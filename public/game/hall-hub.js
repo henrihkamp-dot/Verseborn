@@ -380,7 +380,7 @@
     return true;
   }
   function supportIcon(category, item) {
-    return `<span class="hub-support-icon hub-${category}" aria-hidden="true">${category === 'blessing' ? '&#10022;' : inventoryItemIconHtml(item?.name || (category === 'meal' ? meals[0].name : coatings[0].name))}</span>`;
+    return `<span class="hub-support-icon hub-${category}" aria-hidden="true">${inventoryItemIconHtml(item?.name || (category === 'meal' ? meals[0].name : category === 'blessing' ? blessings[0].name : coatings[0].name))}</span>`;
   }
   function showChoices(category, returnTo = renderPreparation) {
     const selected = progress().selected[category];

@@ -40,6 +40,8 @@
     return themeFor(id).icon;
   }
   function icon(entry,id,cls='') {
+    const sk=entry?.type==='newSkill'?entry.value:entry,art=window.CharacterAbilityArt?.source(id,sk?.name);
+    if(art)return `<span class="ts-icon ts-illustrated ${cls}" style="background-image:url('${e(art)}');background-size:cover!important;background-position:center!important" aria-hidden="true"></span>`;
     const i=iconIndex(entry,id);
     return `<span class="ts-icon ${cls}" style="--ix:${i%4};--iy:${Math.floor(i/4)}" aria-hidden="true"></span>`;
   }
