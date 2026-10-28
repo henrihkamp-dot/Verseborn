@@ -14234,11 +14234,29 @@ function combinedAffixGroup(entry) {
   return "Damage & Crit";
 }
 
+function combinedAffixExplanation(entry) {
+  const status = { defenseDown: "Armor Break", agilityDown: "Slow" }[entry.status] || entry.status || "status";
+  if (entry.type === "statPct") return `Increases ${String(entry.stat).toUpperCase()}.`;
+  if (entry.type === "statusOnHit") return `Hits can inflict ${status}; before resistance.`;
+  if (entry.type === "statusResistance") return `Helps resist ${status}.`;
+  return {
+    hpPct: "Increases maximum HP.", mpPct: "Increases maximum MP.",
+    critChance: "Increases critical-hit chance.", afflictedDamage: "More damage against targets with negative statuses.",
+    physicalDamage: "Increases physical damage.", magicDamage: "Increases magical damage.",
+    statusChance: "Boosts the chance to apply negative statuses.", poisonReduction: "Reduces Poison damage taken.",
+    allStatusResistance: "Helps resist negative statuses.", statusDurationReduction: "Shortens negative statuses you receive.",
+    buffDuration: "Buffs you apply last longer.", statusDuration: "Negative statuses you inflict last longer.",
+    echoing: "Chance to grant an extra ally action; once per battle.", openingTurnProgress: "Act sooner in the first round.",
+    openingResonance: "Start battle with extra Resonance.", leeching: "Direct damage restores HP, up to the healing cap.",
+    siphoning: "Damaging skills refund some MP spent.", blockPower: "Makes blocking more effective."
+  }[entry.type] || affixDescription(entry);
+}
+
 function combinedAffixesHtml(entries) {
   const groups = ["Turn Management", "Stat Increases", "Damage & Crit", "Status Chances", "HP & MP Recovery", "Defense & Resistance"];
   return `<div class="combined-affix-groups">${groups.map(group => {
     const rows = entries.filter(entry => combinedAffixGroup(entry) === group).sort((a, b) => (a.label || a.type).localeCompare(b.label || b.type));
-    return rows.length ? `<section class="combined-affix-group"><h6>${group}</h6>${rows.map(entry => affixDetailHtml(entry)).join('')}</section>` : '';
+    return rows.length ? `<section class="combined-affix-group"><h6>${group}</h6>${rows.map(entry => affixDetailHtml(entry).replace(`<small>${affixDescription(entry)}</small>`, `<small>${escapeMarkup(combinedAffixExplanation(entry))}</small>`)).join('')}</section>` : '';
   }).join('')}</div>`;
 }
 
