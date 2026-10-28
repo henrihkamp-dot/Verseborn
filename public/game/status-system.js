@@ -397,7 +397,7 @@
   };
   equippedProcChances = id => {
     const source = battle?.party?.find(unit => unit.id === id) || { id, statuses: [] };
-    return groupedProcs(source, { basicAttack: true, power: 1, anim: 'melee', scaling: 'str' }, {}).map(entry => ({ type: entry.type, raw: entry.chance, normalChance: Math.min(.95, attackerChance(source, entry.type, entry.chance)) }));
+    return groupedProcs(source, { basicAttack: true, power: 1, anim: 'melee', scaling: 'str' }, {}).map(entry => ({ type: entry.type, raw: entry.chance, triggerText: gearEntries(id).filter(e=>e.type==='statusOnHit'&&e.status===entry.type).every(e=>e.trigger==='weapon') ? 'Basic attacks / physical skills' : 'Eligible damaging hits', normalChance: Math.min(.95, attackerChance(source, entry.type, entry.chance)) }));
   };
   const oldCaps = capsHtml;
   capsHtml = id => oldCaps(id).replace('Boss Poison: 1.5% max HP per tick', 'Boss Poison: 2.5% max HP per normal tick / 3% with CRIT').replace('</div>', '<span>Application resistance from gear: 60% max / broad gear contribution: 30% max</span><span>Negative-duration reduction: 2 actions max / minimum 1 action</span></div>');

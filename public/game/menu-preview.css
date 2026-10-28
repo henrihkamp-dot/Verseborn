@@ -285,3 +285,5 @@ html[data-menu-redesign] [data-menu-view="gear"] .selection-detail-head>.selecti
 html[data-menu-redesign] [data-menu-view="gear"] .selection-detail-head>div { min-width:0!important; position:static!important; }
 
 .game .menu .glimmer-shop-overview:has(.support-flavour) .glimmer-overview-icon .shop-icon { width:140px!important;height:140px!important; }
+
+.game .menu .status-weapon-hit{font-size:11px;line-height:1.35;margin:7px 0}.game .menu .status-weapon-hit>b,.game .menu .status-weapon-hit>small{display:block}.game .menu .status-weapon-hit>small{color:#d2c7d9}
