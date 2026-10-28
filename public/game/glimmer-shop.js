@@ -15,7 +15,7 @@
     rows.forEach(row=>{
       const copy=row.querySelector(':scope > div');fullDetails.set(row,copy?.innerHTML||'');
       if(row.classList.contains('is-gear-row')){[...copy.querySelectorAll(':scope > small')].slice(2).forEach(n=>n.remove());const metadata=copy.querySelector('.shop-gear-metadata');if(metadata)metadata.textContent=metadata.textContent.replace(/\s*•\s*STAGE\s+\d+/i,'');}
-      else if(copy){const summary=copy.querySelector(':scope > small');if(summary)summary.textContent='Consumable / Supplies';}
+      else if(copy&&!row.classList.contains('support-shop-row')){const summary=copy.querySelector(':scope > small');if(summary)summary.textContent='Consumable / Supplies';}
     });
     function key(row){return row.dataset.shopItem||row.querySelector('strong')?.textContent.trim()||'';}
     function inspect(row){

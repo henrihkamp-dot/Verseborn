@@ -81,3 +81,16 @@
 @media(max-width:700px){.shadow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shadow-preview{grid-template-columns:1fr}.shadow-preview>img{height:140px}.shadow-preview dl{grid-template-columns:1fr}.shadow-detail .hub-footer{flex-wrap:wrap}}
 
 .shadow-reward h4{color:#d8b8ff;margin:10px 0 6px}.shadow-reward ul{padding-left:18px;margin:6px 0;line-height:1.5}.shadow-reward-stats{display:flex;gap:10px;flex-wrap:wrap}.shadow-reward-stats span{border:1px solid #6b5287;padding:5px 8px}
+
+/* Illustrated support wares: effect first, flavour beneath. */
+.shop-row.support-shop-row { grid-template-columns: clamp(76px,7vw,112px) minmax(0,1fr) auto auto; align-items:center; gap:16px; min-height:112px; }
+.shop-row.support-shop-row .shop-icon { width:clamp(76px,7vw,112px)!important; height:clamp(76px,7vw,112px)!important; max-width:none!important; max-height:none!important; }
+.support-flavour { display:block; color:#cbbca6; font-style:italic; font-size:12px; line-height:1.45; margin-top:7px; }
+.hub-choices label .hub-support-icon { width:88px; height:88px; }
+.hub-choices label .hub-support-icon .pixel-icon { width:80px!important; height:80px!important; }
+.hub-choices label { grid-template-columns:88px auto minmax(0,1fr) auto; }
+
+.menu[data-menu-view] .shop-row.support-shop-row { grid-template-columns:clamp(76px,7vw,112px) minmax(0,1fr) auto auto!important; min-height:112px!important; }
+.menu[data-menu-view] .shop-row.support-shop-row .shop-icon { width:clamp(76px,7vw,112px)!important; height:clamp(76px,7vw,112px)!important; grid-column:1!important; justify-self:center!important; }
+.menu[data-menu-view] .shop-row.support-shop-row small.support-flavour { font-size:12px!important; line-height:1.45!important; margin-top:7px!important; }
+.menu .hub-choices label .hub-support-icon { width:88px!important; height:88px!important; } .menu .hub-choices label .hub-support-icon .pixel-icon { width:80px!important; height:80px!important; } .menu .hub-choices label { grid-template-columns:88px 20px minmax(0,1fr) 80px!important; }

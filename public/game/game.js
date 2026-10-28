@@ -15479,10 +15479,10 @@ function shopWareRowHtml(ware, index, purchased = false) {
   }) : "";
   const metadata = gear
     ? `<small class="shop-gear-metadata">${displayedRarity.toUpperCase()} &bull; ${gearSlotLabel(gear.slot).toUpperCase()}${ware.hallStage ? ` &bull; STAGE ${ware.hallStage}` : ""}</small><small>${statLine(displayedStats)}</small>`
-    : `<small>${ware.desc}</small>`;
+    : `<small>${ware.desc}</small>${ware.flavour ? `<small class="support-flavour">${escapeMarkup(ware.flavour)}</small>` : ""}`;
   const artifactDetails = ware.artifactShop ? `<small>${gearEffects(gear).map(effect => escapeMarkup(gearEffectLabel(effect))).join(" &bull; ")}</small><small>${ware.affixes.map(entry => escapeMarkup(formatAffix(entry))).join(" &bull; ")}</small>` : "";
   const buttonLabel = purchased || ware.artifactShop && owned ? "Purchased" : owned ? "Owned" : full ? "Full" : ownedCount ? "Buy another" : "Buy";
-  return `<div class="shop-row ${gear ? "is-gear-row rarity-"+displayedRarity.toLowerCase().replace(/\s+/g,"-") : ""} ${ware.artifactShop ? "is-artifact-offer" : ""}" data-shop-item="${escapeMarkup(ware.name)}" ${hover}>${icon}<div><strong>${ware.name}${ware.kind === "item" ? ` <span class="shop-stock">Owned: ${state.inventory[ware.name] || 0}${state.stash[ware.name] ? ` (+${state.stash[ware.name]} stored)` : ""}</span>` : ""}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${metadata}${artifactDetails}</div><span>${price} G</span><button type="button" ${purchased ? "" : `data-buy="${index}"`} ${owned || full || state.gold < price ? "disabled" : ""}>${buttonLabel}</button></div>`;
+  return `<div class="shop-row ${ware.flavour ? "support-shop-row" : ""} ${gear ? "is-gear-row rarity-"+displayedRarity.toLowerCase().replace(/\s+/g,"-") : ""} ${ware.artifactShop ? "is-artifact-offer" : ""}" data-shop-item="${escapeMarkup(ware.name)}" ${hover}>${icon}<div><strong>${ware.name}${ware.kind === "item" ? ` <span class="shop-stock">Owned: ${state.inventory[ware.name] || 0}${state.stash[ware.name] ? ` (+${state.stash[ware.name]} stored)` : ""}</span>` : ""}${ownedCount ? ` <small>OWNED x${ownedCount}</small>` : ""}</strong>${metadata}${artifactDetails}</div><span>${price} G</span><button type="button" ${purchased ? "" : `data-buy="${index}"`} ${owned || full || state.gold < price ? "disabled" : ""}>${buttonLabel}</button></div>`;
 }
 
 function renderVendor() {

@@ -198,8 +198,8 @@ html:is([data-menu-concept],[data-menu-redesign]) .game #menu[data-menu-prototyp
 }
 
 /* Specific support/shop illustrations only; no selectors touch map geometry. */
-.game .menu .hub-choices .hub-support-icon{width:64px!important;height:64px!important;flex:none;background:transparent!important;border:0!important}
-.game .menu .hub-choices .hub-support-icon>.pixel-icon{width:64px!important;height:64px!important}
+.game .menu .hub-choices .hub-support-icon{width:88px!important;height:88px!important;flex:none;background:transparent!important;border:0!important}
+.game .menu .hub-choices .hub-support-icon>.pixel-icon{width:80px!important;height:80px!important}
 .game .menu .hub-choices label{min-height:86px!important;gap:14px!important}
 .game .menu[data-menu-view="shop"] .shop-row .menu-item-art{width:76px!important;height:76px!important;flex:none}
 .game .menu[data-menu-view="shop"] .shop-row .menu-item-art img{image-rendering:auto!important}
@@ -256,3 +256,31 @@ html:is([data-menu-concept],[data-menu-redesign]) .game #menu[data-menu-prototyp
 & .mp-overview-affixes .affix-detail{min-height:0!important;line-height:1.25!important;padding:3px 0!important}
 & .mp-overview-affixes .combined-affix-group{display:flex;flex-direction:column;gap:0}
 }
+
+html:is([data-menu-concept],[data-menu-redesign]) .game #menu[data-menu-prototype][data-menu-view="gear"]{
+& .equip-slot-list{grid-template-rows:repeat(3,minmax(0,1fr));grid-template-areas:"helmet necklace" "weapon armour" "ring ring2"}
+& .equip-body-slot>button:first-child{gap:2px!important;padding:6px 5px!important;color:inherit!important}
+& .equip-body-slot strong{color:inherit!important;min-height:0;flex-shrink:0}
+& .equip-body-slot em{display:block!important;order:3;font:10px/1.2 Georgia,serif!important;font-style:normal!important;color:inherit!important;flex-shrink:0}
+& .equip-body-slot>button:first-child>.mp-slot-stats{display:block!important;order:4;font:9px/1.3 Georgia,serif!important;color:#d8cbdc!important;white-space:normal;overflow-wrap:anywhere;max-width:100%;text-align:center;flex-shrink:0}
+& .equip-body-slot .equip-slot-icon{width:clamp(42px,6vh,82px)!important;height:clamp(42px,6vh,82px)!important;max-height:44%}
+}
+
+html:is([data-menu-concept],[data-menu-redesign]) .game #menu[data-menu-prototype][data-menu-view="gear"] .equip-body-slot>button:first-child>.mp-slot-stats{order:4!important;display:block!important}
+
+/* Gear: primary tools stay within reach on every inspection page. */
+html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto { flex:none!important; order:-1; margin:0 0 8px; padding:8px 12px; border:1px solid #92724988; background:#17101ee8; position:relative; z-index:5; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto>summary { display:list-item!important; cursor:pointer; color:#f2d598; font-size:14px; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto[open] { position:absolute; top:0; left:0; right:0; box-shadow:0 12px 28px #000b; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto .gear-auto-options, html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto .gear-bulk-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto .gear-bulk-actions>section { flex:1 1 180px; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-quick-auto .gear-auto-members { display:flex; flex-wrap:wrap; gap:6px; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-inline-sort>summary { display:none!important; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-inline-sort { display:inline-flex!important; border:0!important; padding:0!important; margin:0!important; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-inline-sort .gear-sort-grid { display:flex!important; gap:8px; padding:0!important; }
+html[data-menu-redesign] [data-menu-view="gear"] .mp-inline-sort label { display:flex; align-items:center; gap:5px; font-size:11px; }
+html[data-menu-redesign] [data-menu-view="gear"] .selection-detail-head { display:flex!important; align-items:center!important; gap:24px!important; }
+html[data-menu-redesign] [data-menu-view="gear"] .selection-detail-head>.selection-detail-icon { flex:0 0 clamp(80px,9vw,150px)!important; position:static!important; margin:0!important; }
+html[data-menu-redesign] [data-menu-view="gear"] .selection-detail-head>div { min-width:0!important; position:static!important; }
+
+.game .menu .glimmer-shop-overview:has(.support-flavour) .glimmer-overview-icon .shop-icon { width:140px!important;height:140px!important; }
