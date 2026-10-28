@@ -1,0 +1,3 @@
+// Release-only compression; retain the source background and its dimensions.
+const fs=require('fs'),path=require('path'),sharp=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');
+(async()=>{const root=path.resolve(__dirname,'..'),src=path.join(root,'public/game/assets/equipment/background.webp'),dst=path.join(root,'dist/client/game/assets/equipment/background.webp');const original=fs.readFileSync(src),compressed=await sharp(original).webp({quality:75}).toBuffer();if(compressed.length<original.length)fs.writeFileSync(dst,compressed);console.log('Equipment background bytes saved:',Math.max(0,original.length-compressed.length));})();
