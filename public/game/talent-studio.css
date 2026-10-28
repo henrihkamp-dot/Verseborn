@@ -262,11 +262,11 @@ html .game .menu[data-menu-view="skills"] .menu-body{padding:0!important;overflo
 .game .menu[data-menu-view="skills"] .ts-tier>header{padding:0;gap:1px}
 .game .menu[data-menu-view="skills"] .ts-tier>header>strong{font-size:15px}
 .game .menu[data-menu-view="skills"] .ts-node{padding:0 2px;min-height:0}
-.game .menu[data-menu-view="skills"] .ts-tier .ts-nodes .ts-icon,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes .ts-icon{width:clamp(30px,4.8vh,48px);height:clamp(30px,4.8vh,48px)}
+.game .menu[data-menu-view="skills"] .ts-tier .ts-nodes .ts-icon,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes .ts-icon{width:clamp(36px,5.6vh,56px);height:clamp(36px,5.6vh,56px)}
 .game .menu[data-menu-view="skills"] .ts-tier .ts-node-name,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-node-name{font-size:12px;line-height:1.15;margin-top:6px;min-height:2.3em}
 .game .menu[data-menu-view="skills"] .ts-node-status{display:none}
-.game .menu[data-menu-view="skills"] .ts-nodes::before,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes::before{top:clamp(15px,2.4vh,24px)}
-.game .menu[data-menu-view="skills"] .ts-tier:not([data-tier="0"]):not([data-tier="5"]) .ts-node::before{top:clamp(30px,4.8vh,48px);bottom:-14px}
+.game .menu[data-menu-view="skills"] .ts-nodes::before,.game .menu[data-menu-view="skills"] .ts-tier[data-tier="0"] .ts-nodes::before{top:clamp(18px,2.8vh,28px)}
+.game .menu[data-menu-view="skills"] .ts-tier:not([data-tier="0"]):not([data-tier="5"]) .ts-node::before{top:clamp(36px,5.6vh,56px);bottom:-14px}
 .game .menu[data-menu-view="skills"] .ts-lanes{flex:none;font-size:11px;letter-spacing:.1em;padding:4px 0 3px 26px}
 .game .menu[data-menu-view="skills"] .ts-tree-footer{flex:none;padding:3px 0 0;min-height:19px;font-size:10px}
 .game .menu[data-menu-view="skills"] .ts-rift{flex:none;padding:0;margin:0;border:0}
@@ -294,3 +294,11 @@ html .game .menu[data-menu-view="skills"] .menu-body{padding:0!important;overflo
 .game .menu[data-menu-view="skills"] .ts-skill-row .ts-icon{width:34px;height:34px}
 .game .menu[data-menu-view="skills"] .ts-skill-row strong{font-size:13px}
 @media(max-height:740px){.game .menu[data-menu-view="skills"] .ts-top h2{font-size:27px!important}.game .menu[data-menu-view="skills"] .ts-top{min-height:54px}.game .menu[data-menu-view="skills"] .ts-top .ts-eyebrow{display:none}.game .menu[data-menu-view="skills"] .ts-node .ts-node-name{font-size:11px}.game .menu[data-menu-view="skills"] .ts-lanes{font-size:10px}.game .menu[data-menu-view="skills"] .ts-roster img{height:36px}.game .menu[data-menu-view="skills"] .ts-identity h2{font-size:28px!important}}
+
+/* Learned choices stay visibly lit; inspection has a separate outer ring. */
+.game .menu[data-menu-view="skills"] .ts-node.is-learned .ts-icon{box-shadow:0 0 0 3px var(--ts-accent),0 0 0 6px #171020,0 0 24px color-mix(in srgb,var(--ts-accent) 45%,transparent)!important;filter:brightness(1.2) saturate(1.2)}
+.game .menu[data-menu-view="skills"] .ts-node.is-learned .ts-node-name{color:var(--ts-accent);font-weight:700;text-shadow:0 0 12px color-mix(in srgb,var(--ts-accent) 50%,transparent)}
+.game .menu[data-menu-view="skills"] .ts-node.is-learned .ts-icon::before{width:22px;height:22px;font:700 15px/21px 'Segoe UI';background:var(--ts-accent);color:#171020;border:2px solid #fff0d0;right:-7px;bottom:-4px}
+.game .menu[data-menu-view="skills"] .ts-node.is-selected .ts-icon::after{inset:-10px;border:2px dashed #fff0cf;opacity:1}
+.game .menu[data-menu-view="skills"] .ts-skill-row.is-selected{background:color-mix(in srgb,var(--ts-accent) 22%,#100d18);outline:1px solid var(--ts-accent);box-shadow:inset 4px 0 var(--ts-accent),0 0 18px color-mix(in srgb,var(--ts-accent) 20%,transparent)!important}
+.game .menu[data-menu-view="skills"] .ts-skill-row .ts-icon{width:42px;height:42px}
