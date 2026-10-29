@@ -420,3 +420,96 @@ body[data-play-mode="battle"] .hud{top:99px!important}
 .command-battle .bc-turn b{font:600 13px/15px Georgia,serif;white-space:normal;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:15px;max-height:30px;width:100%}
 .command-battle .bc-turn>small{font-size:9px}
 .bc-round-divider{flex-basis:32px;font-size:13px}.bc-round-divider small{font-size:9px}
+/* Open desktop command dock: category tabs and the existing illustrated ability assets. */
+@media(min-width:701px){
+ body[data-play-mode="battle"]{--bc-command-height:clamp(238px,28vh,292px)}
+ body[data-play-mode="battle"] .game{width:min(100vw,calc(100dvh * 16 / 9))!important;height:min(100dvh,calc(100vw * 9 / 16))!important}
+ .command-battle .bc-command{left:12px;right:12px;bottom:5px;grid-template-columns:minmax(0,2.45fr) minmax(310px,1fr);gap:0;padding:11px 12px 7px;box-sizing:border-box;border:1px solid #ad915b99;border-radius:15px;background:linear-gradient(100deg,#14121de8,#15141bd9 70%,#100f1ce8);backdrop-filter:blur(12px);box-shadow:0 -10px 40px #06061024}
+ .bc-command-left{grid-template-rows:24px 39px minmax(0,1fr) 23px;gap:7px;padding:0 16px 0 0;border:0;background:none;box-shadow:none}
+ .bc-command-left:before,.bc-detail:before,.bc-category:before,.bc-action:before{display:none}
+ .bc-command-heading{gap:13px;font-size:11px;letter-spacing:.03em;min-height:24px}
+ .bc-command-heading strong{font-size:18px;color:#ead4a3}.bc-current-mp{font:500 12px 'Segoe UI',sans-serif;color:#cab8ed;margin-left:auto;order:2}
+ .bc-categories{gap:0;border-bottom:1px solid #c6b18430;align-items:stretch}
+ .bc-category{flex-direction:row;gap:6px;border:0;border-radius:0;background:transparent;padding:4px 6px;box-shadow:none;transition:background .15s,border-color .15s;min-width:0}
+ .bc-category>span{font:500 clamp(10px,.87vw,14px) 'Segoe UI',sans-serif;white-space:nowrap}.bc-category .bc-icon{width:23px;height:23px;filter:none}.bc-category small{font:9px 'Segoe UI',sans-serif;white-space:nowrap}
+ .bc-category.is-selected,.bc-category.is-focused{border-bottom:2px solid #86dafa;background:linear-gradient(0deg,#63c7eb23,transparent);box-shadow:0 4px 7px -4px #85e3ff;color:#c1efff!important}
+ .bc-category.is-focused:after{display:none}.bc-category.is-empty{opacity:.55}.bc-category.is-not-ready:not(.is-selected){opacity:.7}
+ .bc-category[data-category="ultimate"]{color:#e4c386!important}.bc-category[data-category="items"]{flex:.65;margin-left:6px;border-left:1px solid #c6b18430}
+ .bc-action-row{gap:9px;padding-right:0;min-height:0;align-content:stretch}
+ .bc-action-row:has(.bc-pager){padding-right:27px}
+ .bc-action{border:1px solid #9c835750;border-radius:10px;background:linear-gradient(125deg,#1a18249c,#101019a6);box-shadow:none;padding:8px;gap:9px;min-height:0;overflow:hidden}
+ .bc-action strong{font:600 clamp(12px,.95vw,16px)/1.22 Georgia,serif;overflow-wrap:normal;word-break:normal}
+ .bc-action-copy{gap:6px}.bc-action-copy>span{gap:4px}.bc-action-copy>span>b{font-size:11px;color:#d9d0ee}.bc-action .bc-badge{background:#ffffff06;border:0;padding:0;font-size:10px;white-space:normal}
+ .bc-card-art{width:clamp(58px,5.25vw,88px);height:clamp(58px,5.25vw,88px);border:0;background:transparent;border-radius:8px;overflow:hidden}
+ .bc-card-art .bc-icon{width:44px;height:44px}.bc-card-art img{object-fit:contain;border-radius:8px}
+ .bc-action.is-selected,.bc-action.is-focused{border-color:#8eddf1;background:linear-gradient(120deg,#3a738d36,#141a288c);box-shadow:inset 0 0 0 1px #a3e5fa45,0 0 11px #5cd4f043}
+ .bc-action.is-locked{outline:1px solid #b4efff;outline-offset:-3px}.bc-action.is-unavailable.is-selected{border-color:#a99dbe;box-shadow:none}
+ .bc-detail{padding:0 0 42px 17px;margin:0;border:0;border-left:1px solid #c6b1844a;background:transparent;box-shadow:none;overflow:hidden}
+ .bc-detail>header{gap:10px}.bc-detail-art{width:60px;height:60px;background:none;border:0;border-radius:7px;overflow:hidden}.bc-detail h3{font-size:clamp(17px,1.35vw,22px);margin:0 0 5px}
+ .bc-detail .bc-badge{background:none;border:0;padding:0;font-size:10px}.bc-costline{font-size:11px;gap:9px;margin:6px 0;padding:4px 0;border-color:#c6b18430}
+ .bc-description{font-size:12px;line-height:1.4;margin:5px 0;max-height:58px;overflow:auto;scrollbar-width:thin}
+ .bc-effects{font-size:10px;line-height:1.25;max-height:44px;overflow:auto;scrollbar-width:thin}.bc-effects span{font-size:10px}.bc-effects small{font-size:10px}
+ .bc-use-action{position:absolute;bottom:1px;left:17px;right:0;min-height:32px;border:1px solid #cfb277;border-radius:7px;background:linear-gradient(110deg,#66503455,#2c273e88);color:#fff1cd;font:600 15px Georgia,serif;cursor:pointer}
+ .bc-use-action:disabled{opacity:.4;cursor:default;border-color:#82798a}.bc-use-action:not(:disabled):hover{border-color:#9ce6fa;background:#67b2cd33}
+ .bc-confirm-hint{position:static;border:0;padding:0;margin:4px 0 0;font-size:10px;line-height:1.2;color:#d0c0de}
+ .bc-command-foot{font-size:10px;gap:12px}.bc-retreat-button,.bc-history-button{background:none;border:0;padding:2px 5px;color:#cabdd8!important;text-decoration:none;font-size:10px!important}
+ .bc-pager{width:23px}.bc-pager button{border:0;background:none;width:23px;height:28px;font-size:27px}.bc-pager span{font-size:9px;right:0}
+ .bc-empty-category{color:#b9afc5;font-size:13px;align-self:center;grid-column:1/-1;padding:14px}
+ .command-battle .bc-timeline{top:7px;left:14px;right:14px;height:70px!important;gap:20px;background:none;border:0}
+ .bc-round{flex:0 0 135px;clip-path:none;border:0;background:none;box-shadow:none;font:600 17px Georgia,serif;justify-content:flex-start;flex-wrap:wrap;align-content:center}
+ .bc-round small{font-size:13px}.bc-phase-label{flex-basis:100%;font:10px 'Segoe UI',sans-serif;color:#d3c6dd;letter-spacing:.1em;margin-top:4px}
+ .command-battle .bc-turns{align-items:center;gap:6px;justify-content:flex-start;max-width:1000px;margin:auto;flex:0 1 auto;padding:1px 5px;overflow:auto}
+ .command-battle .bc-turn{width:68px;min-width:68px;max-width:68px;flex:0 0 68px;height:66px!important;padding:0;gap:2px;border:0;background:none;box-shadow:none}
+ .command-battle .bc-turn.enemy{background:none}.command-battle .bc-turn img{width:43px;height:43px;border-radius:50%;border:1px solid #a697b4;clip-path:none;box-shadow:0 2px 7px #08071180}
+ .command-battle .bc-turn.is-current{background:none;border:0;box-shadow:none}.command-battle .bc-turn.is-current img{border:2px solid #f3d58c;box-shadow:0 0 12px #eac57b66}
+ .command-battle .bc-turn b{font:10px/12px 'Segoe UI',sans-serif;white-space:nowrap;min-height:12px;max-height:12px;-webkit-line-clamp:1;display:block;text-overflow:ellipsis;overflow:hidden}
+ .bc-round-divider{flex:0 0 20px;font:9px Georgia,serif;border:0}.bc-round-divider small{font:7px 'Segoe UI',sans-serif;writing-mode:horizontal-tb}
+ body[data-play-mode="battle"] .hud{top:79px!important;background:linear-gradient(90deg,#100d1caa,transparent 40%,transparent 60%,#100d1caa)!important;padding:3px 10px!important;border:0!important}
+ .command-battle .bc-recap{left:19px;right:19px;min-height:25px;max-height:39px;bottom:calc(var(--bc-command-height) + 10px);background:linear-gradient(90deg,#17131dbb,#14111a55);border:0;border-radius:5px;box-shadow:none;padding:4px 9px;font-size:10px}
+ .bc-recap>strong{font-size:11px}.bc-recap-events small{font-size:9px}
+ .command-battle .bc-unit{border:0;border-radius:5px;padding:4px 5px 3px;background:linear-gradient(90deg,#13111bc9,#14101b8c);box-shadow:0 2px 8px #0006;width:clamp(118px,12%,185px)}
+ .bc-unit-name{display:block;font:600 11px Georgia,serif;margin:0 0 2px;color:#eee4cd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .bc-unit .bc-weak{font-size:9px}.bc-vital{height:13px;border:0;border-radius:1px}.bc-vital+.bc-vital{margin-top:2px}.bc-vital b{font-size:10px;line-height:12px}.bc-vital b small{font-size:9px}
+ .bc-role{width:21px;height:21px;top:calc(50% - 10px);right:calc(100% + 3px)}.bc-role i{width:18px;height:18px}
+}
+@media(max-width:700px){.bc-use-action{min-height:29px;border:1px solid #bfa579;background:#332339;color:#f6e5bd;width:100%;font-size:12px}.bc-current-mp{font-size:10px}.bc-phase-label{display:none}.bc-unit-name{font-size:10px}.bc-category small{font-size:8px}.bc-categories{flex-wrap:wrap}.bc-category{flex:1 0 25%;padding:3px}.bc-category .bc-icon{width:19px;height:19px}}
+/* Remove legacy density limits so this dock really uses the illustrated-card layout. */
+@media(min-width:701px){
+ .command-battle .bc-categories{display:flex;justify-content:flex-start;gap:0}
+ .command-battle .bc-category{flex:1 1 auto;max-width:none;min-width:0;height:100%;padding:4px 8px}
+ .command-battle .bc-category>span{display:block!important;text-transform:none;letter-spacing:0;font:500 clamp(11px,.88vw,14px)/1.2 'Segoe UI',sans-serif;overflow:visible;max-width:none}
+ .command-battle .bc-category[data-category="items"]{flex:0 0 74px}
+ .command-battle .bc-action-row,.command-battle .bc-action-row:has(.bc-action:nth-of-type(4)){grid-template-columns:repeat(var(--page-size,4),minmax(0,1fr));grid-template-rows:minmax(0,1fr)!important;grid-auto-rows:minmax(0,1fr);align-content:stretch;align-items:stretch}
+ .command-battle .bc-action{height:100%;max-height:none;min-height:98px;align-self:stretch;padding:9px;gap:10px}
+ .command-battle .bc-action strong{font:600 clamp(13px,.95vw,16px)/1.23 Georgia,serif}
+ .command-battle .bc-card-art{width:clamp(62px,5.25vw,88px);height:clamp(62px,5.25vw,88px)}
+ .command-battle .bc-action-copy{gap:10px}.command-battle .bc-action .bc-reason{display:block;font-size:10px!important}
+ .command-battle .bc-detail-art{width:60px;height:60px}
+ .command-battle .bc-effects{display:block}
+}
+@media(min-width:701px){
+ .command-battle .bc-action strong{white-space:normal!important;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:42px;overflow:hidden}
+ .command-battle .bc-timeline{height:80px!important;top:6px}
+ .command-battle .bc-turn{width:76px;min-width:76px;max-width:76px;flex-basis:76px;height:76px!important;position:relative}
+ .command-battle .bc-turn img{width:50px;height:50px;border:1px solid #cab582;box-shadow:0 2px 9px #080711b0}
+ .command-battle .bc-turn b{font-size:10px;line-height:13px;max-height:13px}
+ .command-battle .bc-turn.is-current img{border:2px solid #ffe7a3;box-shadow:0 0 0 3px #f4c66d24,0 0 20px #eec16a80}
+ .command-battle .bc-turn.is-current:after{content:'◆';position:absolute;top:49px;left:calc(50% - 5px);font-size:10px;color:#ffe2a1;text-shadow:0 0 6px #ffc567}
+ .command-battle .bc-turn:not(:last-child):before{content:'';position:absolute;left:calc(50% + 28px);top:30px;width:20px;border-top:1px solid #d9bf7d60;pointer-events:none}
+ body[data-play-mode="battle"] .hud{top:89px!important;height:47px!important;padding:0 16px!important;align-items:flex-start!important;background:none!important}
+ body[data-play-mode="battle"] .hud-battle-resonance,body[data-play-mode="battle"] .hud-enemy-resonance{display:grid!important;grid-template-columns:36px minmax(0,1fr);grid-template-rows:21px 11px;column-gap:9px;row-gap:2px;width:clamp(230px,21vw,330px);height:39px!important;align-items:center;font:12px/1.2 Georgia,serif!important;letter-spacing:.04em;color:#e6d9f1;filter:drop-shadow(0 2px 4px #080611)}
+ body[data-play-mode="battle"] .hud-battle-resonance>span:not(.bc-resonance-gem),body[data-play-mode="battle"] .hud-enemy-resonance>span:not(.bc-resonance-gem){grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;gap:9px;font:12px/1.1 Georgia,serif!important;white-space:nowrap;text-transform:uppercase}
+ body[data-play-mode="battle"] .hud-enemy-resonance{margin-left:auto;grid-template-columns:minmax(0,1fr) 36px}
+ body[data-play-mode="battle"] .hud-enemy-resonance>span:not(.bc-resonance-gem){grid-column:1}
+ .bc-resonance-gem{grid-column:1;grid-row:1/3;display:block;width:36px;height:36px;filter:drop-shadow(0 0 7px currentColor)}.bc-resonance-gem svg{width:100%;height:100%}
+ body[data-play-mode="battle"] .hud-enemy-resonance .bc-resonance-gem{grid-column:2}
+ .hud-battle-resonance b{color:#dec4ff;font-size:15px;font-weight:500}.hud-enemy-resonance b{color:#f0a4ad;font-size:15px;font-weight:500}.hud-battle-resonance b small,.hud-enemy-resonance b small{font-size:10px;color:#cec5d9}
+ body[data-play-mode="battle"] .battle-resonance-track{grid-column:2;grid-row:2;width:100%!important;min-width:0;height:10px;border:1px solid #b6a3d4;border-radius:0;background:#100b1cdc;clip-path:polygon(5px 0,calc(100% - 5px) 0,100% 50%,calc(100% - 5px) 100%,5px 100%,0 50%);box-shadow:inset 0 0 0 2px #100b1d}
+ body[data-play-mode="battle"] .enemy-resonance-track{grid-column:1;border-color:#ce9ea7}
+ body[data-play-mode="battle"] .battle-resonance-track i{display:block;height:100%;background:linear-gradient(90deg,#7349bc,#d3a5ff)!important;box-shadow:inset 0 1px #ead2ffb3,0 0 9px #be8bff;transition:width .25s}
+ body[data-play-mode="battle"] .enemy-resonance-track i{background:linear-gradient(90deg,#8b344b,#ec9aa9)!important;box-shadow:inset 0 1px #ffc9d0b3,0 0 9px #e87a97}
+ .hud-battle-resonance.is-full .bc-resonance-gem{filter:drop-shadow(0 0 12px #d0a6ff)}
+}
+@media(prefers-reduced-motion:reduce){body[data-play-mode="battle"] .battle-resonance-track i{transition:none}}
+@media(min-width:701px){.hud-battle-resonance,.hud-enemy-resonance{position:relative}.bc-resonance-spend{position:absolute;bottom:-9px;right:45px;font:600 10px 'Segoe UI',sans-serif;letter-spacing:.06em;color:#ffb5bc;text-shadow:0 0 9px #d04873}.bc-resonance-gem{font-style:normal}}
+@media(min-width:701px){.command-battle .bc-turns{max-width:min(72vw,740px)}.command-battle .bc-unit.is-target{outline:1px solid #a4e5f2;box-shadow:0 0 13px #70d5f440}}

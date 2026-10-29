@@ -19,7 +19,7 @@
 // Show the real meter value and its ultimate spend, including healing ultimates.
 (()=>{
  const original=renderBattle;
- function labels(){if(!battle)return;const enemy=document.querySelector('.hud-enemy-resonance>span'),party=document.querySelector('.hud-battle-resonance>span'),spent=battle.lastEnemyResonanceSpend;
+ function labels(){if(!battle)return;if(window.BattleCommandUI?.refreshResonance){BattleCommandUI.refreshResonance();return;}const enemy=document.querySelector('.hud-enemy-resonance>span'),party=document.querySelector('.hud-battle-resonance>span'),spent=battle.lastEnemyResonanceSpend;
   if(enemy)enemy.textContent='Enemy Resonance '+Math.round(battle.enemyResonance||0)+'/100'+(spent&&performance.now()-spent.at<1600?' · ULT −'+Math.round(spent.amount):'');
   if(party)party.textContent='Party Resonance '+Math.round(state.resonance||0)+'/100';
  }

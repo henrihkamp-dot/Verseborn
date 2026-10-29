@@ -3,8 +3,9 @@
   'use strict';
   const model=BattleActionModel,root=el.battle,game=canvas.parentElement;
   const allCategory={id:'all',label:'All',kind:'All actions',color:'#dbbaff'},itemsCategory={id:'items',label:'Items',kind:'Item',color:'#8ccef0'};
-  const categoryInfo=id=>model.categories.find(c=>c.id===id)||(id==='all'?allCategory:id==='items'?itemsCategory:{label:id,kind:'Action'});
-  const categoryOrder=['all','attack','defend','spell','heal','buffDebuff','utility','ultimate','items'];
+  const categoryInfo=id=>model.categories.find(c=>c.id===id)||uiCategories.find(c=>c.id===id)||(id==='all'?allCategory:id==='items'?itemsCategory:{label:id,kind:'Action'});
+  const uiCategories=[{id:'basic',label:'Basic',kind:'Basic action',color:'#e9d6aa'},{id:'attack',label:'Attack actions',kind:'Attack',color:'#81d8f1'},{id:'buffDebuff',label:'Buff & Debuff',kind:'Buff / Debuff',color:'#c6a4f1'},{id:'healDef',label:'Heal & Defence',kind:'Healing / Defence',color:'#9ed8c7'},{id:'ultimate',label:'Ultimate',kind:'Ultimate',color:'#ebc684'},itemsCategory];
+  const categoryOrder=uiCategories.map(c=>c.id);
   root.classList.add('command-battle');
   const make=(tag,cls,parent)=>{const n=document.createElement(tag);n.className=cls;parent?.appendChild(n);return n;};
   const timeline=make('nav','bc-timeline',root);timeline.setAttribute('aria-label','Upcoming turns');
@@ -53,7 +54,7 @@
     history.showModal();content.scrollTop=0;history.scrollTop=0;
   };
   let lockedAction=null,lockedItem=null,targetMemory={enemy:null,party:null};
-  let owner=null,turnOwner=null,ui={level:'category',category:'all',action:0,target:0,page:0},groups=[],unit=null,selected=null,targetList=[],targetGroup=false,lastLayout='',statusNodes=[];
+  let owner=null,turnOwner=null,ui={level:'category',category:'basic',action:0,target:0,page:0},groups=[],unit=null,selected=null,targetList=[],targetGroup=false,lastLayout='',statusNodes=[];
   let lastActions={};try{lastActions=JSON.parse(localStorage.getItem('verseborn-battle-ui-v1')||'{}');}catch{}
   if(!lastActions||typeof lastActions!=='object'||Array.isArray(lastActions))lastActions={};
   const memoryKey=()=>unit?unit.id+':'+(unit.form||'base'):'';
@@ -81,10 +82,11 @@
   };
   function icon(kind,color){return `<svg class="bc-icon" viewBox="0 0 32 32" aria-hidden="true" style="--icon-color:${color||'currentColor'}"><path d="${paths[kind]||paths.spell}"/></svg>`;}
   function abilityIcon(sk){
+    const art=window.CharacterAbilityArt?.source(unit?.id,sk.name,unit?.form||'');
+    if(art)return `<img class="bc-ability-icon" data-bc-ability="${esc(sk.name)}" alt="">`;
     const source=sk.icon||sk.iconSrc||sk.artwork;
     if(source)return `<img class="bc-ability-icon" src="${esc(source)}" alt="">`;
-    // No dedicated ability pictures exist in the old command list. These small
-    // reusable vector sigils match the reference, without replacing status art.
+    // Only uncatalogued native commands use the existing reusable vector sigils.
     if(sk.category==='spell'||sk.anim==='magic'&&skillTargetsEnemies(sk)){
       const color=sk.element==='Tech'?'#55c7ff':sk.element==='Holy Fire'?'#ffd97d':sk.element==='Ancient Fire'?'#ff9e62':'#d484ff';
       return `<svg class="bc-ability-glyph" viewBox="0 0 64 64" aria-hidden="true" style="color:${color}"><circle class="bc-sigil-halo" cx="32" cy="32" r="22"/><g fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="32" cy="32" rx="25" ry="17" transform="rotate(-35 32 32)"/><path d="M13 46C18 12 48 10 49 20S17 54 16 42 44 17 52 16M19 7l3 12M42 47l4 11M6 29l11 3M48 33l11 3"/><path stroke="#fff3ff" d="M31 20l4 9 8 2-9 4-2 9-4-9-8-3 9-3 2-9z"/></g><circle cx="47" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="51" r="1.5" fill="currentColor"/></svg>`;
@@ -93,32 +95,25 @@
   }
   const currentGroup=()=>groups.find(c=>c.id===ui.category)||groups[0];
   const skill=()=>currentGroup()?.actions[ui.action]||currentGroup()?.actions[0];
-  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<701?2:6;
+  const pageSize=()=>game.getBoundingClientRect().width<560?1:game.getBoundingClientRect().width<1100?2:game.getBoundingClientRect().width<1450?3:4;
   function extras(){
     return [{name:'Defend',category:'defend',targetScope:'self',cost:0,command:'defend',desc:`Block ${defendReduction(unit)}% of the next direct hit. Restore 15% of maximum HP and MP and gain 15 Resonance.`}];
   }
+  function commandCategory(sk){
+    if(sk.anim==='ultimate')return 'ultimate';
+    if(sk.basicAttack||sk.command==='defend'||sk.name==='Guard'||sk.rank0Guard||(sk.anim==='block'&&sk.power>=0&&sk.targetScope==='self'))return 'basic';
+    if(sk.power<0||sk.cleanse||sk.manaRecovery)return 'healDef';
+    if(skillTargetsEnemies(sk)&&!sk.statusOnly&&!sk.dispel&&(sk.power>0||sk.coefficient))return 'attack';
+    if(sk.grantsWard||sk.anim==='block'||(sk.buffs||[]).some(b=>['barrier','defenseUp','evasion','mechGuard','intercept'].includes(b.type)))return 'healDef';
+    return 'buffDebuff';
+  }
   function refreshGroups(){
-    groups=model.groups(unit);
-    for(const action of extras()){
-      let group=groups.find(c=>c.id===action.category);
-      if(!group){group={...model.categories.find(c=>c.id===action.category),actions:[]};groups.push(group);}
-      group.actions.push(action);
-    }
-    const support=groups.filter(g=>g.id==='utility'||g.id==='buffDebuff');
-    if(support.length){
-      const actions=[...new Map(support.flatMap(g=>g.actions).map(a=>[a.actionId||a.name,a])).values()];
-      groups=groups.filter(g=>g.id!=='utility'&&g.id!=='buffDebuff');
-      groups.push({...model.categories.find(c=>c.id==='buffDebuff'),label:'(De)Buff',kind:'(De)Buff',actions});
-      if(ui.category==='utility')ui.category='buffDebuff';
-    }
-    groups.push({...itemsCategory,actions:[{name:'Items',category:'items',targetScope:'self',command:'items',cost:0,desc:'Use a carried battle item. Consumes the current action.'}]});
-    const allActions=[...new Map(groups.flatMap(g=>g.actions).map(a=>[a.actionId||a.name,a])).values()];
-    allActions.sort((a,b)=>categoryOrder.indexOf(a.category)-categoryOrder.indexOf(b.category));
-    groups.push({...allCategory,actions:allActions});
-    groups.sort((a,b)=>categoryOrder.indexOf(a.id)-categoryOrder.indexOf(b.id));
-    if(!groups.some(c=>c.id===ui.category)){ui.category=groups[0]?.id;ui.action=0;}
+    const actions=[...new Map([...model.loadout(unit).available,...extras()].map(a=>[a.actionId||a.name,a])).values()];
+    groups=uiCategories.map(c=>({...c,actions:c.id==='items'?[{name:'Items',category:'items',targetScope:'self',command:'items',cost:0,desc:'Use a carried battle item. Consumes the current action.'}]:actions.filter(sk=>commandCategory(sk)===c.id)}));
+    if(!groups.some(c=>c.id===ui.category)){ui.category='basic';ui.action=0;}
     ui.action=Math.min(ui.action,Math.max(0,currentGroup().actions.length-1));
   }
+  function hydrateArt(host){host.querySelectorAll('img[data-bc-ability]').forEach(img=>CharacterAbilityArt.assign(img,unit.id,img.dataset.bcAbility,unit.form||''));}
   function disabled(sk){
     if(sk.command==='defend')return '';
     if(sk.command==='items')return carriedBattleItems().some(([,i])=>canUseBattleItem(unit,i))?'':'No usable item';
@@ -202,7 +197,7 @@
     groups.forEach(c=>{
       const b=make('button','bc-category',categories);b.type='button';b.dataset.category=c.id;b.style.setProperty('--category-color',c.color);
       b.classList.toggle('is-selected',ui.category===c.id);b.classList.toggle('is-focused',ui.level==='category'&&ui.category===c.id);b.setAttribute('aria-pressed',String(ui.category===c.id));
-      b.innerHTML=`${icon(c.id,c.color)}<span>${c.label}</span>`;
+      b.innerHTML=`${icon(c.id==='basic'?'defend':c.id==='healDef'?'heal':c.id,c.color)}<span>${c.label}</span>${c.id==='ultimate'?`<small>${Math.round(state.resonance)} / 100</small>`:''}`;b.classList.toggle('is-empty',!c.actions.length);b.classList.toggle('is-not-ready',c.id==='ultimate'&&state.resonance<100);
       b.onclick=()=>selectCategory(c.id,true);
       b.title=c.label;
       b.setAttribute('aria-label',c.label);
@@ -211,13 +206,13 @@
   function renderCommands(){
     if(!unit||!battle)return;
     root.dataset.level=ui.level;
-    heading.innerHTML=`<strong>${esc(unit.name)}</strong><span>${ui.level==='target'?'Choose target':ui.level==='items'?'Carried items':ui.level==='itemTarget'?'Choose fallen ally':esc(battle.encounterNotice?.until>tick?battle.encounterNotice.title+' · '+battle.encounterNotice.text:'Choose an action')}</span>`;
+    heading.innerHTML=`<strong>${esc(unit.name)}</strong><b class="bc-current-mp">MP ${Math.round(unit.mp)} / ${unit.maxmp}</b><span>${ui.level==='target'?'Choose target':ui.level==='items'?'Carried items':ui.level==='itemTarget'?'Choose fallen ally':esc(battle.encounterNotice?.until>tick?battle.encounterNotice.title+' · '+battle.encounterNotice.text:'Choose an action')}</span>`;
     renderCategories();actionRow.innerHTML='';
     if(ui.level==='items'){renderItems();}
     else if(ui.level==='itemTarget'){renderItemTargets();}
     else{
       const actions=currentGroup()?.actions||[],size=pageSize();ui.page=Math.floor(ui.action/size);
-      const start=ui.page*size;actionRow.style.setProperty('--action-count',Math.min(size,actions.length));
+      const start=ui.page*size;actionRow.style.setProperty('--page-size',size);actionRow.style.setProperty('--action-count',Math.min(size,actions.length));
       actions.slice(start,start+size).forEach((sk,j)=>{
         const index=start+j,reason=disabled(sk),b=make('button','bc-action',actionRow);b.type='button';b.dataset.action=String(index);b.dataset.category=sk.category;
         b.setAttribute('aria-disabled',String(Boolean(reason)));b.classList.toggle('is-unavailable',Boolean(reason));b.classList.toggle('is-unaffordable',reason==='Not enough MP');b.classList.toggle('is-selected',ui.action===index);b.classList.toggle('is-focused',ui.level==='action'&&ui.action===index);
@@ -232,11 +227,12 @@
           if(!reason&&!sk.command)chooseTarget();else renderCommands();
         };
       });
+      if(!actions.length)actionRow.innerHTML='<p class="bc-empty-category">No learned actions in this category.</p>';
       addPages(actions.length,size);
     }
     instruction.textContent=ui.level==='category'?'← → Category · Confirm: actions':ui.level==='target'?'Choose a target · Click the locked skill again to use':ui.level==='itemTarget'?'Choose ally · Click again to revive':'← → Action · ↑ / Back: categories';
     if(ui.level!=='items'&&ui.level!=='itemTarget')updatePreview();
-    renderConfirmHint();
+    renderConfirmHint();hydrateArt(command);
     fitLabels();
   }
   function fitLabels(){
@@ -250,13 +246,15 @@
   }
   function renderConfirmHint(){
     const hint=make('div','bc-confirm-hint',detail);
-    const verb=document.documentElement.classList.contains('touch-layout')?'Tap':'Click';
-    hint.textContent=ui.level==='target'?`Target: ${targetGroup?targetName(skill()):targetList[ui.target]?.name||'Choose target'} · ${verb} the selected skill again to use`:ui.level==='items'?`${verb} an item to select; ${verb.toLowerCase()} it again to use`:`${verb} a skill to lock it; ${verb.toLowerCase()} it again to use`;
+    const ready=ui.level==='target'||Boolean(lockedAction)||Boolean(lockedItem),target=ui.level==='target'?(targetGroup?targetName(skill()):targetList[ui.target]?.name):null;
+    hint.textContent=target?'Target: '+target:'Select a skill, then choose its target.';
+    const use=make('button','bc-use-action',detail);use.type='button';use.textContent=target?'Use on '+target:ui.level==='items'?'Use item':skill()?.command==='defend'?'Defend':'Use action';use.disabled=!ready||Boolean(skill()&&disabled(skill()))||battle.resolving;
+    use.onclick=()=>activate();
   }
   function addPages(total,size){
     if(total<=size)return;
     const pager=make('div','bc-pager',actionRow);
-    for(const [text,d]of [['‹',-1],['›',1]]){const b=make('button','',pager);b.type='button';b.textContent=text;b.setAttribute('aria-label',d<0?'Previous actions':'Next actions');b.onclick=()=>{const pages=Math.ceil(total/size),page=Math.floor(ui.action/size);ui.action=((page+d+pages)%pages)*size;renderCommands();};}
+    for(const [text,d]of [['‹',-1],['›',1]]){const b=make('button','',pager);b.type='button';b.textContent=text;b.setAttribute('aria-label',d<0?'Previous actions':'Next actions');b.onclick=()=>{const pages=Math.ceil(total/size),page=Math.floor(ui.action/size);lockedAction=null;battle.targetMode=false;battle.pendingSkill=null;ui.level='action';ui.action=((page+d+pages)%pages)*size;renderCommands();};}
     const count=make('span','',pager);count.textContent=`${ui.page+1} / ${Math.ceil(total/size)}`;
   }
   function rememberTarget(target){if(battle.enemies.includes(target))targetMemory.enemy=target;else if(battle.party.includes(target))targetMemory.party=target;}
@@ -314,7 +312,7 @@
   function cancel(){
     if(ui.level==='target'){lockedAction=null;battle.targetMode=false;battle.pendingSkill=null;ui.level='action';}
     else if(ui.level==='itemTarget')ui.level='items';
-    else if(ui.level==='items'){battle.itemMode=false;ui.category='all';ui.level='category';ui.action=currentGroup().actions.findIndex(s=>s.command==='items');}
+    else if(ui.level==='items'){battle.itemMode=false;ui.category='basic';ui.level='category';ui.action=0;}
     else ui.level='category';
     renderCommands();
   }
@@ -329,9 +327,9 @@
     }
     if(c==='up'&&ui.level==='action'){ui.level='category';return renderCommands();}
     const d=c==='left'||c==='up'?-1:c==='right'||c==='down'?1:0;if(!d)return;
-    if(ui.level==='items')itemIndex=(itemIndex+d+carriedBattleItems().length)%carriedBattleItems().length;
+    if(ui.level==='items'){const count=carriedBattleItems().length;if(count)itemIndex=(itemIndex+d+count)%count;}
     else if(ui.level==='target'||ui.level==='itemTarget'){ui.target=(ui.target+d+targetList.length)%targetList.length;battleActionIndex=ui.target;if(ui.level==='target')rememberTarget(targetList[ui.target]);}
-    else ui.action=(ui.action+d+currentGroup().actions.length)%currentGroup().actions.length;
+    else if(currentGroup().actions.length){lockedAction=null;ui.action=(ui.action+d+currentGroup().actions.length)%currentGroup().actions.length;}
     renderCommands();
   }
   function portrait(turn){
@@ -352,20 +350,29 @@
       ].sort((a,b)=>b.agi-a.agi||(a.side===b.side?0:a.side===(round%2?'enemy':'party')?-1:1));
       turns.push(...next);
     }
-    timeline.innerHTML=`<strong class="bc-round">R${battle.round}<small>/ ${battle.roundCap||MAX_BATTLE_ROUNDS}</small></strong><div class="bc-turns">${turns.map((t,i)=>{const src=portrait(t),future=t.round>battle.round,boundary=i===0||turns[i-1].round!==t.round;return `${boundary?`<span class="bc-round-divider" title="${future?'Forecast — order may change with actions and status effects':'Current round'}">R${t.round}${future?'<small>Preview</small>':''}</span>`:''}<span class="bc-turn ${t.side} ${i===0?'is-current':''} ${future?'is-forecast':''}" ${i===0?'aria-current="step"':''} title="${esc(t.name)} · Round ${t.round} · AGI ${t.agi}${future?' · Forecast using current stats':''}">${src?`<img src="${esc(src)}" alt="">`:''}<b>${esc(t.name)}</b>${t.extra?'<small>Extra</small>':''}</span>`;}).join('')}</div>`;
+    timeline.innerHTML=`<strong class="bc-round">Round ${battle.round}<small>/ ${battle.roundCap||MAX_BATTLE_ROUNDS}</small><span class="bc-phase-label">Phase ${Math.max(1,(battle.phaseTotal||1)-(battle.waves?.length||0))} / ${battle.phaseTotal||1}</span></strong><div class="bc-turns">${turns.map((t,i)=>{const src=portrait(t),future=t.round>battle.round,boundary=i===0||turns[i-1].round!==t.round;return `${boundary?`<span class="bc-round-divider" title="${future?'Forecast — order may change with actions and status effects':'Current round'}">R${t.round}${future?'<small>Preview</small>':''}</span>`:''}<span class="bc-turn ${t.side} ${i===0?'is-current':''} ${future?'is-forecast':''}" ${i===0?'aria-current="step"':''} title="${esc(t.name)} · Round ${t.round} · AGI ${t.agi}${future?' · Forecast using current stats':''}">${src?`<img src="${esc(src)}" alt="">`:''}<b>${esc(t.name)}</b>${t.extra?'<small>Extra</small>':''}</span>`;}).join('')}</div>`;
   };
+  function renderResonance(){
+    for(const [selector,value,label,color]of [['.hud-battle-resonance',state.resonance,'Party Resonance','#bc86ff'],['.hud-enemy-resonance',battle.enemyResonance||0,'Enemy Resonance','#f28d99']]){
+      const host=document.querySelector(selector);if(!host)continue;
+      if(!host.querySelector('.bc-resonance-gem')){const gem=document.createElement('i');gem.className='bc-resonance-gem';gem.setAttribute('aria-hidden','true');gem.style.color=color;gem.innerHTML='<svg viewBox="0 0 36 36" fill="none"><path d="M18 2 34 18 18 34 2 18Z" stroke="currentColor" stroke-width="1.3" fill="currentColor" fill-opacity=".12"/><path d="m18 7 8 11-8 11-8-11Z" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity=".22"/><path d="m18 9 2.2 6.8L27 18l-6.8 2.2L18 27l-2.2-6.8L9 18l6.8-2.2Z" fill="currentColor"/><path d="M18 11v14M11 18h14" stroke="#fff3ff" stroke-width=".8"/></svg>';host.prepend(gem);}
+      const text=host.querySelector(':scope>span:not(.bc-resonance-gem)');if(text)text.innerHTML=label+' <b>'+Math.round(value)+' <small>/ 100</small></b>';
+      host.querySelector('.bc-resonance-spend')?.remove();const spent=battle.lastEnemyResonanceSpend;if(selector.includes('enemy')&&spent&&performance.now()-spent.at<1600){const note=document.createElement('em');note.className='bc-resonance-spend';note.textContent='−'+Math.round(spent.amount)+' ULT';host.append(note);}
+      host.classList.toggle('is-full',value>=100);const track=host.querySelector('.battle-resonance-track');if(track){track.setAttribute('role','progressbar');track.setAttribute('aria-label',label);track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(Math.round(value)));}
+    }
+  }
   renderBattle=function(log){
     if(!battle)return;
     window.HallEncounters?.dismissSummons();
     retreatButton.disabled=!canRetreatBattle();
-    el.battleLog.textContent=battle.lastAttackDamage||log||'';renderDamageMeter();renderTurnOrder();renderRecap();
+    el.battleLog.textContent=battle.lastAttackDamage||log||'';renderDamageMeter();renderTurnOrder();renderRecap();renderResonance();
     el.battleResonance.style.width=`${Math.max(0,Math.min(100,state.resonance))}%`;
     el.enemyBattleResonance.style.width=`${Math.max(0,Math.min(100,battle.enemyResonance||0))}%`;
     el.battleResonance.parentElement.setAttribute('aria-label',`Party Resonance ${Math.round(state.resonance)} / 100`);
     el.enemyBattleResonance.parentElement.setAttribute('aria-label',`Enemy Resonance ${Math.round(battle.enemyResonance||0)} / 100`);
     const turn=currentTurn(),newTurn=owner!==battle||turnOwner!==turn;
     if(owner!==battle)targetMemory={enemy:null,party:null};
-    if(newTurn){lockedAction=null;lockedItem=null;owner=battle;turnOwner=turn;ui={level:'category',category:'all',action:0,target:0,page:0};}
+    if(newTurn){lockedAction=null;lockedItem=null;owner=battle;turnOwner=turn;ui={level:'category',category:'basic',action:0,target:0,page:0};}
     unit=turn?.side==='party'?battle.party.find(a=>a.id===turn.id):null;
     rebuildStatusCards();
     if(!unit||battle.resolving||battle.phaseTransition){command.classList.add('is-waiting');heading.innerHTML=`<strong>${esc(turn?.name||battle.name)}</strong><span>${esc(battle.lastAttackDamage||log||'')}</span>`;categories.innerHTML='';actionRow.innerHTML='<div class="bc-waiting">'+(battle.phaseTransition?'Next phase':battle.resolving?'Action in progress…':'Enemy turn')+'</div>';detail.innerHTML='<p class="bc-waiting-note">'+esc(battle.lastAttackDamage||log||'')+'</p>';instruction.textContent='';return;}
@@ -389,7 +396,7 @@
       if(side==='enemy'&&u.hp<=0)return;
       const n=make('button',`bc-unit ${side} ${u.hp<=0?'is-down':''}`,cards);n.type='button';n.setAttribute('aria-label',`${u.name}: HP ${Math.max(0,u.hp)} / ${u.max}, MP ${u.mp||0} / ${u.maxmp||0}`);
       const displayStatuses=[...(u.statuses||[])].sort((a,b)=>(b.type==='broken')-(a.type==='broken'));
-      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span class="${STATUS_DEFS[s.type]?.negative?'is-debuff':'is-buff'}" title="${STATUS_DEFS[s.type]?.negative?'Debuff':'Buff'} · ${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
+      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<strong class="bc-unit-name">${esc(u.name)}</strong><span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span class="${STATUS_DEFS[s.type]?.negative?'is-debuff':'is-buff'}" title="${STATUS_DEFS[s.type]?.negative?'Debuff':'Buff'} · ${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
       if(combatRoleIconSheet){const role=make('span','bc-role',n),index=COMBAT_ROLE_ICON_INDEX[combatRoleKey(u,side==='enemy')]??4;role.setAttribute('aria-hidden','true');role.innerHTML=`<i style="background-image:url('${esc(combatRoleIconSheet.image.src)}');background-position:${index*25}% center"></i>`;}
       n.onclick=()=>{if(ui.level==='target'&&targetList.includes(u)){selectTarget(u);renderCommands();}else if(ui.level==='itemTarget'&&targetList.includes(u)){selectTarget(u);renderCommands();}else if(u.statuses?.length){history.querySelector('header strong').textContent=u.name+' · Status effects';history.querySelector('.bc-history-content').innerHTML=u.statuses.map(s=>{const d=statusDisplayData(u,s);return `<div><b>${esc(d.name)}</b> · ${esc(d.timing)}<p>${esc(d.description)}</p></div>`;}).join('');history.showModal();}};
       n.addEventListener('pointerenter',event=>showUnitTooltip(u,event));n.addEventListener('pointermove',event=>showUnitTooltip(u,event));n.addEventListener('pointerleave',hideUnitTooltip);
@@ -511,7 +518,7 @@
     const radius=Math.max(18,Math.min(34,(bounds?.width||24)*.72));
     const center=x+(bounds?.dx||0),feet=y+(bounds?.dy||0)+1;
     const time=performance.now()/1000,pulse=.92+Math.sin(time*1.35)*.08;
-    const rgb=kind==='target'?'201,156,255':'255,219,135',white=kind==='target'?'240,221,255':'255,244,207';
+    const rgb=kind==='target'?'120,216,245':'255,219,135',white=kind==='target'?'214,247,255':'255,244,207';
     const colour=alpha=>`rgba(${rgb},${alpha})`,bright=alpha=>`rgba(${white},${alpha})`;
     ctx.save();ctx.globalCompositeOperation='screen';ctx.imageSmoothingEnabled=true;
     if(!foreground){
@@ -620,7 +627,7 @@
   let pads=[],lastPad=0;
   function gamepad(now){if(mode==='battle'&&!history.open){const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);if(pad){const values=[pad.buttons[14]?.pressed||pad.axes[0]<-.55,pad.buttons[15]?.pressed||pad.axes[0]>.55,pad.buttons[12]?.pressed||pad.axes[1]<-.55,pad.buttons[13]?.pressed||pad.axes[1]>.55,pad.buttons[0]?.pressed,pad.buttons[1]?.pressed];values.forEach((v,i)=>{if(v&&(!pads[i]||i<4&&now-lastPad>240)){handleControl(['left','right','up','down','confirm','cancel'][i]);lastPad=now;}});pads=values;}}requestAnimationFrame(gamepad);}requestAnimationFrame(gamepad);
   new ResizeObserver(()=>{lastLayout='';if(mode==='battle'&&unit&&!battle.resolving){renderCommands();positionCards();}}).observe(game);
-  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},boundsFor:u=>spriteBounds.get(u),presentationFor:enemyPresentation,get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,render:()=>renderBattle(''),previewUnits,positionCards};
+  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},boundsFor:u=>spriteBounds.get(u),presentationFor:enemyPresentation,get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,refreshResonance:renderResonance,render:()=>renderBattle(''),previewUnits,positionCards};
 })();
 
 
