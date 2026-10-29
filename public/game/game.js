@@ -14790,7 +14790,8 @@ function renderMenu() {
       selectedGearSlot = btn.dataset.gearSlot;
       gearPickerOpen = true;
       gearBrowser.slot = selectedGearSlot;
-      selectedGearRef = null;
+      selectedGearRef = baseJobs[selectedGearHero].gear[selectedGearSlot] || null;
+      gearOptimizeOpen = false;
       renderMenu();
     });
     el.menuBody.querySelectorAll("[data-gear-preview]").forEach(btn => btn.onclick = () => {

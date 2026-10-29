@@ -4,11 +4,11 @@
     "owner": "Verseborn",
     "slot": "weapon",
     "stats": {
-      "str": 7,
-      "mag": 35,
-      "stam": 12,
-      "agi": 14,
-      "echo": 18
+      "str": 10,
+      "mag": 51,
+      "stam": 18,
+      "agi": 20,
+      "echo": 26
     },
     "desc": "A melody left unfinished so another voice can join it.",
     "art": "Second Verse Lute",
@@ -22,17 +22,52 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "scholars",
+        "label": "Scholar's",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "mag",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "resonant",
+        "label": "Resonant",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "arcane",
+        "label": "Arcane",
+        "type": "magicDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "siphoning",
+        "label": "Siphoning",
+        "type": "siphoning",
+        "min": 0.0725,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
@@ -44,95 +79,158 @@
       "label": "BASIC ATTACK: next Song gains 20% potency"
     },
     "weaponHitLabel": "BASIC ATTACK: next Song gains 20% potency",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Songweaver’s Travelling Mantle",
     "owner": "Verseborn",
     "slot": "armour",
     "stats": {
-      "str": 7,
-      "mag": 29,
-      "stam": 18,
-      "agi": 14,
-      "echo": 18
+      "str": 10,
+      "mag": 42,
+      "stam": 26,
+      "agi": 21,
+      "echo": 26
     },
     "desc": "Road dust in the hem; a welcome song in every fold.",
     "art": "Mantle of Unwritten Roads",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "stout",
+        "label": "Stout",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.087,
+        "max": 0.232,
+        "stat": "stam",
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
       },
       {
-        "key": "prolonging",
-        "label": "Prolonging",
+        "key": "quietMind",
+        "label": "Quiet Mind",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "silence",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "temperedMind",
+        "label": "Tempered Mind",
+        "type": "statusSeverityReduction",
+        "min": 0.2175,
+        "max": 0.435,
+        "status": "debuff",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "lasting",
+        "label": "Lasting Guard",
         "type": "buffDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 9,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Hood of the Listening Road",
     "owner": "Verseborn",
     "slot": "helmet",
     "stats": {
-      "str": 7,
-      "mag": 31,
-      "stam": 13,
-      "agi": 15,
-      "echo": 20
+      "str": 10,
+      "mag": 45,
+      "stam": 19,
+      "agi": 22,
+      "echo": 29
     },
     "desc": "Pulled low when the room needs a listener more than a singer.",
     "art": "Songweaver Hood",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
       },
       {
         "key": "resolute",
         "label": "Resolute",
         "type": "allStatusResistance",
-        "value": 0.05
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 6,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Pendant of the Shared Refrain",
     "owner": "Verseborn",
     "slot": "necklace",
     "stats": {
-      "str": 7,
-      "mag": 31,
-      "stam": 13,
-      "agi": 15,
-      "echo": 20
+      "str": 10,
+      "mag": 45,
+      "stam": 19,
+      "agi": 22,
+      "echo": 29
     },
     "desc": "A refrain carried close, never kept for one voice alone.",
     "art": "Small Promise of Tomorrow",
@@ -145,35 +243,69 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 3,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Second Verse",
     "owner": "Verseborn",
     "slot": "ring",
     "stats": {
-      "str": 7,
-      "mag": 31,
-      "stam": 13,
-      "agi": 15,
-      "echo": 20
+      "str": 10,
+      "mag": 45,
+      "stam": 19,
+      "agi": 22,
+      "echo": 29
     },
     "desc": "The second verse begins when someone answers.",
     "art": "Ring of the Unwritten Refrain",
@@ -186,35 +318,69 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 9,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Veln’s Betweenworld Voidthorns",
     "owner": "Mira",
     "slot": "weapon",
     "stats": {
-      "str": 34,
-      "mag": 6,
-      "stam": 11,
-      "agi": 24,
-      "echo": 11
+      "str": 49,
+      "mag": 9,
+      "stam": 16,
+      "agi": 35,
+      "echo": 16
     },
     "desc": "Two quiet edges; neither promises a warning.",
     "art": "Veln Eclipse Blades",
@@ -239,109 +405,205 @@
         "key": "strong",
         "label": "Strong",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "str",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "physical",
+        "label": "Forceful",
+        "type": "physicalDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "executioner",
+        "label": "Executioner",
+        "type": "afflictedDamage",
+        "min": 0.145,
+        "max": 0.319,
+        "value": 0.319,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "leeching",
+        "label": "Leeching",
+        "type": "leeching",
+        "min": 0.058,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
     "weaponHitLabel": "30% Marked · basic attacks / physical weapon skills",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Whisperwoven Nightcoat",
     "owner": "Mira",
     "slot": "armour",
     "stats": {
-      "str": 28,
-      "mag": 6,
-      "stam": 17,
-      "agi": 24,
-      "echo": 11
+      "str": 40,
+      "mag": 9,
+      "stam": 25,
+      "agi": 35,
+      "echo": 16
     },
     "desc": "The lining remembers a hundred exits and no farewells.",
     "art": "Nightneedle Harness",
     "effect": [],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "stout",
+        "label": "Stout",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.087,
+        "max": 0.232,
+        "stat": "stam",
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "unyielding",
+        "label": "Unyielding",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "stun",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "antivenom",
+        "label": "Antivenom",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "poison",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "steadfast",
+        "label": "Steadfast",
+        "type": "statusDurationReduction",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 7,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Veln’s Moonshadow Hat",
     "owner": "Mira",
     "slot": "helmet",
     "stats": {
-      "str": 30,
-      "mag": 6,
-      "stam": 12,
-      "agi": 26,
-      "echo": 12
+      "str": 44,
+      "mag": 9,
+      "stam": 17,
+      "agi": 38,
+      "echo": 17
     },
     "desc": "A familiar tilt hides the direction of her next glance.",
     "art": "Mira Top Hat",
     "effect": [],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "fleet",
+        "label": "Fleet",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       },
       {
         "key": "cruel",
         "label": "Cruel",
         "type": "statusDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 1,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Token of the Unspoken Promise",
     "owner": "Mira",
     "slot": "necklace",
     "stats": {
-      "str": 30,
-      "mag": 6,
-      "stam": 12,
-      "agi": 26,
-      "echo": 12
+      "str": 44,
+      "mag": 9,
+      "stam": 17,
+      "agi": 38,
+      "echo": 17
     },
     "desc": "Some promises are safer without witnesses.",
     "art": "Veln Crest Token",
@@ -354,35 +616,68 @@
     ],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "fleet",
+        "label": "Fleet",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 5,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Vanishing Step",
     "owner": "Mira",
     "slot": "ring",
     "stats": {
-      "str": 30,
-      "mag": 6,
-      "stam": 12,
-      "agi": 26,
-      "echo": 12
+      "str": 44,
+      "mag": 9,
+      "stam": 17,
+      "agi": 38,
+      "echo": 17
     },
     "desc": "The smallest movement leaves the longest doubt.",
     "art": "Ring of the Last Whisper",
@@ -395,35 +690,68 @@
     ],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 8,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Starflame Oathblade",
     "owner": "Seerin",
     "slot": "weapon",
     "stats": {
-      "str": 31,
-      "mag": 11,
-      "stam": 24,
-      "agi": 8,
-      "echo": 12
+      "str": 45,
+      "mag": 16,
+      "stam": 35,
+      "agi": 12,
+      "echo": 17
     },
     "desc": "A long blade held between danger and the people behind her.",
     "art": "Cinderstar Aegis",
@@ -448,33 +776,67 @@
         "key": "strong",
         "label": "Strong",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "str",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "physical",
+        "label": "Forceful",
+        "type": "physicalDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "executioner",
+        "label": "Executioner",
+        "type": "afflictedDamage",
+        "min": 0.145,
+        "max": 0.319,
+        "value": 0.319,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "leeching",
+        "label": "Leeching",
+        "type": "leeching",
+        "min": 0.058,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
     "weaponHitLabel": "30% Holy Vulnerability · basic attacks / physical weapon skills",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Plate of the Open Door",
     "owner": "Seerin",
     "slot": "armour",
     "stats": {
-      "str": 25,
-      "mag": 11,
-      "stam": 30,
-      "agi": 8,
-      "echo": 12
+      "str": 36,
+      "mag": 16,
+      "stam": 44,
+      "agi": 12,
+      "echo": 17
     },
     "desc": "A door is only a defence if someone keeps it open for others.",
     "art": "Flameguard Plate",
@@ -484,67 +846,136 @@
         "key": "stout",
         "label": "Stout",
         "type": "statPct",
+        "min": 0.087,
+        "max": 0.232,
         "stat": "stam",
-        "value": 0.06
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "unyielding",
+        "label": "Unyielding",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "stun",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "temperedMind",
+        "label": "Tempered Mind",
+        "type": "statusSeverityReduction",
+        "min": 0.2175,
+        "max": 0.435,
+        "status": "debuff",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "lasting",
+        "label": "Lasting Guard",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 9,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Cinderstar Vigil Crown",
     "owner": "Seerin",
     "slot": "helmet",
     "stats": {
-      "str": 27,
-      "mag": 12,
-      "stam": 26,
-      "agi": 8,
-      "echo": 13
+      "str": 39,
+      "mag": 17,
+      "stam": 38,
+      "agi": 12,
+      "echo": 19
     },
     "desc": "The watch ends when everyone is safely inside.",
     "art": "Hearthbound Covenant",
     "effect": [],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       },
       {
         "key": "resolute",
         "label": "Resolute",
         "type": "allStatusResistance",
-        "value": 0.05
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 1,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Hearthward Oath Pendant",
     "owner": "Seerin",
     "slot": "necklace",
     "stats": {
-      "str": 27,
-      "mag": 12,
-      "stam": 26,
-      "agi": 8,
-      "echo": 13
+      "str": 39,
+      "mag": 17,
+      "stam": 38,
+      "agi": 12,
+      "echo": 19
     },
     "desc": "Warmth carried beneath the weight of an oath.",
     "art": "Hearthwall Crest",
@@ -557,41 +988,69 @@
     ],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
         "key": "prolonging",
         "label": "Prolonging",
         "type": "buffDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 7,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Unbroken Vigil",
     "owner": "Seerin",
     "slot": "ring",
     "stats": {
-      "str": 27,
-      "mag": 12,
-      "stam": 26,
-      "agi": 8,
-      "echo": 13
+      "str": 39,
+      "mag": 17,
+      "stam": 38,
+      "agi": 12,
+      "echo": 19
     },
     "desc": "A promise measured by who makes it home.",
     "art": "Ring of the Hearthward Oath",
@@ -604,35 +1063,69 @@
     ],
     "affixes": [
       {
-        "key": "strong",
-        "label": "Strong",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "str",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       },
       {
         "key": "resolute",
         "label": "Resolute",
         "type": "allStatusResistance",
-        "value": 0.05
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 6,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Staff of the Freely Chosen Oath",
     "owner": "Kael",
     "slot": "weapon",
     "stats": {
-      "str": 4,
-      "mag": 38,
-      "stam": 18,
-      "agi": 8,
-      "echo": 18
+      "str": 6,
+      "mag": 55,
+      "stam": 26,
+      "agi": 12,
+      "echo": 26
     },
     "desc": "The oath holds because the hand holding it is free.",
     "art": "Unbound Oathstaff",
@@ -653,118 +1146,211 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "scholars",
+        "label": "Scholar's",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "mag",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "resonant",
+        "label": "Resonant",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "siphoning",
+        "label": "Siphoning",
+        "type": "siphoning",
+        "min": 0.0725,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
     "weaponHitLabel": "30% Magic Vulnerability · basic attacks / physical weapon skills",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Vestments of Quiet Mercy",
     "owner": "Kael",
     "slot": "armour",
     "stats": {
-      "str": 4,
-      "mag": 32,
-      "stam": 24,
-      "agi": 8,
-      "echo": 18
+      "str": 6,
+      "mag": 46,
+      "stam": 35,
+      "agi": 12,
+      "echo": 26
     },
     "desc": "Mercy has no need to raise its voice.",
     "art": "Unbound Pact Mantle",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "stout",
+        "label": "Stout",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.087,
+        "max": 0.232,
+        "stat": "stam",
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
       },
       {
-        "key": "prolonging",
-        "label": "Prolonging",
+        "key": "quietMind",
+        "label": "Quiet Mind",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "silence",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "temperedMind",
+        "label": "Tempered Mind",
+        "type": "statusSeverityReduction",
+        "min": 0.2175,
+        "max": 0.435,
+        "status": "debuff",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "lasting",
+        "label": "Lasting Guard",
         "type": "buffDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 1,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Circlet of the Unbound Rite",
     "owner": "Kael",
     "slot": "helmet",
     "stats": {
-      "str": 4,
-      "mag": 34,
-      "stam": 19,
-      "agi": 9,
-      "echo": 20
+      "str": 6,
+      "mag": 49,
+      "stam": 28,
+      "agi": 13,
+      "echo": 29
     },
     "desc": "A quiet rite, with room left for doubt.",
     "art": "Impossible Lens",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
         "key": "cruel",
         "label": "Cruel",
         "type": "statusDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "resolute",
+        "label": "Resolute",
+        "type": "allStatusResistance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 3,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Reliquary of the Open Hand",
     "owner": "Kael",
     "slot": "necklace",
     "stats": {
-      "str": 4,
-      "mag": 34,
-      "stam": 19,
-      "agi": 9,
-      "echo": 20
+      "str": 6,
+      "mag": 49,
+      "stam": 28,
+      "agi": 13,
+      "echo": 29
     },
     "desc": "An open hand cannot become a chain.",
     "art": "Silent Reliquary",
@@ -777,35 +1363,69 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 4,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Quiet Horizon",
     "owner": "Kael",
     "slot": "ring",
     "stats": {
-      "str": 4,
-      "mag": 34,
-      "stam": 19,
-      "agi": 9,
-      "echo": 20
+      "str": 6,
+      "mag": 49,
+      "stam": 28,
+      "agi": 13,
+      "echo": 29
     },
     "desc": "He keeps the horizon wide enough for another choice.",
     "art": "Ring of the Unspent Mercy",
@@ -818,35 +1438,69 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 2,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Stoneheart Worldroot Shield",
     "owner": "Torren",
     "slot": "weapon",
     "stats": {
-      "str": 28,
-      "mag": 5,
-      "stam": 34,
-      "agi": 7,
-      "echo": 12
+      "str": 41,
+      "mag": 7,
+      "stam": 49,
+      "agi": 10,
+      "echo": 18
     },
     "desc": "The mountain lends its weight to a shield, not a throne.",
     "art": "Worldroot Shield",
@@ -859,17 +1513,52 @@
     ],
     "affixes": [
       {
-        "key": "stout",
-        "label": "Stout",
+        "key": "strong",
+        "label": "Strong",
         "type": "statPct",
-        "stat": "stam",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "str",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "resonant",
+        "label": "Resonant",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "physical",
+        "label": "Forceful",
+        "type": "physicalDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "leeching",
+        "label": "Leeching",
+        "type": "leeching",
+        "min": 0.058,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
@@ -882,19 +1571,19 @@
       "label": "BASIC ATTACK: grants a 16% personal barrier"
     },
     "weaponHitLabel": "BASIC ATTACK: grants a 16% personal barrier",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Mantle of the Deep Foundation",
     "owner": "Torren",
     "slot": "armour",
     "stats": {
-      "str": 21,
-      "mag": 5,
-      "stam": 41,
-      "agi": 7,
-      "echo": 12
+      "str": 31,
+      "mag": 7,
+      "stam": 60,
+      "agi": 10,
+      "echo": 17
     },
     "desc": "A foundation is worth nothing without people above it.",
     "art": "Stonewake Mantle",
@@ -904,73 +1593,136 @@
         "key": "stout",
         "label": "Stout",
         "type": "statPct",
+        "min": 0.087,
+        "max": 0.232,
         "stat": "stam",
-        "value": 0.06
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
       },
       {
-        "key": "prolonging",
-        "label": "Prolonging",
+        "key": "unyielding",
+        "label": "Unyielding",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "stun",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "poisonward",
+        "label": "Poisonward",
+        "type": "statusSeverityReduction",
+        "min": 0.174,
+        "max": 0.435,
+        "status": "poison",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "lasting",
+        "label": "Lasting Guard",
         "type": "buffDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 5,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Helm of the Patient Mountain",
     "owner": "Torren",
     "slot": "helmet",
     "stats": {
-      "str": 23,
-      "mag": 5,
-      "stam": 37,
-      "agi": 8,
-      "echo": 13
+      "str": 33,
+      "mag": 7,
+      "stam": 54,
+      "agi": 12,
+      "echo": 19
     },
     "desc": "Patient as stone; less forgiving when his friends are threatened.",
     "art": "Ragmask True-Sight",
     "effect": [],
     "affixes": [
       {
-        "key": "stout",
-        "label": "Stout",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "stam",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       },
       {
         "key": "resolute",
         "label": "Resolute",
         "type": "allStatusResistance",
-        "value": 0.05
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 2,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Stonekin Hearthstone",
     "owner": "Torren",
     "slot": "necklace",
     "stats": {
-      "str": 23,
-      "mag": 5,
-      "stam": 37,
-      "agi": 8,
-      "echo": 13
+      "str": 33,
+      "mag": 7,
+      "stam": 54,
+      "agi": 12,
+      "echo": 19
     },
     "desc": "A little piece of home, still warm after the fire.",
     "art": "Ash Quarter Heartfire",
@@ -983,35 +1735,69 @@
     ],
     "affixes": [
       {
-        "key": "stout",
-        "label": "Stout",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "stam",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 3,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Steadfast Table",
     "owner": "Torren",
     "slot": "ring",
     "stats": {
-      "str": 23,
-      "mag": 5,
-      "stam": 37,
-      "agi": 8,
-      "echo": 13
+      "str": 33,
+      "mag": 7,
+      "stam": 54,
+      "agi": 12,
+      "echo": 19
     },
     "desc": "There is always room for one more at his table.",
     "art": "Ring of the Mountain Within",
@@ -1024,35 +1810,69 @@
     ],
     "affixes": [
       {
-        "key": "stout",
-        "label": "Stout",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "stam",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       },
       {
         "key": "resolute",
         "label": "Resolute",
         "type": "allStatusResistance",
-        "value": 0.05
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 5,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Klik-Wrench Beyond Measure",
     "owner": "Glimmer",
     "slot": "weapon",
     "stats": {
-      "str": 10,
-      "mag": 33,
-      "stam": 13,
-      "agi": 14,
-      "echo": 16
+      "str": 15,
+      "mag": 48,
+      "stam": 19,
+      "agi": 20,
+      "echo": 23
     },
     "desc": "One more adjustment. This time it will probably stay adjusted.",
     "art": "Klik-Wrench Infinite",
@@ -1074,112 +1894,209 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "scholars",
+        "label": "Scholar's",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "mag",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "resonant",
+        "label": "Resonant",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "arcane",
+        "label": "Arcane",
+        "type": "magicDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "siphoning",
+        "label": "Siphoning",
+        "type": "siphoning",
+        "min": 0.0725,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
     "weaponHitLabel": "30% Disrupted · basic attacks / physical weapon skills",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Coat of Impossible Repairs",
     "owner": "Glimmer",
     "slot": "armour",
     "stats": {
-      "str": 10,
-      "mag": 27,
-      "stam": 19,
-      "agi": 14,
-      "echo": 16
+      "str": 15,
+      "mag": 39,
+      "stam": 28,
+      "agi": 20,
+      "echo": 23
     },
     "desc": "Every patch marks something she refused to throw away.",
     "art": "Workshop Coat",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "stout",
+        "label": "Stout",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.087,
+        "max": 0.232,
+        "stat": "stam",
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quietMind",
+        "label": "Quiet Mind",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "silence",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "temperedMind",
+        "label": "Tempered Mind",
+        "type": "statusSeverityReduction",
+        "min": 0.2175,
+        "max": 0.435,
+        "status": "debuff",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "lasting",
+        "label": "Lasting Guard",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 4,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Goggles of the Open Circuit",
     "owner": "Glimmer",
     "slot": "helmet",
     "stats": {
-      "str": 10,
-      "mag": 29,
-      "stam": 14,
-      "agi": 16,
-      "echo": 17
+      "str": 15,
+      "mag": 42,
+      "stam": 20,
+      "agi": 23,
+      "echo": 25
     },
     "desc": "Scratches, soot, and a very clear view of the next problem.",
     "art": "Glimmer Goggles",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "fleet",
+        "label": "Fleet",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       },
       {
         "key": "cruel",
         "label": "Cruel",
         "type": "statusDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 5,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Gearheart of the Last Repair",
     "owner": "Glimmer",
     "slot": "necklace",
     "stats": {
-      "str": 10,
-      "mag": 29,
-      "stam": 14,
-      "agi": 16,
-      "echo": 17
+      "str": 15,
+      "mag": 42,
+      "stam": 20,
+      "agi": 23,
+      "echo": 25
     },
     "desc": "The smallest gear can keep the whole workshop turning.",
     "art": "Gearheart Charm",
@@ -1192,35 +2109,68 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "fleet",
+        "label": "Fleet",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 2,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Restless Workshop",
     "owner": "Glimmer",
     "slot": "ring",
     "stats": {
-      "str": 10,
-      "mag": 29,
-      "stam": 14,
-      "agi": 16,
-      "echo": 17
+      "str": 15,
+      "mag": 42,
+      "stam": 20,
+      "agi": 23,
+      "echo": 25
     },
     "desc": "There is no final repair while someone still needs help.",
     "art": "Ring of the Endless Workshop",
@@ -1233,35 +2183,68 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 7,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Claws of the Remembered Prince",
     "owner": "Sparky",
     "slot": "weapon",
     "stats": {
-      "str": 13,
-      "mag": 30,
-      "stam": 14,
-      "agi": 10,
-      "echo": 19
+      "str": 19,
+      "mag": 44,
+      "stam": 20,
+      "agi": 14,
+      "echo": 28
     },
     "desc": "Small claws, carrying a memory much older than their owner looks.",
     "art": "Elderflame Claws",
@@ -1283,112 +2266,209 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "scholars",
+        "label": "Scholar's",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "mag",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "resonant",
+        "label": "Resonant",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "arcane",
+        "label": "Arcane",
+        "type": "magicDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "siphoning",
+        "label": "Siphoning",
+        "type": "siphoning",
+        "min": 0.0725,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
     "weaponHitLabel": "30% Burn · basic attacks / physical weapon skills",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Scales of the First Friendship",
     "owner": "Sparky",
     "slot": "armour",
     "stats": {
-      "str": 13,
-      "mag": 24,
-      "stam": 21,
-      "agi": 9,
-      "echo": 19
+      "str": 19,
+      "mag": 35,
+      "stam": 30,
+      "agi": 13,
+      "echo": 28
     },
     "desc": "The strongest scales grow around a friendship.",
     "art": "Afterimage Coat",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "stout",
+        "label": "Stout",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.087,
+        "max": 0.232,
+        "stat": "stam",
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quietMind",
+        "label": "Quiet Mind",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "silence",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "temperedMind",
+        "label": "Tempered Mind",
+        "type": "statusSeverityReduction",
+        "min": 0.2175,
+        "max": 0.435,
+        "status": "debuff",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "steadfast",
+        "label": "Steadfast",
+        "type": "statusDurationReduction",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 6,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Crown of the Little Dragon",
     "owner": "Sparky",
     "slot": "helmet",
     "stats": {
-      "str": 14,
-      "mag": 26,
-      "stam": 15,
-      "agi": 10,
-      "echo": 21
+      "str": 20,
+      "mag": 38,
+      "stam": 22,
+      "agi": 15,
+      "echo": 30
     },
     "desc": "It sits crooked. The dignity is entirely his own.",
     "art": "Betweenworld Lens",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "fleet",
+        "label": "Fleet",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       },
       {
         "key": "cruel",
         "label": "Cruel",
         "type": "statusDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 3,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Bell of the Enduring Bond",
     "owner": "Sparky",
     "slot": "necklace",
     "stats": {
-      "str": 14,
-      "mag": 26,
-      "stam": 15,
-      "agi": 10,
-      "echo": 21
+      "str": 20,
+      "mag": 38,
+      "stam": 22,
+      "agi": 15,
+      "echo": 30
     },
     "desc": "A familiar chime can bring him back from any dark corner.",
     "art": "Elder Ember Bell",
@@ -1401,35 +2481,68 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "fleet",
+        "label": "Fleet",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 8,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Loyal Flame",
     "owner": "Sparky",
     "slot": "ring",
     "stats": {
-      "str": 14,
-      "mag": 26,
-      "stam": 15,
-      "agi": 10,
-      "echo": 21
+      "str": 20,
+      "mag": 38,
+      "stam": 22,
+      "agi": 15,
+      "echo": 30
     },
     "desc": "A loyal flame does not need to be the largest one.",
     "art": "Ring of the Remembered Ember",
@@ -1442,35 +2555,68 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "cruel",
+        "label": "Cruel",
+        "type": "statusDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 4,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Ledger of the Unwritten Exception",
     "owner": "Tinus",
     "slot": "weapon",
     "stats": {
-      "str": 17,
-      "mag": 28,
-      "stam": 16,
-      "agi": 12,
-      "echo": 13
+      "str": 25,
+      "mag": 41,
+      "stam": 23,
+      "agi": 17,
+      "echo": 19
     },
     "desc": "The final page is deliberately blank.",
     "art": "The Unfinished Ledger",
@@ -1492,36 +2638,71 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "scholars",
+        "label": "Scholar's",
         "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
         "stat": "mag",
-        "value": 0.06
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "resonant",
+        "label": "Resonant",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "arcane",
+        "label": "Arcane",
+        "type": "magicDamage",
+        "min": 0.087,
+        "max": 0.203,
+        "value": 0.203,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "siphoning",
+        "label": "Siphoning",
+        "type": "siphoning",
+        "min": 0.0725,
+        "max": 0.145,
+        "hallOnly": true,
+        "value": 0.145,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
     "weaponHitLabel": "30% Slow · basic attacks / physical weapon skills",
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Jacket of the Unscheduled Guest",
     "owner": "Tinus",
     "slot": "armour",
     "stats": {
-      "str": 18,
-      "mag": 21,
-      "stam": 22,
-      "agi": 12,
-      "echo": 13
+      "str": 26,
+      "mag": 31,
+      "stam": 32,
+      "agi": 17,
+      "echo": 19
     },
     "desc": "Comfortable enough to outlast the meeting.",
     "art": "Chaos Agent’s Black Jacket",
@@ -1531,79 +2712,136 @@
         "key": "stout",
         "label": "Stout",
         "type": "statPct",
+        "min": 0.087,
+        "max": 0.232,
         "stat": "stam",
-        "value": 0.06
+        "value": 0.232,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "vital",
+        "label": "Vital",
+        "type": "hpPct",
+        "min": 0.116,
+        "max": 0.29,
+        "value": 0.29,
+        "statusRulesVersion": 2
       },
       {
-        "key": "prolonging",
-        "label": "Prolonging",
+        "key": "quietMind",
+        "label": "Quiet Mind",
+        "type": "statusResistance",
+        "min": 0.2175,
+        "max": 0.5075,
+        "status": "silence",
+        "value": 0.5075,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "temperedMind",
+        "label": "Tempered Mind",
+        "type": "statusSeverityReduction",
+        "min": 0.2175,
+        "max": 0.435,
+        "status": "debuff",
+        "value": 0.435,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "lasting",
+        "label": "Lasting Guard",
         "type": "buffDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 8,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Beanie of the Missing Footnote",
     "owner": "Tinus",
     "slot": "helmet",
     "stats": {
-      "str": 19,
-      "mag": 23,
-      "stam": 17,
-      "agi": 13,
-      "echo": 14
+      "str": 28,
+      "mag": 33,
+      "stam": 25,
+      "agi": 19,
+      "echo": 20
     },
     "desc": "The footnote has left the document and gone for a walk.",
     "art": "Betweenworld Beanie",
     "effect": [],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
         "key": "cruel",
         "label": "Cruel",
         "type": "statusDuration",
-        "value": 1
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "resolute",
+        "label": "Resolute",
+        "type": "allStatusResistance",
+        "min": 0.058,
+        "max": 0.145,
+        "value": 0.145,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 2,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Coffee Keepsake of the Long Meeting",
     "owner": "Tinus",
     "slot": "necklace",
     "stats": {
-      "str": 19,
-      "mag": 23,
-      "stam": 17,
-      "agi": 13,
-      "echo": 14
+      "str": 28,
+      "mag": 33,
+      "stam": 25,
+      "agi": 19,
+      "echo": 20
     },
     "desc": "A little warmth for a very long meeting.",
     "art": "B Coffee Keepsake",
@@ -1616,35 +2854,69 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "echoing",
+        "label": "Echoing",
+        "type": "echoing",
+        "min": 0.0725,
+        "max": 0.116,
+        "value": 0.116,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "quickstart",
+        "label": "Quickstart",
+        "type": "openingTurnProgress",
+        "min": 0.145,
+        "max": 0.3625,
+        "value": 0.3625,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 1,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   },
   {
     "name": "Signet of the Open Clause",
     "owner": "Tinus",
     "slot": "ring",
     "stats": {
-      "str": 19,
-      "mag": 23,
-      "stam": 17,
-      "agi": 13,
-      "echo": 14
+      "str": 28,
+      "mag": 33,
+      "stam": 25,
+      "agi": 19,
+      "echo": 20
     },
     "desc": "There is always room for one more exception.",
     "art": "Ring of the Returning Path",
@@ -1657,23 +2929,57 @@
     ],
     "affixes": [
       {
-        "key": "wise",
-        "label": "Wise",
+        "key": "resonant",
+        "label": "Resonant",
         "type": "statPct",
-        "stat": "mag",
-        "value": 0.06
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "echo",
+        "value": 0.2175,
+        "statusRulesVersion": 2
       },
       {
-        "key": "resolute",
-        "label": "Resolute",
-        "type": "allStatusResistance",
-        "value": 0.05
+        "key": "fleet",
+        "label": "Fleet",
+        "type": "statPct",
+        "min": 0.0725,
+        "max": 0.2175,
+        "stat": "agi",
+        "value": 0.2175,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "prolonging",
+        "label": "Prolonging",
+        "type": "buffDuration",
+        "min": 2,
+        "max": 2,
+        "value": 2,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "alchemist",
+        "label": "Alchemist",
+        "type": "statusChance",
+        "min": 0.116,
+        "max": 0.261,
+        "value": 0.261,
+        "statusRulesVersion": 2
+      },
+      {
+        "key": "keen",
+        "label": "Keen",
+        "type": "critChance",
+        "min": 0.058,
+        "max": 0.1305,
+        "value": 0.1305,
+        "statusRulesVersion": 2
       }
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 4,
-    "statBudget": 86,
-    "balanceVersion": 373
+    "statBudget": 125,
+    "balanceVersion": 375
   }
 ]
