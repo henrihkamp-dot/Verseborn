@@ -1509,6 +1509,14 @@
         "type": "blockPower",
         "value": 0.12,
         "label": "Living Foundation: stronger personal Guard (+12 percentage points)"
+      },
+      {
+        "type": "statusOnHit",
+        "status": "stun",
+        "value": 0.3,
+        "duration": 2,
+        "trigger": "weapon",
+        "label": "Worldroot Impact: basic attacks and physical skills have a 30% chance to Stun for 2 actions (before resistance)"
       }
     ],
     "affixes": [
@@ -1570,7 +1578,7 @@
       "duration": 2,
       "label": "BASIC ATTACK: grants a 16% personal barrier"
     },
-    "weaponHitLabel": "BASIC ATTACK: grants a 16% personal barrier",
+    "weaponHitLabel": "Worldroot Impact: basic attacks / physical skills have a 30% Stun chance for 2 actions. Basic attacks also grant a 16% personal barrier.",
     "statBudget": 125,
     "balanceVersion": 375
   },

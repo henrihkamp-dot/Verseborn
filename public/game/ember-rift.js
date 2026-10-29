@@ -332,7 +332,7 @@
   function migrateRiftGearRarities(){RiftPersonal.migrate();}
   function migratePersonalGearRarities(){for(const name of state.ownedGear||[]){if(defaultGearRarity(name)!=='Personal Artifact')continue;state.gearRarities??={};state.gearRarities[name]='Personal Artifact';for(const ref of echoGearInstanceRefs(name)){const instance=gearInstance(ref);if(instance)instance.rarity='Personal Artifact';}}}
   const oldLoad=loadGame;
-  loadGame=function(key){const result=oldLoad(key);if(result){migrateRiftGearRarities();migratePersonalGearRarities();}doorStart=null;if(result&&state.gameMode==='hallBattles'&&state.map===MAP){const position=progress().position;ready.then(()=>enterRoom(position));}return result;};
+  loadGame=function(key){const result=oldLoad(key);if(result){migrateRiftGearRarities();migratePersonalGearRarities();RiftPersonal.equipPartySetsOnce(key);}doorStart=null;if(result&&state.gameMode==='hallBattles'&&state.map===MAP){const position=progress().position;ready.then(()=>enterRoom(position));}return result;};
   const oldStart=startHallBattles;
   startHallBattles=function(continuing){let restoreRoom=false;try{restoreRoom=continuing&&JSON.parse(localStorage.getItem(hallSaveKey())||'null')?.state?.map===MAP;}catch{}oldStart(continuing);doorStart=null;if(restoreRoom&&progress().unlocked)ready.then(()=>enterRoom(progress().position));};
   const oldClose=closeHallOverlay;

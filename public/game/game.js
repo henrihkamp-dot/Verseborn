@@ -3662,7 +3662,7 @@ const compactTalentTrees = {
     talentNode(2, "Earthen Guard", "newSkill", skill("Earthen Guard", "block", "Earth", 0, 6, "Gain a personal stone barrier for 4 actions.", { targetSide: "self", buffs: [{ type: "barrier", value: .3, duration: 4 }] })),
     talentNode(2, "Concussive Blow", "basicBreak", 2, "Normal Attack deals +2 Break."),
     talentNode(2, "Foundation Quake", "aoeSkill", "Foundation Break", "Foundation Break becomes an area attack that damages every living enemy."),
-    talentNode(3, "Fault Line", "newSkill", skill("Fault Line", "melee", "Earth", 0, 11, "1.25x STR + 0.625x STAM to all enemies with high Break.", { coefficient: 1.25, allEnemies: true, staggerPower: 3 })),
+    talentNode(3, "Fault Line", "newSkill", skill("Fault Line", "melee", "Earth", 0, 11, "1.25x STR + 0.625x STAM to all enemies with high Break.", { coefficient: 1.25, staminaScaling: .5, allEnemies: true, staggerPower: 3 })),
     talentNode(3, "Rockslide", "brokenDamage", .2, "Deal 20% more physical damage to recently Broken enemies."),
     talentNode(3, "Cover Me", "intercept", .25, "25% chance to absorb an attack intended for a wounded ally."),
     talentNode(4, "Living Mountain", "barrierBoost", .25, "Torren's barriers are 25% stronger."),
@@ -6044,7 +6044,7 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
   if (sk.rank0Agility) return Math.round(primary);
   const agility = id === "Mira" ? stats.agi * .5 : 0;
   if (id === "Torren" && statKey === "str" && skillTargetsEnemies(sk)) {
-    return primary + stats.stam * transformedStatMultiplier(unit, "stam") * .1;
+    return primary + stats.stam * transformedStatMultiplier(unit, "stam") * (sk.staminaScaling ?? .1);
   }
   if (id === "Seerin" && statKey === "str" && skillTargetsEnemies(sk) && !sk.dispel) {
     return primary + stats.mag * transformedStatMultiplier(unit, "mag") * .5;
@@ -6055,7 +6055,7 @@ function skillOffensiveStat(id, sk, unit = { id }, stats = totals(id)) {
 function skillScalingLabel(id, sk) {
   const primary = skillScaling(sk).toUpperCase();
   if (sk.rank0Agility) return primary;
-  if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return "STR + 0.1 STAM";
+  if (id === "Torren" && primary === "STR" && skillTargetsEnemies(sk)) return `STR + ${sk.staminaScaling ?? .1} STAM`;
   if (id === "Seerin" && primary === "STR" && skillTargetsEnemies(sk) && !sk.dispel) return "STR + 0.5 MAG";
   return id === "Mira" && skillTargetsEnemies(sk) ? `${primary} + 0.5 AGI` : primary;
 }
