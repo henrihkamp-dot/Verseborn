@@ -546,3 +546,11 @@ body[data-play-mode="battle"] .hud{top:99px!important}
  .command-battle .bc-action:not(:has(.bc-action-copy))>span:last-child{display:flex;flex-direction:column;align-items:center;gap:4px}
  .command-battle .bc-action .bc-reason{font-size:9px!important;line-height:1.1;margin:0}
 }
+/* Give the existing click area more illustration without growing the dock. */
+@media(min-width:701px){
+ .command-battle .bc-command-left{grid-template-rows:22px 30px minmax(0,1fr) 16px;gap:4px}
+ .command-battle .bc-action{min-height:0;max-height:none;padding:3px 7px;gap:4px}
+ .command-battle .bc-card-art{width:clamp(80px,6vw,112px);height:clamp(80px,6vw,112px);max-height:calc(100% - 52px);aspect-ratio:1;object-fit:contain}
+ .command-battle .bc-action-copy{gap:3px}
+ .command-battle .bc-detail-art{width:60px;height:60px}
+}
