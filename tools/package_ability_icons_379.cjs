@@ -1,0 +1,3 @@
+const fs=require('fs'),path=require('path'),sharp=require('C:/Users/Henri/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');
+(async()=>{const src='public/game/assets/menu-icons-368',dst='dist/client/game/assets/ability-icons-379';fs.mkdirSync(dst,{recursive:true});let bytes=0;for(const name of fs.readdirSync(src).filter(n=>n.startsWith('ability-')&&n.endsWith('.webp'))){const data=await sharp(path.join(src,name)).resize({width:128,height:128,fit:'inside',withoutEnlargement:true}).webp({quality:60}).toBuffer();fs.writeFileSync(path.join(dst,name),data);bytes+=data.length;}console.log({icons:fs.readdirSync(dst).length,bytes});})();
+
