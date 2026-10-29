@@ -59,7 +59,7 @@
   prepareEnemyForBattle = (...args) => { const unit = oldPrepare(...args); unit.statusIdentity = enemyProfile(unit); return unit; };
   function gearEntries(id) {
     if (!baseJobs[id]) return [];
-    return [...Object.values(baseJobs[id].gear).flatMap(ref => ref ? [...gearEffects(gearByName(ref)), ...gearAffixes(ref)] : []), ...activeMythicSetEffects(id)];
+    return [...Object.entries(baseJobs[id].gear).flatMap(([slot,ref]) => ref ? [...gearEffects(gearByName(ref)), ...gearAffixes(ref)].map(entry=>slot==='weapon'&&entry.type==='statusOnHit'&&!entry.trigger?{...entry,trigger:'weapon'}:entry) : []), ...activeMythicSetEffects(id)];
   }
   function resistance(id, type) {
     const entries = gearEntries(id), specific = diminish(entries.filter(entry => entry.type === 'statusResistance' && entry.status === type).map(entry => entry.value));
@@ -169,9 +169,11 @@
   function procSources(source, skill, hit = {}) {
     const id = actorId(source);
     const entries = gearEntries(id).filter(entry => entry.type === 'statusOnHit' && eligible(entry, skill, hit)).map(entry => ({ type: entry.status, chance: entry.value, duration: entry.duration, potency: entry.potency, scaling: skillScaling(skill) }));
-    if (skill.basicAttack) {
+    if (skill.basicAttack || skillScaling(skill) === 'str') {
       const basic = weaponBasicAttackEffect(gearByName(baseJobs[id]?.gear.weapon));
-      if (basic?.type === 'status') entries.push({ ...basic, type: basic.status, chance: basic.chance ?? 1, duration: (basic.duration || 2) + typedTalentValue(id, 'basicDebuffDuration'), scaling: basic.status === 'poison' ? 'str' : 'mag' });
+      if (basic?.type === 'status') entries.push({ ...basic, type: basic.status, chance: basic.chance ?? 1, duration: (basic.duration || 2) + (skill.basicAttack ? typedTalentValue(id, 'basicDebuffDuration') : 0), scaling: basic.status === 'poison' ? 'str' : 'mag' });
+    }
+    if (skill.basicAttack) {
       const coating = battle?.party?.includes(source) ? HallHub.supportForBattle()?.coating : null;
       if (coating) entries.push({ type: coating.status, chance: coating.chance, duration: coating.duration, value: coating.value, scaling: coating.status === 'bleed' ? 'str' : 'agi' });
     }

@@ -4,7 +4,7 @@
   const model=BattleActionModel,root=el.battle,game=canvas.parentElement;
   const allCategory={id:'all',label:'All',kind:'All actions',color:'#dbbaff'},itemsCategory={id:'items',label:'Items',kind:'Item',color:'#8ccef0'};
   const categoryInfo=id=>model.categories.find(c=>c.id===id)||uiCategories.find(c=>c.id===id)||(id==='all'?allCategory:id==='items'?itemsCategory:{label:id,kind:'Action'});
-  const uiCategories=[{id:'basic',label:'Basic',kind:'Basic action',color:'#e9d6aa'},{id:'attack',label:'Attack actions',kind:'Attack',color:'#81d8f1'},{id:'buffDebuff',label:'Buff & Debuff',kind:'Buff / Debuff',color:'#c6a4f1'},{id:'healDef',label:'Heal & Defence',kind:'Healing / Defence',color:'#9ed8c7'},{id:'ultimate',label:'Ultimate',kind:'Ultimate',color:'#ebc684'},itemsCategory];
+  const uiCategories=[{id:'basic',label:'Basic',kind:'Basic action',color:'#e9d6aa'},{id:'attack',label:'Attack actions',kind:'Attack',color:'#81d8f1'},{id:'buffDebuff',label:'Buff & Debuff',kind:'Buff / Debuff',color:'#c6a4f1'},{id:'healDef',label:'Healing actions',kind:'Healing',color:'#9ed8c7'},{id:'ultimate',label:'Ultimate',kind:'Ultimate',color:'#ebc684'},itemsCategory];
   const categoryOrder=uiCategories.map(c=>c.id);
   root.classList.add('command-battle');
   const make=(tag,cls,parent)=>{const n=document.createElement(tag);n.className=cls;parent?.appendChild(n);return n;};
@@ -101,10 +101,9 @@
   }
   function commandCategory(sk){
     if(sk.anim==='ultimate')return 'ultimate';
-    if(sk.basicAttack||sk.command==='defend'||sk.name==='Guard'||sk.rank0Guard||(sk.anim==='block'&&sk.power>=0&&sk.targetScope==='self'))return 'basic';
-    if(sk.power<0||sk.cleanse||sk.manaRecovery)return 'healDef';
+    if(sk.basicAttack||sk.command==='defend')return 'basic';
+    if(sk.power<0||sk.manaRecovery)return 'healDef';
     if(skillTargetsEnemies(sk)&&!sk.statusOnly&&!sk.dispel&&(sk.power>0||sk.coefficient))return 'attack';
-    if(sk.grantsWard||sk.anim==='block'||(sk.buffs||[]).some(b=>['barrier','defenseUp','evasion','mechGuard','intercept'].includes(b.type)))return 'healDef';
     return 'buffDebuff';
   }
   function refreshGroups(){

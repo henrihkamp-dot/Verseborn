@@ -6414,7 +6414,10 @@ function resolveActionSustain(unit, sk, directDamage, paidMp = 0, targetCount = 
     addBattleFloater(unit, hp, { kind: "heal" });
   }
   const siphoning = sk.basicAttack ? 0 : combatSustainRate(unit.id, "siphoning");
-  const mp = siphoning ? Math.min(Math.floor(Math.max(0, paidMp) * Math.min(.3, siphoning * 2)), unit.maxmp - unit.mp) : 0;
+  const rateRefund = siphoning ? Math.floor(Math.max(0, paidMp) * Math.min(.3, siphoning * 2)) : 0;
+  const physicalFloor = unit.id === "Torren" && !sk.basicAttack && sk.anim !== "ultimate" && skillScaling(sk) === "str"
+    ? Math.min(Math.max(0, paidMp), effectValue(unit.id, "physicalMpRefundFloor")) : 0;
+  const mp = Math.min(Math.max(rateRefund, physicalFloor), Math.max(0, unit.maxmp - unit.mp));
   if (mp > 0) { unit.mp += mp; addBattleMpGain(unit, mp, "Siphoning"); }
   return { hp, mp };
 }
@@ -10954,7 +10957,7 @@ function skillPreview(u, sk, target = null) {
   const targetLow = targetRoll(low);
   const targetHigh = targetRoll(high);
   const weaknessText = displayWeakness ? ` | Weakness included${sk.shadowExposureBonus && statusOf(target, "shadowExposed") ? " + Voidthorn payoff" : ""}` : "";
-  const basicEffect = sk.basicAttack ? weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon))?.label : "";
+  const basicEffect = (sk.basicAttack || skillScaling(sk) === "str") ? weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon))?.label : "";
   return `${sk.element} ${statName} | ${targetLow}-${targetHigh} damage${weaknessText} | ${targetLabel} | ${cost}. ${basicEffect ? `${basicEffect}. ` : ""}${sk.desc}`;
 }
 
@@ -11632,6 +11635,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       let totalDamageDealt = 0;
       let directDamageDealt = 0;
       let vampiricRestored = 0;
+      let weaponSpecialApplied = false;
       const holyFollowUpPower = statusValue(u, "holyFollowUp");
       const holyCapPerTarget = holyFollowUpCap(u, hitTargets.length);
       let holyFollowUpTriggered = false;
@@ -11751,7 +11755,8 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           const bleed = applyStatus(hitTarget, "bleed", u, { chance: typedTalentValue(u.id, "critBleed"), duration: 3, scaling: "str", applicationKey: "talent:critBleed" });
           if (bleed.message) statusNotes.push(bleed.message);
         }
-        if (sk.basicAttack) {
+        if ((sk.basicAttack || statKey === "str") && (!weaponSpecialApplied || weaponBasicAttackEffect(gearByName(baseJobs[u.id].gear.weapon))?.type === "status")) {
+          weaponSpecialApplied = true;
           const weaponNote = applyWeaponBasicAttackEffect(u, hitTarget);
           if (weaponNote) statusNotes.push(weaponNote);
         }

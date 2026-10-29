@@ -76,9 +76,9 @@
     "basicEffect": {
       "type": "songCharge",
       "value": 0.2,
-      "label": "BASIC ATTACK: next Song gains 20% potency"
+      "label": "WEAPON HIT: next Song gains 20% potency"
     },
-    "weaponHitLabel": "BASIC ATTACK: next Song gains 20% potency",
+    "weaponHitLabel": "WEAPON HIT: next Song gains 20% potency",
     "statBudget": 125,
     "balanceVersion": 375
   },
@@ -1576,9 +1576,9 @@
       "type": "barrier",
       "value": 0.16,
       "duration": 2,
-      "label": "BASIC ATTACK: grants a 16% personal barrier"
+      "label": "WEAPON HIT: grants a 16% personal barrier"
     },
-    "weaponHitLabel": "Worldroot Impact: basic attacks / physical skills have a 30% Stun chance for 2 actions. Basic attacks also grant a 16% personal barrier.",
+    "weaponHitLabel": "Worldroot Impact: basic attacks / physical skills have a 30% Stun chance for 2 actions. Basic attacks and physical skills also grant a 16% personal barrier.",
     "statBudget": 125,
     "balanceVersion": 375
   },
@@ -1739,6 +1739,16 @@
         "type": "healPower",
         "value": 0.12,
         "label": "Hearthstone: +12% healing potency"
+      },
+      {
+        "type": "siphoning",
+        "value": 0.15,
+        "label": "Hearthstone Flow: Siphoning refunds 30% of paid MP after damaging skills"
+      },
+      {
+        "type": "physicalMpRefundFloor",
+        "value": 3,
+        "label": "Stonekin Reserves: physical skills refund at least 3 MP, up to MP spent; once per action, no Ultimates"
       }
     ],
     "affixes": [
