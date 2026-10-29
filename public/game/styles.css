@@ -7488,7 +7488,7 @@ body.frameless-hall .panel { display: none; }
 .rarity-shadow-artifact { color: #b4c2ef !important; border-color: #7786b9; background: #171d30; text-shadow: 0 0 6px #8297d388; }
 .rarity-rift-artifact { color: #adfff0 !important; border-color: #54d9c2; background: #102c2a; text-shadow: 0 0 6px #59e5cd88; }
 
-.rarity-personal-artifact { color: #d391ff !important; border-color: #a95cdf; background: #291537; text-shadow: 0 0 6px #bb70ec88; }
+.rarity-personal-artifact { color: #e2e7ef !important; border-color: #b4c0cf; background: #20242e; text-shadow: 0 0 6px #c4d2e744; }
 
 .rarity-shadow-personal-artifact { color: #c79cff !important; border-color: #8561c5; background: #20132f; text-shadow: 0 0 6px #a567dc88; }
 .selection-row.rarity-personal-artifact strong, .selection-row.rarity-shadow-personal-artifact strong, .selection-detail-head:has(.rarity-personal-artifact) strong, .selection-detail-head:has(.rarity-shadow-personal-artifact) strong { color: #d391ff; }
@@ -7504,3 +7504,5 @@ body.frameless-hall .panel { display: none; }
 .hall-opening-active .dialogue-portrait figcaption{display:none}
 .hall-opening-active .dialogue-portrait img{image-rendering:auto}
 }
+
+.selection-row.rarity-personal-artifact strong,.selection-detail-head:has(.rarity-personal-artifact) strong {color:#e2e7ef!important}

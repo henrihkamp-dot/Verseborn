@@ -4,13 +4,12 @@
     "owner": "Verseborn",
     "slot": "weapon",
     "stats": {
-      "str": 6,
-      "mag": 31,
-      "stam": 10,
-      "agi": 13,
-      "echo": 16
+      "str": 7,
+      "mag": 35,
+      "stam": 12,
+      "agi": 14,
+      "echo": 18
     },
-    "baselineTotal": 69,
     "desc": "A melody left unfinished so another voice can join it.",
     "art": "Second Verse Lute",
     "effect": [
@@ -44,20 +43,21 @@
       "value": 0.2,
       "label": "BASIC ATTACK: next Song gains 20% potency"
     },
-    "weaponHitLabel": "BASIC ATTACK: next Song gains 20% potency"
+    "weaponHitLabel": "BASIC ATTACK: next Song gains 20% potency",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Songweaver’s Travelling Mantle",
     "owner": "Verseborn",
     "slot": "armour",
     "stats": {
-      "str": 6,
-      "mag": 27,
-      "stam": 17,
+      "str": 7,
+      "mag": 29,
+      "stam": 18,
       "agi": 14,
-      "echo": 17
+      "echo": 18
     },
-    "baselineTotal": 74,
     "desc": "Road dust in the hem; a welcome song in every fold.",
     "art": "Mantle of Unwritten Roads",
     "effect": [],
@@ -84,20 +84,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 9
+    "riftStage": 9,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Hood of the Listening Road",
     "owner": "Verseborn",
     "slot": "helmet",
     "stats": {
-      "str": 5,
-      "mag": 20,
-      "stam": 8,
-      "agi": 10,
-      "echo": 13
+      "str": 7,
+      "mag": 31,
+      "stam": 13,
+      "agi": 15,
+      "echo": 20
     },
-    "baselineTotal": 51,
     "desc": "Pulled low when the room needs a listener more than a singer.",
     "art": "Songweaver Hood",
     "effect": [],
@@ -118,20 +119,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 6
+    "riftStage": 6,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Pendant of the Shared Refrain",
     "owner": "Verseborn",
     "slot": "necklace",
     "stats": {
-      "str": 28,
-      "mag": 125,
-      "stam": 52,
-      "agi": 63,
-      "echo": 80
+      "str": 7,
+      "mag": 31,
+      "stam": 13,
+      "agi": 15,
+      "echo": 20
     },
-    "baselineTotal": 316,
     "desc": "A refrain carried close, never kept for one voice alone.",
     "art": "Small Promise of Tomorrow",
     "effect": [
@@ -158,20 +160,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 3
+    "riftStage": 3,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Second Verse",
     "owner": "Verseborn",
     "slot": "ring",
     "stats": {
-      "str": 5,
-      "mag": 20,
-      "stam": 8,
-      "agi": 10,
-      "echo": 13
+      "str": 7,
+      "mag": 31,
+      "stam": 13,
+      "agi": 15,
+      "echo": 20
     },
-    "baselineTotal": 51,
     "desc": "The second verse begins when someone answers.",
     "art": "Ring of the Unwritten Refrain",
     "effect": [
@@ -198,20 +201,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 9
+    "riftStage": 9,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Veln’s Betweenworld Voidthorns",
     "owner": "Mira",
     "slot": "weapon",
     "stats": {
-      "str": 147,
-      "mag": 24,
-      "stam": 48,
-      "agi": 103,
-      "echo": 48
+      "str": 34,
+      "mag": 6,
+      "stam": 11,
+      "agi": 24,
+      "echo": 11
     },
-    "baselineTotal": 336,
     "desc": "Two quiet edges; neither promises a warning.",
     "art": "Veln Eclipse Blades",
     "effect": [
@@ -248,20 +252,21 @@
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
-    "weaponHitLabel": "30% Marked · basic attacks / physical weapon skills"
+    "weaponHitLabel": "30% Marked · basic attacks / physical weapon skills",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Whisperwoven Nightcoat",
     "owner": "Mira",
     "slot": "armour",
     "stats": {
-      "str": 115,
-      "mag": 23,
-      "stam": 73,
-      "agi": 99,
-      "echo": 46
+      "str": 28,
+      "mag": 6,
+      "stam": 17,
+      "agi": 24,
+      "echo": 11
     },
-    "baselineTotal": 324,
     "desc": "The lining remembers a hundred exits and no farewells.",
     "art": "Nightneedle Harness",
     "effect": [],
@@ -282,20 +287,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 7
+    "riftStage": 7,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Veln’s Moonshadow Hat",
     "owner": "Mira",
     "slot": "helmet",
     "stats": {
-      "str": 110,
-      "mag": 22,
-      "stam": 44,
-      "agi": 95,
-      "echo": 44
+      "str": 30,
+      "mag": 6,
+      "stam": 12,
+      "agi": 26,
+      "echo": 12
     },
-    "baselineTotal": 286,
     "desc": "A familiar tilt hides the direction of her next glance.",
     "art": "Mira Top Hat",
     "effect": [],
@@ -322,20 +328,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 1
+    "riftStage": 1,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Token of the Unspoken Promise",
     "owner": "Mira",
     "slot": "necklace",
     "stats": {
-      "str": 29,
+      "str": 30,
       "mag": 6,
-      "stam": 11,
-      "agi": 25,
-      "echo": 11
+      "stam": 12,
+      "agi": 26,
+      "echo": 12
     },
-    "baselineTotal": 75,
     "desc": "Some promises are safer without witnesses.",
     "art": "Veln Crest Token",
     "effect": [
@@ -362,20 +369,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 5
+    "riftStage": 5,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Vanishing Step",
     "owner": "Mira",
     "slot": "ring",
     "stats": {
-      "str": 122,
-      "mag": 24,
-      "stam": 49,
-      "agi": 104,
-      "echo": 49
+      "str": 30,
+      "mag": 6,
+      "stam": 12,
+      "agi": 26,
+      "echo": 12
     },
-    "baselineTotal": 316,
     "desc": "The smallest movement leaves the longest doubt.",
     "art": "Ring of the Last Whisper",
     "effect": [
@@ -402,20 +410,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 8
+    "riftStage": 8,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Starflame Oathblade",
     "owner": "Seerin",
     "slot": "weapon",
     "stats": {
-      "str": 136,
-      "mag": 49,
-      "stam": 104,
-      "agi": 35,
-      "echo": 52
+      "str": 31,
+      "mag": 11,
+      "stam": 24,
+      "agi": 8,
+      "echo": 12
     },
-    "baselineTotal": 342,
     "desc": "A long blade held between danger and the people behind her.",
     "art": "Cinderstar Aegis",
     "effect": [
@@ -452,20 +461,21 @@
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
-    "weaponHitLabel": "30% Holy Vulnerability · basic attacks / physical weapon skills"
+    "weaponHitLabel": "30% Holy Vulnerability · basic attacks / physical weapon skills",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Plate of the Open Door",
     "owner": "Seerin",
     "slot": "armour",
     "stats": {
-      "str": 109,
-      "mag": 50,
-      "stam": 134,
-      "agi": 35,
-      "echo": 53
+      "str": 25,
+      "mag": 11,
+      "stam": 30,
+      "agi": 8,
+      "echo": 12
     },
-    "baselineTotal": 346,
     "desc": "A door is only a defence if someone keeps it open for others.",
     "art": "Flameguard Plate",
     "effect": [],
@@ -486,20 +496,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 9
+    "riftStage": 9,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Cinderstar Vigil Crown",
     "owner": "Seerin",
     "slot": "helmet",
     "stats": {
-      "str": 116,
-      "mag": 53,
-      "stam": 113,
-      "agi": 38,
-      "echo": 56
+      "str": 27,
+      "mag": 12,
+      "stam": 26,
+      "agi": 8,
+      "echo": 13
     },
-    "baselineTotal": 342,
     "desc": "The watch ends when everyone is safely inside.",
     "art": "Hearthbound Covenant",
     "effect": [],
@@ -520,20 +531,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 1
+    "riftStage": 1,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Hearthward Oath Pendant",
     "owner": "Seerin",
     "slot": "necklace",
     "stats": {
-      "str": 118,
-      "mag": 54,
-      "stam": 114,
-      "agi": 38,
-      "echo": 57
+      "str": 27,
+      "mag": 12,
+      "stam": 26,
+      "agi": 8,
+      "echo": 13
     },
-    "baselineTotal": 346,
     "desc": "Warmth carried beneath the weight of an oath.",
     "art": "Hearthwall Crest",
     "effect": [
@@ -566,20 +578,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 7
+    "riftStage": 7,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Unbroken Vigil",
     "owner": "Seerin",
     "slot": "ring",
     "stats": {
-      "str": 116,
-      "mag": 53,
-      "stam": 113,
-      "agi": 38,
-      "echo": 56
+      "str": 27,
+      "mag": 12,
+      "stam": 26,
+      "agi": 8,
+      "echo": 13
     },
-    "baselineTotal": 342,
     "desc": "A promise measured by who makes it home.",
     "art": "Ring of the Hearthward Oath",
     "effect": [
@@ -606,20 +619,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 6
+    "riftStage": 6,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Staff of the Freely Chosen Oath",
     "owner": "Kael",
     "slot": "weapon",
     "stats": {
-      "str": 17,
-      "mag": 160,
-      "stam": 73,
-      "agi": 33,
-      "echo": 76
+      "str": 4,
+      "mag": 38,
+      "stam": 18,
+      "agi": 8,
+      "echo": 18
     },
-    "baselineTotal": 326,
     "desc": "The oath holds because the hand holding it is free.",
     "art": "Unbound Oathstaff",
     "effect": [
@@ -655,20 +669,21 @@
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
-    "weaponHitLabel": "30% Magic Vulnerability · basic attacks / physical weapon skills"
+    "weaponHitLabel": "30% Magic Vulnerability · basic attacks / physical weapon skills",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Vestments of Quiet Mercy",
     "owner": "Kael",
     "slot": "armour",
     "stats": {
-      "str": 2,
-      "mag": 20,
-      "stam": 15,
-      "agi": 5,
-      "echo": 11
+      "str": 4,
+      "mag": 32,
+      "stam": 24,
+      "agi": 8,
+      "echo": 18
     },
-    "baselineTotal": 48,
     "desc": "Mercy has no need to raise its voice.",
     "art": "Unbound Pact Mantle",
     "effect": [],
@@ -695,20 +710,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 1
+    "riftStage": 1,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Circlet of the Unbound Rite",
     "owner": "Kael",
     "slot": "helmet",
     "stats": {
-      "str": 19,
-      "mag": 148,
-      "stam": 81,
-      "agi": 37,
-      "echo": 85
+      "str": 4,
+      "mag": 34,
+      "stam": 19,
+      "agi": 9,
+      "echo": 20
     },
-    "baselineTotal": 336,
     "desc": "A quiet rite, with room left for doubt.",
     "art": "Impossible Lens",
     "effect": [],
@@ -735,20 +751,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 3
+    "riftStage": 3,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Reliquary of the Open Hand",
     "owner": "Kael",
     "slot": "necklace",
     "stats": {
-      "str": 17,
-      "mag": 136,
-      "stam": 74,
-      "agi": 34,
-      "echo": 78
+      "str": 4,
+      "mag": 34,
+      "stam": 19,
+      "agi": 9,
+      "echo": 20
     },
-    "baselineTotal": 308,
     "desc": "An open hand cannot become a chain.",
     "art": "Silent Reliquary",
     "effect": [
@@ -775,7 +792,9 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 4
+    "riftStage": 4,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Quiet Horizon",
@@ -783,12 +802,11 @@
     "slot": "ring",
     "stats": {
       "str": 4,
-      "mag": 31,
-      "stam": 17,
-      "agi": 8,
-      "echo": 18
+      "mag": 34,
+      "stam": 19,
+      "agi": 9,
+      "echo": 20
     },
-    "baselineTotal": 71,
     "desc": "He keeps the horizon wide enough for another choice.",
     "art": "Ring of the Unspent Mercy",
     "effect": [
@@ -815,20 +833,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 2
+    "riftStage": 2,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Stoneheart Worldroot Shield",
     "owner": "Torren",
     "slot": "weapon",
     "stats": {
-      "str": 128,
-      "mag": 22,
-      "stam": 157,
-      "agi": 33,
-      "echo": 55
+      "str": 28,
+      "mag": 5,
+      "stam": 34,
+      "agi": 7,
+      "echo": 12
     },
-    "baselineTotal": 359,
     "desc": "The mountain lends its weight to a shield, not a throne.",
     "art": "Worldroot Shield",
     "effect": [
@@ -862,20 +881,21 @@
       "duration": 2,
       "label": "BASIC ATTACK: grants a 16% personal barrier"
     },
-    "weaponHitLabel": "BASIC ATTACK: grants a 16% personal barrier"
+    "weaponHitLabel": "BASIC ATTACK: grants a 16% personal barrier",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Mantle of the Deep Foundation",
     "owner": "Torren",
     "slot": "armour",
     "stats": {
-      "str": 94,
-      "mag": 21,
-      "stam": 178,
-      "agi": 31,
-      "echo": 52
+      "str": 21,
+      "mag": 5,
+      "stam": 41,
+      "agi": 7,
+      "echo": 12
     },
-    "baselineTotal": 342,
     "desc": "A foundation is worth nothing without people above it.",
     "art": "Stonewake Mantle",
     "effect": [],
@@ -902,20 +922,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 5
+    "riftStage": 5,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Helm of the Patient Mountain",
     "owner": "Torren",
     "slot": "helmet",
     "stats": {
-      "str": 102,
-      "mag": 23,
-      "stam": 162,
-      "agi": 34,
-      "echo": 56
+      "str": 23,
+      "mag": 5,
+      "stam": 37,
+      "agi": 8,
+      "echo": 13
     },
-    "baselineTotal": 343,
     "desc": "Patient as stone; less forgiving when his friends are threatened.",
     "art": "Ragmask True-Sight",
     "effect": [],
@@ -936,20 +957,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 2
+    "riftStage": 2,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Stonekin Hearthstone",
     "owner": "Torren",
     "slot": "necklace",
     "stats": {
-      "str": 117,
-      "mag": 26,
-      "stam": 186,
-      "agi": 39,
-      "echo": 65
+      "str": 23,
+      "mag": 5,
+      "stam": 37,
+      "agi": 8,
+      "echo": 13
     },
-    "baselineTotal": 394,
     "desc": "A little piece of home, still warm after the fire.",
     "art": "Ash Quarter Heartfire",
     "effect": [
@@ -976,20 +998,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 3
+    "riftStage": 3,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Steadfast Table",
     "owner": "Torren",
     "slot": "ring",
     "stats": {
-      "str": 111,
-      "mag": 25,
-      "stam": 178,
-      "agi": 37,
-      "echo": 62
+      "str": 23,
+      "mag": 5,
+      "stam": 37,
+      "agi": 8,
+      "echo": 13
     },
-    "baselineTotal": 375,
     "desc": "There is always room for one more at his table.",
     "art": "Ring of the Mountain Within",
     "effect": [
@@ -1016,20 +1039,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 5
+    "riftStage": 5,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Klik-Wrench Beyond Measure",
     "owner": "Glimmer",
     "slot": "weapon",
     "stats": {
-      "str": 7,
-      "mag": 24,
-      "stam": 9,
-      "agi": 10,
-      "echo": 12
+      "str": 10,
+      "mag": 33,
+      "stam": 13,
+      "agi": 14,
+      "echo": 16
     },
-    "baselineTotal": 56,
     "desc": "One more adjustment. This time it will probably stay adjusted.",
     "art": "Klik-Wrench Infinite",
     "effect": [
@@ -1066,20 +1090,21 @@
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
-    "weaponHitLabel": "30% Disrupted · basic attacks / physical weapon skills"
+    "weaponHitLabel": "30% Disrupted · basic attacks / physical weapon skills",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Coat of Impossible Repairs",
     "owner": "Glimmer",
     "slot": "armour",
     "stats": {
-      "str": 39,
-      "mag": 110,
-      "stam": 77,
-      "agi": 58,
-      "echo": 64
+      "str": 10,
+      "mag": 27,
+      "stam": 19,
+      "agi": 14,
+      "echo": 16
     },
-    "baselineTotal": 316,
     "desc": "Every patch marks something she refused to throw away.",
     "art": "Workshop Coat",
     "effect": [],
@@ -1100,20 +1125,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 4
+    "riftStage": 4,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Goggles of the Open Circuit",
     "owner": "Glimmer",
     "slot": "helmet",
     "stats": {
-      "str": 6,
-      "mag": 19,
-      "stam": 9,
-      "agi": 10,
-      "echo": 11
+      "str": 10,
+      "mag": 29,
+      "stam": 14,
+      "agi": 16,
+      "echo": 17
     },
-    "baselineTotal": 50,
     "desc": "Scratches, soot, and a very clear view of the next problem.",
     "art": "Glimmer Goggles",
     "effect": [],
@@ -1140,20 +1166,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 5
+    "riftStage": 5,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Gearheart of the Last Repair",
     "owner": "Glimmer",
     "slot": "necklace",
     "stats": {
-      "str": 45,
-      "mag": 128,
-      "stam": 60,
-      "agi": 68,
-      "echo": 75
+      "str": 10,
+      "mag": 29,
+      "stam": 14,
+      "agi": 16,
+      "echo": 17
     },
-    "baselineTotal": 342,
     "desc": "The smallest gear can keep the whole workshop turning.",
     "art": "Gearheart Charm",
     "effect": [
@@ -1180,20 +1207,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 2
+    "riftStage": 2,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Restless Workshop",
     "owner": "Glimmer",
     "slot": "ring",
     "stats": {
-      "str": 38,
-      "mag": 108,
-      "stam": 51,
-      "agi": 57,
-      "echo": 64
+      "str": 10,
+      "mag": 29,
+      "stam": 14,
+      "agi": 16,
+      "echo": 17
     },
-    "baselineTotal": 289,
     "desc": "There is no final repair while someone still needs help.",
     "art": "Ring of the Endless Workshop",
     "effect": [
@@ -1220,20 +1248,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 7
+    "riftStage": 7,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Claws of the Remembered Prince",
     "owner": "Sparky",
     "slot": "weapon",
     "stats": {
-      "str": 10,
-      "mag": 24,
-      "stam": 12,
-      "agi": 8,
-      "echo": 15
+      "str": 13,
+      "mag": 30,
+      "stam": 14,
+      "agi": 10,
+      "echo": 19
     },
-    "baselineTotal": 63,
     "desc": "Small claws, carrying a memory much older than their owner looks.",
     "art": "Elderflame Claws",
     "effect": [
@@ -1270,20 +1299,21 @@
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
-    "weaponHitLabel": "30% Burn · basic attacks / physical weapon skills"
+    "weaponHitLabel": "30% Burn · basic attacks / physical weapon skills",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Scales of the First Friendship",
     "owner": "Sparky",
     "slot": "armour",
     "stats": {
-      "str": 51,
-      "mag": 97,
-      "stam": 84,
-      "agi": 39,
-      "echo": 77
+      "str": 13,
+      "mag": 24,
+      "stam": 21,
+      "agi": 9,
+      "echo": 19
     },
-    "baselineTotal": 316,
     "desc": "The strongest scales grow around a friendship.",
     "art": "Afterimage Coat",
     "effect": [],
@@ -1304,20 +1334,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 6
+    "riftStage": 6,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Crown of the Little Dragon",
     "owner": "Sparky",
     "slot": "helmet",
     "stats": {
-      "str": 59,
-      "mag": 111,
-      "stam": 67,
-      "agi": 44,
-      "echo": 89
+      "str": 14,
+      "mag": 26,
+      "stam": 15,
+      "agi": 10,
+      "echo": 21
     },
-    "baselineTotal": 336,
     "desc": "It sits crooked. The dignity is entirely his own.",
     "art": "Betweenworld Lens",
     "effect": [],
@@ -1344,7 +1375,9 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 3
+    "riftStage": 3,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Bell of the Enduring Bond",
@@ -1352,12 +1385,11 @@
     "slot": "necklace",
     "stats": {
       "str": 14,
-      "mag": 27,
-      "stam": 16,
-      "agi": 11,
-      "echo": 22
+      "mag": 26,
+      "stam": 15,
+      "agi": 10,
+      "echo": 21
     },
-    "baselineTotal": 82,
     "desc": "A familiar chime can bring him back from any dark corner.",
     "art": "Elder Ember Bell",
     "effect": [
@@ -1384,20 +1416,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 8
+    "riftStage": 8,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Loyal Flame",
     "owner": "Sparky",
     "slot": "ring",
     "stats": {
-      "str": 47,
-      "mag": 88,
-      "stam": 53,
-      "agi": 35,
-      "echo": 70
+      "str": 14,
+      "mag": 26,
+      "stam": 15,
+      "agi": 10,
+      "echo": 21
     },
-    "baselineTotal": 266,
     "desc": "A loyal flame does not need to be the largest one.",
     "art": "Ring of the Remembered Ember",
     "effect": [
@@ -1424,20 +1457,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 4
+    "riftStage": 4,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Ledger of the Unwritten Exception",
     "owner": "Tinus",
     "slot": "weapon",
     "stats": {
-      "str": 100,
-      "mag": 158,
-      "stam": 90,
-      "agi": 68,
-      "echo": 72
+      "str": 17,
+      "mag": 28,
+      "stam": 16,
+      "agi": 12,
+      "echo": 13
     },
-    "baselineTotal": 444,
     "desc": "The final page is deliberately blank.",
     "art": "The Unfinished Ledger",
     "effect": [
@@ -1474,20 +1508,21 @@
     "rarity": "Personal Artifact",
     "personalRift": true,
     "riftStage": 10,
-    "weaponHitLabel": "30% Slow · basic attacks / physical weapon skills"
+    "weaponHitLabel": "30% Slow · basic attacks / physical weapon skills",
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Jacket of the Unscheduled Guest",
     "owner": "Tinus",
     "slot": "armour",
     "stats": {
-      "str": 92,
-      "mag": 113,
-      "stam": 117,
-      "agi": 62,
-      "echo": 67
+      "str": 18,
+      "mag": 21,
+      "stam": 22,
+      "agi": 12,
+      "echo": 13
     },
-    "baselineTotal": 410,
     "desc": "Comfortable enough to outlast the meeting.",
     "art": "Chaos Agent’s Black Jacket",
     "effect": [],
@@ -1514,20 +1549,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 8
+    "riftStage": 8,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Beanie of the Missing Footnote",
     "owner": "Tinus",
     "slot": "helmet",
     "stats": {
-      "str": 104,
-      "mag": 127,
-      "stam": 94,
-      "agi": 71,
-      "echo": 75
+      "str": 19,
+      "mag": 23,
+      "stam": 17,
+      "agi": 13,
+      "echo": 14
     },
-    "baselineTotal": 428,
     "desc": "The footnote has left the document and gone for a walk.",
     "art": "Betweenworld Beanie",
     "effect": [],
@@ -1554,20 +1590,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 2
+    "riftStage": 2,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Coffee Keepsake of the Long Meeting",
     "owner": "Tinus",
     "slot": "necklace",
     "stats": {
-      "str": 81,
-      "mag": 100,
-      "stam": 74,
-      "agi": 56,
-      "echo": 59
+      "str": 19,
+      "mag": 23,
+      "stam": 17,
+      "agi": 13,
+      "echo": 14
     },
-    "baselineTotal": 336,
     "desc": "A little warmth for a very long meeting.",
     "art": "B Coffee Keepsake",
     "effect": [
@@ -1594,20 +1631,21 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 1
+    "riftStage": 1,
+    "statBudget": 86,
+    "balanceVersion": 373
   },
   {
     "name": "Signet of the Open Clause",
     "owner": "Tinus",
     "slot": "ring",
     "stats": {
-      "str": 31,
-      "mag": 37,
-      "stam": 28,
-      "agi": 21,
-      "echo": 22
+      "str": 19,
+      "mag": 23,
+      "stam": 17,
+      "agi": 13,
+      "echo": 14
     },
-    "baselineTotal": 126,
     "desc": "There is always room for one more exception.",
     "art": "Ring of the Returning Path",
     "effect": [
@@ -1634,6 +1672,8 @@
     ],
     "rarity": "Personal Artifact",
     "personalRift": true,
-    "riftStage": 4
+    "riftStage": 4,
+    "statBudget": 86,
+    "balanceVersion": 373
   }
 ]

@@ -1,0 +1,9 @@
+# Personal Artifact balance and coherent item art
+
+The old per-save item budgets produced large power differences. All forty items now use the same endgame budget: 86 total base-stat points per piece, 430 across five slots for each character. Role weights and slot priorities distribute the same budget differently. On load, existing copies rebase to the catalogue with their earned temper rank applied once; Destiny Ring II references and instances are excluded.
+
+Every character has five new purpose-drawn WebP icons: weapon, armour, headgear, necklace and first ring. Forty distinct 256px transparent files total 762,412 bytes. The source images are compressed into public/game/assets/personal-icons-373; production uses the existing source-asset hosting path, keeping the game archive small. Torren uses a stone shield, Sparky dragon-fitted equipment, Kael priestly robes and staff, Verseborn a lute, and Tinus a ledger/black jacket/beanie/coffee keepsake. Personal Artifact rarity text and borders use platinum (#e2e7ef); Shadow Personal Artifacts retain their own colour.
+
+System → Downloads offers “Equip full sets for my party” only for a loaded Hall save that has reached Stage 60. It backs up the current save locally, gives/equips the five pieces for each recruited character, reuses existing copies, preserves the formation and Destiny Ring II, and saves only to the active slot. No automatic party-wide grants occur merely by opening a save or menu.
+
+Validation: shared budgets and owner restrictions, existing-instance rebalance, role-specific weapon triggers and signature damage, 40 unique transparent icons under 0.8 MB, actual reward pools, platinum computed colour, missing-set grant and repeat safety, active save-slot targeting, unchanged other slot, unchanged progression/formation/Destiny rings, and successful selector images.

@@ -294,7 +294,7 @@ html:not(.touch-layout) .menu .menu-tabs button{min-height:34px!important;paddin
 .menu .rarity-artifact,.menu .selection-detail:has(.gear-rarity.rarity-artifact),.menu .glimmer-shop-overview[data-rarity="artifact"]{--rarity-accent:#fff3b5}
 .menu .rarity-shadow-artifact,.menu .selection-detail:has(.gear-rarity.rarity-shadow-artifact),.menu .glimmer-shop-overview[data-rarity="shadow-artifact"]{--rarity-accent:#b4c2ef}
 .menu .rarity-rift-artifact,.menu .selection-detail:has(.gear-rarity.rarity-rift-artifact),.menu .glimmer-shop-overview[data-rarity="rift-artifact"]{--rarity-accent:#adfff0}
-.menu .rarity-personal-artifact,.menu .selection-detail:has(.gear-rarity.rarity-personal-artifact),.menu .glimmer-shop-overview[data-rarity="personal-artifact"]{--rarity-accent:#d391ff}
+.menu .rarity-personal-artifact,.menu .selection-detail:has(.gear-rarity.rarity-personal-artifact),.menu .glimmer-shop-overview[data-rarity="personal-artifact"]{--rarity-accent:#e2e7ef}
 .menu .rarity-shadow-personal-artifact,.menu .selection-detail:has(.gear-rarity.rarity-shadow-personal-artifact),.menu .glimmer-shop-overview[data-rarity="shadow-personal-artifact"]{--rarity-accent:#c79cff}
 
 .menu :is(.selection-row,.equip-body-slot,.shop-row)[class*="rarity-"]{border-left:3px solid var(--rarity-accent,#d8d1c4)!important;background:linear-gradient(100deg,color-mix(in srgb,var(--rarity-accent,#d8d1c4) 11%,transparent),transparent 60%),#19151f!important;text-shadow:none}
