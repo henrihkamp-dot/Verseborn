@@ -3,6 +3,20 @@
   'use strict';
   let inScene=false,draws=0;
   const scratch=document.createElement('canvas'),paint=scratch.getContext('2d');
+  const sample=document.createElement('canvas');sample.width=sample.height=64;const scan=sample.getContext('2d',{willReadFrequently:true});
+  function contact(image,dx,dy,dw,dh,p){
+    if(ctx.shadowOffsetX||ctx.shadowOffsetY)return;
+    scan.clearRect(0,0,64,64);scan.drawImage(image,0,0,64,64);
+    let pixels;try{pixels=scan.getImageData(0,0,64,64).data;}catch{return;}
+    let bottom=0,left=64,right=0;
+    for(let y=0;y<64;y++){let count=0;for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){count++;left=Math.min(left,x);right=Math.max(right,x+1);}if(count>=2)bottom=y+1;}
+    if(!bottom||right<=left)return;
+    let sum=0,count=0;for(let y=Math.max(0,bottom-5);y<bottom;y++)for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){sum+=x+.5;count++;}
+    const x=dx+dw*(count?sum/count:(left+right)/2)/64,y=dy+dh*bottom/64-.35,r=Math.max(2,Math.abs(dw)*(right-left)/64*.30);
+    ctx.save();ctx.translate(x,y);ctx.scale(1,.19);
+    let g=ctx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,'rgba(5,4,10,.65)');g.addColorStop(.50,'rgba(5,4,10,.35)');g.addColorStop(1,'rgba(5,4,10,0)');ctx.fillStyle=g;ctx.fillRect(-r,-r,r*2,r*2);ctx.restore();
+    if(p){ctx.save();ctx.globalCompositeOperation='screen';ctx.translate(x,y);ctx.scale(1,.30);g=ctx.createRadialGradient(0,0,0,0,0,r*1.7);g.addColorStop(0,`rgba(${p[0]},.065)`);g.addColorStop(1,`rgba(${p[0]},0)`);ctx.fillStyle=g;ctx.fillRect(-r*1.7,-r*1.7,r*3.4,r*3.4);ctx.restore();}
+  }
   const profiles={Torren:['255,151,48',.77,.60],Seerin:['255,213,116',.58,.52],Mira:['174,103,255',.63,.65],Verseborn:['241,190,114',.61,.53],Kael:['245,221,164',.72,.35],Glimmer:['120,221,245',.72,.60],Sparky:['177,104,255',.74,.74],Tinus:['240,172,84',.72,.48]};
   function profile(unit){return profiles[unit?.id]||null;}
   function wash(c,w,h,p){
@@ -25,6 +39,7 @@
     paint.imageSmoothingEnabled=ctx.imageSmoothingEnabled;
     paint.drawImage(image,sx,sy,sw,sh,0,0,w,h);wash(paint,w,h,p);paint.restore();
     // The source-atop wash preserves the original alpha and exact draw bounds.
+    contact(scratch,dx,dy,dw,dh,p);
     draws++;return native.call(ctx,scratch,0,0,w,h,dx,dy,dw,dh);
   }
   function wrap(native){return function(unit,...args){
@@ -37,21 +52,7 @@
   const shadow=drawFieldShadow;
   drawFieldShadow=function(x,y,r){
     if(!inScene||mode!=='battle')return shadow.apply(this,arguments);
-    ctx.save();ctx.translate(x,y);ctx.scale(1,.27);
-    let g=ctx.createRadialGradient(-r*.38,r*.20,0,-r*.38,r*.20,r*1.7);g.addColorStop(0,'rgba(9,7,18,.40)');g.addColorStop(.48,'rgba(9,7,18,.20)');g.addColorStop(1,'rgba(9,7,18,0)');ctx.fillStyle=g;ctx.fillRect(-r*2.1,-r*1.6,r*3.5,r*3.5);
-    g=ctx.createRadialGradient(0,0,0,0,0,r*.82);g.addColorStop(0,'rgba(7,6,12,.52)');g.addColorStop(1,'rgba(7,6,12,0)');ctx.fillStyle=g;ctx.fillRect(-r,-r,r*2,r*2);ctx.restore();
-  };
-  const backdrop=drawBattleBackground;
-  drawBattleBackground=function(...args){
-    const result=backdrop.apply(this,args);
-    if(!inScene||mode!=='battle'||!battle)return result;
-    ctx.save();ctx.beginPath();ctx.rect(0,0,LOGICAL_WIDTH,BATTLE_ARENA_HEIGHT);ctx.clip();ctx.globalCompositeOperation='screen';
-    battle.party.forEach((unit,i)=>{
-      const p=profile(unit);if(!p||unit.hp<=0||unit.anim==='melee'||unit.anim==='attack')return;
-      const [x,y]=partyBattlePosition(i,battle.party.length),radius=unit.id==='Torren'?34:25;
-      const g=ctx.createRadialGradient(x,y,0,x,y,radius);g.addColorStop(0,`rgba(${p[0]},.12)`);g.addColorStop(.45,`rgba(${p[0]},.045)`);g.addColorStop(1,`rgba(${p[0]},0)`);
-      ctx.save();ctx.translate(x,y);ctx.scale(1,.42);ctx.translate(-x,-y);ctx.fillStyle=g;ctx.fillRect(x-radius,y-radius,radius*2,radius*2);ctx.restore();
-    });ctx.restore();return result;
+    // Actual visible feet are measured from the current frame in litDraw.
   };
   const scene=drawBattleScene;
   drawBattleScene=function(...args){const previous=inScene;inScene=true;try{return scene.apply(this,args);}finally{inScene=previous;}};
