@@ -14994,7 +14994,7 @@ function renderMenu() {
     });
     const gearChoice = developerGearLoadout || state.developerGearChoice || { stage: Math.min(60, hallBattleProgress().unlockedStage), rarity: "Epic" };
     const gearStage = Math.max(1, Math.min(60, Number(gearChoice.stage) || 1));
-    const gearRarities = ["Rare", "Epic", "Legendary", "Mythic", "Artifact", "Rift Artifact"];
+    const gearRarities = ["Rare", "Epic", "Legendary", "Mythic", "Artifact", "Personal Artifact"];
     const gearRarity = developerGearCandidates(gearStage, gearChoice.rarity).length ? gearChoice.rarity : "Rare";
     el.menuBody.insertAdjacentHTML("beforeend", `<section class="developer-controls"><h3>Team Gear Test</h3><label class="developer-slider"><span>Gear Stage</span><input type="range" min="1" max="60" step="1" value="${gearStage}" data-gear-stage aria-label="Gear Stage"><output>${gearStage}</output></label><label>Rarity <select data-gear-rarity>${gearRarities.map(rarity => `<option value="${rarity}" ${rarity === gearRarity ? "selected" : ""} ${developerGearCandidates(gearStage, rarity).length ? "" : "disabled"}>${rarity}</option>`).join("")}</select></label><label><input type="checkbox" data-gear-enabled ${developerGearLoadout ? "checked" : ""}> Test sets: all characters</label><strong>${developerGearLoadout ? `${gearRarity} / Stage ${gearStage}` : "Own gear"}</strong></section>`);
     const changeGearTest = () => {
@@ -15272,6 +15272,7 @@ function hallShopGearPool(rarity, stage) {
 const HALL_SHOP_AFFIX_COUNTS = HALL_GENERATED_AFFIX_COUNTS;
 
 function developerGearCandidates(stage, rarity) {
+  if (rarity === "Personal Artifact") return stage >= 60 && window.RiftPersonal ? RiftPersonal.items.map(gear => ({ gear, stage, personal: true })) : [];
   if (rarity === "Rift Artifact") return Object.values(gearDb).flat().filter(gear => gear.riftArtifact).map(gear => ({ gear, stage, rift: true }));
   const candidates = new Map();
   for (let value = 1; value <= stage; value++) {
@@ -15304,9 +15305,9 @@ function setDeveloperGear(stage, rarity, enabled) {
       const { gear } = entry;
       Math.random = hallSeededRandom(`developer-gear:${stage}:${rarity}:${gear.name}`);
       const scale = entry.drop && entry.stage > 50 ? 1 + (entry.stage - 50) * .045 : 1;
-      const stats = entry.commissioned || entry.rift ? { ...gear.stats } : Object.fromEntries(Object.entries(rollHallBaseStats(rarity)).map(([key, value]) => [key, Math.round(value * scale)]));
+      const stats = entry.personal || entry.commissioned || entry.rift ? { ...gear.stats } : Object.fromEntries(Object.entries(rollHallBaseStats(rarity)).map(([key, value]) => [key, Math.round(value * scale)]));
       const affixPool = affixPools[gear.slot] || affixPools.accessory;
-      const affixes = entry.rift ? EmberRift.riftArtifactAffixes(gear, `developer:${gear.name}`) : entry.commissioned ? entry.affixKeys.map(key => { const affix = affixPool.find(a => a.key === key); return { ...affix, value: affix.max }; })
+      const affixes = entry.personal ? gear.affixes.map(affix => ({ ...affix })) : entry.rift ? EmberRift.riftArtifactAffixes(gear, `developer:${gear.name}`) : entry.commissioned ? entry.affixKeys.map(key => { const affix = affixPool.find(a => a.key === key); return { ...affix, value: affix.max }; })
         : rollGearAffixes(gear, rarity, hallShopAffixTheme(entry.stage), HALL_GENERATED_AFFIX_COUNTS[rarity]).map(affix => ({ ...affix, value: affix.max > 1 ? Math.round(affix.value * scale) : Number((affix.value * scale).toFixed(4)) }));
       prepared.set(gear.name, { gear, stats, affixes });
     }

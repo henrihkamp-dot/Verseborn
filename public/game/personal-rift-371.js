@@ -25,11 +25,11 @@ function migrate(){
 }
 function grantPartySet(){
  if(mode!=='menu'||state.gameMode!=='hallBattles'||hallBattleProgress().unlockedStage<60)return false;
- const key=hallSaveKey();saveGame(key);const before=localStorage.getItem(key);if(before)localStorage.setItem('verseborn-personal-set-backup-'+Date.now(),before);
+ restoreDeveloperGear();const key=hallSaveKey();saveGame(key);const before=localStorage.getItem(key);if(before)localStorage.setItem('verseborn-personal-set-backup-'+Date.now(),before);
  const party=[...new Set(state.party)].filter(id=>baseJobs[id]);
  migrate();
  for(const hero of party)for(const slot of slots){const g=byOwner(hero,slot);if(!g)continue;const current=baseJobs[hero].gear[slot];const ref=gearByName(current)?.name===g.name?current:echoGearInstanceRefs(g.name)[0]||grant(g);if(ref)baseJobs[hero].gear[slot]=ref;}
- refreshHeroVitals();updatePanels();saveGame(key);queueSave();showHudNotice('Full Personal Artifact sets equipped: '+party.join(', ')+'. Destiny Ring II unchanged.');renderMenu();return true;
+ state.developerGearChoice={stage:60,rarity:'Personal Artifact'};refreshHeroVitals();updatePanels();saveGame(key);queueSave();showHudNotice('Full Personal Artifact sets equipped: '+party.join(', ')+'. Destiny Ring II unchanged.');renderMenu();return true;
 }
 const oldSkill=skillDamageTalentMultiplier;
 skillDamageTalentMultiplier=function(source,sk,...args){const base=oldSkill(source,sk,...args);if(!source?.id||!baseJobs[source.id]||sk.basicAttack)return base;const power=Object.values(baseJobs[source.id].gear).flatMap(ref=>gearEffects(gearByName(ref))).filter(e=>e.type==='riftSkillPower'&&(!e.element||e.element===sk.element)).reduce((sum,e)=>sum+e.value,0);return base*(1+power);};
