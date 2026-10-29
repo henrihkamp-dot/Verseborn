@@ -8,23 +8,34 @@
     if(ctx.shadowOffsetX||ctx.shadowOffsetY)return;
     scan.clearRect(0,0,64,64);scan.drawImage(image,0,0,64,64);
     let pixels;try{pixels=scan.getImageData(0,0,64,64).data;}catch{return;}
-    let bottom=0,left=64,right=0;
-    for(let y=0;y<64;y++){let count=0;for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){count++;left=Math.min(left,x);right=Math.max(right,x+1);}if(count>=2)bottom=y+1;}
+    let bottom=0,top=64,left=64,right=0;
+    for(let y=0;y<64;y++){let count=0;for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){count++;left=Math.min(left,x);right=Math.max(right,x+1);top=Math.min(top,y);}if(count>=2)bottom=y+1;}
     if(!bottom||right<=left)return;
     let sum=0,count=0;for(let y=Math.max(0,bottom-5);y<bottom;y++)for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){sum+=x+.5;count++;}
     const x=dx+dw*(count?sum/count:(left+right)/2)/64,y=dy+dh*bottom/64-.35,r=Math.max(2,Math.abs(dw)*(right-left)/64*.30);
     ctx.save();ctx.translate(x,y);ctx.scale(1,.19);
     let g=ctx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,'rgba(5,4,10,.65)');g.addColorStop(.50,'rgba(5,4,10,.35)');g.addColorStop(1,'rgba(5,4,10,0)');ctx.fillStyle=g;ctx.fillRect(-r,-r,r*2,r*2);ctx.restore();
-    if(p){ctx.save();ctx.globalCompositeOperation='screen';ctx.translate(x,y);ctx.scale(1,.30);g=ctx.createRadialGradient(0,0,0,0,0,r*1.7);g.addColorStop(0,`rgba(${p[0]},.065)`);g.addColorStop(1,`rgba(${p[0]},0)`);ctx.fillStyle=g;ctx.fillRect(-r*1.7,-r*1.7,r*3.4,r*3.4);ctx.restore();}
+    if(p){
+      ctx.save();ctx.globalCompositeOperation='screen';
+      const sources=p[3]||[[p[1],p[2],p[0]]],width=Math.abs(dw)*(right-left)/64,height=Math.abs(dh)*(bottom-top)/64;
+      for(const [u,v,colour]of sources){
+        const lx=dx+dw*(left+(right-left)*u)/64,ly=dy+dh*(top+(bottom-top)*v)/64,reach=Math.max(width*.50,height*.29),floorRadius=r*2.5;
+        // Local spill sits behind the unchanged silhouette, not over the UI.
+        g=ctx.createRadialGradient(lx,ly,0,lx,ly,reach);g.addColorStop(0,`rgba(${colour},.50)`);g.addColorStop(.30,`rgba(${colour},.27)`);g.addColorStop(1,`rgba(${colour},0)`);ctx.fillStyle=g;ctx.fillRect(lx-reach,ly-reach,reach*2,reach*2);
+        ctx.save();ctx.translate(lx,y);ctx.scale(1,.27);g=ctx.createRadialGradient(0,0,0,0,0,floorRadius);g.addColorStop(0,`rgba(${colour},.34)`);g.addColorStop(.45,`rgba(${colour},.16)`);g.addColorStop(1,`rgba(${colour},0)`);ctx.fillStyle=g;ctx.fillRect(-floorRadius,-floorRadius,floorRadius*2,floorRadius*2);ctx.restore();
+      }
+      ctx.restore();
+    }
   }
-  const profiles={Torren:['255,151,48',.77,.60],Seerin:['255,213,116',.58,.52],Mira:['174,103,255',.63,.65],Verseborn:['241,190,114',.61,.53],Kael:['245,221,164',.72,.35],Glimmer:['120,221,245',.72,.60],Sparky:['177,104,255',.74,.74],Tinus:['240,172,84',.72,.48]};
-  function profile(unit){return profiles[unit?.id]||null;}
+  const profiles={Torren:['255,151,48',.77,.60],Seerin:['255,221,137',.58,.52,[[.59,.64,'255,222,142'],[.78,.55,'255,205,102']]],Mira:['174,103,255',.63,.65,[[.18,.69,'184,100,255'],[.80,.70,'161,94,255']]],Verseborn:['241,190,114',.61,.53],Kael:['245,221,164',.72,.35,[[.77,.38,'255,233,181'],[.28,.65,'141,101,225']]],Glimmer:['120,221,245',.72,.60,[[.78,.57,'114,223,255'],[.31,.63,'236,135,245']]],Sparky:['177,104,255',.74,.74,[[.24,.76,'176,93,255'],[.73,.43,'187,121,255']]],Tinus:['120,191,255',.72,.48,[[.74,.45,'116,194,255']]]};
+  const shadowKael=['174,115,255',.72,.35,[[.77,.38,'179,109,255'],[.28,.65,'104,78,212']]];
+  function profile(unit){return unit?.id==='Kael'&&unit.form==='shadowpriest'?shadowKael:profiles[unit?.id]||null;}
   function wash(c,w,h,p){
     c.globalCompositeOperation='source-atop';
     let g=c.createLinearGradient(0,0,w,h);
     g.addColorStop(0,'rgba(248,218,165,.12)');g.addColorStop(.47,'rgba(99,100,138,.025)');g.addColorStop(1,'rgba(39,37,67,.17)');
     c.fillStyle=g;c.fillRect(0,0,w,h);
-    if(p){g=c.createRadialGradient(w*p[1],h*p[2],0,w*p[1],h*p[2],w*.48);g.addColorStop(0,`rgba(${p[0]},.17)`);g.addColorStop(1,`rgba(${p[0]},0)`);c.fillStyle=g;c.fillRect(0,0,w,h);}
+    if(p){for(const [u,v,colour]of p[3]||[[p[1],p[2],p[0]]]){g=c.createRadialGradient(w*u,h*v,0,w*u,h*v,w*.36);g.addColorStop(0,`rgba(${colour},.34)`);g.addColorStop(.45,`rgba(${colour},.13)`);g.addColorStop(1,`rgba(${colour},0)`);c.fillStyle=g;c.fillRect(0,0,w,h);}}
   }
   function litDraw(native,image,args,p){
     const iw=image?.naturalWidth||image?.videoWidth||image?.width,ih=image?.naturalHeight||image?.videoHeight||image?.height;
