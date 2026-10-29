@@ -287,3 +287,8 @@ html[data-menu-redesign] [data-menu-view="gear"] .selection-detail-head>div { mi
 .game .menu .glimmer-shop-overview:has(.support-flavour) .glimmer-overview-icon .shop-icon { width:140px!important;height:140px!important; }
 
 .game .menu .status-weapon-hit{font-size:11px;line-height:1.35;margin:7px 0}.game .menu .status-weapon-hit>b,.game .menu .status-weapon-hit>small{display:block}.game .menu .status-weapon-hit>small{color:#d2c7d9}
+
+.game .menu .mp-quick-auto>.mp-auto-close{display:block;margin:12px 0 0 auto;padding:8px 16px;min-height:36px;border:1px solid #d1ae6b;background:#38243e;color:#fff0c6;font-size:13px;cursor:pointer}
+.game .menu .mp-quick-auto:not([open])>.mp-auto-close{display:none!important}
+.game .menu[data-menu-view="gear"] .equip-sidebar{position:relative!important}.game .menu[data-menu-view="gear"] .mp-quick-auto[open]{z-index:30!important}
+html #menu[data-menu-prototype][data-menu-view="gear"] .mp-quick-auto>.gear-auto-equip{display:block!important;position:static!important;width:100%!important;margin:8px 0 0!important}html #menu[data-menu-prototype][data-menu-view="gear"] .mp-quick-auto .gear-bulk-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:start}html #menu[data-menu-prototype][data-menu-view="gear"] .mp-quick-auto .gear-bulk-actions>section{min-width:0;align-content:start}html #menu[data-menu-prototype][data-menu-view="gear"] .mp-quick-auto .gear-auto-members{grid-column:1/-1;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;margin:4px 0!important;gap:6px!important}html #menu[data-menu-prototype][data-menu-view="gear"] .mp-quick-auto .gear-auto-members label{min-width:0;white-space:normal}

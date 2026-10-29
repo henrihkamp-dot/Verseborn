@@ -15923,6 +15923,7 @@ window.addEventListener("keydown", e => {
     if (mode === "title") handleControl("cancel");
     else if (mode === "battle" && battle?.targetMode) closeTargetSelection();
     else if (mode === "battle" && battle?.itemMode) closeBattleItems();
+    else if (mode === "menu" && menuTab === "gear" && el.menuBody.querySelector(".mp-quick-auto[open]")) { gearOptimizeOpen = false; const panel = el.menuBody.querySelector(".mp-quick-auto"); panel.open = false; panel.querySelector("summary")?.focus({preventScroll:true}); requestAnimationFrame(()=>window.MenuStudio?.fit()); }
     else if (mode === "menu" && menuTab === "gear" && gearPickerOpen) { gearPickerOpen = false; renderMenu(); }
     else if (mode === "menu" || mode === "shop" || mode === "hallMap") toggleMenu();
     else if (mode === "atlas") toggleAtlas();
