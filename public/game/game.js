@@ -13353,6 +13353,7 @@ function resolveEnemyTurn(turn, prev) {
         defender.flash = 12;
         addBattleFloater(defender, dmg, { damageType: action.element || "Physical", crit: rolled.critical });
         const statuses = defender.hp > 0 ? enemyApplyActionStatuses(e, defender, action) : [];
+        actionLog += window.WhirlpoolMinions?.onMeleeHit(e, action, dmg) || '';
         actionLog += ` ${defender.name} takes ${dmg}${rolled.critical ? " CRITICAL" : ""}.${fell ? ` ${defender.name} falls.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statuses.length ? ` ${statuses.join(", ")}.` : ""}`;
       });
       battle.ward = false;

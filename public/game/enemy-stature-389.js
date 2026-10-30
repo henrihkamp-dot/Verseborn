@@ -5,7 +5,7 @@
   bear:['hybrid',50,49],raccoon:['hybrid',40,43],rabbit:['hybrid',43,43],squirrel:['hybrid',38,43],mushroom:['small',43,43],fae:['small',34,36],
   pippa:['child',40,56],mina:['child',34,36],sella:['child',34,36],pursuer:['adult',55,43],elf:['adult',57,43],collector:['adult',60,43],velourne:['adult',58,56],benji:['adult',58,56]
  };
- const whirlpool={benji:['adult',58,67],demonlord:['large',94,75],'klaas-de-klemmer':['adult',57,62],'revisor-9':['adult',55,67],bill:['adult',64,62],felinus:['hybrid',55,80],'liza-flux':['adult',55,65],satyr:['hybrid',53,73]};
+ const whirlpool={benji:['large',94,67],demonlord:['large',94,75],'klaas-de-klemmer':['adult',57,62],'revisor-9':['adult',55,67],bill:['adult',64,62],felinus:['hybrid',55,80],'liza-flux':['adult',55,65],satyr:['hybrid',53,73]};
  function profile(u){
   let entry=u.riftKey?rift[u.riftKey]:u.whirlpoolKey?whirlpool[u.whirlpoolKey]:null;
   const key=enemyAnimationKey(u),native=(enemyAnimationHeights[key]||44)*enemyBattleScale(key)*BATTLE_COMPOSITION_SCALE;

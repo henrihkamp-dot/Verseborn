@@ -6,7 +6,7 @@
   let waves=[];
   if(path==='ember'){const stage=Number(host.querySelector('[data-hall-stage].is-selected')?.dataset.hallStage),info=hallBattleInfo(stage);if(info)waves=[info.enemies,...info.waves].map((keys,i)=>hallEnemiesForStage(stage,keys,i).map(u=>prepareEnemyForBattle(u,stage>50?'emberHallBattles':info.mapId)));}
   else if(path==='rift'){const id=Number(host.querySelector('[data-rift-select].is-selected')?.dataset.riftSelect),info=EmberRift.encounters[id-1];if(info)waves=info.waves.map((keys,phase)=>keys.map((key,i)=>prepareEnemyForBattle(EmberRift.makeEnemy(key,id,phase,i),'emberRiftVault')));}
-  else if(path==='whirlpool'){const id=Number(host.querySelector('[data-whirlpool-select].is-selected')?.dataset.whirlpoolSelect);if(id)waves=[[prepareEnemyForBattle(TinusWhirlpool.makeEnemy(id),'emberHallBattles')]];}
+  else if(path==='whirlpool'){const id=Number(host.querySelector('[data-whirlpool-select].is-selected')?.dataset.whirlpoolSelect);if(id)waves=[(window.WhirlpoolMinions?.formation(id)||[TinusWhirlpool.makeEnemy(id)]).map(u=>prepareEnemyForBattle(u,'emberHallBattles'))];}
   else {const id=host.querySelector('[data-shadow].is-selected')?.dataset.shadow;if(id){const total=HallHub.shadowStats(id),source=enemy('Shadow '+id,total.max,total.str,baseJobs[id].element,'#bd9971',1,id);source.sparringId=id;source.levelHint=40;source.fixedLevel=true;waves=[[prepareEnemyForBattle(source,'emberHallBattles')]];}}
   if(!waves.length)return;
   const stage=path==='ember'?Number(host.querySelector('[data-hall-stage].is-selected')?.dataset.hallStage):0;
