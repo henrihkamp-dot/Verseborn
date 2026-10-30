@@ -7,6 +7,46 @@
   const platforms=new Image();platforms.src='assets/hall/glimmer-platforms-v244.webp';
   const props=new Image();props.src='assets/hall/glimmer-repair-props-v244.webp';
   let last=null,clock=0,station=0,elapsed=0,flight=null,progress=null,impact=null,reaction=null,hitKey='',hitCount=0;
+  const droneHome={x:470,y:38};
+  const droneRoutes=[
+    {speed:15,points:[[470,38],[430,65],[350,90],[300,145],[350,190],[410,145],[452,85],[470,38]]},
+    {speed:19,points:[[470,38],[425,65],[360,130],[405,170],[435,115],[360,80],[310,115],[365,150],[430,85],[470,38]]},
+    {speed:17,points:[[470,38],[520,55],[500,100],[420,135],[345,105],[300,65],[365,45],[435,55],[470,38]]}
+  ];
+  // Sample curves once; frame updates only follow the small distance table.
+  function curveTable(points){
+    const table=[{x:points[0][0],y:points[0][1],distance:0}];let distance=0;
+    for(let i=0;i<points.length-1;i++)for(let j=1;j<=24;j++){
+      const t=j/24,t2=t*t,t3=t2*t,a=points[Math.max(0,i-1)],b=points[i],c=points[i+1],d=points[Math.min(points.length-1,i+2)];
+      const component=k=>.5*((2*b[k])+(-a[k]+c[k])*t+(2*a[k]-5*b[k]+4*c[k]-d[k])*t2+(-a[k]+3*b[k]-3*c[k]+d[k])*t3);
+      const x=component(0),y=component(1),prev=table[table.length-1];distance+=Math.hypot(x-prev.x,y-prev.y);table.push({x,y,distance});
+    }
+    return {table,length:distance};
+  }
+  for(const route of droneRoutes)Object.assign(route,curveTable(route.points));
+  let droneFlight=null,droneRoute=0,droneLaunched=false,droneX=470,droneY=38,droneTilt=0;
+  function updateDrone(dt,chatting){
+    const repairing=station===1&&!flight;
+    if(repairing&&!droneFlight)droneLaunched=false;
+    if(flight?.next===2&&!droneLaunched){
+      const route=droneRoutes[droneRoute++%droneRoutes.length];
+      droneFlight={...route,elapsed:0,duration:route.length/route.speed*1000,returning:false};droneLaunched=true;
+    }
+    // Recall early if Kael interrupts the lab routine. The ordinary routes
+    // finish before Glimmer returns to her first station and next repair stop.
+    if(droneFlight&&!droneFlight.returning&&(chatting||flight?.next===0)){
+      const path=curveTable([[droneX,droneY],[(droneX+470)/2,Math.min(droneY,38)-8],[470,38]]);
+      droneFlight={...path,elapsed:0,duration:Math.max(1600,path.length/20*1000),returning:true};
+    }
+    if(droneFlight){
+      const f=droneFlight;f.elapsed+=dt;const t=Math.min(1,f.elapsed/f.duration),distance=t*t*(3-2*t)*f.length;
+      let i=1;while(i<f.table.length-1&&f.table[i].distance<distance)i++;
+      const a=f.table[i-1],b=f.table[i],mix=(distance-a.distance)/(b.distance-a.distance||1),previousX=droneX;
+      droneX=a.x+(b.x-a.x)*mix;droneY=a.y+(b.y-a.y)*mix;
+      droneTilt+=(Math.max(-.09,Math.min(.09,(droneX-previousX)*.10))-droneTilt)*Math.min(1,dt/180);
+      if(t===1){droneFlight=null;droneX=470;droneY=38;}
+    }else{droneX=470+Math.sin(clock*.0007)*(repairing?.15:1.5);droneY=38+Math.sin(clock*.002)*(repairing?.25:1.1);droneTilt*=.92;}
+  }
   const reactions=['That was my concentration.','The dummy has heard you, Seerin.','One quiet paragraph. That is all I ask.','My inkpot is not part of your training.','I was reading that sentence.'];
   function tick(now){
     const dt=last===null?0:Math.max(0,Math.min(50,now-last));last=now;
@@ -14,6 +54,7 @@
     const g=w.actors.find(a=>a.id==='Glimmer'),kael=w.actors.find(a=>a.id==='Kael');
     if(progress!==hallBattleProgress()){
       if(progress)Object.assign(g,{x:464,y:87,labLift:0,labFlying:false});
+      droneFlight=null;droneLaunched=false;droneRoute=0;droneX=470;droneY=38;droneTilt=0;
       progress=hallBattleProgress();station=0;elapsed=0;flight=null;impact=null;reaction=null;hitKey='';
     }
     const busy=mode!=='walk'||activeRecruitScene||window.TinusRecruitment?.replaying||(w.scene&&now-w.scene.started<w.scene.duration);
@@ -47,6 +88,7 @@
         if(elapsed>=stops[station].wait){const next=(station+1)%stops.length;flight={from:{x:g.x,y:g.y},to:stops[next],next,elapsed:0,duration:1600+Math.abs(stops[next].x-g.x)*12,fromLift:g.labLift||0};}
       }
       if(chatting&&!flight){g.labPondering=false;g.labHovering=false;g.labEureka=false;g.labRepairHover=false;g.labLift=Math.max(0,(g.labLift||0)-dt*.006);}
+      updateDrone(dt,chatting);
       g.labActive=true;g.labClock=clock;g.labRow=stops[station].row;
     }else g.labActive=false;
     if(state.party.includes('Seerin')){
@@ -86,13 +128,13 @@
     drawDrone(camera);
   }
   function dronePosition(){
-    const repairing=station===1&&!flight;
-    return {x:470+Math.sin(clock*.0007)*(repairing?.15:1.5),y:38+Math.sin(clock*.002)*(repairing?.25:1.1),repairing};
+    const repairing=station===1&&!flight&&!droneFlight;
+    return {x:droneX,y:droneY,repairing,flying:!!droneFlight,tilt:droneTilt};
   }
   function drawDrone(camera){
     if(!drone.complete||!drone.naturalWidth)return;
     const d=dronePosition(),width=33,height=width*drone.naturalHeight/drone.naturalWidth;
-    ctx.save();ctx.translate(d.x-camera.x,d.y-camera.y);ctx.rotate(Math.sin(clock*.0016)*(d.repairing?.004:.018));
+    ctx.save();ctx.translate(d.x-camera.x,d.y-camera.y);ctx.rotate((d.tilt||0)+Math.sin(clock*.0016)*(d.repairing?.004:.018));
     ctx.drawImage(drone,-width/2,-height/2,width,height);
     // Rotor highlights orbit independently; the brass body never scales/morphs.
     ctx.globalCompositeOperation='screen';ctx.lineWidth=.65;
@@ -113,5 +155,5 @@
     ctx.save();ctx.translate(102-camera.x,143-camera.y-age*.006);ctx.rotate(impact.tilt);ctx.globalAlpha=Math.min(1,(950-age)/250);
     ctx.font='italic 900 9px Georgia';ctx.textAlign='center';ctx.lineWidth=2;ctx.strokeStyle='#251728';ctx.fillStyle='#ffdc80';ctx.strokeText(impact.text,0,0);ctx.fillText(impact.text,0,0);ctx.restore();
   }
-  window.HallLiveliness={tick,drawActor,drawEffects,drawLabProps,stops,dronePosition,get ready(){return loaded&&drone.complete&&drone.naturalWidth>0&&ponder.complete&&ponder.naturalWidth>0&&props.complete&&props.naturalWidth>0;},get flight(){return flight;},get clock(){return clock;},get impact(){return impact;}};
+  window.HallLiveliness={tick,drawActor,drawEffects,drawLabProps,stops,dronePosition,droneRoutes,get ready(){return loaded&&drone.complete&&drone.naturalWidth>0&&ponder.complete&&ponder.naturalWidth>0&&props.complete&&props.naturalWidth>0;},get flight(){return flight;},get clock(){return clock;},get impact(){return impact;}};
 })();

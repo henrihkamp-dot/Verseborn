@@ -9,7 +9,7 @@
  function profile(u){
   let entry=u.riftKey?rift[u.riftKey]:u.whirlpoolKey?whirlpool[u.whirlpoolKey]:null;
   const key=enemyAnimationKey(u),native=(enemyAnimationHeights[key]||44)*enemyBattleScale(key)*BATTLE_COMPOSITION_SCALE;
-  if(!entry&&u.sparringId){const id=u.sparringId,h=(battleSpriteHeights[id]||48)*BATTLE_COMPOSITION_SCALE;entry=[id==='Sparky'||id==='Glimmer'?'small':id==='Torren'?'dwarf':'adult',h*(id==='Torren'?1.10:['Sparky','Glimmer'].includes(id)?1:1.25),h*2];}
+  if(!entry&&u.sparringId){const id=u.sparringId,h=(battleSpriteHeights[id]||48)*BATTLE_COMPOSITION_SCALE;entry=['large',({Verseborn:108,Mira:110,Seerin:110,Kael:108,Torren:100,Glimmer:106,Sparky:100})[id]||108,h*2];}
   if(!entry){
    if(/Dragon|Wyrm|Leviathan|Solinar|Memory Root Guardian|Koru-Vak|Cracked Pillar/i.test(key))entry=['large',native*1.25,native];
    else if(key==='Gorg')entry=['large',75,native];
