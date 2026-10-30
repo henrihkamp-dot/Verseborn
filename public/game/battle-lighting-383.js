@@ -4,7 +4,7 @@
   let inScene=false,draws=0;
   const scratch=document.createElement('canvas'),paint=scratch.getContext('2d');
   const sample=document.createElement('canvas');sample.width=sample.height=64;const scan=sample.getContext('2d',{willReadFrequently:true});
-  function contact(image,dx,dy,dw,dh,p,groundOffsetY=0){
+  function contact(image,dx,dy,dw,dh,p,groundOffsetY=0,groundAnchor=null){
     if(ctx.shadowOffsetX||ctx.shadowOffsetY)return;
     scan.clearRect(0,0,64,64);scan.drawImage(image,0,0,64,64);
     let pixels;try{pixels=scan.getImageData(0,0,64,64).data;}catch{return;}
@@ -12,7 +12,7 @@
     for(let y=0;y<64;y++){let count=0;for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){count++;left=Math.min(left,x);right=Math.max(right,x+1);top=Math.min(top,y);}if(count>=2)bottom=y+1;}
     if(!bottom||right<=left)return;
     let sum=0,count=0;for(let y=Math.max(0,bottom-5);y<bottom;y++)for(let x=0;x<64;x++)if(pixels[(y*64+x)*4+3]>100){sum+=x+.5;count++;}
-    const x=dx+dw*(count?sum/count:(left+right)/2)/64,y=dy+dh*bottom/64-.35-groundOffsetY,r=Math.max(2,Math.abs(dw)*(right-left)/64*.30);
+    const x=dx+dw*(count?sum/count:(left+right)/2)/64,y=dy+dh*(groundAnchor??bottom/64)-.35-groundOffsetY,r=Math.max(2,Math.abs(dw)*(right-left)/64*.30);
     ctx.save();ctx.translate(x,y);ctx.scale(1,.19);
     let g=ctx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,'rgba(5,4,10,.65)');g.addColorStop(.50,'rgba(5,4,10,.35)');g.addColorStop(1,'rgba(5,4,10,0)');ctx.fillStyle=g;ctx.fillRect(-r,-r,r*2,r*2);ctx.restore();
     if(p){
@@ -50,7 +50,7 @@
     paint.imageSmoothingEnabled=ctx.imageSmoothingEnabled;
     paint.drawImage(image,sx,sy,sw,sh,0,0,w,h);wash(paint,w,h,p);paint.restore();
     // The source-atop wash preserves the original alpha and exact draw bounds.
-    contact(scratch,dx,dy,dw,dh,p,window.GlimmerMechAnimation?.offsetFor(unit)?.y||0);
+    contact(scratch,dx,dy,dw,dh,p,window.GlimmerMechAnimation?.offsetFor(unit)?.y||0,unit?.id==='Glimmer'&&unit.form==='mech'?298/320:null);
     draws++;return native.call(ctx,scratch,0,0,w,h,dx,dy,dw,dh);
   }
   function wrap(native){return function(unit,...args){

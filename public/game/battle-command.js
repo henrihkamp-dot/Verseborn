@@ -444,10 +444,11 @@
   const enemyViews=new WeakMap();
   function enemyPresentation(u){
     let view=enemyViews.get(u);
-    if(!view){
-      const wanted=window.HallEncounters?.soloScale(u)||1;
-      const key=enemyAnimationKey(u),height=(enemyAnimationHeights[key]||44)*enemyBattleScale(key)*BATTLE_COMPOSITION_SCALE*visualScale();
-      view={scale:Math.min(wanted,(BATTLE_ARENA_HEIGHT*.70-18)/Math.max(1,height))};
+    const stature=window.EnemyStature?.profile(u),key=enemyAnimationKey(u),nativeHeight=u.encounterNativeHeight||stature?.nativeHeight||(enemyAnimationHeights[key]||44)*enemyBattleScale(key)*BATTLE_COMPOSITION_SCALE;
+    if(!view||Math.abs(nativeHeight-view.nativeHeight)>Math.max(.5,nativeHeight*.02)){
+      const wanted=stature?stature.targetHeight/Math.max(1,nativeHeight):window.HallEncounters?.soloScale(u)||1;
+      const height=nativeHeight*visualScale();
+      view={scale:Math.min(wanted,(BATTLE_ARENA_HEIGHT*.70-18)/Math.max(1,height)),nativeHeight,kind:stature?.kind||'adult'};
       enemyViews.set(u,view);
     }
     return view;
@@ -471,6 +472,7 @@
         x=LOGICAL_WIDTH*(1-spot[0]);y=BATTLE_ARENA_HEIGHT*spot[1];
       }
       y=Math.min(BATTLE_ARENA_HEIGHT-15,y+5);
+      if(enemySide&&view)y=Math.max(y,Math.min(BATTLE_ARENA_HEIGHT-18,view.nativeHeight*view.scale*visualScale()+27));
       const bounds=u&&spriteBounds.get(u);
       if(bounds){const gutter=30/canvas.getBoundingClientRect().width*LOGICAL_WIDTH;
         x=enemySide?Math.min(x,LOGICAL_WIDTH-gutter-bounds.dx-bounds.width/2):Math.max(x,gutter-bounds.dx+bounds.width/2);}
