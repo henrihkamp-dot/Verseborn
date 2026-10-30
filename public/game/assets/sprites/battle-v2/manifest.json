@@ -191,18 +191,14 @@
   },
   "GlimmerMech": {
     "file": "glimmer-mech.png",
-    "columns": 4,
+    "columns": 8,
     "rows": 5,
-    "cellWidth": 384,
-    "cellHeight": 377,
-    "baseline": 348,
-    "referenceHeight": 264,
-    "idleAnchorOffsets": [
-      0,
-      0,
-      0,
-      0
-    ],
+    "cellWidth": 320,
+    "cellHeight": 320,
+    "baseline": 298,
+    "referenceHeight": 260,
+    "anchorX": 160,
+    "directFrames": true,
     "rowMap": {
       "idle": 0,
       "block": 0,
@@ -212,20 +208,7 @@
       "ultimate1": 3,
       "ultimate2": 3,
       "death": 4
-    },
-    "directFrames": true,
-    "sourceGrid": [
-      4,
-      5
-    ],
-    "sourceEdgeContacts": 1,
-    "anchorX": 196,
-    "idleStabilization": [
-      0,
-      10,
-      9,
-      15
-    ]
+    }
   },
   "Kael": {
     "file": "kael.png",
