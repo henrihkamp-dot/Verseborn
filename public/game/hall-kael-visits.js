@@ -24,8 +24,14 @@
       [['Kael','You cannot change beds every time a prototype starts ticking.'],['Glimmer','You would prefer I sleep beside the ticking?'],['Kael','I would prefer you stop storing prototypes under mattresses.'],['Glimmer','Now that is a much more useful rule.']]
     ]
   };
-  const destinations = { Mira:{x:124,y:310}, Seerin:{x:120,y:188}, Glimmer:{x:448,y:86} };
-  const order=Object.keys(conversations),variants={Mira:0,Seerin:0,Glimmer:0};
+  conversations.Tinus = [
+    [['Kael','All eight encounters settled. Can we now settle the matter of your volume?'],['Tinus','That was my indoor voice.'],['Kael','The library is two rooms away. I heard your entire victory speech.'],['Marla','Kael, buy a drink or go bother someone else. My bar is not your pulpit.'],['Tinus','I like this establishment.'],['Kael','I gathered. Everyone gathered.']],
+    [['Kael','Must every story end with you explaining how loudly you won?'],['Tinus','No. Some begin that way.'],['Kael','A little restraint would improve the atmosphere.'],['Marla','So would you stopping at the door with your complaints. Drink, help wash up, or get out.'],['Tinus','Put his tea on my tab.'],['Kael','That does not purchase my approval.'],['Marla','Good. It purchases tea. Sit down.']],
+    [['Kael','People can hear you without the running commentary.'],['Tinus','Then my system is working.'],['Kael','I had hoped the Whirlpool might exhaust you.'],['Marla','Try exhausting the washing-up instead, both of you.'],['Tinus','He started it.'],['Kael','I came here for quiet.'],['Marla','Then you took a spectacular wrong turn.']]
+  ];
+  const whirlpoolComplete = () => Array.from({length:8},(_,i)=>i+1).every(n=>hallBattleProgress().whirlpool?.cleared?.includes(n));
+  const destinations = { Mira:{x:124,y:310}, Seerin:{x:120,y:188}, Glimmer:{x:448,y:86}, Tinus:{x:446,y:193} };
+  const order=Object.keys(conversations),variants={Mira:0,Seerin:0,Glimmer:0,Tinus:0};
   let visit=null,home=null,wait=15000,last=null,cursor=0,loaded=false,savedProgress=null;
   const walkImage=new Image();
   const ready=new Promise((resolve,reject)=>{walkImage.onload=()=>{loaded=true;resolve();};walkImage.onerror=()=>reject(Error('Kael walk sheet unavailable'));});
@@ -34,11 +40,12 @@
   function facing(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);if(Math.min(ax,ay)>Math.max(ax,ay)*.4142)return dy>0?(dx>0?4:5):(dx>0?6:7);return ax>ay?dx>0?2:3:dy>0?0:1;}
   function beginVisit(id){
     const world=window.emberHallWorld,kael=actor();
+    if(id==='Tinus'&&(!whirlpoolComplete()||window.TinusRecruitment?.resident()?.pose!=='seated'))return false;
     if(visit||!loaded||!world||!state.party.includes('Kael')||!state.party.includes(id)||!conversations[id])return false;
     if(!home)home={x:kael.x,y:kael.y,approach:{...kael.approach}};
     const path=world.findPath(kael,destinations[id].x,destinations[id].y);
     if(!path?.length)return false;
-    const target=world.actors.find(a=>a.id===id),pool=window.HallProgressionDialogue?.visit(id,conversations[id])||conversations[id],lines=pool[variants[id]++%pool.length];
+    const target=id==='Tinus'?window.TinusRecruitment.resident():world.actors.find(a=>a.id===id),pool=window.HallProgressionDialogue?.visit(id,conversations[id])||conversations[id],lines=pool[variants[id]++%pool.length];
     visit={id,target,lines,phase:'outbound',path,index:0,elapsed:0,walkPhase:0};
     kael.visiting=true;kael.walking=false;
     return true;
@@ -58,7 +65,7 @@
     }
     if(visit.phase==='talk'){
       kael.walking=false;visit.elapsed+=dt;
-      world.ambientChat('kael-visit',[visit.lines],[kael,visit.target],world.camera,visit.elapsed,72000,600);
+      world.ambientChat('kael-visit',[visit.lines],[kael,visit.target,world.actors.find(a=>a.id==='Marla')].filter(Boolean),world.camera,visit.elapsed,72000,600);
       if(visit.elapsed>=600+visit.lines.length*5200-1000+800){
         world.hideAmbientChat('kael-visit');visit.path=world.findPath(kael,home.x,home.y);visit.index=0;visit.phase='returning';
         if(!visit.path?.length)visit.phase='retry-return';
@@ -84,5 +91,5 @@
       world.resetAmbientChat('kael-visit');
     }
   }
-  window.KaelHallVisits={ready,walkImage,tick,beginVisit,conversations,destinations,get visit(){return visit;},get wait(){return wait;}};
+  window.KaelHallVisits={ready,walkImage,tick,beginVisit,conversations,destinations,whirlpoolComplete,get visit(){return visit;},get wait(){return wait;}};
 })();

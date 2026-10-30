@@ -207,8 +207,8 @@
   }
   function ambientChat(key,lines,participants,viewCamera,now,cycle=72000,delay=12000){
     lines=window.HallProgressionDialogue?.chatter(key,lines)||lines;
-    const room=key==='rift-brothers'?'emberRiftVault':'emberHallBattles';
-    for(const [id,bubble] of ambientBubbles)if((id==='rift-brothers'?'emberRiftVault':'emberHallBattles')!==state.map)bubble.hidden=true;
+    const room=key.startsWith('rift-')?'emberRiftVault':'emberHallBattles';
+    for(const [id,bubble] of ambientBubbles)if((id.startsWith('rift-')?'emberRiftVault':'emberHallBattles')!==state.map)bubble.hidden=true;
     if(state.map!==room||state.gameMode!=='hallBattles'){hideAmbientChat(key);return null;}
     let barBubble=ambientBubbles.get(key);
     if(!ambientClocks.has(key))ambientClocks.set(key,now);
@@ -240,6 +240,7 @@
     // not silently consumed while shopping, in another room or in a cutscene.
     const kitchenSpeaker=kitchenReady?ambientChat('kitchen',kitchenLines,actors,camera,window.HallKitchen?.clock??now):null;
     if(!kitchenReady)hideAmbientChat('kitchen');
+    if(window.KaelHallVisits?.visit?.id==='Tinus'){hideAmbientChat('bar');return kitchenSpeaker;}
     const tinus=window.TinusRecruitment?.resident(),eligible=tinus?.pose==='seated'&&window.TinusRecruitment?.progress().recruited&&!window.TinusRecruitment?.replaying;
     if(!eligible){ambientClocks.delete('bar');hideAmbientChat('bar');return kitchenSpeaker;}
     return ambientChat('bar',barLines,[tinus,actors.find(a=>a.id==='Marla')],camera,now,60000)||kitchenSpeaker;
@@ -324,6 +325,10 @@
     return Boolean(target);
   }
   function drawActor(actor,row,col){
+    if(window.HallCharacterLighting)return HallCharacterLighting.draw(actor,camera,()=>drawActorNative(actor,row,col));
+    return drawActorNative(actor,row,col);
+  }
+  function drawActorNative(actor,row,col){
     if(window.HallKitchen?.drawActor(actor,camera))return;
     if(window.HallLiveliness?.drawActor(actor,camera))return;
     if(actor.id==='Tinus'&&window.TinusCharacter){window.TinusRecruitment?.drawPortal(actor,camera,performance.now());ctx.save();ctx.globalAlpha=actor.alpha??1;window.TinusCharacter.drawField(actor,camera,performance.now());ctx.restore();return;}
