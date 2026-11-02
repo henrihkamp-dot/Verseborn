@@ -1,0 +1,74 @@
+{
+  "pixelConservation": true,
+  "characters": [
+    {
+      "key": "vesper",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 2148331,
+      "preservedSourcePixels": 2148331,
+      "sourceEdgeContacts": []
+    },
+    {
+      "key": "rattlewick",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 1695114,
+      "preservedSourcePixels": 1695114,
+      "sourceEdgeContacts": []
+    },
+    {
+      "key": "morrow",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 2011450,
+      "preservedSourcePixels": 2011450,
+      "sourceEdgeContacts": []
+    },
+    {
+      "key": "conductor",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 1989236,
+      "preservedSourcePixels": 1989236,
+      "sourceEdgeContacts": []
+    },
+    {
+      "key": "cinder",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 2071398,
+      "preservedSourcePixels": 2071398,
+      "sourceEdgeContacts": []
+    },
+    {
+      "key": "vellum",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 1962036,
+      "preservedSourcePixels": 1962036,
+      "sourceEdgeContacts": []
+    },
+    {
+      "key": "hollow-king",
+      "idleFrames": 16,
+      "actionFrames": 24,
+      "sourcePixels": 1799960,
+      "preservedSourcePixels": 1799960,
+      "sourceEdgeContacts": []
+    }
+  ],
+  "validation": {
+    "checkedFrames": 280,
+    "uniqueIdlesPerCharacter": 16,
+    "emptyFrames": 0,
+    "packedFrameEdgeContacts": 0,
+    "losslessAtlasSpotChecks": 49,
+    "sourceForegroundConserved": true
+  },
+  "browser": {
+    "animationSelections": 49,
+    "finalFrameCountersPassed": 49,
+    "localPreview": true
+  }
+}

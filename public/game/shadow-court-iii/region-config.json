@@ -1,0 +1,21 @@
+{
+  "id": "shadow-court-iii",
+  "series": "shadow",
+  "regionIndex": 3,
+  "label": "15–21",
+  "title": "The Court of Unwritten Tomorrows",
+  "background": "assets/region-iii.webp",
+  "clearsStateKey": "shadowCourtClears",
+  "initialUnlock": { "existingStateKey": "shadowTwistClears", "requiresClear": "custodian" },
+  "bossesDamageableWhileSupportsLive": true,
+  "combatImplementationIncluded": false,
+  "destinations": [
+    { "battle": 15, "key": "vesper", "name": "Lady Vesper", "point": [12,73], "landmark": "Clock Observatory", "requires": "custodian" },
+    { "battle": 16, "key": "rattlewick", "name": "Sir Rattlewick", "point": [26,46], "landmark": "Tournament Court", "requires": "vesper" },
+    { "battle": 17, "key": "morrow", "name": "Mother Morrow", "point": [39,73], "landmark": "Herbal Infirmary", "requires": "rattlewick" },
+    { "battle": 18, "key": "conductor", "name": "The Velvet Conductor", "point": [50,54], "landmark": "Velvet Opera", "requires": "morrow" },
+    { "battle": 19, "key": "cinder", "name": "Saint Cinder", "point": [55,30], "landmark": "Candle Chapel", "requires": "conductor" },
+    { "battle": 20, "key": "vellum", "name": "Madame Vellum", "point": [75,55], "landmark": "Quill Archive", "requires": "cinder" },
+    { "battle": 21, "key": "hollow-king", "name": "The Hollow King", "point": [90,29], "landmark": "Empty-Crown Palace", "requires": "vellum" }
+  ]
+}
