@@ -35,7 +35,7 @@
   let prepStage = null, startingSupport = null, sparringSnapshot = null, noticeTimer;
   let preparationNotes = [];
   const curios = new Image();
-  curios.src = 'assets/ui/loot-icons.png';
+  curios.src = 'assets/ui/loot-icons.webp';
   const recruited = id => id === 'Marla' || state.party.includes(id);
   const entry = (category, id) => categories[category]?.find(item => item.id === id);
   const stock = item => Math.max(0, Math.floor(Number(state.inventory[item?.name]) || 0));
@@ -251,6 +251,7 @@
     "desc": "The smallest ember casts a hungry shadow. Survive the fire before Emberblood restores what you took."
   }
 };
+  const originalShadowTrialIds=Object.freeze(Object.keys(shadowTrials));
   const shadowRequirement = 'Encounter unavailable — this Flameguard member has not yet entered Ember Hall.';
   let shadowParty = [], selectedShadow = null;
   for (const [id, trial] of Object.entries(shadowTrials)) {
@@ -291,7 +292,7 @@
   }
   function shadowStats(id) {
     const stats = Object.fromEntries(Object.entries(baseJobs[id].stats).map(([key, value]) => [key, Math.round((value + Math.floor(39 * (.32 + value / 30))) * 2)]));
-    return { ...stats, max: (30 + stats.stam * 4) * 8 * 6, mp: 180 };
+    return { ...stats, max: developerScale("enemy", "hp", (30 + stats.stam * 4) * 8 * 6, 1), mp: developerScale("enemy", "mp", 180) };
   }
   function hasShadowRing(unit) {
     return Boolean(unit?.id && shadowTrials[unit.id] && battle?.party?.includes(unit) && effectValue(unit.id, shadowTrials[unit.id].effectType));
@@ -948,7 +949,7 @@
   function loadDuelArt() {
     return duelArtPromise ||= Promise.all(Object.values(duelArt).flatMap(sheet => [sheet, sheet.vfx]).map(sheet => new Promise(resolve => {
       const image = new Image(); image.onload = () => { sheet.image = image; resolve(); }; image.onerror = () => resolve();
-      image.src = 'assets/sprites/hall-duels/' + sheet.file;
+      image.src = 'assets/sprites/hall-duels/' + sheet.file + '?v=400';
     })));
   }
   function drawDuelOpponent(unit, x, y) {
@@ -958,10 +959,10 @@
     const animation = dying ? 'death' : attacking ? unit.attackStyle === 'ultimate' ? 'ultimate' : unit.attackStyle === 'melee' ? 'melee' : 'magic' : 'idle';
     const column = dying ? Math.min(3, Math.floor(Math.max(0, tick - (unit.deathTick ?? tick)) / 5)) : attacking ? Math.min(3, Math.floor((unit.animTick || 0) / 6)) : [0,1,2,3,2,1][Math.floor((tick + unit.sparringId.length * 3) / 36) % 6];
     const scale = (battleSpriteHeights[unit.sparringId] || 54) * BATTLE_COMPOSITION_SCALE * 2 / sheet.referenceHeight;
-    const width = Math.round(sheet.cellWidth * scale), height = Math.round(sheet.cellHeight * scale);
+    const width = sheet.cellWidth * scale, height = sheet.cellHeight * scale;
     const anchorOffset = animation === "idle" ? sheet.idleFrameOffsets?.[column] || [0, 0] : [0, 0];
-    ctx.save(); ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(sheet.image, column * sheet.cellWidth, sheet.rowMap[animation] * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, Math.round(x + 8 - width / 2 + anchorOffset[0] * scale), Math.round(y + 31 - sheet.baseline * scale + anchorOffset[1] * scale), width, height); ctx.restore();
+    ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(sheet.image, column * sheet.cellWidth, sheet.rowMap[animation] * sheet.cellHeight, sheet.cellWidth, sheet.cellHeight, x + 8 - width / 2 + anchorOffset[0] * scale, y + 31 - sheet.baseline * scale + anchorOffset[1] * scale, width, height); ctx.restore();
     if (attacking && unit.lastAnimDrawTick !== tick) { unit.animTick = (unit.animTick || 0) + 1; unit.lastAnimDrawTick = tick; }
     return true;
   }
@@ -1003,20 +1004,21 @@
   };
 
   function renderSparring(opponent = selectedShadow) {
+    if(opponent==='Tinus'&&window.ShadowBonus)return ShadowBonus.open();
     if (state.gameMode !== 'hallBattles' || !recruited('Seerin')) return false;
     loadDuelArt();
     shadowParty = shadowParty.filter(id => recruited(id)).slice(0, 3);
     if (!shadowParty.length) shadowParty = state.activeParty.filter(id => recruited(id)).slice(0, 3);
     selectedShadow = opponent && recruited(opponent) ? opponent : Object.keys(shadowTrials).find(id=>recruited(id)) || null;
     const defeated = progress().shadowDefeated;
-    const cards = Object.entries(shadowTrials).map(([id, trial], index) => {
+    const cards = Object.entries(shadowTrials).filter(([id])=>originalShadowTrialIds.includes(id)).map(([id, trial], index) => {
       const unlocked = recruited(id), won = defeated.includes(id);
       if (!unlocked) return '<button type="button" class="hall-stage shadow-stage is-locked" disabled><span>SHADOW TRIAL ' + (index + 1) + ' / LOCKED</span><div class="shadow-mystery" aria-hidden="true">?</div><strong>Unknown Flameguard</strong><small>Locked</small><p>' + shadowRequirement + '</p></button>';
       return '<button type="button" class="hall-stage shadow-stage ' + (won ? 'is-cleared ' : '') + (selectedShadow === id ? 'is-selected' : '') + '" data-shadow="' + id + '" aria-pressed="' + (selectedShadow === id) + '"><span>SHADOW TRIAL ' + (index + 1) + ' / ' + (won ? 'DEFEATED' : 'AVAILABLE') + '</span><img src="assets/sprites/hall-duels/' + id.toLowerCase() + '-portrait.webp" alt="Shadow ' + id + '"><strong>Shadow ' + id + '</strong><small>Recommended level 40 / Personal trial</small><em>' + trial.ring + '</em><i>' + (won ? 'FIRST CLEAR EARNED / REPLAY' : 'FIRST CLEAR REWARD / Shadow Personal Artifact Ring') + '</i></button>';
     }).join('');
     const trial = shadowTrials[selectedShadow];
     const details = trial ? '<section class="shadow-detail" aria-label="Shadow encounter preview"><div class="hub-stage-tags"><b>Shadow ' + selectedShadow + '</b><span>' + (defeated.includes(selectedShadow) ? 'Defeated / Replay' : 'Available') + '</span><span>Recommended level 40</span></div><div class="shadow-preview"><img src="assets/sprites/hall-duels/' + selectedShadow.toLowerCase() + '-portrait.webp" alt="Shadow ' + selectedShadow + ' enemy preview"><div><h3>Shadow ' + selectedShadow + '</h3><p>' + trial.desc + '</p><dl class="hub-stage-info"><dt>Encounter</dt><dd>Level 40 / one Shadow / 60-round limit</dd><dt>' + (defeated.includes(selectedShadow) ? 'First clear earned' : 'FIRST CLEAR REWARD') + '</dt><dd><strong>' + trial.ring + '</strong><br>Shadow Personal Artifact Ring / ' + selectedShadow + ' only</dd><dt>Personal reward</dt><dd>' + shadowRewardHtml(selectedShadow) + '</dd></dl></div></div><h3>Your party (' + shadowParty.length + '/3)</h3><p>Choose up to 3 members. Items and vitals are restored afterward; no EXP or stage progress.</p><div class="shadow-party">' + state.party.map(id => '<button type="button" data-shadow-party="' + id + '" aria-pressed="' + shadowParty.includes(id) + '" ' + (!shadowParty.includes(id) && shadowParty.length >= 3 ? 'disabled' : '') + '><strong>' + id + '</strong><small>Level ' + progressFor(id).level + (shadowParty.includes(id) ? ' / Selected' : '') + '</small></button>').join('') + '</div>' + encounterSupportHtml() + '<footer class="hub-footer"><p>' + (defeated.includes(selectedShadow) ? 'First-clear reward already earned.' : 'Guaranteed first victory: ' + trial.ring) + '</p><button type="button" data-shadow-start ' + (!shadowParty.length ? 'disabled' : '') + '>Start Battle</button></footer></section>' : '<p class="shadow-empty">Select an available Shadow trial to preview its encounter and first-clear reward.</p>';
-    overlay('Ember Hall / Shadow Trials', '<nav class="shadow-path-nav"><button type="button" data-ember-path>Ember Battles</button><button type="button" aria-current="page" disabled>Shadow Trials</button></nav><p>' + defeated.length + '/7 trials defeated. Shadows awaken as Flameguard members enter Ember Hall.</p><div class="hall-stage-grid shadow-grid">' + cards + '</div>' + details);
+    overlay('Ember Hall / Shadow Trials', '<nav class="shadow-path-nav"><button type="button" data-ember-path>Ember Battles</button><button type="button" aria-current="page" disabled>Shadow Trials</button></nav><p>' + defeated.filter(id=>originalShadowTrialIds.includes(id)).length + '/7 trials defeated. Shadows awaken as Flameguard members enter Ember Hall.</p><div class="hall-stage-grid shadow-grid">' + cards + '</div>' + details);
     el.menuBody.querySelector('[data-ember-path]').onclick = renderHallBattleMap;
     el.menuBody.querySelectorAll('[data-shadow]').forEach(button => button.onclick = () => { renderSparring(button.dataset.shadow); el.menuBody.querySelector('.shadow-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     el.menuBody.querySelectorAll('[data-shadow-party]').forEach(button => button.onclick = () => { const id = button.dataset.shadowParty; if (shadowParty.includes(id)) shadowParty = shadowParty.filter(member => member !== id); else if (shadowParty.length < 3 && recruited(id)) shadowParty.push(id); renderSparring(); });
@@ -1025,6 +1027,7 @@
     const start = el.menuBody.querySelector('[data-shadow-start]'); if (start) start.onclick = () => startSparring([...shadowParty], selectedShadow);
   }
   function startSparring(fighters, opponent) {
+    if(opponent==='Tinus'&&(!window.ShadowBonus?.unlocked()||!ShadowBonus.loaded))return false;
     const party = Array.isArray(fighters) ? [...new Set(fighters)] : [fighters];
     if (state.gameMode !== 'hallBattles' || !recruited('Seerin') || !shadowTrials[opponent] || !recruited(opponent) || !party.length || party.length > 3 || party.some(id => !Object.hasOwn(baseJobs, id) || !recruited(id)) || mode !== 'hallMap') return false;
     loadDuelArt();
@@ -1046,12 +1049,12 @@
     const prepared = oldPrepareEnemy(source, ...args);
     if (!source.sparringId) return prepared;
     const total = shadowStats(source.sparringId);
-    return { ...prepared, hp: enemyBalanceValue("hp", total.max), max: enemyBalanceValue("hp", total.max), maxmp: total.mp, mp: total.mp, atk: total.str, stats: { ...total }, baseEvasion: FLAMEGUARD_BASE_EVASION[source.sparringId] || .05, resistanceTier: 'normal', crit: .12, xp: 0, sparringId: source.sparringId };
+    return { ...prepared, hp: total.max, max: total.max, maxmp: total.mp, mp: total.mp, atk: total.str, stats: { ...total }, baseEvasion: FLAMEGUARD_BASE_EVASION[source.sparringId] || .05, resistanceTier: 'normal', crit: .12, xp: 0, sparringId: source.sparringId };
   };
   chooseEnemyAction = unit => {
     if (!unit.sparringId) return oldEnemyAction(unit);
     const silenced = Boolean(statusOf(unit, 'silence'));
-    const skills = battleSkills(unit.sparringId, unit).filter(sk => !sk.otherAllyOnly && !sk.encore && !sk.immediateTurn && !sk.dispel && !sk.revive && !sk.transform && (!silenced || sk.anim === 'melee' || sk.basicAttack || sk.anim === 'ultimate' && skillScaling(sk) === 'str') && (sk.anim === 'ultimate' ? battle.enemyResonance >= 100 : skillMpCost(unit.sparringId, sk, unit) <= unit.mp));
+    const skills = battleSkills(unit.sparringId, unit).filter(sk => !sk.otherAllyOnly && !sk.encore && !sk.immediateTurn && !sk.dispel && !sk.revive && !sk.transform && (!silenced || sk.anim === 'melee' || sk.basicAttack || sk.anim === 'ultimate' && skillScaling(sk) === 'str') && (sk.anim === 'ultimate' ? battle.enemyResonance >= 100 : enemyActionMpCost(unit,{mpCost:skillMpCost(unit.sparringId, sk, unit)}) <= unit.mp));
     const offensive = sk => skillTargetsEnemies(sk) && !sk.statusOnly && (sk.power > 0 || sk.coefficient > 0 || sk.basicAttack);
     const damage = skills.filter(sk => sk.anim !== 'ultimate' && offensive(sk));
     const heal = skills.find(sk => sk.anim !== 'ultimate' && sk.power < 0);
@@ -1089,7 +1092,7 @@
       entries.push({ kind: 'gear', icon: 'E', label: reward, detail: 'FIRST CLEAR / Shadow Personal Artifact / ' + opponent + ' only', value: 'x1' });
     } else if (result === 'victory') entries.push({ kind: 'record', icon: '#', label: 'Shadow defeated', detail: 'First-win reward already earned', value: 'REMATCH' });
     updatePanels();
-    oldShowResult(result === 'victory' ? 'victory' : 'defeat', entries, () => { returnToHallAfterBattle(); renderSparring(); queueSave(); });
+    oldShowResult(result === 'victory' ? 'victory' : 'defeat', entries, () => { returnToHallAfterBattle(); if(opponent==='Tinus')ShadowBonus.open();else renderSparring(); queueSave(); });
     return true;
   }
   winBattle = log => battle?.sparring ? finishSparring('victory') : oldWin(log);
@@ -1118,7 +1121,7 @@
     }
     ctx.restore();
   }
-  window.HallHub = { get shadowFormation(){return [...shadowParty];}, setShadowFormation(list){shadowParty=[...new Set(list)].filter(id=>recruited(id)).slice(0,3);renderSparring();}, encounterSupportHtml, bindEncounterSupport, beginSupportedBattle, meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowBreakBonus, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
+  window.HallHub = { originalShadowTrialIds, get shadowFormation(){return [...shadowParty];}, setShadowFormation(list,render=true){shadowParty=[...new Set(list)].filter(id=>recruited(id)).slice(0,3);if(!render)return;if(window.ShadowBonus&&el.menuBody.querySelector('.shadow-bonus-screen'))return ShadowBonus.open();renderSparring();}, encounterSupportHtml, bindEncounterSupport, beginSupportedBattle, meals, coatings, blessings, services, progress, shadowTrials, shadowStats, hasShadowRing, premiumShadowAffixes, upgradeShadowRewards, shadowRewardHtml, beginShadowAction, finishShadowAction, shadowBreakBonus, shadowDamageBonus, shadowHealingBonus, shadowHealed, shadowDefended, renderSparring, select, openPreparation, renderPreparation, beginStage, openService, startSparring, finishSparring, scavenge, drawAreas, recruited, supportForBattle, loadDuelArt, duelArt };
   const duelQa = new URLSearchParams(location.search);
   if (['hallduel','duelselect'].includes(duelQa.get('qa'))) loadDuelArt().then(() => {
     state.gameMode = 'hallBattles'; state.map = 'emberHallBattles'; state.party = duelQa.get('recruits') ? duelQa.get('recruits').split(',').filter(id => Object.hasOwn(baseJobs,id)) : Object.keys(baseJobs); state.activeParty = ['Verseborn','Torren','Glimmer']; mode = 'walk';

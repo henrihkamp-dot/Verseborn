@@ -2,7 +2,7 @@
 (()=>{
  'use strict';
  const image=new Image(),rocket=new Image(),clocks=new WeakMap(),deathClocks=new WeakMap(),hoverStates=new WeakMap(),smokeStates=new WeakMap();let loaded=false;
- const ready=new Promise(resolve=>{image.onload=()=>{loaded=true;resolve(true);};image.onerror=()=>resolve(false);image.src='assets/sprites/battle-v2/glimmer-mech.png?v=386';});
+ const ready=new Promise(resolve=>{image.onload=()=>{loaded=true;resolve(true);};image.onerror=()=>resolve(false);image.src='assets/sprites/battle-v2/glimmer-mech.webp?v=386';});
  rocket.src='assets/sprites/battle-v2/glimmer-rocket-386.webp?v=388';
  const idleDurations=[390,95,440,440,390,95,440,440],cycle=idleDurations.reduce((a,b)=>a+b,0);
  const jetCanvas=document.createElement('canvas');jetCanvas.width=jetCanvas.height=320;const jetPaint=jetCanvas.getContext('2d');

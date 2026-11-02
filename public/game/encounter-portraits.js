@@ -16,11 +16,11 @@
  window.addEventListener('error',event=>{const image=event.target,entry=pending.get(image);if(!entry)return;event.stopImmediatePropagation();if(++entry.index<entry.sources.length)image.setAttribute('src',entry.sources[entry.index]);else pending.delete(image);},true);
 
  function enemy(name){return enemyFiles[name]?fresh(base+enemyFiles[name]+'.webp'):enemyPortraitDataUrl(name);}
- function unit(u){if(u.sparringId)return fresh(base+'shadow-'+u.sparringId.toLowerCase()+'.webp');return enemy(u.sprite||u.name);}
+ function unit(u){if(u.shadowTinusBoss||u.shadowTinusClone)return fresh(root+'assets/shadow-tinus-405/portrait.webp?v=410');if(u.sparringId)return fresh(base+'shadow-'+u.sparringId.toLowerCase()+'.webp');return enemy(u.sprite||u.name);}
  function mount(host,path){
   host.querySelectorAll('img').forEach(img=>{img.addEventListener('error',()=>{if(img.dataset.portraitFallback||!img.src.includes('/assets/'))return;img.dataset.portraitFallback='true';img.src='https://raw.githubusercontent.com/henrihkamp-dot/Verseborn/main/public/game/assets/'+img.src.split('/assets/')[1].split('?')[0];},{once:true});});
   host.querySelectorAll('[data-hall-stage]').forEach(card=>{const info=hallBattleInfo(Number(card.dataset.hallStage));if(!info)return;const main=[info.enemies,...info.waves].flat().map(key=>HALL_ENEMY_LIBRARY[key]).filter(Boolean).sort((a,b)=>b.hp-a.hp)[0];const image=card.querySelector('img');if(main&&image){image.src=enemy(main.sprite||main.name);if(card.classList.contains('is-selected')){const preview=host.querySelector('.trial-overview>img');if(preview)preview.src=image.src;}}});
-  host.querySelectorAll('[data-shadow]').forEach(card=>{const image=card.querySelector('img');if(image)image.src=base+'shadow-'+card.dataset.shadow.toLowerCase()+'.webp';});
+  host.querySelectorAll('[data-shadow]').forEach(card=>{const image=card.querySelector('img');if(image)image.src=card.dataset.shadow==='Tinus'?root+'assets/shadow-tinus-405/portrait.webp?v=410':base+'shadow-'+card.dataset.shadow.toLowerCase()+'.webp';});
   host.querySelectorAll('[data-rift-select]').forEach(card=>{const info=EmberRift.encounters[Number(card.dataset.riftSelect)-1],image=card.querySelector('img');if(info&&image)image.src=enemy(EmberRift.roster[info.preview].name);});
   host.querySelectorAll('[data-whirlpool-select]').forEach(card=>{const info=TinusWhirlpool.encounters[Number(card.dataset.whirlpoolSelect)-1],image=card.querySelector('img');if(info&&image)image.src=base+'whirlpool-'+info.key+'.webp';});
  }

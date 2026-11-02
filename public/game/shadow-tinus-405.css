@@ -1,0 +1,9 @@
+.shadow-bonus-pagination{grid-column:1/-1}
+.shadow-bonus-pages{grid-column:1/-1;display:flex;gap:8px;margin:0;padding:6px 0}.shadow-bonus-pages button{padding:8px 12px;border:1px solid #b78b46;background:linear-gradient(#3d2d29,#201823);color:#ffe0a0;font:600 11px/1.2 "Segoe UI",sans-serif}.shadow-bonus-pages button:disabled{border-color:#e1ae6b;opacity:1;color:#fff1be}.shadow-bonus-strategy,.shadow-bonus-reward{font:11px/1.45 "Segoe UI",sans-serif;color:#d6c6b7;margin:8px 0}.shadow-bonus-reward summary{cursor:pointer;color:#f1ce91}.shadow-bonus-screen [data-bonus-status]{font:11px/1.4 "Segoe UI",sans-serif;color:#ffdfa4}.shadow-bonus-screen [data-bonus-status][hidden]{display:none!important}
+
+.menu.compact-trials .shadow-bonus-screen.resonance-mode .res-fixture[data-mode-fixture="0"]{height:28%!important;transform:translate(-50%,-100%)}.shadow-bonus-screen .res-fixture[data-mode-fixture="0"]:after{content:'';position:absolute;left:13%;bottom:1%;width:74%;height:8%;border-radius:50%;background:radial-gradient(ellipse,#08050bc9,transparent 72%);z-index:-1;pointer-events:none}
+
+/* Register the archive footprint, rather than its frontmost stair, to the platform centre. */
+.menu.compact-trials .shadow-bonus-screen.resonance-mode .res-fixture[data-mode-fixture="0"]:before{display:none}
+.menu.compact-trials .shadow-bonus-screen.resonance-mode .res-fixture[data-mode-fixture="0"]>img{filter:drop-shadow(0 2px 1px #0009)!important;animation:none!important}
+.shadow-bonus-screen .res-fixture[data-mode-fixture="0"]:after{left:7%;bottom:14%;width:86%;height:16%;background:radial-gradient(ellipse,#08050be0,transparent 70%)}

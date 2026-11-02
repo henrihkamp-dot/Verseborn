@@ -46,12 +46,12 @@
         const shade=this.createRadialGradient(0,0,0,0,0,1);shade.addColorStop(0,'rgba(9,5,14,.70)');shade.addColorStop(.4,'rgba(9,5,14,.4)');shade.addColorStop(1,'rgba(9,5,14,0)');this.fillStyle=shade;this.fillRect(-1,-1,2,2);this.restore();shadowed=true;
       }
       g.globalCompositeOperation='source-atop';
-      const ambient=g.createLinearGradient(0,0,0,sh);ambient.addColorStop(0,'rgba(255,210,150,.09)');ambient.addColorStop(1,'rgba(34,23,58,.22)');g.fillStyle=ambient;g.fillRect(0,0,sw,sh);
+      const ambient=g.createLinearGradient(0,0,0,sh);ambient.addColorStop(0,'rgba(255,210,150,.04)');ambient.addColorStop(1,'rgba(34,23,58,.12)');g.fillStyle=ambient;g.fillRect(0,0,sw,sh);
       for(const {l,p} of nearby){if(p<=0)continue;const c=l[3]||[255,166,63],flip=this.getTransform().a<0?-1:1;
         const x=sw*(.5+Math.max(-.5,Math.min(.5,(l[0]-actor.x)/70))*flip),y=sh*.23;
-        const light=g.createRadialGradient(x,y,0,x,y,Math.max(sw,sh)*.9);light.addColorStop(0,`rgba(${c},${p*.34})`);light.addColorStop(1,`rgba(${c},0)`);g.fillStyle=light;g.fillRect(0,0,sw,sh);
+        const light=g.createRadialGradient(x,y,0,x,y,Math.max(sw,sh)*.9);light.addColorStop(0,`rgba(${c},${p*.18})`);light.addColorStop(1,`rgba(${c},0)`);g.fillStyle=light;g.fillRect(0,0,sw,sh);
       }
-      const c=colors[actor.id];if(c){const light=g.createRadialGradient(sw*.5,sh*.62,0,sw*.5,sh*.62,sh*.43);light.addColorStop(0,`rgba(${c},.15)`);light.addColorStop(1,`rgba(${c},0)`);g.fillStyle=light;g.fillRect(0,0,sw,sh);}
+      const c=colors[actor.id];if(c){const light=g.createRadialGradient(sw*.5,sh*.62,0,sw*.5,sh*.62,sh*.43);light.addColorStop(0,`rgba(${c},.06)`);light.addColorStop(1,`rgba(${c},0)`);g.fillStyle=light;g.fillRect(0,0,sw,sh);}
       g.globalCompositeOperation='source-over';
       return original.call(this,surface,0,0,sw,sh,dx,dy,dw,dh);
     };

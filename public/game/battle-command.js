@@ -28,7 +28,8 @@
     if(mode!=='battle')return;
     const scroll=hoveredUnit===u?unitTooltip.scrollTop:0;hoveredUnit=u;
     const enemySide=battle.enemies.includes(u),rawRole=String(u.role||'hybrid').toLowerCase(),roleKey=enemySide?({fighter:'dps',caster:'dps',mage:'dps',ranger:'dps'}[rawRole]||combatRoleKey(u,true)):combatRoleKey(u,false),roleLabel=roleKey==='dps'?'DPS':roleKey.charAt(0).toUpperCase()+roleKey.slice(1);
-    unitTooltip.innerHTML=`<strong>${esc(u.name)}</strong><div class="bc-tooltip-role">Role · ${esc(roleLabel)}</div><div class="bc-tooltip-vitals">HP ${Math.max(0,Math.round(u.hp))} / ${u.max} · MP ${Math.max(0,Math.round(u.mp||0))} / ${u.maxmp||0}</div>${(u.statuses||[]).map(s=>{const data=statusDisplayData(u,s);return `<section><b>${esc(data.name)}</b><small>${esc(data.timing)}</small><p>${esc(data.description)}</p></section>`;}).join('')||'<p>No active buffs or debuffs.</p>'}`;
+    const ward=window.ShadowBonus?.shieldHud(u),weakness=flameguardWeakness(u);
+    unitTooltip.innerHTML=`<strong>${esc(u.name)}</strong><div class="bc-tooltip-role">Role · ${esc(roleLabel)}</div><div class="bc-tooltip-vitals">HP ${Math.max(0,Math.round(u.hp))} / ${u.max} · MP ${Math.max(0,Math.round(u.mp||0))} / ${u.maxmp||0}</div>${weakness?`<section><b>Weak: ${esc(weakness.element)} · +25% direct damage</b><p>${esc(weakness.reason)}</p></section>`:''}${ward?`<section><b>${esc(ward.label+' · '+ward.detail)}</b><p>${esc(ward.description)}</p></section>`:''}${(u.statuses||[]).map(s=>{const data=statusDisplayData(u,s);return `<section><b>${esc(data.name)}</b><small>${esc(data.timing)}</small><p>${esc(data.description)}</p></section>`;}).join('')||(!ward?'<p>No active buffs or debuffs.</p>':'')}`;
     unitTooltip.hidden=false;unitTooltip.scrollTop=scroll;
     const r=game.getBoundingClientRect(),x=event?.clientX??r.left+r.width/2,y=event?.clientY??r.top+r.height/2;
     unitTooltip.style.left=`${Math.max(6,Math.min(r.width-unitTooltip.offsetWidth-6,x-r.left+16))}px`;
@@ -82,10 +83,11 @@
   };
   function icon(kind,color){return `<svg class="bc-icon" viewBox="0 0 32 32" aria-hidden="true" style="--icon-color:${color||'currentColor'}"><path d="${paths[kind]||paths.spell}"/></svg>`;}
   function abilityIcon(sk){
-    const art=window.CharacterAbilityArt?.source(unit?.id,sk.name,unit?.form||'');
-    if(art)return `<img class="bc-ability-icon" data-bc-ability="${esc(sk.name)}" alt="">`;
     const source=sk.icon||sk.iconSrc||sk.artwork;
     if(source)return `<img class="bc-ability-icon" src="${esc(source)}" alt="">`;
+    const hero=sk.iconHero||unit?.id,form=sk.iconHero?'':unit?.form||'';
+    const art=window.CharacterAbilityArt?.source(hero,sk.name,form);
+    if(art)return `<img class="bc-ability-icon" src="${esc(art)}" data-bc-ability="${esc(sk.name)}" data-bc-ability-hero="${esc(hero)}" data-bc-ability-form="${esc(form)}" alt="">`;
     // Only uncatalogued native commands use the existing reusable vector sigils.
     if(sk.category==='spell'||sk.anim==='magic'&&skillTargetsEnemies(sk)){
       const color=sk.element==='Tech'?'#55c7ff':sk.element==='Holy Fire'?'#ffd97d':sk.element==='Ancient Fire'?'#ff9e62':'#d484ff';
@@ -112,7 +114,7 @@
     if(!groups.some(c=>c.id===ui.category)){ui.category='basic';ui.action=0;}
     ui.action=Math.min(ui.action,Math.max(0,currentGroup().actions.length-1));
   }
-  function hydrateArt(host){host.querySelectorAll('img[data-bc-ability]').forEach(img=>CharacterAbilityArt.assign(img,unit.id,img.dataset.bcAbility,unit.form||''));}
+  function hydrateArt(host){host.querySelectorAll('img[data-bc-ability]').forEach(img=>CharacterAbilityArt.assign(img,img.dataset.bcAbilityHero||unit.id,img.dataset.bcAbility,img.dataset.bcAbilityForm??(unit.form||'')));}
   function disabled(sk){
     if(sk.command==='defend')return '';
     if(sk.command==='items')return carriedBattleItems().some(([,i])=>canUseBattleItem(unit,i))?'':'No usable item';
@@ -394,8 +396,9 @@
     for(const [side,list]of[['party',battle.party],['enemy',battle.enemies]])list.forEach((u,index)=>{
       if(side==='enemy'&&u.hp<=0)return;
       const n=make('button',`bc-unit ${side} ${u.hp<=0?'is-down':''}`,cards);n.type='button';n.setAttribute('aria-label',`${u.name}: HP ${Math.max(0,u.hp)} / ${u.max}, MP ${u.mp||0} / ${u.maxmp||0}`);
+      const ward=window.ShadowBonus?.shieldHud(u);if(ward)n.classList.add('is-'+ward.kind);
       const displayStatuses=[...(u.statuses||[])].sort((a,b)=>(b.type==='broken')-(a.type==='broken'));
-      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:''}<strong class="bc-unit-name">${esc(u.name)}</strong><span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span class="${STATUS_DEFS[s.type]?.negative?'is-debuff':'is-buff'}" title="${STATUS_DEFS[s.type]?.negative?'Debuff':'Buff'} · ${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
+      n.innerHTML=`${side==='enemy'?`<small class="bc-weak">Weak: ${knownWeakness(u)?esc(u.weak):'???'}</small>`:flameguardWeakness(u)?`<small class="bc-weak">Weak: ${esc(flameguardWeakness(u).element)}</small>`:''}${ward?`<span class="bc-immunity bc-immunity-${ward.kind}" title="${esc(ward.description)}"><img src="assets/shadow-tinus-405/ward-icon.webp?v=412" alt=""><b>${esc(ward.label)}</b><small>${esc(ward.detail)}</small></span>`:''}<strong class="bc-unit-name">${esc(u.name)}</strong><span class="bc-hp bc-vital"><i style="width:${Math.max(0,u.hp/u.max*100)}%"></i><b>HP ${Math.max(0,Math.round(u.hp))}<small> / ${u.max}</small></b></span>${Number.isFinite(u.maxmp)?`<span class="bc-mp bc-vital"><i style="width:${Math.max(0,u.mp/Math.max(1,u.maxmp)*100)}%"></i><b>MP ${Math.max(0,Math.round(u.mp))}<small> / ${u.maxmp}</small></b></span>`:''}<span class="bc-statuses">${displayStatuses.slice(0,4).map(s=>{const data=statusDisplayData(u,s),img=s.type==='broken'?brokenIcon():statusIconImages[statusIconAliases[s.type]||s.type]?.src;return `<span class="${STATUS_DEFS[s.type]?.negative?'is-debuff':'is-buff'}" title="${STATUS_DEFS[s.type]?.negative?'Debuff':'Buff'} · ${esc(data.name+': '+data.description+' '+data.timing)}">${img?`<img src="${esc(img)}" alt="${esc(data.name)}">`:`<b>${esc(STATUS_DEFS[s.type]?.short||s.type.slice(0,3))}</b>`}<small>${esc(data.compact)}</small></span>`;}).join('')}${displayStatuses.length>4?`<b>+${displayStatuses.length-4}</b>`:''}</span>`;
       if(combatRoleIconSheet){const role=make('span','bc-role',n),index=COMBAT_ROLE_ICON_INDEX[combatRoleKey(u,side==='enemy')]??4;role.setAttribute('aria-hidden','true');role.innerHTML=`<i style="background-image:url('${esc(combatRoleIconSheet.image.src)}');background-position:${index*25}% center"></i>`;}
       n.onclick=()=>{if(ui.level==='target'&&targetList.includes(u)){selectTarget(u);renderCommands();}else if(ui.level==='itemTarget'&&targetList.includes(u)){selectTarget(u);renderCommands();}else if(u.statuses?.length){history.querySelector('header strong').textContent=u.name+' · Status effects';history.querySelector('.bc-history-content').innerHTML=u.statuses.map(s=>{const d=statusDisplayData(u,s);return `<div><b>${esc(d.name)}</b> · ${esc(d.timing)}<p>${esc(d.description)}</p></div>`;}).join('');history.showModal();}};
       n.addEventListener('pointerenter',event=>showUnitTooltip(u,event));n.addEventListener('pointermove',event=>showUnitTooltip(u,event));n.addEventListener('pointerleave',hideUnitTooltip);
@@ -628,7 +631,7 @@
   let pads=[],lastPad=0;
   function gamepad(now){if(mode==='battle'&&!history.open){const pad=[...(navigator.getGamepads?.()||[])].find(p=>p?.connected);if(pad){const values=[pad.buttons[14]?.pressed||pad.axes[0]<-.55,pad.buttons[15]?.pressed||pad.axes[0]>.55,pad.buttons[12]?.pressed||pad.axes[1]<-.55,pad.buttons[13]?.pressed||pad.axes[1]>.55,pad.buttons[0]?.pressed,pad.buttons[1]?.pressed];values.forEach((v,i)=>{if(v&&(!pads[i]||i<4&&now-lastPad>240)){handleControl(['left','right','up','down','confirm','cancel'][i]);lastPad=now;}});pads=values;}}requestAnimationFrame(gamepad);}requestAnimationFrame(gamepad);
   new ResizeObserver(()=>{lastLayout='';if(mode==='battle'&&unit&&!battle.resolving){renderCommands();positionCards();}}).observe(game);
-  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},boundsFor:u=>spriteBounds.get(u),presentationFor:enemyPresentation,get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},control,refreshResonance:renderResonance,render:()=>renderBattle(''),previewUnits,positionCards};
+  window.BattleCommandUI={get state(){return {...ui};},get groups(){return groups;},get actor(){return unit;},get selected(){return selected;},get remembered(){return {...lastActions};},clearMemory(){lastActions={};localStorage.removeItem('verseborn-battle-ui-v1');},boundsFor:u=>spriteBounds.get(u),presentationFor:enemyPresentation,get spriteBounds(){return statusNodes.map(({u})=>({name:u.name,...spriteBounds.get(u)}));},captureSprite,control,refreshResonance:renderResonance,render:()=>renderBattle(''),previewUnits,positionCards};
 })();
 
 

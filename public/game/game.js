@@ -209,20 +209,20 @@ const titleTwinkles = [
 const TITLE_BACKGROUND_FRAME = 1;
 
 const portraitSources = {
-  Verseborn: "assets/portraits/verseborn.png",
-  Mira: "assets/portraits/mira.png",
-  Seerin: "assets/portraits/seerin.png",
-  Kael: "assets/portraits/kael.png",
-  Torren: "assets/portraits/torren.png",
-  Sparky: "assets/portraits/sparky.png",
-  Glimmer: "assets/portraits/glimmer.png",
-  Marla: "assets/portraits/marla.png",
-  Harl: "assets/portraits/harl.png",
-  Nyx: "assets/portraits/nyx.png",
-  Rava: "assets/portraits/rava.png",
-  Jory: "assets/portraits/jory.png",
-  Kaeldrin: "assets/portraits/kaeldrin.png",
-  Lyrsa: "assets/portraits/lyrsa.png"
+  Verseborn: "assets/portraits/verseborn.webp",
+  Mira: "assets/portraits/mira.webp",
+  Seerin: "assets/portraits/seerin.webp",
+  Kael: "assets/portraits/kael.webp",
+  Torren: "assets/portraits/torren.webp",
+  Sparky: "assets/portraits/sparky.webp",
+  Glimmer: "assets/portraits/glimmer.webp",
+  Marla: "assets/portraits/marla.webp",
+  Harl: "assets/portraits/harl.webp",
+  Nyx: "assets/portraits/nyx.webp",
+  Rava: "assets/portraits/rava.webp",
+  Jory: "assets/portraits/jory.webp",
+  Kaeldrin: "assets/portraits/kaeldrin.webp",
+  Lyrsa: "assets/portraits/lyrsa.webp"
 };
 const menuPortraitSources = {
   Verseborn: "assets/menu/portrait-verseborn.webp",
@@ -237,9 +237,9 @@ function menuPortraitSource(id) {
   return menuPortraitSources[id] || portraitSources[id];
 }
 const bossPortraitSources = {
-  "Archive Custodian": "assets/portraits/enemies/archive-custodian.png",
-  "Dawn Gate Sentinel": "assets/portraits/enemies/dawn-gate-sentinel.png",
-  "Dock Foreman": "assets/portraits/enemies/dock-foreman.png"
+  "Archive Custodian": "assets/portraits/enemies/archive-custodian.webp",
+  "Dawn Gate Sentinel": "assets/portraits/enemies/dawn-gate-sentinel.webp",
+  "Dock Foreman": "assets/portraits/enemies/dock-foreman.webp"
 };
 const enemyPortraitCache = new Map();
 
@@ -615,7 +615,7 @@ const enemyAbilityProfiles = {
   }, ["melee", "buff", "magic"], { element: "Earth", baseEvasion: 0, affixes: { physicalResistance: .15, breakPower: 1 } }),
   Grumm: enemyCombatProfile("tank", .09, { hp: 150, mp: 78, str: 138, mag: 58, stam: 155, agi: 60 }, {
     melee: em("Granite Cleave", "melee", "Physical", 0, { coefficient: .94, breakPower: 2 }),
-    magic: em("Boulder Toss", "magic", "Earth", 20, { coefficient: 1, scaling: "str", breakPower: 1 }),
+    magic: em("Stonewake Whirlwind", "melee", "Physical", 20, { coefficient: .68, scaling: "str", allTargets: true, breakPower: 1, grummWhirlwind: true }),
     buff: em("Mountain Stance", "buff", "Earth", 28, { targetSide: "self", buffs: [{ type: "defenseUp", duration: 3, value: .28 }, { type: "barrier", duration: 2, value: .2 }] }),
     ultimate: em("Mountain Breaker", "ultimate", "Earth", 0, { coefficient: 1.68, scaling: "str", breakPower: 3, payoff: "broken", payoffMultiplier: 1.22 })
   }, ["melee", "buff", "magic"], { row: 3, element: "Earth", baseEvasion: .02, affixes: { physicalResistance: .15, breakPower: 1 } }),
@@ -889,11 +889,11 @@ const recruitSceneImages = {};
 const STAGE_SELECTOR_ASSET = "assets/ui/stage-selector-sheet.webp";
 const STAGE_SELECTOR_FRAMES = 4;
 const battleImageFiles = {
-  "ash-quarter": "ash-quarter.png",
-  reverie: "reverie.png",
-  guildspire: "guildspire.png",
-  "ember-hall": "ember-hall.png",
-  "false-dawn": "false-dawn.png",
+  "ash-quarter": "ash-quarter.webp",
+  reverie: "reverie.webp",
+  guildspire: "guildspire.webp",
+  "ember-hall": "ember-hall.webp",
+  "false-dawn": "false-dawn.webp",
   "cinder-terrace": "cinder-terrace.webp",
   "lantern-tavern": "lantern-tavern.webp",
   "reverie-garden": "reverie-garden.webp",
@@ -997,7 +997,7 @@ function loadBreakIconSheet() {
       resolve();
     };
     image.onerror = resolve;
-    image.src = "assets/ui/break-icons.png";
+    image.src = "assets/ui/break-icons.webp";
   });
 }
 
@@ -1009,7 +1009,7 @@ function loadCombatRoleIconSheet() {
       resolve();
     };
     image.onerror = resolve;
-    image.src = "assets/ui/combat-role-icons.png";
+    image.src = "assets/ui/combat-role-icons.webp";
   });
 }
 
@@ -1047,7 +1047,7 @@ function loadSpriteSheet(id) {
       resolve();
     };
     image.onerror = () => { spriteLoadProgress++; resolve(); };
-    image.src = `assets/sprites/${id.toLowerCase()}-runtime.png`;
+    image.src = `assets/sprites/${id.toLowerCase()}-runtime.webp`;
   });
 }
 
@@ -1076,7 +1076,7 @@ function loadWalkSpriteSheet(id) {
       resolve();
     };
     image.onerror = resolve;
-    image.src = `assets/sprites/${id.toLowerCase()}-walk-runtime.png`;
+    image.src = `assets/sprites/${id.toLowerCase()}-walk-runtime.webp`;
   });
 }
 
@@ -1117,7 +1117,7 @@ function loadAnimationSheet(id, fileName = id.toLowerCase()) {
       resolve();
     } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = `assets/sprites/animation/${fileName}.png`;
+    image.src = `assets/sprites/animation/${fileName}.webp`;
   });
 }
 
@@ -1184,7 +1184,7 @@ function loadMarlaBattleSheet() {
       resolve();
     };
     image.onerror = resolve;
-    image.src = "assets/sprites/animation/marla-battle.png";
+    image.src = "assets/sprites/animation/marla-battle.webp";
   });
 }
 
@@ -1227,7 +1227,7 @@ function loadChestSheet() {
       resolve();
     } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = "assets/sprites/chests.png";
+    image.src = "assets/sprites/chests.webp";
   });
 }
 
@@ -1251,7 +1251,7 @@ function loadEnemySheet() {
       resolve();
     } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = "assets/sprites/enemies-runtime.png";
+    image.src = "assets/sprites/enemies-runtime.webp";
   });
 }
 
@@ -1275,7 +1275,7 @@ function loadEnemyAttackSheet() {
       resolve();
     } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = "assets/sprites/enemies-attack-runtime.png";
+    image.src = "assets/sprites/enemies-attack-runtime.webp";
   });
 }
 
@@ -1299,7 +1299,7 @@ function loadWorldEnemySheet() {
       resolve();
     } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = "assets/sprites/enemies-field-runtime.png";
+    image.src = "assets/sprites/enemies-field-runtime.webp";
   });
 }
 
@@ -1329,7 +1329,7 @@ function loadNpcSheet() {
       resolve();
     } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = "assets/sprites/npcs-runtime.png";
+    image.src = "assets/sprites/npcs-runtime.webp";
   });
 }
 
@@ -1339,7 +1339,7 @@ function loadMapImage(id) {
     image.fetchPriority = "high";
     image.onload = () => {try { mapImages[id] = image; resolve(); } catch(error) { console.warn("Startup art could not be prepared", error); resolve({failed:true}); }};
     image.onerror = ()=>resolve({failed:true});
-    image.src = `assets/maps/runtime/${id}.png`;
+    image.src = `assets/maps/runtime/${id}.webp`;
   });
 }
 
@@ -1399,7 +1399,7 @@ function loadEchoProjectileSheet() {
       resolve();
     };
     image.onerror = resolve;
-    image.src = "assets/effects/echo-projectiles.png";
+    image.src = "assets/effects/echo-projectiles.webp";
   });
 }
 
@@ -1474,25 +1474,25 @@ const essentialStartup=Promise.all([
  ...Object.keys(spriteScale).map(id=>startupJob('Character '+id,()=>loadAnimationSheet(id))),
  ...Object.entries(animatedNpcFiles).map(([id,file])=>startupJob('Resident '+id,()=>loadAnimationSheet(id,file))),
  ...[['Chests',loadChestSheet],['Enemies',loadEnemySheet],['Enemy attacks',loadEnemyAttackSheet],['World enemies',loadWorldEnemySheet],['Residents',loadNpcSheet],['Ember Hall',()=>loadMapImage('ember-hall-battle')],['Lantern',()=>loadMapImage('lantern')]].map(([name,load])=>startupJob(name,load))
-]).then(async()=>{if(!tabletStartup&&!startupState.failed.length)await optionalStartup;startupState.ready=!startupState.failed.length;runtimeAssetsReady=startupState.ready;if(runtimeAssetsReady){el.hint.textContent='Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party';return;}const retry=document.createElement('button');retry.textContent='Retry game loading';retry.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;padding:14px;background:#302039;color:#ffdfa4;border:1px solid #c89c57;font:17px Georgia';retry.onclick=()=>location.reload();document.body.append(retry);});
+]).then(()=>{startupState.ready=!startupState.failed.length;runtimeAssetsReady=startupState.ready;if(runtimeAssetsReady){el.hint.textContent='Houd WASD/pijlen ingedrukt, Z/Enter kiezen, C menu, Tab party';return;}const retry=document.createElement('button');retry.textContent='Retry game loading';retry.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;padding:14px;background:#302039;color:#ffdfa4;border:1px solid #c89c57;font:17px Georgia';retry.onclick=()=>location.reload();document.body.append(retry);});
 window.RuntimeStartup={ready:essentialStartup,get status(){return {...startupState,pending:[...startupState.pending],failed:[...startupState.failed]};}};
 const optionalStartup=Promise.allSettled([loadEndgameBossVfx(),loadBossMechanicAssets(),loadStatusIcons(),loadCharacterVfxSheets(),loadBreakIconSheet(),loadCombatRoleIconSheet(),loadBattleAnimationSheets(),loadEnemyAnimationSheets(),loadTitleImage(),loadTitleIdleFrames(),loadStageSelectorImage(),loadMarlaBattleSheet(),loadEchoProjectileSheet(),...Object.keys(battleImageFiles).map(loadBattleImage),...Object.keys(recruitSceneImageFiles).map(loadRecruitSceneImage),...['ash','reverie','guildspire','ember','alarm','ash-route','reverie-route','guildspire-route','ember-route','dawn-route'].map(loadMapImage)]);
 
 const codex = [
-  ["Verseborn", "07_Verseborn_Clean_Quest_Manga_Sheet.png"],
-  ["Mira Veln", "03_Mira_Veln_Clean_Quest_Manga_Sheet.png"],
-  ["Seerin Vahl", "04_Seerin_Vahl_Clean_Quest_Manga_Sheet.png"],
-  ["Kael Ironhand", "02_Kael_Ironhand_Clean_Quest_Manga_Sheet.png"],
-  ["Torren Stonekin", "06_Torren_Stonekin_Clean_Quest_Manga_Sheet.png"],
-  ["Glimmer", "01_Glimmer_Clean_Quest_Manga_Sheet.png"],
-  ["Sparky", "05_Sparky_Clean_Quest_Manga_Sheet.png"],
-  ["Kaeldrin", "18_Kaeldrin_Clean_Quest_Manga_Sheet.png"],
-  ["Lyrsa", "19_Lysra_Clean_Quest_Manga_Sheet.png"],
-  ["Shade", "20_Shade_Clean_Quest_Manga_Sheet.png"],
-  ["Grumm", "17_Grumm_Clean_Quest_Manga_Sheet.png"],
-  ["Ember Hall", "location_EmberHall_Manga_Sheet.png"],
-  ["Guildspire", "location_Guildspire_Manga_Sheet.png"],
-  ["The Drunk Lantern", "location_TheDrunkenLantern_Manga_Sheet.png"]
+  ["Verseborn", "07_Verseborn_Clean_Quest_Manga_Sheet.webp"],
+  ["Mira Veln", "03_Mira_Veln_Clean_Quest_Manga_Sheet.webp"],
+  ["Seerin Vahl", "04_Seerin_Vahl_Clean_Quest_Manga_Sheet.webp"],
+  ["Kael Ironhand", "02_Kael_Ironhand_Clean_Quest_Manga_Sheet.webp"],
+  ["Torren Stonekin", "06_Torren_Stonekin_Clean_Quest_Manga_Sheet.webp"],
+  ["Glimmer", "01_Glimmer_Clean_Quest_Manga_Sheet.webp"],
+  ["Sparky", "05_Sparky_Clean_Quest_Manga_Sheet.webp"],
+  ["Kaeldrin", "18_Kaeldrin_Clean_Quest_Manga_Sheet.webp"],
+  ["Lyrsa", "19_Lysra_Clean_Quest_Manga_Sheet.webp"],
+  ["Shade", "20_Shade_Clean_Quest_Manga_Sheet.webp"],
+  ["Grumm", "17_Grumm_Clean_Quest_Manga_Sheet.webp"],
+  ["Ember Hall", "location_EmberHall_Manga_Sheet.webp"],
+  ["Guildspire", "location_Guildspire_Manga_Sheet.webp"],
+  ["The Drunk Lantern", "location_TheDrunkenLantern_Manga_Sheet.webp"]
 ];
 
 const gearDb = {
@@ -5462,7 +5462,7 @@ function currentBreakStrength(source) {
 }
 
 function addBreakProgress(source, target, amount) {
-  if (!canGenerateBreak(source)) return { gain: 0, breaks: 0, remainder: target?.stagger || 0, bonusDamage: 0 };
+  if (window.ShadowBonus?.shielded(target) || !canGenerateBreak(source)) return { gain: 0, breaks: 0, remainder: target?.stagger || 0, bonusDamage: 0 };
   const gain = Math.max(0, Math.round(amount || 0));
   const threshold = target?.breakThreshold || BREAK_THRESHOLD;
   const total = Math.max(0, target?.stagger || 0) + gain;
@@ -5942,6 +5942,7 @@ function statusBadgesHtml(unit) {
 }
 
 function processTurnStart(unit) {
+  window.ShadowBonus?.onTurnStart(unit);
   const notes = [];
   if ((battle?.hallStage >= 53 || battle?.hallStage >= 5 && battle.hallStage <= 40) && unit.encounterMechanic?.stagePending && (unit.endgameBoss ? endgameBossControlled(unit) : stageUnitControlled(unit))) interruptStageCombination(unit);
   if (battle?.hallStage === 52 && unit.encounterMechanic?.sanctuaryPending && stageUnitControlled(unit)) interruptSanctuaryRitual(unit);
@@ -5951,7 +5952,7 @@ function processTurnStart(unit) {
   delete unit.mechClinicResolved;
   ["poison", "burn", "bleed"].forEach(type => {
     const dot = statusOf(unit, type);
-    if (!dot || unit.hp <= 0) return;
+    if (!dot || unit.hp <= 0 || window.ShadowBonus?.shielded(unit)) return;
     let amount = dot.value || 1;
     const critical = ["burn", "poison", "bleed"].includes(type) && Math.random() < (dot.critChance || 0);
     if (critical) amount = Math.max(1, Math.round(amount * (dot.critMultiplier || 2)));
@@ -6373,7 +6374,7 @@ function skillMpCost(id, sk, unit = null) {
   const audit = statusOf(unit, "audit");
   const penalty = !sk.basicAttack ? (lock?.skillName === sk.name ? lock.value : 0) + (audit?.skillName === sk.name ? audit.value : 0) : 0;
   const cost = Math.max(sk.cost > 0 ? 1 : 0, Math.round(baseCost * Math.max(.35, multiplier)) - comfortDiscount) + (penalty ? Math.max(1, Math.ceil(baseCost * penalty)) : 0);
-  return developerScale("party", "cost", cost);
+  return unit?.sparringId ? cost : developerScale("party", "cost", cost);
 }
 
 function healingReceived(unit, amount) {
@@ -8044,9 +8045,9 @@ function drawBattleFloaters(context = ctx) {
     const alpha = Math.min(1, (BATTLE_FLOATER_LIFETIME - age) / 30);
     const healing = floater.kind === "heal";
     const evaded = floater.kind === "evade";
-    const feedback = evaded || ["cleanse", "dispel", "broken"].includes(floater.kind);
+    const feedback = evaded || ["cleanse", "dispel", "broken", "weak"].includes(floater.kind);
     const main = floater.text || `${floater.crit ? "CRIT! " : ""}${healing ? "+" : ""}${floater.amount}`;
-    const mainSize = evaded || floater.kind === "broken" ? 13 : feedback ? 9 : floater.crit ? 15 : 10;
+    const mainSize = evaded || ["broken", "weak"].includes(floater.kind) ? 13 : feedback ? 9 : floater.crit ? 15 : 10;
     const [laneX, laneY] = battleFloaterLaneOffsets[floater.lane] || battleFloaterLaneOffsets[0];
     const mainY = Math.max(mainSize + 7, floater.y - rise + laneY + (floater.y + laneY < 30 ? 5 : 0));
     context.save();
@@ -8065,7 +8066,7 @@ function drawBattleFloaters(context = ctx) {
       context.strokeStyle = "#ffd45c";
       context.strokeText(main, mainX, mainY);
     }
-    context.fillStyle = floater.kind === "mp" ? "#79ddff" : evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : floater.kind === "broken" ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
+    context.fillStyle = floater.kind === "mp" ? "#79ddff" : evaded ? "#79ddff" : floater.kind === "cleanse" ? "#76f1b0" : floater.kind === "dispel" ? "#d7a7ff" : ["broken", "weak"].includes(floater.kind) ? "#ffb348" : healing ? "#65e88a" : "#ff5b55";
     context.fillText(main, mainX, mainY);
     context.font = `bold ${floater.crit ? 7 : 6}px "Comic Sans MS", "Comic Sans", cursive`;
     context.lineWidth = 2;
@@ -8976,8 +8977,56 @@ function drawEnemy(e, px, py) {
   if (e.anim === "attack") e.animTick = (e.animTick || 0) + 1;
 }
 
+// Smooth, deterministic particle shield: no textures, filters or combat RNG.
+function drawDefendShield(fx, elapsed, context = ctx) {
+  const p = Math.max(0, Math.min(1, elapsed / fx.timing.totalMs));
+  if (p >= 1) return;
+  const a = battleVfxAnchor(fx.source);
+  const facing = battle.party.includes(fx.source) ? 1 : -1;
+  const form = Math.min(1, p / .32), fade = Math.min(1, (1 - p) / .3);
+  const smooth = form * form * (3 - 2 * form);
+  context.save();
+  context.translate(a.x + facing * 17, a.y + 1);
+  context.scale(.72 + smooth * .28, .86 + smooth * .14);
+  context.globalAlpha = fade;
+  const outline = () => {
+    context.beginPath();context.moveTo(0,-25);
+    context.bezierCurveTo(7,-20,13,-20,15,-19);
+    context.bezierCurveTo(16,0,11,15,0,23);
+    context.bezierCurveTo(-11,15,-16,0,-15,-19);
+    context.bezierCurveTo(-9,-20,-6,-21,0,-25);context.closePath();
+  };
+  outline();context.fillStyle = `rgba(91,204,244,${.06 + .1 * smooth})`;context.fill();
+  context.lineWidth=2.5;context.strokeStyle=`rgba(75,185,232,${.32*smooth})`;context.stroke();
+  context.lineWidth=.8;context.strokeStyle=`rgba(206,249,255,${smooth*.9})`;context.stroke();
+  // Motes assemble along a pointed, curved perimeter, then drift away.
+  for(let i=0;i<36;i++) {
+    const t=i/36, angle=t*Math.PI*2-Math.PI/2;
+    const bx=Math.cos(angle)*(13+3*Math.sin(angle)),by=Math.sin(angle)*23;
+    const scatter=(1-smooth)*16+Math.max(0,p-.67)*34;
+    const phase=i*2.399+p*5;
+    const x=bx+Math.cos(phase)*scatter,y=by+Math.sin(phase)*scatter;
+    const glow=.4+.6*Math.pow(Math.sin(i*1.7+p*9),2);
+    context.globalAlpha=fade*glow;
+    context.beginPath();context.arc(x,y,.45+(i%3)*.23,0,Math.PI*2);
+    context.fillStyle=i%4?'#b4efff':'#ffe7ac';context.fill();
+  }
+  // Brief crest glint; the center stays transparent so the defender is readable.
+  context.globalAlpha=fade*Math.max(0,1-Math.abs(p-.36)/.18);
+  context.strokeStyle='#fff1bf';context.lineWidth=.7;
+  context.beginPath();context.moveTo(-4,-13);context.lineTo(4,-13);
+  context.moveTo(0,-18);context.lineTo(0,-8);context.stroke();
+  context.restore();
+}
+
 function drawEffect() {
   if (!effect) return;
+  if (effect.defendShield) {
+    const elapsed = Math.max(0, performance.now() - effect.startedAt);
+    drawDefendShield(effect, elapsed);
+    if (elapsed >= effect.timing.totalMs) effect = null;
+    return;
+  }
   if (effect.meleeMotion) {
     const elapsed = performance.now() - effect.startedAt;
     effect.t = elapsed / effect.timing.totalMs * effect.duration;
@@ -9024,8 +9073,8 @@ function drawEffect() {
     drawRect(x - Math.round(sweep * .6) - 9, y - 2, 18, 2, "#e07136");
   }
   if (effect.kind === "block") {
-    ctx.strokeStyle = "#f5d68b";
-    for (let i = 0; i < 3; i++) ctx.strokeRect(x - 12 - i * 3, y - 20 - i * 3, 24 + i * 6, 28 + i * 6);
+    const source = effect.source || battle.party.find(unit => unit.id === effect.caster);
+    if (source) drawDefendShield({ ...effect, source, timing: effect.timing || battleActionTiming("block") }, effect.t / (effect.duration || 48) * (effect.timing?.totalMs || 900));
   }
   if (effect.kind === "magic") {
     drawCharacterProjectile(effect);
@@ -9731,7 +9780,7 @@ function enemyPortraitDataUrl(name) {
     enemyPortraitCache.set(name, url);
     return url;
   }
-  if (!enemySheet?.image) return "assets/sprites/enemies-runtime.png";
+  if (!enemySheet?.image) return "assets/sprites/enemies-runtime.webp";
   const cell = enemySheet.cells[enemySpriteIndex(name)];
   const portrait = document.createElement("canvas");
   portrait.width = 96;
@@ -10454,7 +10503,7 @@ function showBattleResult(kind, entries = [], after = null) {
   el.battle.classList.add("hidden");
   el.battleResult.classList.remove("hidden", "is-victory", "is-defeat");
   el.battleResult.classList.add(kind === "victory" ? "is-victory" : "is-defeat");
-  el.battleResultArt.src = kind === "victory" ? "assets/ui/battle-victory.png" : "assets/ui/battle-defeat.png";
+  el.battleResultArt.src = kind === "victory" ? "assets/ui/battle-victory.webp" : "assets/ui/battle-defeat.webp";
   el.battleResultArt.alt = kind === "victory" ? "Victory. The trial is cleared." : "The Flameguard fell. You awaken again in Ember Hall.";
   el.battleResultRewards.classList.toggle("hidden", kind !== "victory");
   el.battleResultRewards.innerHTML = kind === "victory" ? battleResultRowsHtml(entries) : "";
@@ -11208,6 +11257,11 @@ function drawCharacterVfx(fx) {
 }
 
 function makeBattleEffect(caster, skillData, target) {
+  if (skillData.anim === "block") return {
+    defendShield: true, kind: "block", source: caster, caster: caster.id,
+    skill: skillData.name, timing: battleActionTiming("block"),
+    startedAt: performance.now(), t: 0
+  };
   if (partyMeleeSkill(caster, skillData) && battle.enemies.includes(target)) {
     const targetPosition = enemyBattlePosition(battle.enemies.indexOf(target), battle.enemies.length);
     const targetKey = enemyAnimationKey(target);
@@ -11408,7 +11462,7 @@ function combatDroneFollowUp(source, totalDamage, targetCount) {
   const enemies = battle.enemies.filter(enemy => enemy.hp > 0);
   let log = "";
   function strike(enemy, ratio) {
-    if (!enemy || enemy.hp <= 0 || budget <= 0) return;
+    if (!enemy || enemy.hp <= 0 || budget <= 0 || window.ShadowBonus?.shielded(enemy)) return;
     const crash = ownerId === "Glimmer" && statusOf(enemy, "disrupted") ? typedTalentValue(ownerId, "systemCrash") : 0;
     const raw = Math.min(budget, Math.max(1, Math.round(damage * ratio * (1 + crash))));
     budget -= raw;
@@ -11613,6 +11667,9 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       if (buffNotes.length) log += ` ${buffNotes.join(" ")}.`;
       if (sk.immediateTurn) log += ` ${grantImmediateTurn(u, sk)}`;
       state.resonance = Math.min(100, state.resonance + (sk.anim === "block" ? 12 : 6));
+    } else if (sk.statusOnly && target && window.ShadowBonus?.shielded(target)) {
+      addBattleFloater(target, 0, {kind:'dispel',text:'IMMUNE'});
+      log += ` ${target.name}: IMMUNE — destroy the echoes.`;
     } else if (sk.statusOnly && target) {
       const notes = applySkillStatuses(u, target, sk);
       log += ` ${target.name}: ${notes.join(", ")}.`;
@@ -11631,7 +11688,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
     } else if (target) {
       const live = battle.enemies.filter(e => e.hp > 0);
       const t = totals(u.id);
-      const hitTargets = u.id === "Mira" && sk.name === "Voidthorn Mark" ? (skillHitsAll(u.id, sk) ? [target, ...live.filter(e => e !== target)].slice(0, 3) : [target]) : skillHitsAll(u.id, sk) ? (meleeAreaSkill(u, sk) ? frontlineTargetOrder(live) : live) : [target];
+      const hitTargets = u.id === "Mira" && sk.name === "Voidthorn Mark" && !sk.relicAction ? (skillHitsAll(u.id, sk) ? [target, ...live.filter(e => e !== target)].slice(0, 3) : [target]) : skillHitsAll(u.id, sk) ? (meleeAreaSkill(u, sk) ? frontlineTargetOrder(live) : live) : [target];
       let totalDamageDealt = 0;
       let directDamageDealt = 0;
       let vampiricRestored = 0;
@@ -11640,6 +11697,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       const holyCapPerTarget = holyFollowUpCap(u, hitTargets.length);
       let holyFollowUpTriggered = false;
       hitTargets.forEach(hitTarget => {
+        if (window.ShadowBonus?.shielded(hitTarget)) {
+          addBattleFloater(hitTarget, 0, {kind:'dispel',text:'IMMUNE'});
+          log += ` ${hitTarget.name}: IMMUNE — destroy the echoes.`;
+          return;
+        }
         if (tryEvadeAttack(hitTarget)) {
           addBattleFloater(hitTarget, 0, { kind: "evade", text: "EVADE!" });
           log += ` ${hitTarget.name}: EVADE!`;
@@ -11673,6 +11735,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
           + (sk.basicAttack ? typedTalentValue(u.id, "basicBreak") : 0) : 0;
         const breakResult = addBreakProgress(u, hitTarget, breakGain);
         if (weaknessHit) {
+          addBattleFloater(hitTarget, 0, { kind: "weak", text: "WEAK" });
           if (hitTarget.weak === sk.element && rememberWeakness(hitTarget)) log += " Weakness discovered: " + hitTarget.name + " / " + hitTarget.weak + "!";
           dmg = Math.floor(dmg * skillWeaknessMultiplier(u.id, sk, hitTarget));
           if (sk.anim !== "ultimate") { const gain = Math.min(14, 18 - actionResonance); state.resonance = Math.min(100, state.resonance + gain); actionResonance += gain; }
@@ -11715,10 +11778,11 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         if (sk.name.includes("Silent Step")) hitTarget.node = Math.min(3, hitTarget.node + 1);
         dmg = Math.max(1, Math.round(dmg * endgamePlayerDamageMultiplier(u, sk, hitTarget)));
         dmg = developerScale("party", "damage", dmg);
+        if(window.ShadowBonus?.shielded(hitTarget))dmg=0;
         hitTarget.hp -= dmg;
         totalDamageDealt += dmg;
         directDamageDealt += dmg;
-        const holyDamage = holyFollowUpPower ? Math.min(holyCapPerTarget, Math.max(1, Math.round(dmg * holyFollowUpPower))) : 0;
+        const holyDamage = holyFollowUpPower && !window.ShadowBonus?.shielded(hitTarget) ? Math.min(holyCapPerTarget, Math.max(1, Math.round(dmg * holyFollowUpPower))) : 0;
         if (holyDamage) {
           hitTarget.hp -= holyDamage;
           totalDamageDealt += holyDamage;
@@ -11777,7 +11841,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
       }
       if (holyFollowUpTriggered) u.statuses = ensureStatuses(u).filter(status => status.type !== "holyFollowUp");
       if (!sk.allEnemies && sk.element === "Sound" && typedTalentValue(u.id, "splashDamage") && totalDamageDealt > 0) {
-        battle.enemies.filter(enemy => enemy.hp > 0 && !hitTargets.includes(enemy)).forEach(enemy => {
+        battle.enemies.filter(enemy => enemy.hp > 0 && !window.ShadowBonus?.shielded(enemy) && !hitTargets.includes(enemy)).forEach(enemy => {
           const splash = Math.max(1, Math.round(totalDamageDealt * typedTalentValue(u.id, "splashDamage")));
           enemy.hp = Math.max(0, enemy.hp - splash);
           addBattleFloater(enemy, splash, { damageType: "Sound" });
@@ -11785,7 +11849,7 @@ function useSkill(u, selectedSkill, chosenTarget = null) {
         });
       }
       if (sk.element === "Earth" && (sk.staggerPower || 0) >= 3 && typedTalentValue(u.id, "aftershock") && totalDamageDealt > 0) {
-        battle.enemies.filter(enemy => enemy.hp > 0 && !hitTargets.includes(enemy)).forEach(enemy => {
+        battle.enemies.filter(enemy => enemy.hp > 0 && !window.ShadowBonus?.shielded(enemy) && !hitTargets.includes(enemy)).forEach(enemy => {
           const shock = Math.max(1, Math.round(totalDamageDealt * typedTalentValue(u.id, "aftershock")));
           enemy.hp = Math.max(0, enemy.hp - shock);
           addBattleFloater(enemy, shock, { damageType: "Earth" });
@@ -13076,6 +13140,25 @@ function enemyActionCrit(unit, action, target) {
   return Math.random() < chance;
 }
 
+// Innate vulnerabilities are design choices from each Flameguard's combat identity.
+// Direct hits only: no extra DoT, Break, resonance, or bypass of encounter caps.
+const FLAMEGUARD_WEAKNESSES = Object.freeze({
+  Verseborn: { element: "Shadow", reason: "Shadow distorts the living Verse and undermines its resolve." },
+  Mira: { element: "Holy Fire", reason: "Consecrated flame exposes the shadow operative's concealment." },
+  Seerin: { element: "Shadow", reason: "Corrupting shadow presses against her protective paladin oath." },
+  Kael: { element: "Tech", reason: "Mechanical interference disrupts the priest's carefully woven sigils." },
+  Torren: { element: "Sound", reason: "Resonant shock fractures his stone defenses." },
+  Glimmer: { element: "Earth", reason: "Stone and grit jam the engineer's intricate mechanisms." },
+  Sparky: { element: "Ice", reason: "Deep cold suppresses the elder dragonling's ancient flame." },
+  Tinus: { element: "Sound", reason: "Chaotic resonance disrupts his exacting systems and seals." }
+});
+function flameguardWeakness(unit) {
+  return unit && !unit.sparringId && battle?.party?.includes(unit) ? FLAMEGUARD_WEAKNESSES[unit.id] || null : null;
+}
+function flameguardWeaknessHit(unit, action) {
+  return Boolean(action && !action.healing && flameguardWeakness(unit)?.element === action.element);
+}
+
 function enemyDamageRoll(unit, action, target) {
   const random = Math.floor(Math.random() * 6);
   let damage = enemyActionScalingStat(unit, action) * (action.coefficient || .9) + Math.max(0, unit.level - 1) * .35 + random;
@@ -13099,6 +13182,7 @@ function enemyDamageRoll(unit, action, target) {
   if (statusOf(target, "violationStamp") && statusOf(target, "defenseDown")) damage *= 1 + statusValue(target, "defenseDown");
   const critical = enemyActionCrit(unit, action, target);
   if (critical) damage *= (state.gameMode === "hallBattles" && unit.levelHint > 20 ? 1.5 : 2) + (unit.affixes?.critDamage || 0);
+  damage *= flameguardWeaknessHit(target, action) ? 1.25 : 1;
   damage = Math.max(1, Math.round(damage * ENEMY_DIRECT_DAMAGE_MULTIPLIER * incomingDamageMultiplier(target)));
   return { damage, critical };
 }
@@ -13186,7 +13270,7 @@ function resolveEnemyTurn(turn, prev) {
   }
   if (enemyActionHitsAll(e, action) && (action.kind === "melee" || action.scaling === "str")) target = frontlineTargetOrder(liveParty, "party")[0] || target;
   const timingKey = action.kind === "melee" || action.kind === "ultimate" ? action.kind : "magic";
-  const timing = battleActionTiming(timingKey);
+  const timing = action.courtRipostes ? { effectTicks: 120, impactTicks: 26, impactMs: 430, totalMs: 2000, hitSpacingMs: 220 } : action.grummWhirlwind ? { effectTicks: 240, impactTicks: 66, impactMs: 1100, totalMs: 4000, hitSpacingMs: 700 } : battleActionTiming(timingKey);
   const mpCost = enemyActionMpCost(e, action);
   if (action.recentSkillLock || action.auditSkill) action.status = { ...action.status };
   e.moveUses ||= {};
@@ -13201,7 +13285,7 @@ function resolveEnemyTurn(turn, prev) {
   playSfx(action.kind === "melee" ? (e.npcBoss ? "boss" : "melee") : "magic");
   renderBattle(`${e.name} prepares ${action.name}${action.kind === "ultimate" ? " - ULTIMATE" : ""}...`);
   const resolvingBattle=battle;
-  setTimeout(() => {
+  setTimeout(async () => {
     if (battle!==resolvingBattle || mode !== "battle" || e.hp <= 0) return;
     battle.attackDamage = [];
     window.StatusSystem?.begin(e, action);
@@ -13283,11 +13367,16 @@ function resolveEnemyTurn(turn, prev) {
         if (protector) { intercepted.add(protector); actionLog += ` ${protector.name} protects ${defender.name}.`; }
         return protector || defender;
       });
-      hitTargets.forEach(defender => {
+      for (const [hitIndex, defender] of hitTargets.entries()) {
+        if ((action.grummWhirlwind || action.courtRipostes) && hitIndex > 0) {
+          await new Promise(resolve => setTimeout(resolve, timing.hitSpacingMs));
+          if (battle !== resolvingBattle || mode !== "battle" || e.hp <= 0) break;
+        }
+        if (defender.hp <= 0) continue;
         if (tryEvadeAttack(defender)) {
           addBattleFloater(defender, 0, { kind: "evade", text: "EVADE!" });
           actionLog += ` ${defender.name}: EVADE!`;
-          return;
+          continue;
         }
         const rolled = enemyDamageRoll(e, action, defender);
         let dmg = rolled.damage;
@@ -13352,10 +13441,12 @@ function resolveEnemyTurn(turn, prev) {
         if (defender.hp > 0 && typedTalentValue(defender.id, "damageResonance")) state.resonance = Math.min(100, state.resonance + Math.max(1, Math.round(4 * (1 + typedTalentValue(defender.id, "damageResonance")))));
         defender.flash = 12;
         addBattleFloater(defender, dmg, { damageType: action.element || "Physical", crit: rolled.critical });
+        if (dmg > 0 && flameguardWeaknessHit(defender, action)) addBattleFloater(defender, 0, { kind: "weak", text: "WEAK" });
         const statuses = defender.hp > 0 ? enemyApplyActionStatuses(e, defender, action) : [];
         actionLog += window.WhirlpoolMinions?.onMeleeHit(e, action, dmg) || '';
         actionLog += ` ${defender.name} takes ${dmg}${rolled.critical ? " CRITICAL" : ""}.${fell ? ` ${defender.name} falls.` : ""}${sleepBreak ? ` ${sleepBreak}` : ""}${defenseText}${statuses.length ? ` ${statuses.join(", ")}.` : ""}`;
-      });
+        if (action.grummWhirlwind) { playSfx("hit", .6); updatePanels(); }
+      }
       battle.ward = false;
       if (action.partyResonanceDrain) {
         const drained = Math.min(state.resonance, action.partyResonanceDrain);
@@ -13389,7 +13480,7 @@ function resolveEnemyTurn(turn, prev) {
       e.anim = "idle";
       e.animTick = 0;
       finishTurn(actionLog);
-    }, action.kind === "ultimate" ? 820 : 560);
+    }, action.courtRipostes ? timing.totalMs - timing.impactMs - action.courtRipostes * timing.hitSpacingMs : action.grummWhirlwind ? timing.totalMs - timing.impactMs - Math.max(0, liveParty.length - 1) * timing.hitSpacingMs : action.kind === "ultimate" ? 820 : 560);
   }, timing.impactMs);
 }
 
@@ -14980,6 +15071,14 @@ function renderMenu() {
   }
   if (menuTab === "developer") {
     el.menuBody.innerHTML = `<section class="developer-controls"><header><h3>Developer</h3><button type="button" data-reset-tuning>Reset 0%</button></header><div class="developer-gold"><strong>Gold: ${state.gold} G</strong><input type="number" step="1" value="1000" aria-label="Gold adjustment" data-gold-delta><button type="button" data-adjust-gold>Apply Gold</button></div>${["party", "enemy"].map(side => `<section><h3>${side === "party" ? "Party" : "Enemies"}</h3>${[["hp", "Max HP"], ["mp", "Max MP"], ["damage", "Damage"], ["cost", "Mana Cost"]].map(([stat, label]) => `<label class="developer-slider"><span>${label}</span><input type="range" min="-100" max="100" step="1" value="${developerPercent(side, stat)}" data-tune-side="${side}" data-tune-stat="${stat}" aria-label="${side} ${label}"><output>${developerPercent(side, stat)}%</output></label>`).join("")}</section>`).join("")}</section>`;
+    if(window.ShadowRelics){
+      el.menuBody.querySelector('.developer-gold').insertAdjacentHTML('afterend',`<div class="developer-gold"><label for="developer-shadow-copy">Shadow Twist gear</label><select id="developer-shadow-copy" data-shadow-copy-item>${ShadowRelics.items.map(g=>`<option value="${escapeMarkup(g.name)}">${escapeMarkup(g.name)} · ${gearSlotLabel(g.slot)}</option>`).join('')}</select><button type="button" data-shadow-copy-add>Add duplicate to inventory</button><output data-shadow-copy-result aria-live="polite"></output></div>`);
+      el.menuBody.querySelector('[data-shadow-copy-add]').addEventListener('click',()=>{
+        const ref=ShadowRelics.duplicateCopy(el.menuBody.querySelector('[data-shadow-copy-item]').value);
+        el.menuBody.querySelector('[data-shadow-copy-result]').textContent=ref?gearDisplayName(ref)+' added to inventory.':'Choose a Shadow Twist item.';
+        if(ref)updatePanels();
+      });
+    }
     const developerRift = window.EmberRift?.progress();
     if (developerRift) {
       el.menuBody.querySelector(".developer-gold").insertAdjacentHTML("afterend", `<div class="developer-gold"><strong>Rift Shards: ${developerRift.shards}</strong><input type="number" step="1" value="100" aria-label="Rift Shard adjustment" data-shard-delta><button type="button" data-adjust-shards>Apply Shards</button></div>`);

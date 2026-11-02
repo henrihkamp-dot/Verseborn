@@ -67,7 +67,7 @@
   }
   function eligible() {
     const wins = window.HallHub?.progress().shadowDefeated || [];
-    const trials = Object.keys(window.HallHub?.shadowTrials || {});
+    const trials = window.HallHub?.originalShadowTrialIds || [];
     return trials.length === 7 && trials.every(id => wins.includes(id));
   }
   function makeActor(x, y, pose = 'idle') {
