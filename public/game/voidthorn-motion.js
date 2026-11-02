@@ -1,9 +1,10 @@
-// Voidthorn Rain uses native dagger poses at each affected enemy, then returns home.
+// Voidthorn Rain uses each wearer’s own melee poses at successive enemies, then returns home.
 (()=>{
- const make=makeBattleEffect,motion=partyMeleeMotion,trail=drawMeleeChargeTrail;
- makeBattleEffect=function(caster,sk,target){const fx=make(caster,sk,target);if(caster.id==='Mira'&&sk.name==='Voidthorn Mark'&&fx.meleeMotion){fx.voidthornTargets=(sk.allEnemies?[target,...battle.enemies.filter(u=>u.hp>0&&u!==target)].slice(0,3):[target]).map(u=>{const i=battle.enemies.indexOf(u),[x,y]=enemyBattlePosition(i,battle.enemies.length);return {x:x-21,y,targetX:x,targetY:y-24}});}return fx;};
+ const make=makeBattleEffect,motion=partyMeleeMotion,trail=drawMeleeChargeTrail,timing=skillVisualTiming;
+ skillVisualTiming=function(caster,sk){if(sk.relicAction==='voidthorn'&&battle){const count=Math.max(1,battle.enemies.filter(u=>u.hp>0).length),hits=Array.from({length:count},(_,i)=>505+i*180);return {effectTicks:104,impactTicks:68,approachImpactMs:505,comboHitMs:hits,impactMs:hits.at(-1)+35,totalMs:Math.max(1400,440+180*count+480)};}return timing(caster,sk);};
+ makeBattleEffect=function(caster,sk,target){const fx=make(caster,sk,target);if((caster.id==='Mira'||sk.relicAction==='voidthorn')&&sk.name==='Voidthorn Mark'&&fx.meleeMotion){fx.voidthornTargets=(sk.allEnemies?[target,...battle.enemies.filter(u=>u.hp>0&&u!==target)].slice(0,sk.relicAction?Infinity:3):[target]).map(u=>{const i=battle.enemies.indexOf(u),[x,y]=enemyBattlePosition(i,battle.enemies.length);return {x:x-21,y,targetX:x,targetY:y-24}});}return fx;};
  partyMeleeMotion=function(unit,now=performance.now()){
-  const m=motion(unit,now),fx=effect;if(!m||unit.id!=='Mira'||fx?.source!==unit||!fx.voidthornTargets)return m;
+  const m=motion(unit,now),fx=effect;if(!m||fx?.source!==unit||!fx.voidthornTargets)return m;
   const points=fx.voidthornTargets,elapsed=now-fx.startedAt,start=440,span=180,end=start+span*points.length,home=fx.meleeMotion.route.home;
   const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};
   let x,y,sprinting=false,slash=false,index=0,direction=1;
@@ -11,7 +12,7 @@
   else if(elapsed<end){index=Math.min(points.length-1,Math.floor((elapsed-start)/span));const point=points[index],local=elapsed-start-index*span,from=index?{x:points[index-1].targetX+23,y:points[index-1].y}:{x:point.targetX-28,y:point.y};if(local<65){const t=smooth(local/65);x=from.x+(point.targetX-28-from.x)*t;y=from.y+(point.y-from.y)*t;sprinting=true;direction=point.targetX-28>=from.x?1:-1;}else{const t=(local-65)/115;x=point.targetX-28+51*t;y=point.y;slash=true;}}
   else{const point=points.at(-1),t=smooth((elapsed-end)/(fx.timing.totalMs-end));x=point.targetX+23+(home[0]-point.targetX-23)*t;y=point.y+(home[1]-point.y)*t;sprinting=true;direction=-1;index=points.length-1;}
   const point=points[index];fx.toX=point.targetX;fx.toY=point.targetY;
-  return {...m,x,y,groundY:y,rotation:slash?-.05:0,lift:0,attackFrame:slash?(Math.floor((elapsed-start-index*span-65)/58)%2?3:2):-1,runFrame:-1,returning:elapsed>=end,voidthorn:true,voidSprint:sprinting,voidSlash:slash,voidDirection:direction,voidFrame:Math.floor(elapsed/65)%4,activity:1};
+  return {...m,x,y,groundY:y,rotation:slash?-.05:0,lift:0,attackFrame:slash?(Math.floor((elapsed-start-index*span-65)/58)%2?3:2):unit.id==='Mira'?-1:0,runFrame:sprinting&&unit.id!=='Mira'&&battleChargeSheets[battleVisualId(unit)]?Math.floor(elapsed/65)%4:-1,returning:elapsed>=end,voidthorn:true,voidSprint:sprinting,voidSlash:slash,voidDirection:direction,voidFrame:Math.floor(elapsed/65)%4,activity:1};
  };
  drawMeleeChargeTrail=function(unit,m){trail(unit,m);if(!m.voidthorn)return;ctx.save();ctx.globalCompositeOperation='screen';ctx.strokeStyle='#b36bff';ctx.shadowColor='#aa4dff';ctx.shadowBlur=5;ctx.lineWidth=1.5;ctx.globalAlpha=.65;const dir=m.returning?1:-1;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(m.x+dir*(9+i*4),m.y-12-i*5);ctx.quadraticCurveTo(m.x+dir*(19+i*6),m.y-21-i*4,m.x+dir*(29+i*7),m.y-15-i*4);ctx.stroke();}if(m.voidSlash){ctx.strokeStyle='#e3c0ff';ctx.beginPath();ctx.moveTo(effect.toX-10,effect.toY+9);ctx.lineTo(effect.toX+10,effect.toY-9);ctx.stroke();}ctx.restore();};
 })();

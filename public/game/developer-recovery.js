@@ -7,7 +7,7 @@
  function recruit(id){if(!state.party.includes(id))addParty(id);if(id==='Tinus'){const p=TinusRecruitment.progress();p.recruited=true;p.phase='resident';}}
  function unlockAll(){Object.keys(baseJobs).forEach(recruit);hallBattleProgress().pendingRecruit=0;}
  function unlockModes(){['Seerin','Tinus'].forEach(recruit);const hall=hallBattleProgress();hall.unlockedStage=HALL_BATTLE_BLUEPRINTS.length;hall.developerUnlocks={...(hall.developerUnlocks||{}),rift:true,whirlpool:true};EmberRift.progress().unlocked=true;}
- const completions={hall:{label:'Ember Hall · 60 stages',get:()=>hallBattleProgress().clearedStages,all:()=>Array.from({length:60},(_,i)=>i+1)},shadow:{label:'Shadow Trials · 7 trials → Tinus arrival',get:()=>HallHub.progress().shadowDefeated,all:()=>Object.keys(HallHub.shadowTrials)},whirlpool:{label:'Whirlpool of Destinies · 8 encounters',get:()=>TinusWhirlpool.progress().cleared,all:()=>Array.from({length:8},(_,i)=>i+1)},rift:{label:'Ember Rift · 10 battles → sleeping dragon',get:()=>EmberRift.progress().cleared,all:()=>Array.from({length:10},(_,i)=>i+1)}};
+ const completions={hall:{label:'Ember Hall · 60 stages',get:()=>hallBattleProgress().clearedStages,all:()=>Array.from({length:60},(_,i)=>i+1)},shadow:{label:'Shadow Trials · 7 trials → Tinus arrival',get:()=>HallHub.progress().shadowDefeated,all:()=>[...HallHub.originalShadowTrialIds]},whirlpool:{label:'Whirlpool of Destinies · 8 encounters',get:()=>TinusWhirlpool.progress().cleared,all:()=>Array.from({length:8},(_,i)=>i+1)},rift:{label:'Ember Rift · 10 battles → sleeping dragon',get:()=>EmberRift.progress().cleared,all:()=>Array.from({length:10},(_,i)=>i+1)}};
  // Only the fixed first-clear gear is recovered; no repeat loot, shards or shop purchases.
  function recoverRewards(keys=['shadow','whirlpool','rift']){const hall=hallBattleProgress(),claims=hall.developerStageRewardClaims??={};let added=0;
   HallHub.upgradeShadowRewards();
@@ -21,7 +21,7 @@
    const refs=addOwnedGear(gear.name,1,{...options,separateCopy:true,rollAffixes:false});if(refs.length){claims[claim]=true;added++;}
   }}HallHub.upgradeShadowRewards();hall.developerLastRewardRecovery=added;return added;
  }
- function setCleared(key,on){const spec=completions[key];if(!spec)return;const values=spec.get();values.splice(0,values.length,...(on?spec.all():[]));if(on)recoverRewards([key]);if(key==='hall'&&on){hallBattleProgress().unlockedStage=60;EmberRift.progress().unlocked=true;}save();}
+ function setCleared(key,on){const spec=completions[key];if(!spec)return;const values=spec.get(),bonus=key==='shadow'?values.filter(id=>!spec.all().includes(id)):[];values.splice(0,values.length,...(on?[...spec.all(),...bonus]:bonus));if(on)recoverRewards([key]);if(key==='hall'&&on){hallBattleProgress().unlockedStage=60;EmberRift.progress().unlocked=true;}save();}
  const original=renderMenu;
  renderMenu=function(...args){const result=original(...args);if(menuTab!=='developer'||state.gameMode!=='hallBattles')return result;
   const owned=state.party.length,total=Object.keys(baseJobs).length,hall=hallBattleProgress();

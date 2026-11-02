@@ -13,7 +13,8 @@
   if(!entry){
    if(/Dragon|Wyrm|Leviathan|Solinar|Memory Root Guardian|Koru-Vak|Cracked Pillar/i.test(key))entry=['large',native*1.25,native];
    else if(key==='Gorg')entry=['large',75,native];
-   else if(['Brokk','Grumm'].includes(key))entry=['dwarf',52,native];
+   else if(key==='Grumm')entry=['adult',57.2,native]; // 10% taller than his previous 52px stature.
+   else if(key==='Brokk')entry=['dwarf',52,native];
    else if(['Slobbo','Clock Goblin','Angry Gnome Mob','Lord Sprocket'].includes(key))entry=['small',Math.min(43,native),native];
    else entry=['adult',55,native];
   }

@@ -59,7 +59,7 @@
     const known=battleSkills(unit.id,unit),saved=progressFor(unit.id).battleLoadout;
     // Optional future per-category slots. Absent legacy field means every learned
     // action remains equipped. No migration, deletion or implicit one-skill limit.
-    const equipped=!saved||unit.form?known:known.filter(sk=>sk.basicAttack||!Object.prototype.hasOwnProperty.call(saved,sk.category)||
+    const equipped=!saved||unit.form?known:known.filter(sk=>sk.basicAttack||sk.relicAction||!Object.prototype.hasOwnProperty.call(saved,sk.category)||
       (Array.isArray(saved[sk.category])?saved[sk.category]:[saved[sk.category]]).includes(sk.actionId||sk.name));
     return {known,equipped,available:equipped};
   }

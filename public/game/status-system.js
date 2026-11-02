@@ -127,6 +127,7 @@
   applyStatus = (target, type, source, options = {}) => {
     const def = STATUS_DEFS[type], origin = options.origin || 'ability';
     if (!target || !def || target.hp <= 0) return { applied: false, message: '', outcome: 'invalid' };
+    if (def.negative && window.ShadowBonus?.shielded(target)) return {applied:false,message:'IMMUNE (clone ward)',outcome:'immune'};
     if (!def.negative) return oldApply(target, type, source, options);
     const inAction = action && action.battle === battle && action.source === source;
     const cache = inAction ? action.attempts : null;

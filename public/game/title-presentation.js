@@ -23,7 +23,7 @@
     if(mode!=='title'||!slotMenu()||titleMenuIndex!==request.mode||intent!==request.intent){cancelPendingStart();return;}
     if(window.RuntimeStartup?.status.failed.length){pendingStart=null;startNotice='Essential game art could not load. Tap Retry game loading.';return;}
     if(runtimeAssetsReady){cancelPendingStart();titleSubmenuIndex=request.slot-1;activateTitleSelection();return;}
-    if(performance.now()-request.at>30000){pendingStart=null;startNotice='Game artwork is still loading. Please try again.';return;}
+    if(performance.now()-request.at>30000)startNotice='Preparing game artwork… Your game will start automatically.';
     startTimer=setTimeout(waitForGame,100);
   }
   const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

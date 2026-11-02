@@ -1387,14 +1387,14 @@ canvas:focus {
 
 
 
-.gear-drop-icon { background-image: url("assets/ui/gear-drop.png"); }
+.gear-drop-icon { background-image: url("assets/ui/gear-drop.webp"); }
 
 .item-icon {
-  background-image: url("assets/ui/item-icons.png");
+  background-image: url("assets/ui/item-icons.webp");
 }
 
 .loot-icon {
-  background-image: url("assets/ui/loot-icons.png");
+  background-image: url("assets/ui/loot-icons.webp");
 }
 .resource-icon { position: relative; }
 .resource-icon > b { position: absolute; bottom: 0; left: 0; right: 0; padding: 1px 0; text-align: center; font: bold 9px/1.2 "Segoe UI", sans-serif; color: #fff; text-shadow: none; border: 1px solid #bcb39a; }

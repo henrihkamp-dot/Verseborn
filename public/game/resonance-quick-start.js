@@ -4,7 +4,7 @@
  const startSelector='[data-begin],[data-shadow-start],[data-whirlpool-start],[data-rift-start]';
  document.addEventListener('click',event=>{
   const fixture=event.target.closest?.('[data-res-stage],[data-mode-fixture]');if(!fixture||fixture.disabled||mode!=='hallMap'||event.detail===0)return;
-  const root=fixture.closest('.trial-screen'),path=root.classList.contains('trial-screen-ember')?'ember':root.classList.contains('trial-screen-shadow')?'shadow':root.classList.contains('trial-screen-whirlpool')?'whirlpool':'rift',id=fixture.dataset.resStage??fixture.dataset.modeFixture,key=path+':'+id,now=performance.now();
+  const root=fixture.closest('.trial-screen'),path=root.classList.contains('trial-screen-ember')?'ember':root.classList.contains('trial-screen-shadow')?'shadow':root.classList.contains('trial-screen-whirlpool')?'whirlpool':'rift',id=fixture.dataset.resStage??fixture.dataset.modeFixture,key=path+':'+(root.classList.contains('shadow-bonus-screen')?'bonus:':'')+id,now=performance.now();
   if(last?.key===key&&now-last.at<450){last=null;const start=root.querySelector(startSelector);if(start&&!start.disabled){event.preventDefault();event.stopImmediatePropagation();start.click();}}
   else last={key,at:now};
  },true);

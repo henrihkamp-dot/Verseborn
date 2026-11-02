@@ -1,24 +1,24 @@
 // Whirlpool-only formations, authored minion poses and attack effects.
 (()=>{
  const BASE='assets/whirlpool-minions-397/',images={},support={},specs={
-  bulwark:{name:'Riftbound Bulwark',role:'tank',element:'Shadow',weak:'Holy Fire',height:48,hp:.18,power:.34},
-  gloamknife:{name:'Gloamknife Stalker',role:'assassin',element:'Shadow',weak:'Holy Fire',height:43,hp:.12,power:.40},
-  riftcaller:{name:'Veilcaller',role:'caster',element:'Sigil',weak:'Tech',height:46,hp:.13,power:.32},
-  sentry:{name:'Clockwork Marauder',role:'fighter',element:'Tech',weak:'Earth',height:43,hp:.15,power:.36}
+  bulwark:{name:'Riftbound Bulwark',role:'tank',element:'Shadow',weak:'Holy Fire',height:48,hp:16000,power:.34},
+  gloamknife:{name:'Gloamknife Stalker',role:'assassin',element:'Shadow',weak:'Holy Fire',height:43,hp:11000,power:.40},
+  riftcaller:{name:'Veilcaller',role:'caster',element:'Sigil',weak:'Tech',height:46,hp:12500,power:.32},
+  sentry:{name:'Clockwork Marauder',role:'fighter',element:'Tech',weak:'Earth',height:43,hp:14000,power:.36}
  };
  const pairs=[['bulwark','gloamknife'],['gloamknife','riftcaller'],['bulwark','sentry'],['gloamknife','riftcaller'],['sentry','riftcaller'],['bulwark','riftcaller'],['sentry','gloamknife'],['bulwark','riftcaller']];
  let meta,loaded=false,failure=null;
- const load=(key,url,into=images)=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{into[key]=im;resolve();};im.onerror=()=>reject(Error('Whirlpool art unavailable: '+key));im.src=url;});
- const ready=Promise.all([fetch(BASE+'frames.json').then(r=>{if(!r.ok)throw Error('Minion anchors unavailable');return r.json();}).then(v=>meta=v),...Object.keys(specs).map(k=>load(k,BASE+k+'.webp')),...['slash','projectile','magic'].map(k=>load(k,BASE+k+'.webp')),load('buff','assets/effects/recipient-buff-392.webp',support),load('heal','assets/effects/recipient-heal-396.webp',support)]).then(()=>loaded=true).catch(e=>{failure=e.message;console.error(e);return false;});
+ const load=(key,url,into=images)=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{into[key]=im;resolve();};im.onerror=()=>reject(Error('Whirlpool art unavailable: '+key));im.src=url+'?v=399';});
+ const ready=Promise.all([fetch(BASE+'frames.json?v=399').then(r=>{if(!r.ok)throw Error('Minion anchors unavailable');return r.json();}).then(v=>meta=v),...Object.keys(specs).map(k=>load(k,BASE+k+'.webp')),...['slash','projectile','magic'].map(k=>load(k,BASE+k+'.webp')),load('buff','assets/effects/recipient-buff-392.webp',support),load('heal','assets/effects/recipient-heal-396.webp',support)]).then(()=>loaded=true).catch(e=>{failure=e.message;console.error(e);return false;});
  for(const s of Object.values(specs))enemyAbilityProfiles[s.name]={role:s.role,element:s.element,maxMp:90,identity:{str:100,mag:100,agi:100,stam:100},moves:{},pattern:['melee','magic']};
- function makeMinion(key,id){const s=specs[key],e=TinusWhirlpool.encounters[id-1];return {...enemy(s.name,Math.round(e.hp*s.hp),Math.round(e.power*s.power),s.weak,'#a8a1cb',1),whirlpoolMinion:key,whirlpoolStage:id,levelHint:40,fixedLevel:true,xp:0};}
+ function makeMinion(key,id){const s=specs[key],e=TinusWhirlpool.encounters[id-1];return {...enemy(s.name,s.hp,Math.round(e.power*s.power),s.weak,'#a8a1cb',1),whirlpoolMinion:key,whirlpoolStage:id,levelHint:40,fixedLevel:true,xp:0};}
  function formation(id){return [TinusWhirlpool.makeEnemy(id),...pairs[id-1].map(k=>makeMinion(k,id))];}
  const originalPrepare=prepareEnemyForBattle;
- prepareEnemyForBattle=function(source,...args){const u=originalPrepare.apply(this,arguments);if(!source.whirlpoolMinion)return u;const s=specs[source.whirlpoolMinion],e=TinusWhirlpool.encounters[source.whirlpoolStage-1],power=Math.round(e.power*s.power);return Object.assign(u,{hp:enemyBalanceValue('hp',Math.round(e.hp*s.hp)),max:enemyBalanceValue('hp',Math.round(e.hp*s.hp)),atk:power,stats:{str:power,mag:power,agi:s.role==='assassin'?125:85,stam:s.role==='tank'?180:100},mp:90,maxmp:90,crit:.04,baseEvasion:.025,xp:0,resistanceTier:'normal',role:s.role,combatPotency:{damage:1,healing:1,ultimate:1}});};
+ prepareEnemyForBattle=function(source,...args){const u=originalPrepare.apply(this,arguments);if(!source.whirlpoolMinion)return u;const s=specs[source.whirlpoolMinion],e=TinusWhirlpool.encounters[source.whirlpoolStage-1],power=Math.round(e.power*s.power);return Object.assign(u,{hp:developerScale('enemy','hp',s.hp,1),max:developerScale('enemy','hp',s.hp,1),atk:power,stats:{str:power,mag:power,agi:s.role==='assassin'?125:85,stam:s.role==='tank'?180:100},mp:developerScale('enemy','mp',90),maxmp:developerScale('enemy','mp',90),crit:.04,baseEvasion:.025,xp:0,resistanceTier:'normal',role:s.role,combatPotency:{damage:1,healing:1,ultimate:1}});};
  const originalProfile=EnemyStature.profile;
- EnemyStature.profile=function(u){return u.whirlpoolMinion?{kind:'adult',targetHeight:specs[u.whirlpoolMinion].height,nativeHeight:u.encounterNativeHeight||48}:originalProfile(u);};
+ EnemyStature.profile=function(u){return u.whirlpoolMinion?{kind:'adult',targetHeight:specs[u.whirlpoolMinion].height*1.1,nativeHeight:u.encounterNativeHeight||48}:originalProfile(u);};
  const originalPortrait=enemyPortraitDataUrl;
- enemyPortraitDataUrl=function(name){const key=Object.keys(specs).find(k=>specs[k].name===name);return key?BASE+key+'-portrait.webp':originalPortrait(name);};
+ enemyPortraitDataUrl=function(name){const key=Object.keys(specs).find(k=>specs[k].name===name);return key?BASE+key+'-portrait.webp?v=399':originalPortrait(name);};
  const originalRole=combatRoleKey;
  combatRoleKey=function(u,enemySide=false){if(enemySide&&(u?.whirlpoolKey||u?.whirlpoolMinion)&&u.role==='caster')return 'utility';return originalRole(u,enemySide);};
  const originalSheet=enemyAnimationSheetFor;
@@ -61,9 +61,12 @@
   if(!u.whirlpoolMinion)return originalDraw(u,x,y);
   const s=meta?.sheets[u.whirlpoolMinion],im=images[u.whirlpoolMinion];if(!loaded||!s||!im)return false;
   const dying=u.hp<=0||u.anim==='death',attacking=u.anim==='attack',row=dying?3:attacking?(u.attackStyle==='melee'?1:2):0;
-  let frame;if(!dying&&!attacking){const times=[600,280,430,280,680,330],order=[0,1,2,1,0,3];let t=(performance.now()+u.name.length*91)%2600,i=0;while(i<5&&t>=times[i])t-=times[i++];frame=order[i];}else frame=Math.min(3,Math.floor((dying?Math.max(0,tick-(u.deathTick??tick)):u.animTick||0)/7));
+  const idle=!dying&&!attacking;
+  // The authored idle poses differ too much for hard cuts. Breathe smoothly from one stable pose.
+  const breath=idle?Math.sin((performance.now()+u.name.length*173)/4200*Math.PI*2):0;
+  const frame=idle?0:Math.min(3,Math.floor((dying?Math.max(0,tick-(u.deathTick??tick)):u.animTick||0)/7));
   const index=row*4+frame,a=s.anchors[index],scale=specs[u.whirlpoolMinion].height/s.referenceHeight;
-  ctx.save();ctx.imageSmoothingEnabled=true;ctx.drawImage(im,frame*s.cell,row*s.cell,s.cell,s.cell,x+8-a[0]*scale,y+31-a[1]*scale,s.cell*scale,s.cell*scale);ctx.restore();
+  ctx.save();if(idle){ctx.translate(x+8,y+31);ctx.scale(1-breath*.002,1+breath*.006);ctx.translate(-x-8,-y-31);}ctx.imageSmoothingEnabled=true;ctx.drawImage(im,frame*s.cell,row*s.cell,s.cell,s.cell,x+8-a[0]*scale,y+31-a[1]*scale,s.cell*scale,s.cell*scale);ctx.restore();
   if(attacking&&u.lastAnimDrawTick!==tick){u.animTick=(u.animTick||0)+1;u.lastAnimDrawTick=tick;}return true;
  };
  const recovered=new WeakSet();
